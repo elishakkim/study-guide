@@ -808,13 +808,13 @@
       "id": "MCQ01",
       "difficulty": "easy",
       "question": "What is the primary purpose of a back-of-the-envelope estimate?",
-      "choices": {
-        "A": "To prove the final design mathematically",
-        "B": "To get a useful sense of whether a design can meet capacity or performance requirements",
-        "C": "To avoid discussing assumptions",
-        "D": "To produce exact production benchmarks"
-      },
-      "answer": "B",
+      "choices": [
+        "To get a useful sense of whether a design can meet capacity or performance requirements",
+        "To prove the final design mathematically",
+        "To avoid discussing assumptions",
+        "To produce exact production benchmarks"
+      ],
+      "answer": "To get a useful sense of whether a design can meet capacity or performance requirements",
       "explanation": "The chapter frames these estimates as a way to reason quickly about which designs can meet requirements.",
       "source_pages": [
         34
@@ -824,13 +824,13 @@
       "id": "MCQ02",
       "difficulty": "easy",
       "question": "Which three topics does the chapter identify as scalability basics for estimation?",
-      "choices": {
-        "A": "DNS, TLS, and REST",
-        "B": "Power of two, latency numbers, and availability numbers",
-        "C": "Sharding, caching, and CDNs",
-        "D": "Threads, processes, and containers"
-      },
-      "answer": "B",
+      "choices": [
+        "Power of two, latency numbers, and availability numbers",
+        "Threads, processes, and containers",
+        "DNS, TLS, and REST",
+        "Sharding, caching, and CDNs"
+      ],
+      "answer": "Power of two, latency numbers, and availability numbers",
       "source_pages": [
         34
       ]
@@ -839,13 +839,13 @@
       "id": "MCQ03",
       "difficulty": "easy",
       "question": "One byte contains how many bits?",
-      "choices": {
-        "A": "2",
-        "B": "4",
-        "C": "8",
-        "D": "16"
-      },
-      "answer": "C",
+      "choices": [
+        "16",
+        "4",
+        "2",
+        "8"
+      ],
+      "answer": "8",
       "source_pages": [
         35
       ]
@@ -854,13 +854,13 @@
       "id": "MCQ04",
       "difficulty": "medium",
       "question": "In the chapter's power-of-two table, 2^30 corresponds approximately to:",
-      "choices": {
-        "A": "1 MB",
-        "B": "1 GB",
-        "C": "1 TB",
-        "D": "1 PB"
-      },
-      "answer": "B",
+      "choices": [
+        "1 TB",
+        "1 MB",
+        "1 PB",
+        "1 GB"
+      ],
+      "answer": "1 GB",
       "source_pages": [
         35
       ]
@@ -869,13 +869,13 @@
       "id": "MCQ05",
       "difficulty": "medium",
       "question": "In the chapter's table, 2^40 is approximately:",
-      "choices": {
-        "A": "1 billion",
-        "B": "1 trillion",
-        "C": "1 quadrillion",
-        "D": "1 million"
-      },
-      "answer": "B",
+      "choices": [
+        "1 billion",
+        "1 million",
+        "1 quadrillion",
+        "1 trillion"
+      ],
+      "answer": "1 trillion",
       "source_pages": [
         35
       ]
@@ -884,13 +884,13 @@
       "id": "MCQ06",
       "difficulty": "easy",
       "question": "How many nanoseconds are in one microsecond?",
-      "choices": {
-        "A": "10",
-        "B": "100",
-        "C": "1,000",
-        "D": "1,000,000"
-      },
-      "answer": "C",
+      "choices": [
+        "1,000",
+        "10",
+        "1,000,000",
+        "100"
+      ],
+      "answer": "1,000",
       "source_pages": [
         36
       ]
@@ -899,13 +899,13 @@
       "id": "MCQ07",
       "difficulty": "medium",
       "question": "How many nanoseconds are in one millisecond?",
-      "choices": {
-        "A": "1,000",
-        "B": "10,000",
-        "C": "100,000",
-        "D": "1,000,000"
-      },
-      "answer": "D",
+      "choices": [
+        "1,000,000",
+        "1,000",
+        "10,000",
+        "100,000"
+      ],
+      "answer": "1,000,000",
       "source_pages": [
         36
       ]
@@ -914,13 +914,13 @@
       "id": "MCQ08",
       "difficulty": "medium",
       "question": "Which operation is fastest in the chapter's 2010 latency table?",
-      "choices": {
-        "A": "Disk seek",
-        "B": "Main memory reference",
-        "C": "L1 cache reference",
-        "D": "Round trip within the same datacenter"
-      },
-      "answer": "C",
+      "choices": [
+        "Disk seek",
+        "Round trip within the same datacenter",
+        "L1 cache reference",
+        "Main memory reference"
+      ],
+      "answer": "L1 cache reference",
       "explanation": "L1 cache reference is listed at 0.5 ns.",
       "source_pages": [
         36
@@ -930,13 +930,13 @@
       "id": "MCQ09",
       "difficulty": "medium",
       "question": "Which operation is listed at approximately 10 ms?",
-      "choices": {
-        "A": "L2 cache reference",
-        "B": "Disk seek",
-        "C": "Main memory reference",
-        "D": "Compress 1K bytes with Zippy"
-      },
-      "answer": "B",
+      "choices": [
+        "Main memory reference",
+        "Disk seek",
+        "Compress 1K bytes with Zippy",
+        "L2 cache reference"
+      ],
+      "answer": "Disk seek",
       "source_pages": [
         36
       ]
@@ -945,13 +945,13 @@
       "id": "MCQ10",
       "difficulty": "hard",
       "question": "Which pair has the same latency in the chapter's 2010 table?",
-      "choices": {
-        "A": "Disk seek and read 1 MB sequentially from the network",
-        "B": "L1 cache reference and L2 cache reference",
-        "C": "Main memory reference and disk seek",
-        "D": "Read 1 MB from disk and CA-Netherlands-CA packet trip"
-      },
-      "answer": "A",
+      "choices": [
+        "Disk seek and read 1 MB sequentially from the network",
+        "Read 1 MB from disk and CA-Netherlands-CA packet trip",
+        "L1 cache reference and L2 cache reference",
+        "Main memory reference and disk seek"
+      ],
+      "answer": "Disk seek and read 1 MB sequentially from the network",
       "explanation": "Both are listed as 10 ms.",
       "source_pages": [
         36
@@ -961,13 +961,13 @@
       "id": "MCQ11",
       "difficulty": "hard",
       "question": "How does reading 1 MB sequentially from disk compare with reading 1 MB sequentially from memory in the table?",
-      "choices": {
-        "A": "Disk is faster",
-        "B": "They are equal",
-        "C": "Disk is much slower",
-        "D": "The chapter gives no values for them"
-      },
-      "answer": "C",
+      "choices": [
+        "They are equal",
+        "Disk is faster",
+        "The chapter gives no values for them",
+        "Disk is much slower"
+      ],
+      "answer": "Disk is much slower",
       "explanation": "The table lists 30 ms for disk versus 250 µs for memory.",
       "source_pages": [
         36
@@ -977,13 +977,13 @@
       "id": "MCQ12",
       "difficulty": "medium",
       "question": "Which conclusion does Chapter 2 draw from the latency numbers?",
-      "choices": {
-        "A": "Disk seeks are cheap",
-        "B": "Memory is fast but disk is slow",
-        "C": "Compression should always be avoided",
-        "D": "Cross-region communication has zero meaningful cost"
-      },
-      "answer": "B",
+      "choices": [
+        "Cross-region communication has zero meaningful cost",
+        "Memory is fast but disk is slow",
+        "Compression should always be avoided",
+        "Disk seeks are cheap"
+      ],
+      "answer": "Memory is fast but disk is slow",
       "source_pages": [
         37
       ]
@@ -992,13 +992,13 @@
       "id": "MCQ13",
       "difficulty": "medium",
       "question": "What does the chapter recommend before sending data over the internet when possible?",
-      "choices": {
-        "A": "Decompress it",
-        "B": "Write it to disk",
-        "C": "Compress it",
-        "D": "Convert it to ASCII"
-      },
-      "answer": "C",
+      "choices": [
+        "Write it to disk",
+        "Decompress it",
+        "Convert it to ASCII",
+        "Compress it"
+      ],
+      "answer": "Compress it",
       "source_pages": [
         37
       ]
@@ -1007,13 +1007,13 @@
       "id": "MCQ14",
       "difficulty": "easy",
       "question": "What does 100% availability mean in the chapter's definition?",
-      "choices": {
-        "A": "One hour of downtime per year",
-        "B": "Zero downtime",
-        "C": "Five minutes of downtime per year",
-        "D": "No SLA"
-      },
-      "answer": "B",
+      "choices": [
+        "Zero downtime",
+        "One hour of downtime per year",
+        "No SLA",
+        "Five minutes of downtime per year"
+      ],
+      "answer": "Zero downtime",
       "source_pages": [
         38
       ]
@@ -1022,13 +1022,13 @@
       "id": "MCQ15",
       "difficulty": "easy",
       "question": "What does SLA stand for?",
-      "choices": {
-        "A": "System Latency Approximation",
-        "B": "Service Level Agreement",
-        "C": "Server Load Analysis",
-        "D": "Storage Limit Allocation"
-      },
-      "answer": "B",
+      "choices": [
+        "Server Load Analysis",
+        "Storage Limit Allocation",
+        "Service Level Agreement",
+        "System Latency Approximation"
+      ],
+      "answer": "Service Level Agreement",
       "source_pages": [
         38
       ]
@@ -1037,13 +1037,13 @@
       "id": "MCQ16",
       "difficulty": "medium",
       "question": "According to Table 2-3, 99.9% availability permits approximately how much downtime per year?",
-      "choices": {
-        "A": "3.65 days",
-        "B": "8.77 hours",
-        "C": "52.60 minutes",
-        "D": "5.26 minutes"
-      },
-      "answer": "B",
+      "choices": [
+        "52.60 minutes",
+        "5.26 minutes",
+        "3.65 days",
+        "8.77 hours"
+      ],
+      "answer": "8.77 hours",
       "source_pages": [
         38
       ]
@@ -1052,13 +1052,13 @@
       "id": "MCQ17",
       "difficulty": "medium",
       "question": "According to Table 2-3, 99.999% availability corresponds to approximately:",
-      "choices": {
-        "A": "3.65 days per year",
-        "B": "8.77 hours per year",
-        "C": "52.60 minutes per year",
-        "D": "5.26 minutes per year"
-      },
-      "answer": "D",
+      "choices": [
+        "5.26 minutes per year",
+        "3.65 days per year",
+        "8.77 hours per year",
+        "52.60 minutes per year"
+      ],
+      "answer": "5.26 minutes per year",
       "source_pages": [
         38
       ]
@@ -1067,13 +1067,13 @@
       "id": "MCQ18",
       "difficulty": "medium",
       "question": "The Twitter exercise assumes 300 million MAU and 50% daily usage. What DAU does that produce?",
-      "choices": {
-        "A": "30 million",
-        "B": "75 million",
-        "C": "150 million",
-        "D": "300 million"
-      },
-      "answer": "C",
+      "choices": [
+        "300 million",
+        "30 million",
+        "75 million",
+        "150 million"
+      ],
+      "answer": "150 million",
       "explanation": "300 million * 50% = 150 million.",
       "source_pages": [
         39
@@ -1083,13 +1083,13 @@
       "id": "MCQ19",
       "difficulty": "hard",
       "question": "With 150 million DAU and 2 tweets per user per day, what Tweets QPS does the chapter estimate?",
-      "choices": {
-        "A": "~350",
-        "B": "~3,500",
-        "C": "~35,000",
-        "D": "~350,000"
-      },
-      "answer": "B",
+      "choices": [
+        "~35,000",
+        "~3,500",
+        "~350",
+        "~350,000"
+      ],
+      "answer": "~3,500",
       "source_pages": [
         39
       ]
@@ -1098,13 +1098,13 @@
       "id": "MCQ20",
       "difficulty": "medium",
       "question": "What doubled QPS value does the chapter calculate after the average QPS estimate?",
-      "choices": {
-        "A": "~1,750",
-        "B": "~3,500",
-        "C": "~7,000",
-        "D": "~14,000"
-      },
-      "answer": "C",
+      "choices": [
+        "~7,000",
+        "~14,000",
+        "~3,500",
+        "~1,750"
+      ],
+      "answer": "~7,000",
       "source_pages": [
         39
       ]
@@ -1113,13 +1113,13 @@
       "id": "MCQ21",
       "difficulty": "medium",
       "question": "What percentage of tweets in the exercise are assumed to contain media?",
-      "choices": {
-        "A": "1%",
-        "B": "10%",
-        "C": "25%",
-        "D": "50%"
-      },
-      "answer": "B",
+      "choices": [
+        "25%",
+        "50%",
+        "10%",
+        "1%"
+      ],
+      "answer": "10%",
       "source_pages": [
         39
       ]
@@ -1128,13 +1128,13 @@
       "id": "MCQ22",
       "difficulty": "hard",
       "question": "What daily media storage does the chapter estimate?",
-      "choices": {
-        "A": "3 TB/day",
-        "B": "30 TB/day",
-        "C": "300 TB/day",
-        "D": "3 PB/day"
-      },
-      "answer": "B",
+      "choices": [
+        "3 PB/day",
+        "30 TB/day",
+        "3 TB/day",
+        "300 TB/day"
+      ],
+      "answer": "30 TB/day",
       "source_pages": [
         39
       ]
@@ -1143,13 +1143,13 @@
       "id": "MCQ23",
       "difficulty": "hard",
       "question": "What five-year media storage does the chapter estimate?",
-      "choices": {
-        "A": "~5.5 PB",
-        "B": "~55 PB",
-        "C": "~550 PB",
-        "D": "~55 TB"
-      },
-      "answer": "B",
+      "choices": [
+        "~55 TB",
+        "~55 PB",
+        "~550 PB",
+        "~5.5 PB"
+      ],
+      "answer": "~55 PB",
       "source_pages": [
         39
       ]
@@ -1158,13 +1158,13 @@
       "id": "MCQ24",
       "difficulty": "medium",
       "question": "Which interview behavior does Chapter 2 recommend?",
-      "choices": {
-        "A": "Use exact arithmetic even if it consumes most of the interview",
-        "B": "Keep assumptions in your head",
-        "C": "Use rounding and approximation",
-        "D": "Drop units to make equations shorter"
-      },
-      "answer": "C",
+      "choices": [
+        "Keep assumptions in your head",
+        "Use exact arithmetic even if it consumes most of the interview",
+        "Drop units to make equations shorter",
+        "Use rounding and approximation"
+      ],
+      "answer": "Use rounding and approximation",
       "source_pages": [
         40
       ]
@@ -1173,13 +1173,13 @@
       "id": "MCQ25",
       "difficulty": "medium",
       "question": "Why does the chapter recommend labeling units?",
-      "choices": {
-        "A": "It makes numbers larger",
-        "B": "It removes ambiguity",
-        "C": "It guarantees the estimate is exact",
-        "D": "It replaces assumptions"
-      },
-      "answer": "B",
+      "choices": [
+        "It replaces assumptions",
+        "It guarantees the estimate is exact",
+        "It removes ambiguity",
+        "It makes numbers larger"
+      ],
+      "answer": "It removes ambiguity",
       "source_pages": [
         40
       ]
@@ -1188,13 +1188,13 @@
       "id": "MCQ26",
       "difficulty": "medium",
       "question": "Which of the following is listed as a commonly asked back-of-the-envelope estimate?",
-      "choices": {
-        "A": "QPS",
-        "B": "Storage",
-        "C": "Number of servers",
-        "D": "All of the above"
-      },
-      "answer": "D",
+      "choices": [
+        "QPS",
+        "Storage",
+        "All of the above",
+        "Number of servers"
+      ],
+      "answer": "All of the above",
       "source_pages": [
         40
       ]

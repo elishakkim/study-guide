@@ -2500,13 +2500,13 @@
       "id": "MCQ001",
       "difficulty": "medium",
       "question": "Why must complex applications often combine several systems?",
-      "choices": {
-        "A": "No single tool fits all access patterns",
-        "B": "Databases cannot store data",
-        "C": "All software must be microservices",
-        "D": "Consensus forbids one system"
-      },
-      "answer": "A",
+      "choices": [
+        "Consensus forbids one system",
+        "Databases cannot store data",
+        "All software must be microservices",
+        "No single tool fits all access patterns"
+      ],
+      "answer": "No single tool fits all access patterns",
       "source_pages": [
         512,
         513
@@ -2516,13 +2516,13 @@
       "id": "MCQ002",
       "difficulty": "medium",
       "question": "A system of record is?",
-      "choices": {
-        "A": "Authoritative source of primary input",
-        "B": "Any cache",
-        "C": "Any search index",
-        "D": "A temporary materialized view"
-      },
-      "answer": "A",
+      "choices": [
+        "Any search index",
+        "A temporary materialized view",
+        "Any cache",
+        "Authoritative source of primary input"
+      ],
+      "answer": "Authoritative source of primary input",
       "source_pages": [
         513
       ]
@@ -2531,13 +2531,13 @@
       "id": "MCQ003",
       "difficulty": "medium",
       "question": "A search index maintained from CDC is?",
-      "choices": {
-        "A": "Derived data",
-        "B": "System of record necessarily",
-        "C": "A consensus protocol",
-        "D": "A transaction coordinator"
-      },
-      "answer": "A",
+      "choices": [
+        "A transaction coordinator",
+        "Derived data",
+        "System of record necessarily",
+        "A consensus protocol"
+      ],
+      "answer": "Derived data",
       "source_pages": [
         513
       ]
@@ -2546,13 +2546,13 @@
       "id": "MCQ004",
       "difficulty": "medium",
       "question": "Direct writes to DB and search index risk?",
-      "choices": {
-        "A": "Different write orders and divergence",
-        "B": "Guaranteed total order",
-        "C": "Perfect atomicity",
-        "D": "No race conditions"
-      },
-      "answer": "A",
+      "choices": [
+        "Perfect atomicity",
+        "Different write orders and divergence",
+        "Guaranteed total order",
+        "No race conditions"
+      ],
+      "answer": "Different write orders and divergence",
       "source_pages": [
         513
       ]
@@ -2561,13 +2561,13 @@
       "id": "MCQ005",
       "difficulty": "medium",
       "question": "Log-based derived integration commonly uses?",
-      "choices": {
-        "A": "Deterministic retry and idempotence",
-        "B": "Only 2PC",
-        "C": "Only locks",
-        "D": "Only polling"
-      },
-      "answer": "A",
+      "choices": [
+        "Deterministic retry and idempotence",
+        "Only locks",
+        "Only 2PC",
+        "Only polling"
+      ],
+      "answer": "Deterministic retry and idempotence",
       "source_pages": [
         514
       ]
@@ -2576,13 +2576,13 @@
       "id": "MCQ006",
       "difficulty": "medium",
       "question": "Compared with async derived systems, transactions usually provide stronger?",
-      "choices": {
-        "A": "Timeliness/linearizability",
-        "B": "Compression",
-        "C": "Index size",
-        "D": "Schema flexibility only"
-      },
-      "answer": "A",
+      "choices": [
+        "Timeliness/linearizability",
+        "Index size",
+        "Compression",
+        "Schema flexibility only"
+      ],
+      "answer": "Timeliness/linearizability",
       "source_pages": [
         514
       ]
@@ -2591,13 +2591,13 @@
       "id": "MCQ007",
       "difficulty": "medium",
       "question": "Why does global total ordering struggle at scale?",
-      "choices": {
-        "A": "Single sequencer becomes bottleneck",
-        "B": "Logs cannot be partitioned",
-        "C": "Events have no IDs",
-        "D": "Databases cannot replicate"
-      },
-      "answer": "A",
+      "choices": [
+        "Logs cannot be partitioned",
+        "Databases cannot replicate",
+        "Single sequencer becomes bottleneck",
+        "Events have no IDs"
+      ],
+      "answer": "Single sequencer becomes bottleneck",
       "source_pages": [
         515
       ]
@@ -2606,13 +2606,13 @@
       "id": "MCQ008",
       "difficulty": "medium",
       "question": "Cross-datacenter independent leaders imply?",
-      "choices": {
-        "A": "Ambiguous global order",
-        "B": "Perfect total order",
-        "C": "No latency",
-        "D": "No causality"
-      },
-      "answer": "A",
+      "choices": [
+        "No causality",
+        "Perfect total order",
+        "Ambiguous global order",
+        "No latency"
+      ],
+      "answer": "Ambiguous global order",
       "source_pages": [
         515
       ]
@@ -2621,13 +2621,13 @@
       "id": "MCQ009",
       "difficulty": "medium",
       "question": "The unfriend/message example is about?",
-      "choices": {
-        "A": "Lost causal dependency",
-        "B": "Only storage size",
-        "C": "Window aggregation",
-        "D": "Index rebuilding"
-      },
-      "answer": "A",
+      "choices": [
+        "Index rebuilding",
+        "Window aggregation",
+        "Only storage size",
+        "Lost causal dependency"
+      ],
+      "answer": "Lost causal dependency",
       "source_pages": [
         516
       ]
@@ -2636,13 +2636,13 @@
       "id": "MCQ010",
       "difficulty": "medium",
       "question": "Conflict resolution cannot undo?",
-      "choices": {
-        "A": "External side effects",
-        "B": "Mutable state",
-        "C": "Local caches",
-        "D": "Log offsets"
-      },
-      "answer": "A",
+      "choices": [
+        "External side effects",
+        "Mutable state",
+        "Log offsets",
+        "Local caches"
+      ],
+      "answer": "External side effects",
       "source_pages": [
         516
       ]
@@ -2651,13 +2651,13 @@
       "id": "MCQ011",
       "difficulty": "medium",
       "question": "Stream processing is best for?",
-      "choices": {
-        "A": "Low-delay derived updates",
-        "B": "Only historical recomputation",
-        "C": "Only bounded input",
-        "D": "Only batch files"
-      },
-      "answer": "A",
+      "choices": [
+        "Only batch files",
+        "Only historical recomputation",
+        "Low-delay derived updates",
+        "Only bounded input"
+      ],
+      "answer": "Low-delay derived updates",
       "source_pages": [
         518
       ]
@@ -2666,13 +2666,13 @@
       "id": "MCQ012",
       "difficulty": "medium",
       "question": "Batch processing is best for?",
-      "choices": {
-        "A": "Large historical reprocessing",
-        "B": "Only subsecond alerts",
-        "C": "Only unbounded input",
-        "D": "Only RPC"
-      },
-      "answer": "A",
+      "choices": [
+        "Only subsecond alerts",
+        "Large historical reprocessing",
+        "Only unbounded input",
+        "Only RPC"
+      ],
+      "answer": "Large historical reprocessing",
       "source_pages": [
         518
       ]
@@ -2681,13 +2681,13 @@
       "id": "MCQ013",
       "difficulty": "medium",
       "question": "Lambda architecture runs?",
-      "choices": {
-        "A": "Batch and stream paths in parallel",
-        "B": "Only one stream layer",
-        "C": "Only SQL",
-        "D": "Only consensus"
-      },
-      "answer": "A",
+      "choices": [
+        "Only consensus",
+        "Batch and stream paths in parallel",
+        "Only SQL",
+        "Only one stream layer"
+      ],
+      "answer": "Batch and stream paths in parallel",
       "source_pages": [
         519
       ]
@@ -2696,13 +2696,13 @@
       "id": "MCQ014",
       "difficulty": "medium",
       "question": "A main lambda architecture problem is?",
-      "choices": {
-        "A": "Duplicate logic and operational complexity",
-        "B": "No immutable log",
-        "C": "No low-latency output",
-        "D": "No historical processing"
-      },
-      "answer": "A",
+      "choices": [
+        "No low-latency output",
+        "Duplicate logic and operational complexity",
+        "No immutable log",
+        "No historical processing"
+      ],
+      "answer": "Duplicate logic and operational complexity",
       "source_pages": [
         519,
         520
@@ -2712,13 +2712,13 @@
       "id": "MCQ015",
       "difficulty": "medium",
       "question": "Unified batch/stream systems require?",
-      "choices": {
-        "A": "Replay, exactly-once behavior, event-time windows",
-        "B": "Only processing-time windows",
-        "C": "No replay",
-        "D": "Only 2PC"
-      },
-      "answer": "A",
+      "choices": [
+        "Only processing-time windows",
+        "Only 2PC",
+        "Replay, exactly-once behavior, event-time windows",
+        "No replay"
+      ],
+      "answer": "Replay, exactly-once behavior, event-time windows",
       "source_pages": [
         520
       ]
@@ -2727,13 +2727,13 @@
       "id": "MCQ016",
       "difficulty": "medium",
       "question": "Unbundling databases means?",
-      "choices": {
-        "A": "Compose database-like capabilities from specialized systems",
-        "B": "Delete all databases",
-        "C": "Use one universal DB",
-        "D": "Avoid dataflow"
-      },
-      "answer": "A",
+      "choices": [
+        "Avoid dataflow",
+        "Use one universal DB",
+        "Delete all databases",
+        "Compose database-like capabilities from specialized systems"
+      ],
+      "answer": "Compose database-like capabilities from specialized systems",
       "source_pages": [
         521,
         522,
@@ -2744,13 +2744,13 @@
       "id": "MCQ017",
       "difficulty": "medium",
       "question": "CREATE INDEX resembles?",
-      "choices": {
-        "A": "Snapshot + catch-up + continuous maintenance",
-        "B": "Only a read query",
-        "C": "Only a transaction abort",
-        "D": "Only a cache miss"
-      },
-      "answer": "A",
+      "choices": [
+        "Only a read query",
+        "Only a cache miss",
+        "Snapshot + catch-up + continuous maintenance",
+        "Only a transaction abort"
+      ],
+      "answer": "Snapshot + catch-up + continuous maintenance",
       "source_pages": [
         522
       ]
@@ -2759,13 +2759,13 @@
       "id": "MCQ018",
       "difficulty": "medium",
       "question": "Federated databases mainly unify?",
-      "choices": {
-        "A": "Reads",
-        "B": "Writes",
-        "C": "Consensus",
-        "D": "Replication only"
-      },
-      "answer": "A",
+      "choices": [
+        "Consensus",
+        "Replication only",
+        "Reads",
+        "Writes"
+      ],
+      "answer": "Reads",
       "source_pages": [
         523
       ]
@@ -2774,13 +2774,13 @@
       "id": "MCQ019",
       "difficulty": "medium",
       "question": "Unbundled databases mainly try to unify?",
-      "choices": {
-        "A": "Writes/propagated changes",
-        "B": "Only read SQL",
-        "C": "Only files",
-        "D": "Only schemas"
-      },
-      "answer": "A",
+      "choices": [
+        "Writes/propagated changes",
+        "Only files",
+        "Only read SQL",
+        "Only schemas"
+      ],
+      "answer": "Writes/propagated changes",
       "source_pages": [
         523,
         524
@@ -2790,13 +2790,13 @@
       "id": "MCQ020",
       "difficulty": "medium",
       "question": "Why does async log integration improve fault isolation?",
-      "choices": {
-        "A": "A slow consumer can lag without stopping others",
-        "B": "Every consumer must commit synchronously",
-        "C": "It removes all disks",
-        "D": "It eliminates failures"
-      },
-      "answer": "A",
+      "choices": [
+        "Every consumer must commit synchronously",
+        "It removes all disks",
+        "A slow consumer can lag without stopping others",
+        "It eliminates failures"
+      ],
+      "answer": "A slow consumer can lag without stopping others",
       "source_pages": [
         524
       ]
@@ -2805,13 +2805,13 @@
       "id": "MCQ021",
       "difficulty": "medium",
       "question": "If one database product meets all needs, recommended approach?",
-      "choices": {
-        "A": "Use it",
-        "B": "Always unbundle",
-        "C": "Always use Kafka",
-        "D": "Always use XA"
-      },
-      "answer": "A",
+      "choices": [
+        "Always use XA",
+        "Use it",
+        "Always unbundle",
+        "Always use Kafka"
+      ],
+      "answer": "Use it",
       "source_pages": [
         525
       ]
@@ -2820,13 +2820,13 @@
       "id": "MCQ022",
       "difficulty": "medium",
       "question": "mysql | elasticsearch represents?",
-      "choices": {
-        "A": "Declarative continuous derivation between systems",
-        "B": "SQL join only",
-        "C": "Distributed transaction",
-        "D": "Replication election"
-      },
-      "answer": "A",
+      "choices": [
+        "SQL join only",
+        "Distributed transaction",
+        "Declarative continuous derivation between systems",
+        "Replication election"
+      ],
+      "answer": "Declarative continuous derivation between systems",
       "source_pages": [
         525
       ]
@@ -2835,13 +2835,13 @@
       "id": "MCQ023",
       "difficulty": "medium",
       "question": "Database inside-out centers architecture around?",
-      "choices": {
-        "A": "Dataflow of state changes",
-        "B": "Synchronous RPC only",
-        "C": "Global locks",
-        "D": "Batch-only processing"
-      },
-      "answer": "A",
+      "choices": [
+        "Synchronous RPC only",
+        "Batch-only processing",
+        "Global locks",
+        "Dataflow of state changes"
+      ],
+      "answer": "Dataflow of state changes",
       "source_pages": [
         526
       ]
@@ -2850,13 +2850,13 @@
       "id": "MCQ024",
       "difficulty": "medium",
       "question": "A derivation function maps?",
-      "choices": {
-        "A": "One dataset/state to another",
-        "B": "One TCP packet to another",
-        "C": "One lock to another",
-        "D": "One leader to another"
-      },
-      "answer": "A",
+      "choices": [
+        "One lock to another",
+        "One leader to another",
+        "One dataset/state to another",
+        "One TCP packet to another"
+      ],
+      "answer": "One dataset/state to another",
       "source_pages": [
         527
       ]
@@ -2865,13 +2865,13 @@
       "id": "MCQ025",
       "difficulty": "medium",
       "question": "Why separate application code from durable state?",
-      "choices": {
-        "A": "Different systems specialize in execution vs persistence",
-        "B": "Databases cannot persist",
-        "C": "Containers provide ACID",
-        "D": "State cannot be networked"
-      },
-      "answer": "A",
+      "choices": [
+        "Different systems specialize in execution vs persistence",
+        "Databases cannot persist",
+        "Containers provide ACID",
+        "State cannot be networked"
+      ],
+      "answer": "Different systems specialize in execution vs persistence",
       "source_pages": [
         528
       ]
@@ -2880,13 +2880,13 @@
       "id": "MCQ026",
       "difficulty": "medium",
       "question": "Derived data maintenance requires strong?",
-      "choices": {
-        "A": "Ordering and reliable processing",
-        "B": "Random delivery",
-        "C": "Best-effort loss",
-        "D": "No persistence"
-      },
-      "answer": "A",
+      "choices": [
+        "Random delivery",
+        "No persistence",
+        "Best-effort loss",
+        "Ordering and reliable processing"
+      ],
+      "answer": "Ordering and reliable processing",
       "source_pages": [
         529
       ]
@@ -2895,13 +2895,13 @@
       "id": "MCQ027",
       "difficulty": "medium",
       "question": "Dataflow communication compared with microservices is more?",
-      "choices": {
-        "A": "Asynchronous and stream-oriented",
-        "B": "Synchronous only",
-        "C": "Global-transaction-only",
-        "D": "File-only"
-      },
-      "answer": "A",
+      "choices": [
+        "Asynchronous and stream-oriented",
+        "File-only",
+        "Global-transaction-only",
+        "Synchronous only"
+      ],
+      "answer": "Asynchronous and stream-oriented",
       "source_pages": [
         530
       ]
@@ -2910,13 +2910,13 @@
       "id": "MCQ028",
       "difficulty": "medium",
       "question": "Local exchange-rate state replaces?",
-      "choices": {
-        "A": "Synchronous remote request",
-        "B": "Event stream",
-        "C": "Local database",
-        "D": "Join"
-      },
-      "answer": "A",
+      "choices": [
+        "Join",
+        "Event stream",
+        "Synchronous remote request",
+        "Local database"
+      ],
+      "answer": "Synchronous remote request",
       "source_pages": [
         530,
         531
@@ -2926,13 +2926,13 @@
       "id": "MCQ029",
       "difficulty": "medium",
       "question": "Write path means?",
-      "choices": {
-        "A": "Eager work on incoming data",
-        "B": "Query-time-only work",
-        "C": "A read replica",
-        "D": "Only client writes"
-      },
-      "answer": "A",
+      "choices": [
+        "Query-time-only work",
+        "Eager work on incoming data",
+        "Only client writes",
+        "A read replica"
+      ],
+      "answer": "Eager work on incoming data",
       "source_pages": [
         531,
         532
@@ -2942,13 +2942,13 @@
       "id": "MCQ030",
       "difficulty": "medium",
       "question": "Read path means?",
-      "choices": {
-        "A": "Lazy work when data is requested",
-        "B": "All indexing work",
-        "C": "CDC processing",
-        "D": "Only replication"
-      },
-      "answer": "A",
+      "choices": [
+        "CDC processing",
+        "All indexing work",
+        "Lazy work when data is requested",
+        "Only replication"
+      ],
+      "answer": "Lazy work when data is requested",
       "source_pages": [
         532
       ]
@@ -2957,13 +2957,13 @@
       "id": "MCQ031",
       "difficulty": "medium",
       "question": "Indexes/caches shift work toward?",
-      "choices": {
-        "A": "Write path",
-        "B": "Network partition",
-        "C": "Consensus election",
-        "D": "Transaction coordinator"
-      },
-      "answer": "A",
+      "choices": [
+        "Transaction coordinator",
+        "Network partition",
+        "Consensus election",
+        "Write path"
+      ],
+      "answer": "Write path",
       "source_pages": [
         532,
         533
@@ -2973,13 +2973,13 @@
       "id": "MCQ032",
       "difficulty": "medium",
       "question": "Offline-first apps primarily rely on?",
-      "choices": {
-        "A": "Local state with background sync",
-        "B": "Always-on RPC",
-        "C": "No local storage",
-        "D": "Global transaction per click"
-      },
-      "answer": "A",
+      "choices": [
+        "Local state with background sync",
+        "Global transaction per click",
+        "No local storage",
+        "Always-on RPC"
+      ],
+      "answer": "Local state with background sync",
       "source_pages": [
         533,
         534
@@ -2989,13 +2989,13 @@
       "id": "MCQ033",
       "difficulty": "medium",
       "question": "Server-sent events and WebSockets enable?",
-      "choices": {
-        "A": "Push changes to clients",
-        "B": "Global consensus",
-        "C": "B-tree indexing",
-        "D": "Batch joins"
-      },
-      "answer": "A",
+      "choices": [
+        "Push changes to clients",
+        "Global consensus",
+        "Batch joins",
+        "B-tree indexing"
+      ],
+      "answer": "Push changes to clients",
       "source_pages": [
         534
       ]
@@ -3004,13 +3004,13 @@
       "id": "MCQ034",
       "difficulty": "medium",
       "question": "Representing reads as events makes a read resemble?",
-      "choices": {
-        "A": "Stream-table join",
-        "B": "2PC",
-        "C": "Snapshot backup",
-        "D": "Leader election"
-      },
-      "answer": "A",
+      "choices": [
+        "Stream-table join",
+        "Snapshot backup",
+        "2PC",
+        "Leader election"
+      ],
+      "answer": "Stream-table join",
       "source_pages": [
         536
       ]
@@ -3019,13 +3019,13 @@
       "id": "MCQ035",
       "difficulty": "medium",
       "question": "Why log reads?",
-      "choices": {
-        "A": "Capture what user saw for provenance/causality",
-        "B": "Reduce storage to zero",
-        "C": "Avoid all queries",
-        "D": "Guarantee total order globally"
-      },
-      "answer": "A",
+      "choices": [
+        "Reduce storage to zero",
+        "Guarantee total order globally",
+        "Capture what user saw for provenance/causality",
+        "Avoid all queries"
+      ],
+      "answer": "Capture what user saw for provenance/causality",
       "source_pages": [
         536
       ]
@@ -3034,13 +3034,13 @@
       "id": "MCQ036",
       "difficulty": "medium",
       "question": "The end-to-end argument says?",
-      "choices": {
-        "A": "Some guarantees require endpoint/application participation",
-        "B": "Lower layers always suffice",
-        "C": "TCP guarantees business correctness",
-        "D": "Serializability prevents all application bugs"
-      },
-      "answer": "A",
+      "choices": [
+        "Serializability prevents all application bugs",
+        "Lower layers always suffice",
+        "TCP guarantees business correctness",
+        "Some guarantees require endpoint/application participation"
+      ],
+      "answer": "Some guarantees require endpoint/application participation",
       "source_pages": [
         541,
         542
@@ -3050,13 +3050,13 @@
       "id": "MCQ037",
       "difficulty": "medium",
       "question": "TCP duplicate suppression is limited to?",
-      "choices": {
-        "A": "One connection",
-        "B": "All user retries",
-        "C": "All HTTP requests forever",
-        "D": "All databases"
-      },
-      "answer": "A",
+      "choices": [
+        "One connection",
+        "All HTTP requests forever",
+        "All user retries",
+        "All databases"
+      ],
+      "answer": "One connection",
       "source_pages": [
         539
       ]
@@ -3065,13 +3065,13 @@
       "id": "MCQ038",
       "difficulty": "medium",
       "question": "End-to-end duplicate suppression should use?",
-      "choices": {
-        "A": "Operation/request ID",
-        "B": "Only TCP sequence number",
-        "C": "Only wall-clock timestamp",
-        "D": "Only retry count"
-      },
-      "answer": "A",
+      "choices": [
+        "Only TCP sequence number",
+        "Operation/request ID",
+        "Only wall-clock timestamp",
+        "Only retry count"
+      ],
+      "answer": "Operation/request ID",
       "source_pages": [
         540,
         541
@@ -3081,13 +3081,13 @@
       "id": "MCQ039",
       "difficulty": "medium",
       "question": "A UNIQUE request_id constraint prevents?",
-      "choices": {
-        "A": "Applying same identified operation twice",
-        "B": "All network delays",
-        "C": "All stale reads",
-        "D": "All disk corruption"
-      },
-      "answer": "A",
+      "choices": [
+        "Applying same identified operation twice",
+        "All disk corruption",
+        "All network delays",
+        "All stale reads"
+      ],
+      "answer": "Applying same identified operation twice",
       "source_pages": [
         541
       ]
@@ -3096,13 +3096,13 @@
       "id": "MCQ040",
       "difficulty": "medium",
       "question": "Strict distributed uniqueness requires?",
-      "choices": {
-        "A": "Consensus/coordination",
-        "B": "Only async multi-master",
-        "C": "Only hashing",
-        "D": "Only eventual consistency"
-      },
-      "answer": "A",
+      "choices": [
+        "Only async multi-master",
+        "Only hashing",
+        "Consensus/coordination",
+        "Only eventual consistency"
+      ],
+      "answer": "Consensus/coordination",
       "source_pages": [
         543
       ]
@@ -3111,13 +3111,13 @@
       "id": "MCQ041",
       "difficulty": "medium",
       "question": "How can strict uniqueness scale?",
-      "choices": {
-        "A": "Partition by unique value",
-        "B": "Use unrelated partitions for same value",
-        "C": "Disable ordering",
-        "D": "Use random leaders"
-      },
-      "answer": "A",
+      "choices": [
+        "Use unrelated partitions for same value",
+        "Disable ordering",
+        "Partition by unique value",
+        "Use random leaders"
+      ],
+      "answer": "Partition by unique value",
       "source_pages": [
         543,
         544
@@ -3127,13 +3127,13 @@
       "id": "MCQ042",
       "difficulty": "medium",
       "question": "Log-based uniqueness decides conflicts by?",
-      "choices": {
-        "A": "Sequential processing in same partition",
-        "B": "Last random arrival everywhere",
-        "C": "Dual writes",
-        "D": "Unordered fan-out"
-      },
-      "answer": "A",
+      "choices": [
+        "Dual writes",
+        "Sequential processing in same partition",
+        "Unordered fan-out",
+        "Last random arrival everywhere"
+      ],
+      "answer": "Sequential processing in same partition",
       "source_pages": [
         544
       ]
@@ -3142,13 +3142,13 @@
       "id": "MCQ043",
       "difficulty": "medium",
       "question": "Multi-partition request pattern begins with?",
-      "choices": {
-        "A": "One durable atomic request event",
-        "B": "Simultaneous independent writes",
-        "C": "Global XA transaction always",
-        "D": "No request ID"
-      },
-      "answer": "A",
+      "choices": [
+        "Simultaneous independent writes",
+        "One durable atomic request event",
+        "No request ID",
+        "Global XA transaction always"
+      ],
+      "answer": "One durable atomic request event",
       "source_pages": [
         545
       ]
@@ -3157,13 +3157,13 @@
       "id": "MCQ044",
       "difficulty": "medium",
       "question": "Why pass request ID downstream?",
-      "choices": {
-        "A": "Deduplicate derived effects",
-        "B": "Sort by time only",
-        "C": "Choose datacenter",
-        "D": "Create cache"
-      },
-      "answer": "A",
+      "choices": [
+        "Choose datacenter",
+        "Deduplicate derived effects",
+        "Sort by time only",
+        "Create cache"
+      ],
+      "answer": "Deduplicate derived effects",
       "source_pages": [
         545
       ]
@@ -3172,13 +3172,13 @@
       "id": "MCQ045",
       "difficulty": "medium",
       "question": "Timeliness refers to?",
-      "choices": {
-        "A": "Freshness/up-to-date observations",
-        "B": "Absence of corruption",
-        "C": "Only durability",
-        "D": "Only uniqueness"
-      },
-      "answer": "A",
+      "choices": [
+        "Absence of corruption",
+        "Only uniqueness",
+        "Freshness/up-to-date observations",
+        "Only durability"
+      ],
+      "answer": "Freshness/up-to-date observations",
       "source_pages": [
         546
       ]
@@ -3187,13 +3187,13 @@
       "id": "MCQ046",
       "difficulty": "hard",
       "question": "Integrity refers to?",
-      "choices": {
-        "A": "Absence of loss/contradiction/corruption",
-        "B": "Low latency",
-        "C": "Fresh reads",
-        "D": "WAN performance"
-      },
-      "answer": "A",
+      "choices": [
+        "Low latency",
+        "Absence of loss/contradiction/corruption",
+        "WAN performance",
+        "Fresh reads"
+      ],
+      "answer": "Absence of loss/contradiction/corruption",
       "source_pages": [
         546,
         547
@@ -3203,13 +3203,13 @@
       "id": "MCQ047",
       "difficulty": "hard",
       "question": "Which is usually temporary?",
-      "choices": {
-        "A": "Timeliness violation",
-        "B": "Integrity corruption",
-        "C": "Lost money",
-        "D": "Broken index"
-      },
-      "answer": "A",
+      "choices": [
+        "Broken index",
+        "Integrity corruption",
+        "Timeliness violation",
+        "Lost money"
+      ],
+      "answer": "Timeliness violation",
       "source_pages": [
         546,
         547
@@ -3219,13 +3219,13 @@
       "id": "MCQ048",
       "difficulty": "hard",
       "question": "Which usually needs explicit repair?",
-      "choices": {
-        "A": "Integrity violation",
-        "B": "Temporary staleness",
-        "C": "Read lag",
-        "D": "Slow client"
-      },
-      "answer": "A",
+      "choices": [
+        "Temporary staleness",
+        "Integrity violation",
+        "Slow client",
+        "Read lag"
+      ],
+      "answer": "Integrity violation",
       "source_pages": [
         547
       ]
@@ -3234,13 +3234,13 @@
       "id": "MCQ049",
       "difficulty": "hard",
       "question": "Dataflow integrity can use?",
-      "choices": {
-        "A": "Atomic event + deterministic derivation + IDs + replay",
-        "B": "Only linearizability",
-        "C": "Only global locks",
-        "D": "Only sync WAN RPC"
-      },
-      "answer": "A",
+      "choices": [
+        "Only sync WAN RPC",
+        "Atomic event + deterministic derivation + IDs + replay",
+        "Only linearizability",
+        "Only global locks"
+      ],
+      "answer": "Atomic event + deterministic derivation + IDs + replay",
       "source_pages": [
         548
       ]
@@ -3249,13 +3249,13 @@
       "id": "MCQ050",
       "difficulty": "hard",
       "question": "A compensating transaction does what?",
-      "choices": {
-        "A": "Repairs a prior undesirable outcome later",
-        "B": "Prevents all conflicts synchronously",
-        "C": "Rolls back TCP",
-        "D": "Creates global order"
-      },
-      "answer": "A",
+      "choices": [
+        "Prevents all conflicts synchronously",
+        "Creates global order",
+        "Repairs a prior undesirable outcome later",
+        "Rolls back TCP"
+      ],
+      "answer": "Repairs a prior undesirable outcome later",
       "source_pages": [
         548,
         549
@@ -3265,13 +3265,13 @@
       "id": "MCQ051",
       "difficulty": "hard",
       "question": "Overbooking illustrates?",
-      "choices": {
-        "A": "Some constraints can be intentionally loose",
-        "B": "All constraints must be linearizable",
-        "C": "No business compensation exists",
-        "D": "No integrity needed"
-      },
-      "answer": "A",
+      "choices": [
+        "All constraints must be linearizable",
+        "Some constraints can be intentionally loose",
+        "No business compensation exists",
+        "No integrity needed"
+      ],
+      "answer": "Some constraints can be intentionally loose",
       "source_pages": [
         548,
         549
@@ -3281,13 +3281,13 @@
       "id": "MCQ052",
       "difficulty": "hard",
       "question": "Coordination-avoiding systems typically trade?",
-      "choices": {
-        "A": "Timeliness for availability/scalability while preserving integrity",
-        "B": "Integrity for total order",
-        "C": "Durability for cache",
-        "D": "Storage for CPU only"
-      },
-      "answer": "A",
+      "choices": [
+        "Timeliness for availability/scalability while preserving integrity",
+        "Storage for CPU only",
+        "Durability for cache",
+        "Integrity for total order"
+      ],
+      "answer": "Timeliness for availability/scalability while preserving integrity",
       "source_pages": [
         549,
         550
@@ -3297,13 +3297,13 @@
       "id": "MCQ053",
       "difficulty": "hard",
       "question": "When should coordination still be used?",
-      "choices": {
-        "A": "Where strict/irreversible constraints require it",
-        "B": "Never",
-        "C": "For every read",
-        "D": "Only for logs"
-      },
-      "answer": "A",
+      "choices": [
+        "Only for logs",
+        "Where strict/irreversible constraints require it",
+        "Never",
+        "For every read"
+      ],
+      "answer": "Where strict/irreversible constraints require it",
       "source_pages": [
         550
       ]
@@ -3312,13 +3312,13 @@
       "id": "MCQ054",
       "difficulty": "hard",
       "question": "'Trust, but verify' means?",
-      "choices": {
-        "A": "Assume components usually work but actively audit integrity",
-        "B": "Assume hardware is perfect",
-        "C": "Disable checksums",
-        "D": "Never use transactions"
-      },
-      "answer": "A",
+      "choices": [
+        "Assume hardware is perfect",
+        "Assume components usually work but actively audit integrity",
+        "Never use transactions",
+        "Disable checksums"
+      ],
+      "answer": "Assume components usually work but actively audit integrity",
       "source_pages": [
         550,
         551,
@@ -3329,13 +3329,13 @@
       "id": "MCQ055",
       "difficulty": "hard",
       "question": "What is auditing?",
-      "choices": {
-        "A": "Checking data integrity",
-        "B": "Compressing logs",
-        "C": "Electing leaders",
-        "D": "Windowing streams"
-      },
-      "answer": "A",
+      "choices": [
+        "Compressing logs",
+        "Electing leaders",
+        "Windowing streams",
+        "Checking data integrity"
+      ],
+      "answer": "Checking data integrity",
       "source_pages": [
         552
       ]
@@ -3344,13 +3344,13 @@
       "id": "MCQ056",
       "difficulty": "hard",
       "question": "Why test backup restoration?",
-      "choices": {
-        "A": "A backup is only useful if restoration actually works",
-        "B": "It improves indexes",
-        "C": "It provides total order",
-        "D": "It eliminates network faults"
-      },
-      "answer": "A",
+      "choices": [
+        "It improves indexes",
+        "It eliminates network faults",
+        "It provides total order",
+        "A backup is only useful if restoration actually works"
+      ],
+      "answer": "A backup is only useful if restoration actually works",
       "source_pages": [
         552
       ]
@@ -3359,13 +3359,13 @@
       "id": "MCQ057",
       "difficulty": "hard",
       "question": "Event-based auditability improves?",
-      "choices": {
-        "A": "Provenance and reproducibility",
-        "B": "Randomness",
-        "C": "Data deletion only",
-        "D": "RPC latency only"
-      },
-      "answer": "A",
+      "choices": [
+        "Data deletion only",
+        "Randomness",
+        "Provenance and reproducibility",
+        "RPC latency only"
+      ],
+      "answer": "Provenance and reproducibility",
       "source_pages": [
         553
       ]
@@ -3374,13 +3374,13 @@
       "id": "MCQ058",
       "difficulty": "hard",
       "question": "Merkle trees are useful for?",
-      "choices": {
-        "A": "Cryptographic integrity proofs",
-        "B": "Only SQL joins",
-        "C": "Only message queues",
-        "D": "Only data compression"
-      },
-      "answer": "A",
+      "choices": [
+        "Only message queues",
+        "Only SQL joins",
+        "Cryptographic integrity proofs",
+        "Only data compression"
+      ],
+      "answer": "Cryptographic integrity proofs",
       "source_pages": [
         554
       ]
@@ -3389,13 +3389,13 @@
       "id": "MCQ059",
       "difficulty": "hard",
       "question": "Certificate transparency is cited as?",
-      "choices": {
-        "A": "Merkle-tree-based integrity/audit technology",
-        "B": "A stream join",
-        "C": "A database isolation level",
-        "D": "A cache"
-      },
-      "answer": "A",
+      "choices": [
+        "A cache",
+        "Merkle-tree-based integrity/audit technology",
+        "A database isolation level",
+        "A stream join"
+      ],
+      "answer": "Merkle-tree-based integrity/audit technology",
       "source_pages": [
         554
       ]
@@ -3404,13 +3404,13 @@
       "id": "MCQ060",
       "difficulty": "hard",
       "question": "Chapter's ethical premise?",
-      "choices": {
-        "A": "Engineers must consider human consequences",
-        "B": "Technology is ethically neutral in all uses",
-        "C": "Only managers own responsibility",
-        "D": "Scale matters more than dignity"
-      },
-      "answer": "A",
+      "choices": [
+        "Technology is ethically neutral in all uses",
+        "Scale matters more than dignity",
+        "Engineers must consider human consequences",
+        "Only managers own responsibility"
+      ],
+      "answer": "Engineers must consider human consequences",
       "source_pages": [
         555
       ]
@@ -3419,13 +3419,13 @@
       "id": "MCQ061",
       "difficulty": "hard",
       "question": "Biased training data may cause models to?",
-      "choices": {
-        "A": "Learn and amplify bias",
-        "B": "Automatically remove bias",
-        "C": "Become deterministic fairness engines",
-        "D": "Ignore proxies"
-      },
-      "answer": "A",
+      "choices": [
+        "Learn and amplify bias",
+        "Automatically remove bias",
+        "Ignore proxies",
+        "Become deterministic fairness engines"
+      ],
+      "answer": "Learn and amplify bias",
       "source_pages": [
         556
       ]
@@ -3434,13 +3434,13 @@
       "id": "MCQ062",
       "difficulty": "hard",
       "question": "Postal code can be dangerous in fairness analysis because?",
-      "choices": {
-        "A": "It may proxy protected traits",
-        "B": "It is always inaccurate",
-        "C": "It prevents ML",
-        "D": "It is a primary key"
-      },
-      "answer": "A",
+      "choices": [
+        "It is always inaccurate",
+        "It is a primary key",
+        "It prevents ML",
+        "It may proxy protected traits"
+      ],
+      "answer": "It may proxy protected traits",
       "source_pages": [
         556
       ]
@@ -3449,13 +3449,13 @@
       "id": "MCQ063",
       "difficulty": "hard",
       "question": "Algorithmic accountability requires?",
-      "choices": {
-        "A": "Appeal, explanation, responsibility",
-        "B": "No human review",
-        "C": "Permanent secrecy",
-        "D": "Only higher accuracy"
-      },
-      "answer": "A",
+      "choices": [
+        "Permanent secrecy",
+        "No human review",
+        "Only higher accuracy",
+        "Appeal, explanation, responsibility"
+      ],
+      "answer": "Appeal, explanation, responsibility",
       "source_pages": [
         557
       ]
@@ -3464,13 +3464,13 @@
       "id": "MCQ064",
       "difficulty": "hard",
       "question": "A statistically accurate model can still?",
-      "choices": {
-        "A": "Be wrong for an individual",
-        "B": "Guarantee every decision",
-        "C": "Remove uncertainty",
-        "D": "Provide causal truth"
-      },
-      "answer": "A",
+      "choices": [
+        "Remove uncertainty",
+        "Be wrong for an individual",
+        "Guarantee every decision",
+        "Provide causal truth"
+      ],
+      "answer": "Be wrong for an individual",
       "source_pages": [
         557
       ]
@@ -3479,13 +3479,13 @@
       "id": "MCQ065",
       "difficulty": "hard",
       "question": "A feedback loop means?",
-      "choices": {
-        "A": "Predictions affect future data and reinforce themselves",
-        "B": "Only model retraining",
-        "C": "A cache eviction",
-        "D": "A retry queue"
-      },
-      "answer": "A",
+      "choices": [
+        "Only model retraining",
+        "Predictions affect future data and reinforce themselves",
+        "A retry queue",
+        "A cache eviction"
+      ],
+      "answer": "Predictions affect future data and reinforce themselves",
       "source_pages": [
         558
       ]
@@ -3494,13 +3494,13 @@
       "id": "MCQ066",
       "difficulty": "hard",
       "question": "Systems thinking includes?",
-      "choices": {
-        "A": "Human behavior and wider consequences",
-        "B": "Only code paths",
-        "C": "Only CPU utilization",
-        "D": "Only schema design"
-      },
-      "answer": "A",
+      "choices": [
+        "Only code paths",
+        "Human behavior and wider consequences",
+        "Only schema design",
+        "Only CPU utilization"
+      ],
+      "answer": "Human behavior and wider consequences",
       "source_pages": [
         558
       ]
@@ -3509,13 +3509,13 @@
       "id": "MCQ067",
       "difficulty": "hard",
       "question": "Tracking that primarily serves advertisers may be framed as?",
-      "choices": {
-        "A": "Surveillance",
-        "B": "Only caching",
-        "C": "Only observability",
-        "D": "Only analytics"
-      },
-      "answer": "A",
+      "choices": [
+        "Only observability",
+        "Surveillance",
+        "Only caching",
+        "Only analytics"
+      ],
+      "answer": "Surveillance",
       "source_pages": [
         559
       ]
@@ -3524,13 +3524,13 @@
       "id": "MCQ068",
       "difficulty": "hard",
       "question": "Meaningful consent is hard because?",
-      "choices": {
-        "A": "Users may not understand collection and downstream use",
-        "B": "Policies are always simple",
-        "C": "Data is never combined",
-        "D": "Users always negotiate terms"
-      },
-      "answer": "A",
+      "choices": [
+        "Data is never combined",
+        "Users may not understand collection and downstream use",
+        "Users always negotiate terms",
+        "Policies are always simple"
+      ],
+      "answer": "Users may not understand collection and downstream use",
       "source_pages": [
         560,
         561
@@ -3540,13 +3540,13 @@
       "id": "MCQ069",
       "difficulty": "hard",
       "question": "Privacy is defined as?",
-      "choices": {
-        "A": "Control over what to reveal to whom",
-        "B": "Keeping everything secret",
-        "C": "No internet use",
-        "D": "Anonymity only"
-      },
-      "answer": "A",
+      "choices": [
+        "Anonymity only",
+        "Control over what to reveal to whom",
+        "No internet use",
+        "Keeping everything secret"
+      ],
+      "answer": "Control over what to reveal to whom",
       "source_pages": [
         561
       ]
@@ -3555,13 +3555,13 @@
       "id": "MCQ070",
       "difficulty": "hard",
       "question": "Why can collected data be a toxic asset?",
-      "choices": {
-        "A": "It creates breach, misuse, coercion, and future-governance risk",
-        "B": "It has no value",
-        "C": "It cannot be copied",
-        "D": "It is always public"
-      },
-      "answer": "A",
+      "choices": [
+        "It is always public",
+        "It cannot be copied",
+        "It creates breach, misuse, coercion, and future-governance risk",
+        "It has no value"
+      ],
+      "answer": "It creates breach, misuse, coercion, and future-governance risk",
       "source_pages": [
         563
       ]
@@ -3570,13 +3570,13 @@
       "id": "MCQ071",
       "difficulty": "hard",
       "question": "Industrial-Revolution analogy emphasizes need for?",
-      "choices": {
-        "A": "Safeguards against harms created by new technology",
-        "B": "No regulation",
-        "C": "More pollution",
-        "D": "Less accountability"
-      },
-      "answer": "A",
+      "choices": [
+        "Safeguards against harms created by new technology",
+        "More pollution",
+        "Less accountability",
+        "No regulation"
+      ],
+      "answer": "Safeguards against harms created by new technology",
       "source_pages": [
         564
       ]
@@ -3585,13 +3585,13 @@
       "id": "MCQ072",
       "difficulty": "hard",
       "question": "Recommended data-retention stance?",
-      "choices": {
-        "A": "Purge data when no longer needed",
-        "B": "Keep all data forever",
-        "C": "Never delete any log",
-        "D": "Always duplicate"
-      },
-      "answer": "A",
+      "choices": [
+        "Always duplicate",
+        "Purge data when no longer needed",
+        "Keep all data forever",
+        "Never delete any log"
+      ],
+      "answer": "Purge data when no longer needed",
       "source_pages": [
         565
       ]
@@ -3600,13 +3600,13 @@
       "id": "MCQ073",
       "difficulty": "hard",
       "question": "Final chapter message to engineers?",
-      "choices": {
-        "A": "Build systems that respect humanity, dignity, and agency",
-        "B": "Optimize only throughput",
-        "C": "Avoid ethics discussions",
-        "D": "Assume users are metrics"
-      },
-      "answer": "A",
+      "choices": [
+        "Avoid ethics discussions",
+        "Assume users are metrics",
+        "Optimize only throughput",
+        "Build systems that respect humanity, dignity, and agency"
+      ],
+      "answer": "Build systems that respect humanity, dignity, and agency",
       "source_pages": [
         565,
         566

@@ -1981,13 +1981,13 @@
       "id": "MCQ001",
       "difficulty": "medium",
       "question": "What does an append-only db_set optimize?",
-      "choices": {
-        "A": "Writes",
-        "B": "Range queries",
-        "C": "Joins",
-        "D": "Full-text search"
-      },
-      "answer": "A",
+      "choices": [
+        "Full-text search",
+        "Joins",
+        "Range queries",
+        "Writes"
+      ],
+      "answer": "Writes",
       "source_pages": [
         92,
         93
@@ -1997,13 +1997,13 @@
       "id": "MCQ002",
       "difficulty": "medium",
       "question": "What is the simple db_get lookup complexity?",
-      "choices": {
-        "A": "O(n)",
-        "B": "O(1)",
-        "C": "O(log n)",
-        "D": "O(n log n)"
-      },
-      "answer": "A",
+      "choices": [
+        "O(n)",
+        "O(log n)",
+        "O(n log n)",
+        "O(1)"
+      ],
+      "answer": "O(n)",
       "source_pages": [
         93
       ]
@@ -2012,13 +2012,13 @@
       "id": "MCQ003",
       "difficulty": "medium",
       "question": "What is an index?",
-      "choices": {
-        "A": "Derived lookup metadata",
-        "B": "Primary data itself only",
-        "C": "A transaction",
-        "D": "A network protocol"
-      },
-      "answer": "A",
+      "choices": [
+        "Derived lookup metadata",
+        "A network protocol",
+        "A transaction",
+        "Primary data itself only"
+      ],
+      "answer": "Derived lookup metadata",
       "source_pages": [
         93
       ]
@@ -2027,13 +2027,13 @@
       "id": "MCQ004",
       "difficulty": "medium",
       "question": "What is the index tradeoff?",
-      "choices": {
-        "A": "Faster reads, slower writes",
-        "B": "Faster writes, slower reads always",
-        "C": "No overhead",
-        "D": "Only more RAM"
-      },
-      "answer": "A",
+      "choices": [
+        "Only more RAM",
+        "Faster reads, slower writes",
+        "Faster writes, slower reads always",
+        "No overhead"
+      ],
+      "answer": "Faster reads, slower writes",
       "source_pages": [
         93
       ]
@@ -2042,13 +2042,13 @@
       "id": "MCQ005",
       "difficulty": "medium",
       "question": "What does Bitcask keep in memory?",
-      "choices": {
-        "A": "Key-to-offset hash maps",
-        "B": "All values",
-        "C": "All files",
-        "D": "All logs and values"
-      },
-      "answer": "A",
+      "choices": [
+        "All files",
+        "All values",
+        "Key-to-offset hash maps",
+        "All logs and values"
+      ],
+      "answer": "Key-to-offset hash maps",
       "source_pages": [
         94
       ]
@@ -2057,13 +2057,13 @@
       "id": "MCQ006",
       "difficulty": "medium",
       "question": "What is compaction?",
-      "choices": {
-        "A": "Drop obsolete duplicate values",
-        "B": "Encrypt segments",
-        "C": "Sort SQL queries",
-        "D": "Create joins"
-      },
-      "answer": "A",
+      "choices": [
+        "Encrypt segments",
+        "Sort SQL queries",
+        "Create joins",
+        "Drop obsolete duplicate values"
+      ],
+      "answer": "Drop obsolete duplicate values",
       "source_pages": [
         95
       ]
@@ -2072,13 +2072,13 @@
       "id": "MCQ007",
       "difficulty": "medium",
       "question": "What represents deletion in an append-only log?",
-      "choices": {
-        "A": "Tombstone",
-        "B": "WAL",
-        "C": "Bloom filter",
-        "D": "Heap pointer"
-      },
-      "answer": "A",
+      "choices": [
+        "Heap pointer",
+        "Tombstone",
+        "WAL",
+        "Bloom filter"
+      ],
+      "answer": "Tombstone",
       "source_pages": [
         96
       ]
@@ -2087,13 +2087,13 @@
       "id": "MCQ008",
       "difficulty": "medium",
       "question": "How are partial writes detected?",
-      "choices": {
-        "A": "Checksums",
-        "B": "Joins",
-        "C": "Indexes only",
-        "D": "Sorting"
-      },
-      "answer": "A",
+      "choices": [
+        "Indexes only",
+        "Checksums",
+        "Sorting",
+        "Joins"
+      ],
+      "answer": "Checksums",
       "source_pages": [
         97
       ]
@@ -2102,13 +2102,13 @@
       "id": "MCQ009",
       "difficulty": "medium",
       "question": "Which is a hash-index limitation?",
-      "choices": {
-        "A": "Poor range scans",
-        "B": "Poor point lookup",
-        "C": "Requires sorted keys",
-        "D": "Cannot update keys"
-      },
-      "answer": "A",
+      "choices": [
+        "Poor point lookup",
+        "Cannot update keys",
+        "Requires sorted keys",
+        "Poor range scans"
+      ],
+      "answer": "Poor range scans",
       "source_pages": [
         97
       ]
@@ -2117,13 +2117,13 @@
       "id": "MCQ010",
       "difficulty": "medium",
       "question": "What does SSTable stand for?",
-      "choices": {
-        "A": "Sorted String Table",
-        "B": "Sequential Storage Tree",
-        "C": "Simple Search Table",
-        "D": "Segmented String Tree"
-      },
-      "answer": "A",
+      "choices": [
+        "Sequential Storage Tree",
+        "Simple Search Table",
+        "Segmented String Tree",
+        "Sorted String Table"
+      ],
+      "answer": "Sorted String Table",
       "source_pages": [
         98
       ]
@@ -2132,13 +2132,13 @@
       "id": "MCQ011",
       "difficulty": "medium",
       "question": "Why does SSTable merging work efficiently?",
-      "choices": {
-        "A": "Inputs are sorted",
-        "B": "Keys are random",
-        "C": "All data is in RAM",
-        "D": "No duplicates exist across segments"
-      },
-      "answer": "A",
+      "choices": [
+        "No duplicates exist across segments",
+        "Keys are random",
+        "All data is in RAM",
+        "Inputs are sorted"
+      ],
+      "answer": "Inputs are sorted",
       "source_pages": [
         98,
         99
@@ -2148,13 +2148,13 @@
       "id": "MCQ012",
       "difficulty": "medium",
       "question": "Why can SSTable indexes be sparse?",
-      "choices": {
-        "A": "Sorted keys allow short scans",
-        "B": "Every key is fixed size",
-        "C": "Values are in RAM",
-        "D": "No disk is used"
-      },
-      "answer": "A",
+      "choices": [
+        "No disk is used",
+        "Every key is fixed size",
+        "Values are in RAM",
+        "Sorted keys allow short scans"
+      ],
+      "answer": "Sorted keys allow short scans",
       "source_pages": [
         99
       ]
@@ -2163,13 +2163,13 @@
       "id": "MCQ013",
       "difficulty": "medium",
       "question": "What is a memtable?",
-      "choices": {
-        "A": "In-memory sorted write structure",
-        "B": "Disk-only B-tree",
-        "C": "Bloom filter",
-        "D": "Data cube"
-      },
-      "answer": "A",
+      "choices": [
+        "Disk-only B-tree",
+        "Bloom filter",
+        "Data cube",
+        "In-memory sorted write structure"
+      ],
+      "answer": "In-memory sorted write structure",
       "source_pages": [
         100
       ]
@@ -2178,13 +2178,13 @@
       "id": "MCQ014",
       "difficulty": "medium",
       "question": "What protects unflushed memtable writes?",
-      "choices": {
-        "A": "Append-only recovery log",
-        "B": "Secondary index",
-        "C": "Heap file",
-        "D": "R-tree"
-      },
-      "answer": "A",
+      "choices": [
+        "Heap file",
+        "Secondary index",
+        "R-tree",
+        "Append-only recovery log"
+      ],
+      "answer": "Append-only recovery log",
       "source_pages": [
         100
       ]
@@ -2193,13 +2193,13 @@
       "id": "MCQ015",
       "difficulty": "medium",
       "question": "What is an LSM-tree?",
-      "choices": {
-        "A": "Log-Structured Merge-Tree",
-        "B": "Linked Sorted Map Tree",
-        "C": "Low Storage Memory Tree",
-        "D": "Linear Segment Map"
-      },
-      "answer": "A",
+      "choices": [
+        "Linked Sorted Map Tree",
+        "Linear Segment Map",
+        "Low Storage Memory Tree",
+        "Log-Structured Merge-Tree"
+      ],
+      "answer": "Log-Structured Merge-Tree",
       "source_pages": [
         100,
         101
@@ -2209,13 +2209,13 @@
       "id": "MCQ016",
       "difficulty": "medium",
       "question": "Which system uses LSM-style storage?",
-      "choices": {
-        "A": "RocksDB",
-        "B": "CSS",
-        "C": "RDF",
-        "D": "PostGIS only"
-      },
-      "answer": "A",
+      "choices": [
+        "RDF",
+        "RocksDB",
+        "CSS",
+        "PostGIS only"
+      ],
+      "answer": "RocksDB",
       "source_pages": [
         100,
         101
@@ -2225,13 +2225,13 @@
       "id": "MCQ017",
       "difficulty": "medium",
       "question": "What does a Bloom filter optimize?",
-      "choices": {
-        "A": "Nonexistent-key lookup",
-        "B": "Range aggregation",
-        "C": "WAL writes",
-        "D": "Page splits"
-      },
-      "answer": "A",
+      "choices": [
+        "Range aggregation",
+        "Page splits",
+        "Nonexistent-key lookup",
+        "WAL writes"
+      ],
+      "answer": "Nonexistent-key lookup",
       "source_pages": [
         101
       ]
@@ -2240,13 +2240,13 @@
       "id": "MCQ018",
       "difficulty": "medium",
       "question": "Which compaction strategy uses levels?",
-      "choices": {
-        "A": "Leveled",
-        "B": "Hash",
-        "C": "Bitmap",
-        "D": "Clustered"
-      },
-      "answer": "A",
+      "choices": [
+        "Bitmap",
+        "Hash",
+        "Clustered",
+        "Leveled"
+      ],
+      "answer": "Leveled",
       "source_pages": [
         101
       ]
@@ -2255,13 +2255,13 @@
       "id": "MCQ019",
       "difficulty": "medium",
       "question": "What is the dominant traditional index structure?",
-      "choices": {
-        "A": "B-tree",
-        "B": "Bitmap only",
-        "C": "Trie only",
-        "D": "Heap file"
-      },
-      "answer": "A",
+      "choices": [
+        "B-tree",
+        "Bitmap only",
+        "Heap file",
+        "Trie only"
+      ],
+      "answer": "B-tree",
       "source_pages": [
         101,
         102
@@ -2271,13 +2271,13 @@
       "id": "MCQ020",
       "difficulty": "medium",
       "question": "How are B-trees organized?",
-      "choices": {
-        "A": "Fixed-size pages",
-        "B": "Append-only variable segments only",
-        "C": "One hash table",
-        "D": "One giant row"
-      },
-      "answer": "A",
+      "choices": [
+        "One hash table",
+        "Append-only variable segments only",
+        "Fixed-size pages",
+        "One giant row"
+      ],
+      "answer": "Fixed-size pages",
       "source_pages": [
         102
       ]
@@ -2286,13 +2286,13 @@
       "id": "MCQ021",
       "difficulty": "medium",
       "question": "What starts a B-tree lookup?",
-      "choices": {
-        "A": "Root page",
-        "B": "Leaf sibling",
-        "C": "WAL",
-        "D": "Memtable"
-      },
-      "answer": "A",
+      "choices": [
+        "Memtable",
+        "Root page",
+        "Leaf sibling",
+        "WAL"
+      ],
+      "answer": "Root page",
       "source_pages": [
         102
       ]
@@ -2301,13 +2301,13 @@
       "id": "MCQ022",
       "difficulty": "medium",
       "question": "What does branching factor mean?",
-      "choices": {
-        "A": "Children per page",
-        "B": "Rows per transaction",
-        "C": "Segments per log",
-        "D": "Columns per row"
-      },
-      "answer": "A",
+      "choices": [
+        "Segments per log",
+        "Columns per row",
+        "Rows per transaction",
+        "Children per page"
+      ],
+      "answer": "Children per page",
       "source_pages": [
         103
       ]
@@ -2316,13 +2316,13 @@
       "id": "MCQ023",
       "difficulty": "medium",
       "question": "What happens when a B-tree page is full?",
-      "choices": {
-        "A": "Split page and update parent",
-        "B": "Delete old records",
-        "C": "Compact SSTables",
-        "D": "Create Bloom filter"
-      },
-      "answer": "A",
+      "choices": [
+        "Compact SSTables",
+        "Split page and update parent",
+        "Delete old records",
+        "Create Bloom filter"
+      ],
+      "answer": "Split page and update parent",
       "source_pages": [
         103
       ]
@@ -2331,13 +2331,13 @@
       "id": "MCQ024",
       "difficulty": "medium",
       "question": "What is B-tree depth?",
-      "choices": {
-        "A": "O(log n)",
-        "B": "O(n)",
-        "C": "O(1) always",
-        "D": "O(n²)"
-      },
-      "answer": "A",
+      "choices": [
+        "O(n²)",
+        "O(1) always",
+        "O(n)",
+        "O(log n)"
+      ],
+      "answer": "O(log n)",
       "source_pages": [
         103
       ]
@@ -2346,13 +2346,13 @@
       "id": "MCQ025",
       "difficulty": "medium",
       "question": "What ensures B-tree crash recovery?",
-      "choices": {
-        "A": "WAL",
-        "B": "Bloom filter",
-        "C": "R-tree",
-        "D": "Bitmap"
-      },
-      "answer": "A",
+      "choices": [
+        "WAL",
+        "Bloom filter",
+        "Bitmap",
+        "R-tree"
+      ],
+      "answer": "WAL",
       "source_pages": [
         104
       ]
@@ -2361,13 +2361,13 @@
       "id": "MCQ026",
       "difficulty": "medium",
       "question": "What controls concurrent B-tree updates?",
-      "choices": {
-        "A": "Latches",
-        "B": "Tombstones",
-        "C": "ETL",
-        "D": "Cubes"
-      },
-      "answer": "A",
+      "choices": [
+        "Tombstones",
+        "Cubes",
+        "Latches",
+        "ETL"
+      ],
+      "answer": "Latches",
       "source_pages": [
         104
       ]
@@ -2376,13 +2376,13 @@
       "id": "MCQ027",
       "difficulty": "medium",
       "question": "Which is a B-tree optimization?",
-      "choices": {
-        "A": "Copy-on-write",
-        "B": "SSTable compaction only",
-        "C": "MapReduce",
-        "D": "Star schema"
-      },
-      "answer": "A",
+      "choices": [
+        "Copy-on-write",
+        "Star schema",
+        "MapReduce",
+        "SSTable compaction only"
+      ],
+      "answer": "Copy-on-write",
       "source_pages": [
         104,
         105
@@ -2392,13 +2392,13 @@
       "id": "MCQ028",
       "difficulty": "medium",
       "question": "Rule of thumb: LSMs are faster for?",
-      "choices": {
-        "A": "Writes",
-        "B": "Reads only",
-        "C": "Joins only",
-        "D": "OLAP only"
-      },
-      "answer": "A",
+      "choices": [
+        "OLAP only",
+        "Writes",
+        "Reads only",
+        "Joins only"
+      ],
+      "answer": "Writes",
       "source_pages": [
         105
       ]
@@ -2407,13 +2407,13 @@
       "id": "MCQ029",
       "difficulty": "medium",
       "question": "Rule of thumb: B-trees are often faster/more predictable for?",
-      "choices": {
-        "A": "Reads",
-        "B": "Bulk writes only",
-        "C": "Bitmap compression",
-        "D": "ETL"
-      },
-      "answer": "A",
+      "choices": [
+        "Bulk writes only",
+        "ETL",
+        "Bitmap compression",
+        "Reads"
+      ],
+      "answer": "Reads",
       "source_pages": [
         105
       ]
@@ -2422,13 +2422,13 @@
       "id": "MCQ030",
       "difficulty": "medium",
       "question": "What is write amplification?",
-      "choices": {
-        "A": "One logical write causes multiple physical writes",
-        "B": "Multiple reads per query",
-        "C": "Only WAL growth",
-        "D": "Only replication"
-      },
-      "answer": "A",
+      "choices": [
+        "Multiple reads per query",
+        "Only WAL growth",
+        "Only replication",
+        "One logical write causes multiple physical writes"
+      ],
+      "answer": "One logical write causes multiple physical writes",
       "source_pages": [
         106
       ]
@@ -2437,13 +2437,13 @@
       "id": "MCQ031",
       "difficulty": "medium",
       "question": "Why are sequential writes attractive?",
-      "choices": {
-        "A": "Higher throughput, especially on disks",
-        "B": "They remove all reads",
-        "C": "They require no storage",
-        "D": "They guarantee transactions"
-      },
-      "answer": "A",
+      "choices": [
+        "They require no storage",
+        "Higher throughput, especially on disks",
+        "They remove all reads",
+        "They guarantee transactions"
+      ],
+      "answer": "Higher throughput, especially on disks",
       "source_pages": [
         106
       ]
@@ -2452,13 +2452,13 @@
       "id": "MCQ032",
       "difficulty": "medium",
       "question": "What is a key LSM downside?",
-      "choices": {
-        "A": "Compaction can interfere with latency",
-        "B": "No range queries",
-        "C": "No high write throughput",
-        "D": "Cannot exceed RAM"
-      },
-      "answer": "A",
+      "choices": [
+        "No high write throughput",
+        "No range queries",
+        "Cannot exceed RAM",
+        "Compaction can interfere with latency"
+      ],
+      "answer": "Compaction can interfere with latency",
       "source_pages": [
         106,
         107
@@ -2468,13 +2468,13 @@
       "id": "MCQ033",
       "difficulty": "medium",
       "question": "What if compaction falls behind?",
-      "choices": {
-        "A": "Segments grow and disk/read performance degrades",
-        "B": "B-tree splits stop",
-        "C": "Data warehouse disappears",
-        "D": "Queries become constant time"
-      },
-      "answer": "A",
+      "choices": [
+        "Data warehouse disappears",
+        "Segments grow and disk/read performance degrades",
+        "B-tree splits stop",
+        "Queries become constant time"
+      ],
+      "answer": "Segments grow and disk/read performance degrades",
       "source_pages": [
         107
       ]
@@ -2483,13 +2483,13 @@
       "id": "MCQ034",
       "difficulty": "medium",
       "question": "Why can B-trees help locking?",
-      "choices": {
-        "A": "Each key exists in one index location",
-        "B": "Keys exist in many segments",
-        "C": "No ranges exist",
-        "D": "They use Bloom filters"
-      },
-      "answer": "A",
+      "choices": [
+        "Keys exist in many segments",
+        "Each key exists in one index location",
+        "No ranges exist",
+        "They use Bloom filters"
+      ],
+      "answer": "Each key exists in one index location",
       "source_pages": [
         107
       ]
@@ -2498,13 +2498,13 @@
       "id": "MCQ035",
       "difficulty": "medium",
       "question": "What is a secondary index?",
-      "choices": {
-        "A": "Index on non-primary attributes",
-        "B": "Always unique primary key",
-        "C": "WAL",
-        "D": "Data warehouse"
-      },
-      "answer": "A",
+      "choices": [
+        "Index on non-primary attributes",
+        "Always unique primary key",
+        "WAL",
+        "Data warehouse"
+      ],
+      "answer": "Index on non-primary attributes",
       "source_pages": [
         107,
         108
@@ -2514,13 +2514,13 @@
       "id": "MCQ036",
       "difficulty": "medium",
       "question": "How can nonunique secondary keys be stored?",
-      "choices": {
-        "A": "Key to row-ID list",
-        "B": "Only reject duplicates",
-        "C": "One file per row",
-        "D": "No index"
-      },
-      "answer": "A",
+      "choices": [
+        "One file per row",
+        "No index",
+        "Only reject duplicates",
+        "Key to row-ID list"
+      ],
+      "answer": "Key to row-ID list",
       "source_pages": [
         108
       ]
@@ -2529,13 +2529,13 @@
       "id": "MCQ037",
       "difficulty": "medium",
       "question": "What is a heap file?",
-      "choices": {
-        "A": "Unordered row storage referenced by indexes",
-        "B": "Sorted column file",
-        "C": "WAL",
-        "D": "Bloom filter"
-      },
-      "answer": "A",
+      "choices": [
+        "Sorted column file",
+        "Bloom filter",
+        "Unordered row storage referenced by indexes",
+        "WAL"
+      ],
+      "answer": "Unordered row storage referenced by indexes",
       "source_pages": [
         108
       ]
@@ -2544,13 +2544,13 @@
       "id": "MCQ038",
       "difficulty": "medium",
       "question": "What is a clustered index?",
-      "choices": {
-        "A": "Stores row data in the index",
-        "B": "Only row references",
-        "C": "Only Bloom filters",
-        "D": "Only keys"
-      },
-      "answer": "A",
+      "choices": [
+        "Only Bloom filters",
+        "Only keys",
+        "Only row references",
+        "Stores row data in the index"
+      ],
+      "answer": "Stores row data in the index",
       "source_pages": [
         108
       ]
@@ -2559,13 +2559,13 @@
       "id": "MCQ039",
       "difficulty": "medium",
       "question": "What is a covering index?",
-      "choices": {
-        "A": "Includes extra columns needed by queries",
-        "B": "Always primary key",
-        "C": "Only a spatial index",
-        "D": "An OLAP cube"
-      },
-      "answer": "A",
+      "choices": [
+        "Only a spatial index",
+        "Always primary key",
+        "Includes extra columns needed by queries",
+        "An OLAP cube"
+      ],
+      "answer": "Includes extra columns needed by queries",
       "source_pages": [
         108
       ]
@@ -2574,13 +2574,13 @@
       "id": "MCQ040",
       "difficulty": "medium",
       "question": "What is the leading-prefix behavior of (lastname, firstname)?",
-      "choices": {
-        "A": "Can query lastname efficiently",
-        "B": "Can only query firstname",
-        "C": "No sorted behavior",
-        "D": "Only geospatial"
-      },
-      "answer": "A",
+      "choices": [
+        "No sorted behavior",
+        "Only geospatial",
+        "Can query lastname efficiently",
+        "Can only query firstname"
+      ],
+      "answer": "Can query lastname efficiently",
       "source_pages": [
         109
       ]
@@ -2589,13 +2589,13 @@
       "id": "MCQ041",
       "difficulty": "medium",
       "question": "Which index is used for spatial data?",
-      "choices": {
-        "A": "R-tree",
-        "B": "WAL",
-        "C": "Tombstone",
-        "D": "Bloom filter"
-      },
-      "answer": "A",
+      "choices": [
+        "Tombstone",
+        "Bloom filter",
+        "WAL",
+        "R-tree"
+      ],
+      "answer": "R-tree",
       "source_pages": [
         109
       ]
@@ -2604,13 +2604,13 @@
       "id": "MCQ042",
       "difficulty": "medium",
       "question": "What can fuzzy search use?",
-      "choices": {
-        "A": "Edit distance",
-        "B": "Only equality",
-        "C": "Only numeric range",
-        "D": "Only primary key"
-      },
-      "answer": "A",
+      "choices": [
+        "Only primary key",
+        "Only equality",
+        "Only numeric range",
+        "Edit distance"
+      ],
+      "answer": "Edit distance",
       "source_pages": [
         110
       ]
@@ -2619,13 +2619,13 @@
       "id": "MCQ043",
       "difficulty": "medium",
       "question": "What does Lucene use for fuzzy term lookup?",
-      "choices": {
-        "A": "Levenshtein automaton",
-        "B": "B-tree page split",
-        "C": "ETL",
-        "D": "Star schema"
-      },
-      "answer": "A",
+      "choices": [
+        "B-tree page split",
+        "Star schema",
+        "Levenshtein automaton",
+        "ETL"
+      ],
+      "answer": "Levenshtein automaton",
       "source_pages": [
         110
       ]
@@ -2634,13 +2634,13 @@
       "id": "MCQ044",
       "difficulty": "medium",
       "question": "How can an in-memory DB be durable?",
-      "choices": {
-        "A": "Disk log/snapshots/replication",
-        "B": "It cannot",
-        "C": "Only RAID",
-        "D": "Only column compression"
-      },
-      "answer": "A",
+      "choices": [
+        "Disk log/snapshots/replication",
+        "Only column compression",
+        "It cannot",
+        "Only RAID"
+      ],
+      "answer": "Disk log/snapshots/replication",
       "source_pages": [
         111
       ]
@@ -2649,13 +2649,13 @@
       "id": "MCQ045",
       "difficulty": "medium",
       "question": "Why can in-memory DBs outperform disk-oriented ones?",
-      "choices": {
-        "A": "Avoid disk-oriented encoding/layout overhead",
-        "B": "They never write anywhere",
-        "C": "They require no CPU",
-        "D": "They have no indexes"
-      },
-      "answer": "A",
+      "choices": [
+        "They have no indexes",
+        "Avoid disk-oriented encoding/layout overhead",
+        "They never write anywhere",
+        "They require no CPU"
+      ],
+      "answer": "Avoid disk-oriented encoding/layout overhead",
       "source_pages": [
         111
       ]
@@ -2664,13 +2664,13 @@
       "id": "MCQ046",
       "difficulty": "medium",
       "question": "What is anti-caching?",
-      "choices": {
-        "A": "Evict cold records to disk",
-        "B": "Delete all data",
-        "C": "Cache only WAL",
-        "D": "Compress every row"
-      },
-      "answer": "A",
+      "choices": [
+        "Compress every row",
+        "Evict cold records to disk",
+        "Delete all data",
+        "Cache only WAL"
+      ],
+      "answer": "Evict cold records to disk",
       "source_pages": [
         111,
         112
@@ -2680,13 +2680,13 @@
       "id": "MCQ047",
       "difficulty": "medium",
       "question": "What is OLTP's typical read pattern?",
-      "choices": {
-        "A": "Few records by key",
-        "B": "Scan millions of rows",
-        "C": "Only aggregates",
-        "D": "Only batch"
-      },
-      "answer": "A",
+      "choices": [
+        "Only aggregates",
+        "Few records by key",
+        "Scan millions of rows",
+        "Only batch"
+      ],
+      "answer": "Few records by key",
       "source_pages": [
         112,
         113
@@ -2696,13 +2696,13 @@
       "id": "MCQ048",
       "difficulty": "medium",
       "question": "What is OLAP's typical read pattern?",
-      "choices": {
-        "A": "Large scans and aggregates",
-        "B": "One row by key",
-        "C": "Only user form writes",
-        "D": "Only cache reads"
-      },
-      "answer": "A",
+      "choices": [
+        "Only user form writes",
+        "Only cache reads",
+        "One row by key",
+        "Large scans and aggregates"
+      ],
+      "answer": "Large scans and aggregates",
       "source_pages": [
         112,
         113
@@ -2712,13 +2712,13 @@
       "id": "MCQ049",
       "difficulty": "medium",
       "question": "What does OLTP data represent?",
-      "choices": {
-        "A": "Current state",
-        "B": "Only history",
-        "C": "Only dimensions",
-        "D": "Only aggregates"
-      },
-      "answer": "A",
+      "choices": [
+        "Only aggregates",
+        "Current state",
+        "Only dimensions",
+        "Only history"
+      ],
+      "answer": "Current state",
       "source_pages": [
         113
       ]
@@ -2727,13 +2727,13 @@
       "id": "MCQ050",
       "difficulty": "hard",
       "question": "What does OLAP data represent?",
-      "choices": {
-        "A": "Historical events",
-        "B": "Only current row",
-        "C": "Only cache state",
-        "D": "Only WAL"
-      },
-      "answer": "A",
+      "choices": [
+        "Only WAL",
+        "Only cache state",
+        "Historical events",
+        "Only current row"
+      ],
+      "answer": "Historical events",
       "source_pages": [
         113
       ]
@@ -2742,13 +2742,13 @@
       "id": "MCQ051",
       "difficulty": "hard",
       "question": "Why use a separate data warehouse?",
-      "choices": {
-        "A": "Protect OLTP from expensive analytics",
-        "B": "Remove SQL",
-        "C": "Prevent aggregation",
-        "D": "Avoid ETL"
-      },
-      "answer": "A",
+      "choices": [
+        "Remove SQL",
+        "Protect OLTP from expensive analytics",
+        "Prevent aggregation",
+        "Avoid ETL"
+      ],
+      "answer": "Protect OLTP from expensive analytics",
       "source_pages": [
         113,
         114
@@ -2758,13 +2758,13 @@
       "id": "MCQ052",
       "difficulty": "hard",
       "question": "What does ETL stand for?",
-      "choices": {
-        "A": "Extract-Transform-Load",
-        "B": "Encode-Transfer-Log",
-        "C": "Evaluate-Tree-Lookup",
-        "D": "Extract-Transaction-Lock"
-      },
-      "answer": "A",
+      "choices": [
+        "Evaluate-Tree-Lookup",
+        "Extract-Transform-Load",
+        "Extract-Transaction-Lock",
+        "Encode-Transfer-Log"
+      ],
+      "answer": "Extract-Transform-Load",
       "source_pages": [
         114
       ]
@@ -2773,13 +2773,13 @@
       "id": "MCQ053",
       "difficulty": "hard",
       "question": "What is at the center of a star schema?",
-      "choices": {
-        "A": "Fact table",
-        "B": "Dimension only",
-        "C": "WAL",
-        "D": "B-tree root"
-      },
-      "answer": "A",
+      "choices": [
+        "WAL",
+        "B-tree root",
+        "Fact table",
+        "Dimension only"
+      ],
+      "answer": "Fact table",
       "source_pages": [
         115,
         116
@@ -2789,13 +2789,13 @@
       "id": "MCQ054",
       "difficulty": "hard",
       "question": "What does a fact row represent?",
-      "choices": {
-        "A": "Event",
-        "B": "Index page",
-        "C": "Schema version",
-        "D": "Cache entry"
-      },
-      "answer": "A",
+      "choices": [
+        "Schema version",
+        "Index page",
+        "Cache entry",
+        "Event"
+      ],
+      "answer": "Event",
       "source_pages": [
         115,
         116
@@ -2805,13 +2805,13 @@
       "id": "MCQ055",
       "difficulty": "hard",
       "question": "What do dimensions describe?",
-      "choices": {
-        "A": "Context of events",
-        "B": "Only keys",
-        "C": "Only indexes",
-        "D": "Only WAL entries"
-      },
-      "answer": "A",
+      "choices": [
+        "Only indexes",
+        "Only keys",
+        "Context of events",
+        "Only WAL entries"
+      ],
+      "answer": "Context of events",
       "source_pages": [
         116
       ]
@@ -2820,13 +2820,13 @@
       "id": "MCQ056",
       "difficulty": "hard",
       "question": "What is a snowflake schema?",
-      "choices": {
-        "A": "More normalized dimensional schema",
-        "B": "LSM variant",
-        "C": "B-tree variant",
-        "D": "Hash index"
-      },
-      "answer": "A",
+      "choices": [
+        "B-tree variant",
+        "More normalized dimensional schema",
+        "LSM variant",
+        "Hash index"
+      ],
+      "answer": "More normalized dimensional schema",
       "source_pages": [
         117
       ]
@@ -2835,13 +2835,13 @@
       "id": "MCQ057",
       "difficulty": "hard",
       "question": "Why is column storage useful for analytics?",
-      "choices": {
-        "A": "Read only needed columns",
-        "B": "Always faster writes",
-        "C": "No compression needed",
-        "D": "No scans"
-      },
-      "answer": "A",
+      "choices": [
+        "No scans",
+        "Read only needed columns",
+        "Always faster writes",
+        "No compression needed"
+      ],
+      "answer": "Read only needed columns",
       "source_pages": [
         117,
         118
@@ -2851,13 +2851,13 @@
       "id": "MCQ058",
       "difficulty": "hard",
       "question": "How are rows reconstructed in a column store?",
-      "choices": {
-        "A": "Same position across column files",
-        "B": "Foreign key join always",
-        "C": "Hash map",
-        "D": "WAL"
-      },
-      "answer": "A",
+      "choices": [
+        "Foreign key join always",
+        "Hash map",
+        "WAL",
+        "Same position across column files"
+      ],
+      "answer": "Same position across column files",
       "source_pages": [
         119
       ]
@@ -2866,13 +2866,13 @@
       "id": "MCQ059",
       "difficulty": "hard",
       "question": "What is bitmap encoding?",
-      "choices": {
-        "A": "One bitmap per distinct value",
-        "B": "One B-tree per row",
-        "C": "One WAL per column",
-        "D": "One cube per query"
-      },
-      "answer": "A",
+      "choices": [
+        "One WAL per column",
+        "One cube per query",
+        "One B-tree per row",
+        "One bitmap per distinct value"
+      ],
+      "answer": "One bitmap per distinct value",
       "source_pages": [
         120
       ]
@@ -2881,13 +2881,13 @@
       "id": "MCQ060",
       "difficulty": "hard",
       "question": "How do you evaluate IN(A,B,C) with bitmaps?",
-      "choices": {
-        "A": "Bitwise OR",
-        "B": "Bitwise AND only",
-        "C": "Page split",
-        "D": "Hash collision"
-      },
-      "answer": "A",
+      "choices": [
+        "Bitwise AND only",
+        "Page split",
+        "Bitwise OR",
+        "Hash collision"
+      ],
+      "answer": "Bitwise OR",
       "source_pages": [
         120
       ]
@@ -2896,13 +2896,13 @@
       "id": "MCQ061",
       "difficulty": "hard",
       "question": "How do you evaluate condition A AND B?",
-      "choices": {
-        "A": "Bitwise AND",
-        "B": "Bitwise OR only",
-        "C": "Concatenate",
-        "D": "Compact"
-      },
-      "answer": "A",
+      "choices": [
+        "Bitwise AND",
+        "Compact",
+        "Concatenate",
+        "Bitwise OR only"
+      ],
+      "answer": "Bitwise AND",
       "source_pages": [
         121
       ]
@@ -2911,13 +2911,13 @@
       "id": "MCQ062",
       "difficulty": "hard",
       "question": "What compresses sparse bitmaps?",
-      "choices": {
-        "A": "Run-length encoding",
-        "B": "WAL",
-        "C": "B-tree pages",
-        "D": "ETL"
-      },
-      "answer": "A",
+      "choices": [
+        "ETL",
+        "WAL",
+        "B-tree pages",
+        "Run-length encoding"
+      ],
+      "answer": "Run-length encoding",
       "source_pages": [
         120
       ]
@@ -2926,13 +2926,13 @@
       "id": "MCQ063",
       "difficulty": "hard",
       "question": "What is vectorized processing?",
-      "choices": {
-        "A": "Operate on column chunks efficiently using CPU/cache/SIMD",
-        "B": "Row-by-row network calls",
-        "C": "Only disk seeks",
-        "D": "Only joins"
-      },
-      "answer": "A",
+      "choices": [
+        "Row-by-row network calls",
+        "Operate on column chunks efficiently using CPU/cache/SIMD",
+        "Only disk seeks",
+        "Only joins"
+      ],
+      "answer": "Operate on column chunks efficiently using CPU/cache/SIMD",
       "source_pages": [
         121
       ]
@@ -2941,13 +2941,13 @@
       "id": "MCQ064",
       "difficulty": "hard",
       "question": "Can each column be sorted independently?",
-      "choices": {
-        "A": "No",
-        "B": "Yes always",
-        "C": "Only dimensions",
-        "D": "Only strings"
-      },
-      "answer": "A",
+      "choices": [
+        "No",
+        "Yes always",
+        "Only strings",
+        "Only dimensions"
+      ],
+      "answer": "No",
       "source_pages": [
         122
       ]
@@ -2956,13 +2956,13 @@
       "id": "MCQ065",
       "difficulty": "hard",
       "question": "Why choose a sort key?",
-      "choices": {
-        "A": "Match common filters and improve compression",
-        "B": "Increase random writes",
-        "C": "Remove rows",
-        "D": "Prevent scanning"
-      },
-      "answer": "A",
+      "choices": [
+        "Remove rows",
+        "Prevent scanning",
+        "Increase random writes",
+        "Match common filters and improve compression"
+      ],
+      "answer": "Match common filters and improve compression",
       "source_pages": [
         122
       ]
@@ -2971,13 +2971,13 @@
       "id": "MCQ066",
       "difficulty": "hard",
       "question": "How can multiple replica sort orders help?",
-      "choices": {
-        "A": "Different queries use different layouts",
-        "B": "They remove replication",
-        "C": "They reduce all writes to zero",
-        "D": "They create OLTP transactions"
-      },
-      "answer": "A",
+      "choices": [
+        "They reduce all writes to zero",
+        "They remove replication",
+        "Different queries use different layouts",
+        "They create OLTP transactions"
+      ],
+      "answer": "Different queries use different layouts",
       "source_pages": [
         122
       ]
@@ -2986,13 +2986,13 @@
       "id": "MCQ067",
       "difficulty": "hard",
       "question": "How are column-store writes commonly handled?",
-      "choices": {
-        "A": "Buffer then bulk merge",
-        "B": "Rewrite every file per row",
-        "C": "Use no memory",
-        "D": "Only random overwrite"
-      },
-      "answer": "A",
+      "choices": [
+        "Buffer then bulk merge",
+        "Rewrite every file per row",
+        "Only random overwrite",
+        "Use no memory"
+      ],
+      "answer": "Buffer then bulk merge",
       "source_pages": [
         123
       ]
@@ -3001,13 +3001,13 @@
       "id": "MCQ068",
       "difficulty": "hard",
       "question": "What is a materialized view?",
-      "choices": {
-        "A": "Persisted query result",
-        "B": "Only query text",
-        "C": "B-tree root",
-        "D": "Heap file"
-      },
-      "answer": "A",
+      "choices": [
+        "Persisted query result",
+        "Heap file",
+        "Only query text",
+        "B-tree root"
+      ],
+      "answer": "Persisted query result",
       "source_pages": [
         123
       ]
@@ -3016,13 +3016,13 @@
       "id": "MCQ069",
       "difficulty": "hard",
       "question": "What is a virtual view?",
-      "choices": {
-        "A": "Stored query definition evaluated on read",
-        "B": "Persisted data copy",
-        "C": "Column file",
-        "D": "Bloom filter"
-      },
-      "answer": "A",
+      "choices": [
+        "Bloom filter",
+        "Column file",
+        "Stored query definition evaluated on read",
+        "Persisted data copy"
+      ],
+      "answer": "Stored query definition evaluated on read",
       "source_pages": [
         123
       ]
@@ -3031,13 +3031,13 @@
       "id": "MCQ070",
       "difficulty": "hard",
       "question": "What is a data cube?",
-      "choices": {
-        "A": "Precomputed multidimensional aggregates",
-        "B": "LSM level",
-        "C": "Hash table",
-        "D": "WAL"
-      },
-      "answer": "A",
+      "choices": [
+        "Precomputed multidimensional aggregates",
+        "Hash table",
+        "LSM level",
+        "WAL"
+      ],
+      "answer": "Precomputed multidimensional aggregates",
       "source_pages": [
         124
       ]
@@ -3046,13 +3046,13 @@
       "id": "MCQ071",
       "difficulty": "hard",
       "question": "Main data-cube tradeoff?",
-      "choices": {
-        "A": "Fast predefined aggregates but less flexible",
-        "B": "Slow all queries",
-        "C": "No storage cost",
-        "D": "No write overhead"
-      },
-      "answer": "A",
+      "choices": [
+        "Slow all queries",
+        "No storage cost",
+        "No write overhead",
+        "Fast predefined aggregates but less flexible"
+      ],
+      "answer": "Fast predefined aggregates but less flexible",
       "source_pages": [
         124,
         125
@@ -3062,13 +3062,13 @@
       "id": "MCQ072",
       "difficulty": "hard",
       "question": "What bottleneck commonly dominates OLTP?",
-      "choices": {
-        "A": "Seek time",
-        "B": "Disk bandwidth only",
-        "C": "CPU SIMD only",
-        "D": "Compression ratio"
-      },
-      "answer": "A",
+      "choices": [
+        "CPU SIMD only",
+        "Seek time",
+        "Compression ratio",
+        "Disk bandwidth only"
+      ],
+      "answer": "Seek time",
       "source_pages": [
         125
       ]
@@ -3077,13 +3077,13 @@
       "id": "MCQ073",
       "difficulty": "hard",
       "question": "What bottleneck commonly dominates OLAP?",
-      "choices": {
-        "A": "Disk bandwidth",
-        "B": "Only seek time",
-        "C": "Hash collision",
-        "D": "WAL sync"
-      },
-      "answer": "A",
+      "choices": [
+        "Hash collision",
+        "Only seek time",
+        "Disk bandwidth",
+        "WAL sync"
+      ],
+      "answer": "Disk bandwidth",
       "source_pages": [
         125
       ]

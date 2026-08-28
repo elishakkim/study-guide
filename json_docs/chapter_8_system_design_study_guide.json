@@ -1160,13 +1160,13 @@
       "id": "MCQ01",
       "difficulty": "easy",
       "question": "What are the two main functions of the service?",
-      "choices": {
-        "A": "Shorten and redirect URLs",
-        "B": "Index and rank pages",
-        "C": "Send notifications and emails",
-        "D": "Upload and transcode video"
-      },
-      "answer": "A",
+      "choices": [
+        "Send notifications and emails",
+        "Index and rank pages",
+        "Shorten and redirect URLs",
+        "Upload and transcode video"
+      ],
+      "answer": "Shorten and redirect URLs",
       "source_pages": [
         120
       ]
@@ -1175,13 +1175,13 @@
       "id": "MCQ02",
       "difficulty": "medium",
       "question": "How many URLs are assumed to be created per day?",
-      "choices": {
-        "A": "1 million",
-        "B": "10 million",
-        "C": "100 million",
-        "D": "1 billion"
-      },
-      "answer": "C",
+      "choices": [
+        "100 million",
+        "1 billion",
+        "1 million",
+        "10 million"
+      ],
+      "answer": "100 million",
       "source_pages": [
         120
       ]
@@ -1190,13 +1190,13 @@
       "id": "MCQ03",
       "difficulty": "medium",
       "question": "What short-code characters are allowed?",
-      "choices": {
-        "A": "Digits only",
-        "B": "a-z only",
-        "C": "0-9, a-z, A-Z",
-        "D": "Unicode only"
-      },
-      "answer": "C",
+      "choices": [
+        "Unicode only",
+        "0-9, a-z, A-Z",
+        "a-z only",
+        "Digits only"
+      ],
+      "answer": "0-9, a-z, A-Z",
       "source_pages": [
         120
       ]
@@ -1205,13 +1205,13 @@
       "id": "MCQ04",
       "difficulty": "medium",
       "question": "What write QPS does the chapter estimate?",
-      "choices": {
-        "A": "116",
-        "B": "1,160",
-        "C": "11,600",
-        "D": "116,000"
-      },
-      "answer": "B",
+      "choices": [
+        "11,600",
+        "116,000",
+        "1,160",
+        "116"
+      ],
+      "answer": "1,160",
       "source_pages": [
         120
       ]
@@ -1220,13 +1220,13 @@
       "id": "MCQ05",
       "difficulty": "medium",
       "question": "What read QPS does the chapter estimate?",
-      "choices": {
-        "A": "1,160",
-        "B": "5,800",
-        "C": "11,600",
-        "D": "116,000"
-      },
-      "answer": "C",
+      "choices": [
+        "116,000",
+        "5,800",
+        "1,160",
+        "11,600"
+      ],
+      "answer": "11,600",
       "source_pages": [
         120
       ]
@@ -1235,13 +1235,13 @@
       "id": "MCQ06",
       "difficulty": "medium",
       "question": "What read/write ratio is assumed?",
-      "choices": {
-        "A": "1:1",
-        "B": "2:1",
-        "C": "10:1",
-        "D": "100:1"
-      },
-      "answer": "C",
+      "choices": [
+        "10:1",
+        "1:1",
+        "2:1",
+        "100:1"
+      ],
+      "answer": "10:1",
       "source_pages": [
         120
       ]
@@ -1250,13 +1250,13 @@
       "id": "MCQ07",
       "difficulty": "medium",
       "question": "How many records are estimated over 10 years?",
-      "choices": {
-        "A": "36.5 billion",
-        "B": "100 billion",
-        "C": "365 billion",
-        "D": "3.65 trillion"
-      },
-      "answer": "C",
+      "choices": [
+        "100 billion",
+        "365 billion",
+        "3.65 trillion",
+        "36.5 billion"
+      ],
+      "answer": "365 billion",
       "source_pages": [
         120
       ]
@@ -1265,13 +1265,13 @@
       "id": "MCQ08",
       "difficulty": "easy",
       "question": "Which HTTP method creates a short URL?",
-      "choices": {
-        "A": "GET",
-        "B": "POST",
-        "C": "PUT",
-        "D": "DELETE"
-      },
-      "answer": "B",
+      "choices": [
+        "PUT",
+        "DELETE",
+        "POST",
+        "GET"
+      ],
+      "answer": "POST",
       "source_pages": [
         121
       ]
@@ -1280,13 +1280,13 @@
       "id": "MCQ09",
       "difficulty": "easy",
       "question": "Which HTTP method is used for redirect lookup?",
-      "choices": {
-        "A": "GET",
-        "B": "POST",
-        "C": "PATCH",
-        "D": "DELETE"
-      },
-      "answer": "A",
+      "choices": [
+        "GET",
+        "PATCH",
+        "DELETE",
+        "POST"
+      ],
+      "answer": "GET",
       "source_pages": [
         121
       ]
@@ -1295,13 +1295,13 @@
       "id": "MCQ10",
       "difficulty": "medium",
       "question": "What does a 301 redirect indicate?",
-      "choices": {
-        "A": "Temporary move",
-        "B": "Permanent move",
-        "C": "Server error",
-        "D": "Unauthorized"
-      },
-      "answer": "B",
+      "choices": [
+        "Permanent move",
+        "Temporary move",
+        "Server error",
+        "Unauthorized"
+      ],
+      "answer": "Permanent move",
       "source_pages": [
         122
       ]
@@ -1310,13 +1310,13 @@
       "id": "MCQ11",
       "difficulty": "hard",
       "question": "Why can 301 reduce load on the shortening service?",
-      "choices": {
-        "A": "The browser caches the redirect",
-        "B": "It deletes the mapping",
-        "C": "It avoids DNS",
-        "D": "It disables analytics"
-      },
-      "answer": "A",
+      "choices": [
+        "It disables analytics",
+        "It avoids DNS",
+        "The browser caches the redirect",
+        "It deletes the mapping"
+      ],
+      "answer": "The browser caches the redirect",
       "source_pages": [
         122
       ]
@@ -1325,13 +1325,13 @@
       "id": "MCQ12",
       "difficulty": "medium",
       "question": "Which redirect is better if click analytics is important?",
-      "choices": {
-        "A": "301",
-        "B": "302",
-        "C": "404",
-        "D": "500"
-      },
-      "answer": "B",
+      "choices": [
+        "301",
+        "404",
+        "500",
+        "302"
+      ],
+      "answer": "302",
       "source_pages": [
         122
       ]
@@ -1340,13 +1340,13 @@
       "id": "MCQ13",
       "difficulty": "medium",
       "question": "What does the high-level redirect hash table store?",
-      "choices": {
-        "A": "<user,password>",
-        "B": "<shortURL,longURL>",
-        "C": "<ID,timestamp>",
-        "D": "<IP,count>"
-      },
-      "answer": "B",
+      "choices": [
+        "<shortURL,longURL>",
+        "<user,password>",
+        "<IP,count>",
+        "<ID,timestamp>"
+      ],
+      "answer": "<shortURL,longURL>",
       "source_pages": [
         122
       ]
@@ -1355,13 +1355,13 @@
       "id": "MCQ14",
       "difficulty": "hard",
       "question": "Why does the deep dive move mappings to a relational database?",
-      "choices": {
-        "A": "Memory is limited and expensive",
-        "B": "Hash tables cannot map keys",
-        "C": "HTTP requires SQL",
-        "D": "Base62 only works in databases"
-      },
-      "answer": "A",
+      "choices": [
+        "Memory is limited and expensive",
+        "Base62 only works in databases",
+        "Hash tables cannot map keys",
+        "HTTP requires SQL"
+      ],
+      "answer": "Memory is limited and expensive",
       "source_pages": [
         124
       ]
@@ -1370,13 +1370,13 @@
       "id": "MCQ15",
       "difficulty": "medium",
       "question": "How many symbols are available in the short-code alphabet?",
-      "choices": {
-        "A": "26",
-        "B": "36",
-        "C": "52",
-        "D": "62"
-      },
-      "answer": "D",
+      "choices": [
+        "36",
+        "52",
+        "62",
+        "26"
+      ],
+      "answer": "62",
       "source_pages": [
         124
       ]
@@ -1385,13 +1385,13 @@
       "id": "MCQ16",
       "difficulty": "hard",
       "question": "What inequality is used to determine code length?",
-      "choices": {
-        "A": "10^n >= 365B",
-        "B": "62^n >= 365B",
-        "C": "2^n >= 365B",
-        "D": "26^n >= 365B"
-      },
-      "answer": "B",
+      "choices": [
+        "2^n >= 365B",
+        "10^n >= 365B",
+        "26^n >= 365B",
+        "62^n >= 365B"
+      ],
+      "answer": "62^n >= 365B",
       "source_pages": [
         124
       ]
@@ -1400,13 +1400,13 @@
       "id": "MCQ17",
       "difficulty": "medium",
       "question": "What short-code length is selected?",
-      "choices": {
-        "A": "5",
-        "B": "6",
-        "C": "7",
-        "D": "8"
-      },
-      "answer": "C",
+      "choices": [
+        "6",
+        "5",
+        "7",
+        "8"
+      ],
+      "answer": "7",
       "source_pages": [
         125
       ]
@@ -1415,13 +1415,13 @@
       "id": "MCQ18",
       "difficulty": "hard",
       "question": "Why is 6 characters insufficient?",
-      "choices": {
-        "A": "62^6 supports only about 56.8 billion values",
-        "B": "6 characters cannot contain letters",
-        "C": "CRC32 requires 7 bits",
-        "D": "Browsers reject 6-character URLs"
-      },
-      "answer": "A",
+      "choices": [
+        "CRC32 requires 7 bits",
+        "Browsers reject 6-character URLs",
+        "62^6 supports only about 56.8 billion values",
+        "6 characters cannot contain letters"
+      ],
+      "answer": "62^6 supports only about 56.8 billion values",
       "source_pages": [
         125
       ]
@@ -1430,13 +1430,13 @@
       "id": "MCQ19",
       "difficulty": "medium",
       "question": "What is 62^7 approximately?",
-      "choices": {
-        "A": "56.8 billion",
-        "B": "365 billion",
-        "C": "3.5 trillion",
-        "D": "35 trillion"
-      },
-      "answer": "C",
+      "choices": [
+        "56.8 billion",
+        "35 trillion",
+        "3.5 trillion",
+        "365 billion"
+      ],
+      "answer": "3.5 trillion",
       "source_pages": [
         125
       ]
@@ -1445,13 +1445,13 @@
       "id": "MCQ20",
       "difficulty": "medium",
       "question": "Which hash functions are mentioned for hash-plus-collision-resolution?",
-      "choices": {
-        "A": "CRC32, MD5, SHA-1",
-        "B": "Base64, RSA, AES",
-        "C": "Bcrypt, Argon2, scrypt",
-        "D": "Murmur only"
-      },
-      "answer": "A",
+      "choices": [
+        "Murmur only",
+        "CRC32, MD5, SHA-1",
+        "Base64, RSA, AES",
+        "Bcrypt, Argon2, scrypt"
+      ],
+      "answer": "CRC32, MD5, SHA-1",
       "source_pages": [
         125
       ]
@@ -1460,13 +1460,13 @@
       "id": "MCQ21",
       "difficulty": "hard",
       "question": "What problem arises from taking only the first 7 hash characters?",
-      "choices": {
-        "A": "Collision",
-        "B": "No database required",
-        "C": "No possible short URL",
-        "D": "All outputs are numeric"
-      },
-      "answer": "A",
+      "choices": [
+        "No possible short URL",
+        "Collision",
+        "No database required",
+        "All outputs are numeric"
+      ],
+      "answer": "Collision",
       "source_pages": [
         125
       ]
@@ -1475,13 +1475,13 @@
       "id": "MCQ22",
       "difficulty": "hard",
       "question": "How does the chapter resolve a collision?",
-      "choices": {
-        "A": "Append a predefined string and rehash",
-        "B": "Delete the old URL",
-        "C": "Return 404",
-        "D": "Add more web servers"
-      },
-      "answer": "A",
+      "choices": [
+        "Append a predefined string and rehash",
+        "Return 404",
+        "Delete the old URL",
+        "Add more web servers"
+      ],
+      "answer": "Append a predefined string and rehash",
       "source_pages": [
         125,
         126
@@ -1491,13 +1491,13 @@
       "id": "MCQ23",
       "difficulty": "hard",
       "question": "Why can collision checking be expensive?",
-      "choices": {
-        "A": "A database existence query may be needed for every candidate",
-        "B": "Base62 requires disk sorting",
-        "C": "301 causes writes",
-        "D": "UUID is too small"
-      },
-      "answer": "A",
+      "choices": [
+        "UUID is too small",
+        "Base62 requires disk sorting",
+        "A database existence query may be needed for every candidate",
+        "301 causes writes"
+      ],
+      "answer": "A database existence query may be needed for every candidate",
       "source_pages": [
         126
       ]
@@ -1506,13 +1506,13 @@
       "id": "MCQ24",
       "difficulty": "medium",
       "question": "What does the chapter suggest to improve collision-check performance?",
-      "choices": {
-        "A": "Bloom filter",
-        "B": "Vector clock",
-        "C": "Merkle tree",
-        "D": "Gossip"
-      },
-      "answer": "A",
+      "choices": [
+        "Bloom filter",
+        "Merkle tree",
+        "Vector clock",
+        "Gossip"
+      ],
+      "answer": "Bloom filter",
       "source_pages": [
         126
       ]
@@ -1521,13 +1521,13 @@
       "id": "MCQ25",
       "difficulty": "medium",
       "question": "Why Base62?",
-      "choices": {
-        "A": "62 allowed characters",
-        "B": "62 database shards",
-        "C": "62 web servers",
-        "D": "62 redirects"
-      },
-      "answer": "A",
+      "choices": [
+        "62 web servers",
+        "62 database shards",
+        "62 redirects",
+        "62 allowed characters"
+      ],
+      "answer": "62 allowed characters",
       "source_pages": [
         126
       ]
@@ -1536,13 +1536,13 @@
       "id": "MCQ26",
       "difficulty": "medium",
       "question": "What does decimal 11157 encode to in the chapter?",
-      "choices": {
-        "A": "2TX",
-        "B": "abc",
-        "C": "y7keocwj",
-        "D": "zn9edcu"
-      },
-      "answer": "A",
+      "choices": [
+        "abc",
+        "2TX",
+        "y7keocwj",
+        "zn9edcu"
+      ],
+      "answer": "2TX",
       "source_pages": [
         126,
         127
@@ -1552,13 +1552,13 @@
       "id": "MCQ27",
       "difficulty": "hard",
       "question": "Which approach requires a unique ID generator?",
-      "choices": {
-        "A": "Hash + collision resolution",
-        "B": "Base62 conversion",
-        "C": "301 redirect",
-        "D": "Cache lookup"
-      },
-      "answer": "B",
+      "choices": [
+        "Hash + collision resolution",
+        "Base62 conversion",
+        "Cache lookup",
+        "301 redirect"
+      ],
+      "answer": "Base62 conversion",
       "source_pages": [
         127
       ]
@@ -1567,13 +1567,13 @@
       "id": "MCQ28",
       "difficulty": "hard",
       "question": "Which approach can still collide and requires explicit resolution?",
-      "choices": {
-        "A": "Base62 of a unique ID",
-        "B": "Hash + collision resolution",
-        "C": "Relational database",
-        "D": "302 redirect"
-      },
-      "answer": "B",
+      "choices": [
+        "302 redirect",
+        "Relational database",
+        "Base62 of a unique ID",
+        "Hash + collision resolution"
+      ],
+      "answer": "Hash + collision resolution",
       "source_pages": [
         127
       ]
@@ -1582,13 +1582,13 @@
       "id": "MCQ29",
       "difficulty": "hard",
       "question": "Why is the Base62 method collision-free in the chapter's design?",
-      "choices": {
-        "A": "The source ID is unique",
-        "B": "Browsers reject duplicates",
-        "C": "Base62 uses 128 bits",
-        "D": "It hashes the long URL twice"
-      },
-      "answer": "A",
+      "choices": [
+        "It hashes the long URL twice",
+        "Browsers reject duplicates",
+        "Base62 uses 128 bits",
+        "The source ID is unique"
+      ],
+      "answer": "The source ID is unique",
       "source_pages": [
         127
       ]
@@ -1597,13 +1597,13 @@
       "id": "MCQ30",
       "difficulty": "medium",
       "question": "What happens first in the selected shortening flow?",
-      "choices": {
-        "A": "Generate a new ID immediately",
-        "B": "Check whether longURL already exists",
-        "C": "Redirect with 301",
-        "D": "Read cache"
-      },
-      "answer": "B",
+      "choices": [
+        "Generate a new ID immediately",
+        "Redirect with 301",
+        "Read cache",
+        "Check whether longURL already exists"
+      ],
+      "answer": "Check whether longURL already exists",
       "source_pages": [
         128
       ]
@@ -1612,13 +1612,13 @@
       "id": "MCQ31",
       "difficulty": "hard",
       "question": "If the longURL already exists, what happens?",
-      "choices": {
-        "A": "Generate another shortURL",
-        "B": "Return the existing shortURL",
-        "C": "Delete it",
-        "D": "Return 404"
-      },
-      "answer": "B",
+      "choices": [
+        "Return the existing shortURL",
+        "Generate another shortURL",
+        "Return 404",
+        "Delete it"
+      ],
+      "answer": "Return the existing shortURL",
       "source_pages": [
         128
       ]
@@ -1627,13 +1627,13 @@
       "id": "MCQ32",
       "difficulty": "medium",
       "question": "What short code is generated from ID 2009215674938 in the example?",
-      "choices": {
-        "A": "2TX",
-        "B": "zn9edcu",
-        "C": "y7keocwj",
-        "D": "systemdesign"
-      },
-      "answer": "B",
+      "choices": [
+        "systemdesign",
+        "y7keocwj",
+        "2TX",
+        "zn9edcu"
+      ],
+      "answer": "zn9edcu",
       "source_pages": [
         128
       ]
@@ -1642,13 +1642,13 @@
       "id": "MCQ33",
       "difficulty": "medium",
       "question": "Why is cache added to the redirect path?",
-      "choices": {
-        "A": "Reads exceed writes",
-        "B": "Writes exceed reads",
-        "C": "It generates IDs",
-        "D": "It performs Base62 conversion"
-      },
-      "answer": "A",
+      "choices": [
+        "Writes exceed reads",
+        "Reads exceed writes",
+        "It performs Base62 conversion",
+        "It generates IDs"
+      ],
+      "answer": "Reads exceed writes",
       "source_pages": [
         129
       ]
@@ -1657,13 +1657,13 @@
       "id": "MCQ34",
       "difficulty": "medium",
       "question": "What happens after a cache miss during redirect?",
-      "choices": {
-        "A": "Query the database",
-        "B": "Generate a new ID",
-        "C": "Delete shortURL",
-        "D": "Return 301 without lookup"
-      },
-      "answer": "A",
+      "choices": [
+        "Delete shortURL",
+        "Generate a new ID",
+        "Query the database",
+        "Return 301 without lookup"
+      ],
+      "answer": "Query the database",
       "source_pages": [
         129
       ]
@@ -1672,13 +1672,13 @@
       "id": "MCQ35",
       "difficulty": "medium",
       "question": "What does a missing database mapping most likely mean?",
-      "choices": {
-        "A": "Invalid shortURL",
-        "B": "Cache is full",
-        "C": "Long URL is too short",
-        "D": "The ID generator failed"
-      },
-      "answer": "A",
+      "choices": [
+        "Invalid shortURL",
+        "Cache is full",
+        "Long URL is too short",
+        "The ID generator failed"
+      ],
+      "answer": "Invalid shortURL",
       "source_pages": [
         129
       ]
@@ -1687,13 +1687,13 @@
       "id": "MCQ36",
       "difficulty": "medium",
       "question": "Why is the web tier easy to scale?",
-      "choices": {
-        "A": "It is stateless",
-        "B": "It stores every URL in local memory",
-        "C": "It uses no load balancer",
-        "D": "It has one server"
-      },
-      "answer": "A",
+      "choices": [
+        "It stores every URL in local memory",
+        "It has one server",
+        "It uses no load balancer",
+        "It is stateless"
+      ],
+      "answer": "It is stateless",
       "source_pages": [
         130
       ]
@@ -1702,13 +1702,13 @@
       "id": "MCQ37",
       "difficulty": "medium",
       "question": "What database-scaling techniques are mentioned?",
-      "choices": {
-        "A": "Replication and sharding",
-        "B": "Only compression",
-        "C": "Only vertical scaling",
-        "D": "No scaling"
-      },
-      "answer": "A",
+      "choices": [
+        "Only compression",
+        "Only vertical scaling",
+        "Replication and sharding",
+        "No scaling"
+      ],
+      "answer": "Replication and sharding",
       "source_pages": [
         130
       ]
@@ -1717,13 +1717,13 @@
       "id": "MCQ38",
       "difficulty": "medium",
       "question": "What protects the shortening endpoint from abusive request volume?",
-      "choices": {
-        "A": "Rate limiter",
-        "B": "Bloom filter only",
-        "C": "301 redirect",
-        "D": "Base62"
-      },
-      "answer": "A",
+      "choices": [
+        "Rate limiter",
+        "301 redirect",
+        "Bloom filter only",
+        "Base62"
+      ],
+      "answer": "Rate limiter",
       "source_pages": [
         130
       ]
@@ -1732,13 +1732,13 @@
       "id": "MCQ39",
       "difficulty": "medium",
       "question": "Which question is explicitly suggested for analytics?",
-      "choices": {
-        "A": "How many people click on a link?",
-        "B": "What CPU brand is used?",
-        "C": "What compiler builds the server?",
-        "D": "How many bits are in IPv6?"
-      },
-      "answer": "A",
+      "choices": [
+        "How many people click on a link?",
+        "What CPU brand is used?",
+        "How many bits are in IPv6?",
+        "What compiler builds the server?"
+      ],
+      "answer": "How many people click on a link?",
       "source_pages": [
         130
       ]
@@ -1747,13 +1747,13 @@
       "id": "MCQ40",
       "difficulty": "hard",
       "question": "Which design choice best matches a system whose priority is minimizing repeat traffic to URL-shortener servers?",
-      "choices": {
-        "A": "301 redirect",
-        "B": "302 redirect",
-        "C": "Always bypass cache",
-        "D": "Always query database"
-      },
-      "answer": "A",
+      "choices": [
+        "Always query database",
+        "302 redirect",
+        "301 redirect",
+        "Always bypass cache"
+      ],
+      "answer": "301 redirect",
       "source_pages": [
         122
       ]

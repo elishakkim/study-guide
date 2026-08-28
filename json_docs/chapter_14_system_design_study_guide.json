@@ -960,13 +960,13 @@
     {
       "id": "MCQ01",
       "question": "Which feature is in core scope?",
-      "choices": {
-        "A": "Upload video",
-        "B": "Comments only",
-        "C": "Subscriptions only",
-        "D": "Ads only"
-      },
-      "answer": "A",
+      "choices": [
+        "Subscriptions only",
+        "Comments only",
+        "Upload video",
+        "Ads only"
+      ],
+      "answer": "Upload video",
       "source_pages": [
         221
       ]
@@ -974,13 +974,13 @@
     {
       "id": "MCQ02",
       "question": "What client is supported?",
-      "choices": {
-        "A": "Smart TV",
-        "B": "Only browser",
-        "C": "Only phone",
-        "D": "Only desktop"
-      },
-      "answer": "A",
+      "choices": [
+        "Only desktop",
+        "Only browser",
+        "Only phone",
+        "Smart TV"
+      ],
+      "answer": "Smart TV",
       "source_pages": [
         221
       ]
@@ -988,13 +988,13 @@
     {
       "id": "MCQ03",
       "question": "What DAU is assumed?",
-      "choices": {
-        "A": "500K",
-        "B": "5M",
-        "C": "50M",
-        "D": "500M"
-      },
-      "answer": "B",
+      "choices": [
+        "500K",
+        "500M",
+        "50M",
+        "5M"
+      ],
+      "answer": "5M",
       "source_pages": [
         221
       ]
@@ -1002,13 +1002,13 @@
     {
       "id": "MCQ04",
       "question": "What max upload size is assumed?",
-      "choices": {
-        "A": "100MB",
-        "B": "300MB",
-        "C": "1GB",
-        "D": "10GB"
-      },
-      "answer": "C",
+      "choices": [
+        "300MB",
+        "10GB",
+        "100MB",
+        "1GB"
+      ],
+      "answer": "1GB",
       "source_pages": [
         221
       ]
@@ -1016,13 +1016,13 @@
     {
       "id": "MCQ05",
       "question": "What daily storage is estimated?",
-      "choices": {
-        "A": "15TB",
-        "B": "150TB",
-        "C": "1.5PB",
-        "D": "15PB"
-      },
-      "answer": "B",
+      "choices": [
+        "15TB",
+        "150TB",
+        "15PB",
+        "1.5PB"
+      ],
+      "answer": "150TB",
       "source_pages": [
         221
       ]
@@ -1030,13 +1030,13 @@
     {
       "id": "MCQ06",
       "question": "What daily CDN cost is estimated?",
-      "choices": {
-        "A": "$15K",
-        "B": "$150K",
-        "C": "$1.5M",
-        "D": "$15M"
-      },
-      "answer": "B",
+      "choices": [
+        "$150K",
+        "$1.5M",
+        "$15M",
+        "$15K"
+      ],
+      "answer": "$150K",
       "source_pages": [
         222
       ]
@@ -1044,13 +1044,13 @@
     {
       "id": "MCQ07",
       "question": "What two external infrastructure types are emphasized?",
-      "choices": {
-        "A": "CDN and blob storage",
-        "B": "SQL and DNS",
-        "C": "Queues and chat servers",
-        "D": "Graph DB and email"
-      },
-      "answer": "A",
+      "choices": [
+        "Queues and chat servers",
+        "Graph DB and email",
+        "CDN and blob storage",
+        "SQL and DNS"
+      ],
+      "answer": "CDN and blob storage",
       "source_pages": [
         223
       ]
@@ -1058,13 +1058,13 @@
     {
       "id": "MCQ08",
       "question": "Which traffic bypasses API servers?",
-      "choices": {
-        "A": "Video streaming",
-        "B": "Signup",
-        "C": "Metadata update",
-        "D": "Upload URL generation"
-      },
-      "answer": "A",
+      "choices": [
+        "Video streaming",
+        "Signup",
+        "Metadata update",
+        "Upload URL generation"
+      ],
+      "answer": "Video streaming",
       "source_pages": [
         223
       ]
@@ -1072,13 +1072,13 @@
     {
       "id": "MCQ09",
       "question": "Where is metadata persisted?",
-      "choices": {
-        "A": "Metadata DB",
-        "B": "Only CDN",
-        "C": "Only client",
-        "D": "Completion queue"
-      },
-      "answer": "A",
+      "choices": [
+        "Metadata DB",
+        "Only client",
+        "Only CDN",
+        "Completion queue"
+      ],
+      "answer": "Metadata DB",
       "source_pages": [
         224
       ]
@@ -1086,13 +1086,13 @@
     {
       "id": "MCQ10",
       "question": "How is Metadata DB scaled?",
-      "choices": {
-        "A": "Sharding and replication",
-        "B": "One server",
-        "C": "Browser cache only",
-        "D": "No persistence"
-      },
-      "answer": "A",
+      "choices": [
+        "Sharding and replication",
+        "No persistence",
+        "One server",
+        "Browser cache only"
+      ],
+      "answer": "Sharding and replication",
       "source_pages": [
         224
       ]
@@ -1100,13 +1100,13 @@
     {
       "id": "MCQ11",
       "question": "Where is original video stored?",
-      "choices": {
-        "A": "Blob storage",
-        "B": "Graph DB",
-        "C": "Queue",
-        "D": "Cache only"
-      },
-      "answer": "A",
+      "choices": [
+        "Graph DB",
+        "Queue",
+        "Blob storage",
+        "Cache only"
+      ],
+      "answer": "Blob storage",
       "source_pages": [
         224
       ]
@@ -1114,13 +1114,13 @@
     {
       "id": "MCQ12",
       "question": "What does transcoding do?",
-      "choices": {
-        "A": "Create compatible video variants",
-        "B": "Authenticate users",
-        "C": "Rank comments",
-        "D": "Resolve DNS"
-      },
-      "answer": "A",
+      "choices": [
+        "Rank comments",
+        "Create compatible video variants",
+        "Authenticate users",
+        "Resolve DNS"
+      ],
+      "answer": "Create compatible video variants",
       "source_pages": [
         224,
         229
@@ -1129,13 +1129,13 @@
     {
       "id": "MCQ13",
       "question": "What does the completion queue hold?",
-      "choices": {
-        "A": "Completion events",
-        "B": "User passwords",
-        "C": "Video frames only",
-        "D": "Recommendations"
-      },
-      "answer": "A",
+      "choices": [
+        "Video frames only",
+        "Recommendations",
+        "Completion events",
+        "User passwords"
+      ],
+      "answer": "Completion events",
       "source_pages": [
         225
       ]
@@ -1143,13 +1143,13 @@
     {
       "id": "MCQ14",
       "question": "What does the completion handler update?",
-      "choices": {
-        "A": "Metadata DB/cache",
-        "B": "CDN only",
-        "C": "Original storage only",
-        "D": "User browser"
-      },
-      "answer": "A",
+      "choices": [
+        "CDN only",
+        "User browser",
+        "Metadata DB/cache",
+        "Original storage only"
+      ],
+      "answer": "Metadata DB/cache",
       "source_pages": [
         225,
         227
@@ -1158,13 +1158,13 @@
     {
       "id": "MCQ15",
       "question": "What best defines streaming?",
-      "choices": {
-        "A": "Incremental playback data",
-        "B": "Full file download first",
-        "C": "Metadata only",
-        "D": "Database copy"
-      },
-      "answer": "A",
+      "choices": [
+        "Metadata only",
+        "Database copy",
+        "Full file download first",
+        "Incremental playback data"
+      ],
+      "answer": "Incremental playback data",
       "source_pages": [
         227
       ]
@@ -1172,13 +1172,13 @@
     {
       "id": "MCQ16",
       "question": "Which is a streaming protocol?",
-      "choices": {
-        "A": "MPEG-DASH",
-        "B": "SMTP",
-        "C": "FTP",
-        "D": "SQL"
-      },
-      "answer": "A",
+      "choices": [
+        "SMTP",
+        "SQL",
+        "FTP",
+        "MPEG-DASH"
+      ],
+      "answer": "MPEG-DASH",
       "source_pages": [
         227
       ]
@@ -1186,13 +1186,13 @@
     {
       "id": "MCQ17",
       "question": "Where does playback data come from?",
-      "choices": {
-        "A": "Nearby CDN edge",
-        "B": "Metadata DB",
-        "C": "Original storage only",
-        "D": "Completion queue"
-      },
-      "answer": "A",
+      "choices": [
+        "Nearby CDN edge",
+        "Completion queue",
+        "Original storage only",
+        "Metadata DB"
+      ],
+      "answer": "Nearby CDN edge",
       "source_pages": [
         228
       ]
@@ -1200,13 +1200,13 @@
     {
       "id": "MCQ18",
       "question": "What is bitrate?",
-      "choices": {
-        "A": "Bits processed over time",
-        "B": "Frame count",
-        "C": "Filename",
-        "D": "Encryption level"
-      },
-      "answer": "A",
+      "choices": [
+        "Encryption level",
+        "Frame count",
+        "Bits processed over time",
+        "Filename"
+      ],
+      "answer": "Bits processed over time",
       "source_pages": [
         229
       ]
@@ -1214,13 +1214,13 @@
     {
       "id": "MCQ19",
       "question": "Which is a container?",
-      "choices": {
-        "A": ".mp4",
-        "B": "H.264",
-        "C": "VP9",
-        "D": "HEVC"
-      },
-      "answer": "A",
+      "choices": [
+        "HEVC",
+        "VP9",
+        "H.264",
+        ".mp4"
+      ],
+      "answer": ".mp4",
       "source_pages": [
         229
       ]
@@ -1228,13 +1228,13 @@
     {
       "id": "MCQ20",
       "question": "Which is a codec?",
-      "choices": {
-        "A": "H.264",
-        "B": ".mov",
-        "C": ".avi",
-        "D": ".mp4"
-      },
-      "answer": "A",
+      "choices": [
+        ".avi",
+        ".mov",
+        "H.264",
+        ".mp4"
+      ],
+      "answer": "H.264",
       "source_pages": [
         229
       ]
@@ -1242,13 +1242,13 @@
     {
       "id": "MCQ21",
       "question": "Why use a DAG?",
-      "choices": {
-        "A": "Flexible sequential/parallel tasks",
-        "B": "Eliminate encoding",
-        "C": "Store profiles",
-        "D": "Replace CDN"
-      },
-      "answer": "A",
+      "choices": [
+        "Eliminate encoding",
+        "Replace CDN",
+        "Flexible sequential/parallel tasks",
+        "Store profiles"
+      ],
+      "answer": "Flexible sequential/parallel tasks",
       "source_pages": [
         229
       ]
@@ -1256,13 +1256,13 @@
     {
       "id": "MCQ22",
       "question": "Which is a DAG task?",
-      "choices": {
-        "A": "Thumbnail generation",
-        "B": "DNS",
-        "C": "Signup",
-        "D": "Billing"
-      },
-      "answer": "A",
+      "choices": [
+        "DNS",
+        "Thumbnail generation",
+        "Signup",
+        "Billing"
+      ],
+      "answer": "Thumbnail generation",
       "source_pages": [
         230
       ]
@@ -1270,13 +1270,13 @@
     {
       "id": "MCQ23",
       "question": "What does GOP stand for?",
-      "choices": {
-        "A": "Group of Pictures",
-        "B": "Group of Protocols",
-        "C": "Global Output Path",
-        "D": "Graph of Pixels"
-      },
-      "answer": "A",
+      "choices": [
+        "Graph of Pixels",
+        "Global Output Path",
+        "Group of Protocols",
+        "Group of Pictures"
+      ],
+      "answer": "Group of Pictures",
       "source_pages": [
         232
       ]
@@ -1284,13 +1284,13 @@
     {
       "id": "MCQ24",
       "question": "Why persist GOPs/metadata temporarily?",
-      "choices": {
-        "A": "Retry failed encoding",
-        "B": "Store profiles",
-        "C": "Reduce comments",
-        "D": "Replace DB"
-      },
-      "answer": "A",
+      "choices": [
+        "Retry failed encoding",
+        "Store profiles",
+        "Reduce comments",
+        "Replace DB"
+      ],
+      "answer": "Retry failed encoding",
       "source_pages": [
         232
       ]
@@ -1298,13 +1298,13 @@
     {
       "id": "MCQ25",
       "question": "What does the DAG scheduler do?",
-      "choices": {
-        "A": "Split DAG into stages",
-        "B": "Stream to viewers",
-        "C": "Store users",
-        "D": "Encrypt all data"
-      },
-      "answer": "A",
+      "choices": [
+        "Split DAG into stages",
+        "Stream to viewers",
+        "Encrypt all data",
+        "Store users"
+      ],
+      "answer": "Split DAG into stages",
       "source_pages": [
         233
       ]
@@ -1312,13 +1312,13 @@
     {
       "id": "MCQ26",
       "question": "What type of queue is the task queue?",
-      "choices": {
-        "A": "Priority queue",
-        "B": "FIFO only",
-        "C": "Stack",
-        "D": "Hash table"
-      },
-      "answer": "A",
+      "choices": [
+        "Hash table",
+        "FIFO only",
+        "Stack",
+        "Priority queue"
+      ],
+      "answer": "Priority queue",
       "source_pages": [
         234
       ]
@@ -1326,13 +1326,13 @@
     {
       "id": "MCQ27",
       "question": "What does the worker queue store?",
-      "choices": {
-        "A": "Worker utilization info",
-        "B": "Encoded files",
-        "C": "Users",
-        "D": "Comments"
-      },
-      "answer": "A",
+      "choices": [
+        "Comments",
+        "Worker utilization info",
+        "Users",
+        "Encoded files"
+      ],
+      "answer": "Worker utilization info",
       "source_pages": [
         234
       ]
@@ -1340,13 +1340,13 @@
     {
       "id": "MCQ28",
       "question": "What does the running queue track?",
-      "choices": {
-        "A": "Active task-worker bindings",
-        "B": "Completed uploads",
-        "C": "Only errors",
-        "D": "CDN prices"
-      },
-      "answer": "A",
+      "choices": [
+        "CDN prices",
+        "Only errors",
+        "Completed uploads",
+        "Active task-worker bindings"
+      ],
+      "answer": "Active task-worker bindings",
       "source_pages": [
         234
       ]
@@ -1354,13 +1354,13 @@
     {
       "id": "MCQ29",
       "question": "Where should frequently accessed small metadata live?",
-      "choices": {
-        "A": "Memory/cache",
-        "B": "Tape",
-        "C": "CDN only",
-        "D": "Cold archive"
-      },
-      "answer": "A",
+      "choices": [
+        "CDN only",
+        "Tape",
+        "Memory/cache",
+        "Cold archive"
+      ],
+      "answer": "Memory/cache",
       "source_pages": [
         235,
         236
@@ -1369,13 +1369,13 @@
     {
       "id": "MCQ30",
       "question": "Where should intermediate video/audio data live?",
-      "choices": {
-        "A": "Blob storage",
-        "B": "Only RAM",
-        "C": "User profile DB",
-        "D": "Cookie"
-      },
-      "answer": "A",
+      "choices": [
+        "Cookie",
+        "User profile DB",
+        "Blob storage",
+        "Only RAM"
+      ],
+      "answer": "Blob storage",
       "source_pages": [
         236
       ]
@@ -1383,13 +1383,13 @@
     {
       "id": "MCQ31",
       "question": "What upload technique enables resumability?",
-      "choices": {
-        "A": "GOP chunking",
-        "B": "Single huge upload",
-        "C": "No transcoding",
-        "D": "Full restart"
-      },
-      "answer": "A",
+      "choices": [
+        "No transcoding",
+        "GOP chunking",
+        "Single huge upload",
+        "Full restart"
+      ],
+      "answer": "GOP chunking",
       "source_pages": [
         236
       ]
@@ -1397,13 +1397,13 @@
     {
       "id": "MCQ32",
       "question": "What is used as nearby upload centers?",
-      "choices": {
-        "A": "CDN",
-        "B": "Metadata DB",
-        "C": "Queue",
-        "D": "User cache"
-      },
-      "answer": "A",
+      "choices": [
+        "Metadata DB",
+        "User cache",
+        "CDN",
+        "Queue"
+      ],
+      "answer": "CDN",
       "source_pages": [
         237
       ]
@@ -1411,13 +1411,13 @@
     {
       "id": "MCQ33",
       "question": "Why insert message queues?",
-      "choices": {
-        "A": "Decouple and parallelize",
-        "B": "Remove workers",
-        "C": "Replace storage",
-        "D": "Increase dependency"
-      },
-      "answer": "A",
+      "choices": [
+        "Decouple and parallelize",
+        "Increase dependency",
+        "Replace storage",
+        "Remove workers"
+      ],
+      "answer": "Decouple and parallelize",
       "source_pages": [
         237,
         238
@@ -1426,13 +1426,13 @@
     {
       "id": "MCQ34",
       "question": "What authorizes direct object upload?",
-      "choices": {
-        "A": "Pre-signed URL",
-        "B": "Public credentials",
-        "C": "Comment token",
-        "D": "GOP ID"
-      },
-      "answer": "A",
+      "choices": [
+        "Public credentials",
+        "GOP ID",
+        "Comment token",
+        "Pre-signed URL"
+      ],
+      "answer": "Pre-signed URL",
       "source_pages": [
         238,
         239
@@ -1441,13 +1441,13 @@
     {
       "id": "MCQ35",
       "question": "Which is a DRM system?",
-      "choices": {
-        "A": "Widevine",
-        "B": "Kafka",
-        "C": "HBase",
-        "D": "ZooKeeper"
-      },
-      "answer": "A",
+      "choices": [
+        "ZooKeeper",
+        "Kafka",
+        "Widevine",
+        "HBase"
+      ],
+      "answer": "Widevine",
       "source_pages": [
         239
       ]
@@ -1455,13 +1455,13 @@
     {
       "id": "MCQ36",
       "question": "What is another protection option?",
-      "choices": {
-        "A": "AES encryption",
-        "B": "No authorization",
-        "C": "Plaintext only",
-        "D": "SQL sharding"
-      },
-      "answer": "A",
+      "choices": [
+        "SQL sharding",
+        "No authorization",
+        "Plaintext only",
+        "AES encryption"
+      ],
+      "answer": "AES encryption",
       "source_pages": [
         239
       ]
@@ -1469,13 +1469,13 @@
     {
       "id": "MCQ37",
       "question": "What does long-tail distribution imply?",
-      "choices": {
-        "A": "Few popular, many rarely viewed",
-        "B": "All equal popularity",
-        "C": "Only new videos matter",
-        "D": "No regional differences"
-      },
-      "answer": "A",
+      "choices": [
+        "No regional differences",
+        "All equal popularity",
+        "Few popular, many rarely viewed",
+        "Only new videos matter"
+      ],
+      "answer": "Few popular, many rarely viewed",
       "source_pages": [
         239,
         240
@@ -1484,13 +1484,13 @@
     {
       "id": "MCQ38",
       "question": "What should receive CDN priority?",
-      "choices": {
-        "A": "Popular videos",
-        "B": "Every video equally",
-        "C": "Malformed videos",
-        "D": "Only originals"
-      },
-      "answer": "A",
+      "choices": [
+        "Every video equally",
+        "Popular videos",
+        "Only originals",
+        "Malformed videos"
+      ],
+      "answer": "Popular videos",
       "source_pages": [
         239,
         240
@@ -1499,13 +1499,13 @@
     {
       "id": "MCQ39",
       "question": "What can happen for less popular short videos?",
-      "choices": {
-        "A": "Encode on demand",
-        "B": "Always precompute every format",
-        "C": "Never stream",
-        "D": "Only keep original"
-      },
-      "answer": "A",
+      "choices": [
+        "Encode on demand",
+        "Never stream",
+        "Always precompute every format",
+        "Only keep original"
+      ],
+      "answer": "Encode on demand",
       "source_pages": [
         240
       ]
@@ -1513,13 +1513,13 @@
     {
       "id": "MCQ40",
       "question": "What helps region-specific content cost?",
-      "choices": {
-        "A": "Avoid unnecessary global distribution",
-        "B": "Replicate everywhere",
-        "C": "Disable CDN",
-        "D": "Use one region"
-      },
-      "answer": "A",
+      "choices": [
+        "Replicate everywhere",
+        "Avoid unnecessary global distribution",
+        "Use one region",
+        "Disable CDN"
+      ],
+      "answer": "Avoid unnecessary global distribution",
       "source_pages": [
         240
       ]
@@ -1527,13 +1527,13 @@
     {
       "id": "MCQ41",
       "question": "How is a recoverable transcode failure handled?",
-      "choices": {
-        "A": "Retry",
-        "B": "Delete immediately",
-        "C": "Never retry",
-        "D": "Promote DB slave"
-      },
-      "answer": "A",
+      "choices": [
+        "Promote DB slave",
+        "Retry",
+        "Never retry",
+        "Delete immediately"
+      ],
+      "answer": "Retry",
       "source_pages": [
         240
       ]
@@ -1541,13 +1541,13 @@
     {
       "id": "MCQ42",
       "question": "How is malformed video handled?",
-      "choices": {
-        "A": "Stop tasks and return error",
-        "B": "Retry forever",
-        "C": "Send to CDN",
-        "D": "Ignore"
-      },
-      "answer": "A",
+      "choices": [
+        "Ignore",
+        "Send to CDN",
+        "Stop tasks and return error",
+        "Retry forever"
+      ],
+      "answer": "Stop tasks and return error",
       "source_pages": [
         240
       ]
@@ -1555,13 +1555,13 @@
     {
       "id": "MCQ43",
       "question": "What if resource-manager queue is down?",
-      "choices": {
-        "A": "Use replica",
-        "B": "Delete jobs",
-        "C": "Disable system",
-        "D": "Use browser cache"
-      },
-      "answer": "A",
+      "choices": [
+        "Use browser cache",
+        "Use replica",
+        "Disable system",
+        "Delete jobs"
+      ],
+      "answer": "Use replica",
       "source_pages": [
         241
       ]
@@ -1569,13 +1569,13 @@
     {
       "id": "MCQ44",
       "question": "What if task worker is down?",
-      "choices": {
-        "A": "Retry on a new worker",
-        "B": "Drop job",
-        "C": "Restart all APIs",
-        "D": "Promote DB"
-      },
-      "answer": "A",
+      "choices": [
+        "Retry on a new worker",
+        "Restart all APIs",
+        "Drop job",
+        "Promote DB"
+      ],
+      "answer": "Retry on a new worker",
       "source_pages": [
         241
       ]
@@ -1583,13 +1583,13 @@
     {
       "id": "MCQ45",
       "question": "Why can API failure be rerouted easily?",
-      "choices": {
-        "A": "API servers are stateless",
-        "B": "CDN stores state",
-        "C": "DB is local",
-        "D": "Workers are clients"
-      },
-      "answer": "A",
+      "choices": [
+        "CDN stores state",
+        "Workers are clients",
+        "API servers are stateless",
+        "DB is local"
+      ],
+      "answer": "API servers are stateless",
       "source_pages": [
         241
       ]
@@ -1597,13 +1597,13 @@
     {
       "id": "MCQ46",
       "question": "What if DB master fails?",
-      "choices": {
-        "A": "Promote a slave",
-        "B": "Delete replicas",
-        "C": "Use CDN as DB",
-        "D": "Only retry upload"
-      },
-      "answer": "A",
+      "choices": [
+        "Promote a slave",
+        "Delete replicas",
+        "Use CDN as DB",
+        "Only retry upload"
+      ],
+      "answer": "Promote a slave",
       "source_pages": [
         241
       ]
@@ -1611,13 +1611,13 @@
     {
       "id": "MCQ47",
       "question": "How does API tier scale?",
-      "choices": {
-        "A": "Horizontally",
-        "B": "Cannot scale",
-        "C": "Only vertically",
-        "D": "Only via CDN"
-      },
-      "answer": "A",
+      "choices": [
+        "Only vertically",
+        "Only via CDN",
+        "Horizontally",
+        "Cannot scale"
+      ],
+      "answer": "Horizontally",
       "source_pages": [
         242
       ]
@@ -1625,13 +1625,13 @@
     {
       "id": "MCQ48",
       "question": "Which live-streaming difference is correct?",
-      "choices": {
-        "A": "Stricter latency/error handling",
-        "B": "No encoding",
-        "C": "No upload",
-        "D": "No network"
-      },
-      "answer": "A",
+      "choices": [
+        "No encoding",
+        "No network",
+        "Stricter latency/error handling",
+        "No upload"
+      ],
+      "answer": "Stricter latency/error handling",
       "source_pages": [
         242
       ]

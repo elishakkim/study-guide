@@ -2257,13 +2257,13 @@
       "id": "MCQ001",
       "difficulty": "medium",
       "question": "Stream input is primarily?",
-      "choices": {
-        "A": "Unbounded",
-        "B": "Always one file",
-        "C": "Always relational",
-        "D": "Always finite"
-      },
-      "answer": "A",
+      "choices": [
+        "Always one file",
+        "Always finite",
+        "Unbounded",
+        "Always relational"
+      ],
+      "answer": "Unbounded",
       "source_pages": [
         461,
         462
@@ -2273,13 +2273,13 @@
       "id": "MCQ002",
       "difficulty": "medium",
       "question": "An event is best described as?",
-      "choices": {
-        "A": "Immutable record of something that happened",
-        "B": "Mutable database page",
-        "C": "Lock record",
-        "D": "Query plan"
-      },
-      "answer": "A",
+      "choices": [
+        "Immutable record of something that happened",
+        "Lock record",
+        "Mutable database page",
+        "Query plan"
+      ],
+      "answer": "Immutable record of something that happened",
       "source_pages": [
         462
       ]
@@ -2288,13 +2288,13 @@
       "id": "MCQ003",
       "difficulty": "medium",
       "question": "Slow-consumer options include?",
-      "choices": {
-        "A": "Drop, buffer, backpressure",
-        "B": "Only retry",
-        "C": "Only drop",
-        "D": "Only replicate"
-      },
-      "answer": "A",
+      "choices": [
+        "Only drop",
+        "Drop, buffer, backpressure",
+        "Only retry",
+        "Only replicate"
+      ],
+      "answer": "Drop, buffer, backpressure",
       "source_pages": [
         463,
         464
@@ -2304,13 +2304,13 @@
       "id": "MCQ004",
       "difficulty": "medium",
       "question": "Backpressure does what?",
-      "choices": {
-        "A": "Slows/blocks producer",
-        "B": "Deletes consumer",
-        "C": "Reorders log",
-        "D": "Compacts database"
-      },
-      "answer": "A",
+      "choices": [
+        "Deletes consumer",
+        "Compacts database",
+        "Slows/blocks producer",
+        "Reorders log"
+      ],
+      "answer": "Slows/blocks producer",
       "source_pages": [
         463,
         464
@@ -2320,13 +2320,13 @@
       "id": "MCQ005",
       "difficulty": "medium",
       "question": "Traditional message broker primarily helps with?",
-      "choices": {
-        "A": "Decoupling producer and consumer lifetimes",
-        "B": "SQL joins",
-        "C": "B-tree indexing",
-        "D": "Consensus elections"
-      },
-      "answer": "A",
+      "choices": [
+        "Decoupling producer and consumer lifetimes",
+        "SQL joins",
+        "Consensus elections",
+        "B-tree indexing"
+      ],
+      "answer": "Decoupling producer and consumer lifetimes",
       "source_pages": [
         465
       ]
@@ -2335,13 +2335,13 @@
       "id": "MCQ006",
       "difficulty": "medium",
       "question": "Load balancing means?",
-      "choices": {
-        "A": "One consumer in a group gets each message",
-        "B": "Every consumer gets every message",
-        "C": "Messages are sorted",
-        "D": "Messages are deleted before delivery"
-      },
-      "answer": "A",
+      "choices": [
+        "Messages are deleted before delivery",
+        "Messages are sorted",
+        "Every consumer gets every message",
+        "One consumer in a group gets each message"
+      ],
+      "answer": "One consumer in a group gets each message",
       "source_pages": [
         466
       ]
@@ -2350,13 +2350,13 @@
       "id": "MCQ007",
       "difficulty": "medium",
       "question": "Fan-out means?",
-      "choices": {
-        "A": "Every independent subscriber receives message",
-        "B": "Only one worker receives message",
-        "C": "No buffering",
-        "D": "No broker"
-      },
-      "answer": "A",
+      "choices": [
+        "No broker",
+        "Every independent subscriber receives message",
+        "No buffering",
+        "Only one worker receives message"
+      ],
+      "answer": "Every independent subscriber receives message",
       "source_pages": [
         467
       ]
@@ -2365,13 +2365,13 @@
       "id": "MCQ008",
       "difficulty": "medium",
       "question": "Why use acknowledgments?",
-      "choices": {
-        "A": "Confirm processing before deletion/progress",
-        "B": "Order partitions",
-        "C": "Compact logs",
-        "D": "Create windows"
-      },
-      "answer": "A",
+      "choices": [
+        "Compact logs",
+        "Order partitions",
+        "Create windows",
+        "Confirm processing before deletion/progress"
+      ],
+      "answer": "Confirm processing before deletion/progress",
       "source_pages": [
         467
       ]
@@ -2380,13 +2380,13 @@
       "id": "MCQ009",
       "difficulty": "medium",
       "question": "Redelivery may cause?",
-      "choices": {
-        "A": "Duplicate processing",
-        "B": "Guaranteed exactly-once",
-        "C": "No retries",
-        "D": "Global ordering"
-      },
-      "answer": "A",
+      "choices": [
+        "Guaranteed exactly-once",
+        "Duplicate processing",
+        "No retries",
+        "Global ordering"
+      ],
+      "answer": "Duplicate processing",
       "source_pages": [
         467
       ]
@@ -2395,13 +2395,13 @@
       "id": "MCQ010",
       "difficulty": "medium",
       "question": "Load balancing plus redelivery may cause?",
-      "choices": {
-        "A": "Reordering",
-        "B": "Compaction",
-        "C": "Serialization",
-        "D": "Windowing"
-      },
-      "answer": "A",
+      "choices": [
+        "Compaction",
+        "Serialization",
+        "Windowing",
+        "Reordering"
+      ],
+      "answer": "Reordering",
       "source_pages": [
         468
       ]
@@ -2410,13 +2410,13 @@
       "id": "MCQ011",
       "difficulty": "medium",
       "question": "A log-based broker stores messages as?",
-      "choices": {
-        "A": "Append-only logs",
-        "B": "Mutable hash rows only",
-        "C": "B-tree leaves only",
-        "D": "RPC calls"
-      },
-      "answer": "A",
+      "choices": [
+        "B-tree leaves only",
+        "Mutable hash rows only",
+        "Append-only logs",
+        "RPC calls"
+      ],
+      "answer": "Append-only logs",
       "source_pages": [
         469
       ]
@@ -2425,13 +2425,13 @@
       "id": "MCQ012",
       "difficulty": "medium",
       "question": "Offsets are ordered within?",
-      "choices": {
-        "A": "A partition",
-        "B": "All topics globally",
-        "C": "All clusters",
-        "D": "All consumers globally"
-      },
-      "answer": "A",
+      "choices": [
+        "All consumers globally",
+        "All clusters",
+        "A partition",
+        "All topics globally"
+      ],
+      "answer": "A partition",
       "source_pages": [
         469
       ]
@@ -2440,13 +2440,13 @@
       "id": "MCQ013",
       "difficulty": "medium",
       "question": "Kafka-style parallelism primarily comes from?",
-      "choices": {
-        "A": "Partitions",
-        "B": "Per-message threads inside one partition",
-        "C": "Global sorting",
-        "D": "One giant queue"
-      },
-      "answer": "A",
+      "choices": [
+        "Global sorting",
+        "One giant queue",
+        "Per-message threads inside one partition",
+        "Partitions"
+      ],
+      "answer": "Partitions",
       "source_pages": [
         470,
         471
@@ -2456,13 +2456,13 @@
       "id": "MCQ014",
       "difficulty": "medium",
       "question": "Maximum normal active consumers in one group is?",
-      "choices": {
-        "A": "Number of partitions",
-        "B": "Number of messages",
-        "C": "Unlimited regardless of partitions",
-        "D": "One"
-      },
-      "answer": "A",
+      "choices": [
+        "Unlimited regardless of partitions",
+        "Number of partitions",
+        "One",
+        "Number of messages"
+      ],
+      "answer": "Number of partitions",
       "source_pages": [
         471
       ]
@@ -2471,13 +2471,13 @@
       "id": "MCQ015",
       "difficulty": "medium",
       "question": "Consumer recovery starts from?",
-      "choices": {
-        "A": "Checkpointed offset",
-        "B": "Beginning always",
-        "C": "Producer clock",
-        "D": "Query plan"
-      },
-      "answer": "A",
+      "choices": [
+        "Checkpointed offset",
+        "Query plan",
+        "Producer clock",
+        "Beginning always"
+      ],
+      "answer": "Checkpointed offset",
       "source_pages": [
         471
       ]
@@ -2486,13 +2486,13 @@
       "id": "MCQ016",
       "difficulty": "medium",
       "question": "If offset was not saved after processing, failover may?",
-      "choices": {
-        "A": "Process messages again",
-        "B": "Lose all history necessarily",
-        "C": "Delete partition",
-        "D": "Change topic"
-      },
-      "answer": "A",
+      "choices": [
+        "Change topic",
+        "Process messages again",
+        "Delete partition",
+        "Lose all history necessarily"
+      ],
+      "answer": "Process messages again",
       "source_pages": [
         471
       ]
@@ -2501,13 +2501,13 @@
       "id": "MCQ017",
       "difficulty": "medium",
       "question": "Log retention behaves like?",
-      "choices": {
-        "A": "Large disk-backed circular buffer",
-        "B": "Infinite storage",
-        "C": "One-message queue",
-        "D": "RAM-only cache"
-      },
-      "answer": "A",
+      "choices": [
+        "Large disk-backed circular buffer",
+        "Infinite storage",
+        "RAM-only cache",
+        "One-message queue"
+      ],
+      "answer": "Large disk-backed circular buffer",
       "source_pages": [
         472
       ]
@@ -2516,13 +2516,13 @@
       "id": "MCQ018",
       "difficulty": "medium",
       "question": "Replay is possible because log reads are?",
-      "choices": {
-        "A": "Non-destructive",
-        "B": "Destructive",
-        "C": "Transactional deletes",
-        "D": "One-shot"
-      },
-      "answer": "A",
+      "choices": [
+        "Non-destructive",
+        "Transactional deletes",
+        "One-shot",
+        "Destructive"
+      ],
+      "answer": "Non-destructive",
       "source_pages": [
         473
       ]
@@ -2531,13 +2531,13 @@
       "id": "MCQ019",
       "difficulty": "medium",
       "question": "A replication log is a stream of?",
-      "choices": {
-        "A": "Database write events",
-        "B": "Only read queries",
-        "C": "Only locks",
-        "D": "Only checkpoints"
-      },
-      "answer": "A",
+      "choices": [
+        "Only checkpoints",
+        "Only locks",
+        "Database write events",
+        "Only read queries"
+      ],
+      "answer": "Database write events",
       "source_pages": [
         474
       ]
@@ -2546,13 +2546,13 @@
       "id": "MCQ020",
       "difficulty": "medium",
       "question": "Dual writes can diverge because?",
-      "choices": {
-        "A": "Different systems can observe writes in different order or one write fails",
-        "B": "All writes use same leader",
-        "C": "CDC fixes them automatically",
-        "D": "Indexes are immutable"
-      },
-      "answer": "A",
+      "choices": [
+        "Indexes are immutable",
+        "Different systems can observe writes in different order or one write fails",
+        "All writes use same leader",
+        "CDC fixes them automatically"
+      ],
+      "answer": "Different systems can observe writes in different order or one write fails",
       "source_pages": [
         474,
         475
@@ -2562,13 +2562,13 @@
       "id": "MCQ021",
       "difficulty": "medium",
       "question": "CDC stands for?",
-      "choices": {
-        "A": "Change Data Capture",
-        "B": "Consumer Data Cache",
-        "C": "Concurrent Durable Commit",
-        "D": "Compacted Data Channel"
-      },
-      "answer": "A",
+      "choices": [
+        "Change Data Capture",
+        "Compacted Data Channel",
+        "Consumer Data Cache",
+        "Concurrent Durable Commit"
+      ],
+      "answer": "Change Data Capture",
       "source_pages": [
         476
       ]
@@ -2577,13 +2577,13 @@
       "id": "MCQ022",
       "difficulty": "medium",
       "question": "CDC source DB behaves like?",
-      "choices": {
-        "A": "Leader/system of record",
-        "B": "Follower only",
-        "C": "Stateless broker",
-        "D": "Window"
-      },
-      "answer": "A",
+      "choices": [
+        "Follower only",
+        "Stateless broker",
+        "Window",
+        "Leader/system of record"
+      ],
+      "answer": "Leader/system of record",
       "source_pages": [
         476,
         477
@@ -2593,13 +2593,13 @@
       "id": "MCQ023",
       "difficulty": "medium",
       "question": "CDC is usually?",
-      "choices": {
-        "A": "Asynchronous",
-        "B": "Synchronous 2PC only",
-        "C": "Batch-only",
-        "D": "Read-only"
-      },
-      "answer": "A",
+      "choices": [
+        "Synchronous 2PC only",
+        "Batch-only",
+        "Asynchronous",
+        "Read-only"
+      ],
+      "answer": "Asynchronous",
       "source_pages": [
         477
       ]
@@ -2608,13 +2608,13 @@
       "id": "MCQ024",
       "difficulty": "medium",
       "question": "New CDC consumer needs snapshot plus?",
-      "choices": {
-        "A": "Known log offset",
-        "B": "New random ID",
-        "C": "Only latest row",
-        "D": "No history"
-      },
-      "answer": "A",
+      "choices": [
+        "Known log offset",
+        "Only latest row",
+        "New random ID",
+        "No history"
+      ],
+      "answer": "Known log offset",
       "source_pages": [
         477
       ]
@@ -2623,13 +2623,13 @@
       "id": "MCQ025",
       "difficulty": "medium",
       "question": "Log compaction keeps?",
-      "choices": {
-        "A": "Latest value per key",
-        "B": "Every message forever",
-        "C": "Only oldest value",
-        "D": "Only tombstones"
-      },
-      "answer": "A",
+      "choices": [
+        "Only oldest value",
+        "Latest value per key",
+        "Every message forever",
+        "Only tombstones"
+      ],
+      "answer": "Latest value per key",
       "source_pages": [
         478
       ]
@@ -2638,13 +2638,13 @@
       "id": "MCQ026",
       "difficulty": "medium",
       "question": "A tombstone denotes?",
-      "choices": {
-        "A": "Deletion",
-        "B": "Commit",
-        "C": "Window boundary",
-        "D": "Join key"
-      },
-      "answer": "A",
+      "choices": [
+        "Commit",
+        "Deletion",
+        "Join key",
+        "Window boundary"
+      ],
+      "answer": "Deletion",
       "source_pages": [
         478
       ]
@@ -2653,13 +2653,13 @@
       "id": "MCQ027",
       "difficulty": "medium",
       "question": "Event sourcing differs from CDC because it records?",
-      "choices": {
-        "A": "Application-level immutable events intentionally",
-        "B": "Only physical WAL records",
-        "C": "Only snapshots",
-        "D": "Only current state"
-      },
-      "answer": "A",
+      "choices": [
+        "Only snapshots",
+        "Application-level immutable events intentionally",
+        "Only current state",
+        "Only physical WAL records"
+      ],
+      "answer": "Application-level immutable events intentionally",
       "source_pages": [
         479
       ]
@@ -2668,13 +2668,13 @@
       "id": "MCQ028",
       "difficulty": "medium",
       "question": "Current state in event sourcing is?",
-      "choices": {
-        "A": "Derived from replaying events",
-        "B": "Independent of history",
-        "C": "The same as command log always",
-        "D": "Not needed"
-      },
-      "answer": "A",
+      "choices": [
+        "The same as command log always",
+        "Not needed",
+        "Derived from replaying events",
+        "Independent of history"
+      ],
+      "answer": "Derived from replaying events",
       "source_pages": [
         480
       ]
@@ -2683,13 +2683,13 @@
       "id": "MCQ029",
       "difficulty": "medium",
       "question": "Commands are?",
-      "choices": {
-        "A": "Requests that may still be rejected",
-        "B": "Immutable facts already accepted",
-        "C": "Consumer offsets",
-        "D": "Windows"
-      },
-      "answer": "A",
+      "choices": [
+        "Requests that may still be rejected",
+        "Consumer offsets",
+        "Windows",
+        "Immutable facts already accepted"
+      ],
+      "answer": "Requests that may still be rejected",
       "source_pages": [
         481
       ]
@@ -2698,13 +2698,13 @@
       "id": "MCQ030",
       "difficulty": "medium",
       "question": "Events are?",
-      "choices": {
-        "A": "Durable accepted facts",
-        "B": "Unvalidated requests",
-        "C": "Temporary queries",
-        "D": "Locks"
-      },
-      "answer": "A",
+      "choices": [
+        "Locks",
+        "Durable accepted facts",
+        "Temporary queries",
+        "Unvalidated requests"
+      ],
+      "answer": "Durable accepted facts",
       "source_pages": [
         481
       ]
@@ -2713,13 +2713,13 @@
       "id": "MCQ031",
       "difficulty": "medium",
       "question": "Mutable state is conceptually?",
-      "choices": {
-        "A": "Accumulation of immutable events",
-        "B": "Unrelated to events",
-        "C": "Only a cache miss",
-        "D": "Only a snapshot timestamp"
-      },
-      "answer": "A",
+      "choices": [
+        "Only a snapshot timestamp",
+        "Accumulation of immutable events",
+        "Only a cache miss",
+        "Unrelated to events"
+      ],
+      "answer": "Accumulation of immutable events",
       "source_pages": [
         482
       ]
@@ -2728,13 +2728,13 @@
       "id": "MCQ032",
       "difficulty": "medium",
       "question": "CQRS separates?",
-      "choices": {
-        "A": "Write and read representations",
-        "B": "Producer and broker",
-        "C": "Offsets and partitions",
-        "D": "Windows and clocks"
-      },
-      "answer": "A",
+      "choices": [
+        "Windows and clocks",
+        "Write and read representations",
+        "Offsets and partitions",
+        "Producer and broker"
+      ],
+      "answer": "Write and read representations",
       "source_pages": [
         484
       ]
@@ -2743,13 +2743,13 @@
       "id": "MCQ033",
       "difficulty": "medium",
       "question": "Async read models may violate?",
-      "choices": {
-        "A": "Read-your-own-writes",
-        "B": "Durability always",
-        "C": "Partition ordering always",
-        "D": "Message encoding"
-      },
-      "answer": "A",
+      "choices": [
+        "Read-your-own-writes",
+        "Partition ordering always",
+        "Message encoding",
+        "Durability always"
+      ],
+      "answer": "Read-your-own-writes",
       "source_pages": [
         484
       ]
@@ -2758,13 +2758,13 @@
       "id": "MCQ034",
       "difficulty": "medium",
       "question": "CEP stores long-lived?",
-      "choices": {
-        "A": "Queries/patterns",
-        "B": "Documents only",
-        "C": "Consumer offsets only",
-        "D": "Database pages"
-      },
-      "answer": "A",
+      "choices": [
+        "Database pages",
+        "Documents only",
+        "Queries/patterns",
+        "Consumer offsets only"
+      ],
+      "answer": "Queries/patterns",
       "source_pages": [
         487
       ]
@@ -2773,13 +2773,13 @@
       "id": "MCQ035",
       "difficulty": "medium",
       "question": "Stream analytics often computes?",
-      "choices": {
-        "A": "Windowed aggregates/statistics",
-        "B": "Only point lookups",
-        "C": "Only transactions",
-        "D": "Only file copies"
-      },
-      "answer": "A",
+      "choices": [
+        "Only point lookups",
+        "Only file copies",
+        "Windowed aggregates/statistics",
+        "Only transactions"
+      ],
+      "answer": "Windowed aggregates/statistics",
       "source_pages": [
         488
       ]
@@ -2788,13 +2788,13 @@
       "id": "MCQ036",
       "difficulty": "medium",
       "question": "Probabilistic algorithms imply stream processing is inherently approximate?",
-      "choices": {
-        "A": "No",
-        "B": "Yes",
-        "C": "Only for Kafka",
-        "D": "Only for windows"
-      },
-      "answer": "A",
+      "choices": [
+        "Yes",
+        "Only for Kafka",
+        "Only for windows",
+        "No"
+      ],
+      "answer": "No",
       "source_pages": [
         488
       ]
@@ -2803,13 +2803,13 @@
       "id": "MCQ037",
       "difficulty": "medium",
       "question": "Materialized-view maintenance is?",
-      "choices": {
-        "A": "Continuously updating derived query state",
-        "B": "Deleting old log segments only",
-        "C": "Always batch",
-        "D": "Only search"
-      },
-      "answer": "A",
+      "choices": [
+        "Continuously updating derived query state",
+        "Always batch",
+        "Deleting old log segments only",
+        "Only search"
+      ],
+      "answer": "Continuously updating derived query state",
       "source_pages": [
         489
       ]
@@ -2818,13 +2818,13 @@
       "id": "MCQ038",
       "difficulty": "medium",
       "question": "Stream search reverses conventional search by?",
-      "choices": {
-        "A": "Storing queries and flowing documents past them",
-        "B": "Deleting queries",
-        "C": "Avoiding indexes entirely",
-        "D": "Only using RPC"
-      },
-      "answer": "A",
+      "choices": [
+        "Deleting queries",
+        "Avoiding indexes entirely",
+        "Storing queries and flowing documents past them",
+        "Only using RPC"
+      ],
+      "answer": "Storing queries and flowing documents past them",
       "source_pages": [
         489
       ]
@@ -2833,13 +2833,13 @@
       "id": "MCQ039",
       "difficulty": "medium",
       "question": "Event time means?",
-      "choices": {
-        "A": "When event occurred",
-        "B": "When processor received it",
-        "C": "When checkpoint happened",
-        "D": "When query started"
-      },
-      "answer": "A",
+      "choices": [
+        "When query started",
+        "When checkpoint happened",
+        "When processor received it",
+        "When event occurred"
+      ],
+      "answer": "When event occurred",
       "source_pages": [
         491
       ]
@@ -2848,13 +2848,13 @@
       "id": "MCQ040",
       "difficulty": "medium",
       "question": "Processing time means?",
-      "choices": {
-        "A": "When processor handled event",
-        "B": "When user action occurred",
-        "C": "Always server receive time",
-        "D": "Event offset"
-      },
-      "answer": "A",
+      "choices": [
+        "Event offset",
+        "When user action occurred",
+        "Always server receive time",
+        "When processor handled event"
+      ],
+      "answer": "When processor handled event",
       "source_pages": [
         491
       ]
@@ -2863,13 +2863,13 @@
       "id": "MCQ041",
       "difficulty": "medium",
       "question": "Processing-time windows can create fake spikes after?",
-      "choices": {
-        "A": "Backlog/restart",
-        "B": "Normal steady processing",
-        "C": "Compaction",
-        "D": "Hash join"
-      },
-      "answer": "A",
+      "choices": [
+        "Hash join",
+        "Backlog/restart",
+        "Compaction",
+        "Normal steady processing"
+      ],
+      "answer": "Backlog/restart",
       "source_pages": [
         491
       ]
@@ -2878,13 +2878,13 @@
       "id": "MCQ042",
       "difficulty": "medium",
       "question": "Late events make it hard to know?",
-      "choices": {
-        "A": "When an event-time window is complete",
-        "B": "Which partition exists",
-        "C": "Who producer is",
-        "D": "Which key to hash"
-      },
-      "answer": "A",
+      "choices": [
+        "When an event-time window is complete",
+        "Who producer is",
+        "Which partition exists",
+        "Which key to hash"
+      ],
+      "answer": "When an event-time window is complete",
       "source_pages": [
         492
       ]
@@ -2893,13 +2893,13 @@
       "id": "MCQ043",
       "difficulty": "medium",
       "question": "One late-event strategy?",
-      "choices": {
-        "A": "Publish corrections/retractions",
-        "B": "Always ignore all events",
-        "C": "Delete log",
-        "D": "Disable timestamps"
-      },
-      "answer": "A",
+      "choices": [
+        "Disable timestamps",
+        "Publish corrections/retractions",
+        "Delete log",
+        "Always ignore all events"
+      ],
+      "answer": "Publish corrections/retractions",
       "source_pages": [
         492
       ]
@@ -2908,13 +2908,13 @@
       "id": "MCQ044",
       "difficulty": "medium",
       "question": "Tumbling windows are?",
-      "choices": {
-        "A": "Fixed and non-overlapping",
-        "B": "Fixed and overlapping",
-        "C": "Relative only",
-        "D": "Session-based"
-      },
-      "answer": "A",
+      "choices": [
+        "Fixed and overlapping",
+        "Relative only",
+        "Fixed and non-overlapping",
+        "Session-based"
+      ],
+      "answer": "Fixed and non-overlapping",
       "source_pages": [
         494
       ]
@@ -2923,13 +2923,13 @@
       "id": "MCQ045",
       "difficulty": "medium",
       "question": "Hopping windows are?",
-      "choices": {
-        "A": "Fixed and overlapping",
-        "B": "Fixed non-overlapping",
-        "C": "No fixed duration",
-        "D": "Only one event"
-      },
-      "answer": "A",
+      "choices": [
+        "No fixed duration",
+        "Fixed non-overlapping",
+        "Only one event",
+        "Fixed and overlapping"
+      ],
+      "answer": "Fixed and overlapping",
       "source_pages": [
         494
       ]
@@ -2938,13 +2938,13 @@
       "id": "MCQ046",
       "difficulty": "hard",
       "question": "Sliding windows use?",
-      "choices": {
-        "A": "Relative temporal proximity",
-        "B": "Only fixed wall-clock boundaries",
-        "C": "No state",
-        "D": "Only producer offsets"
-      },
-      "answer": "A",
+      "choices": [
+        "No state",
+        "Only fixed wall-clock boundaries",
+        "Relative temporal proximity",
+        "Only producer offsets"
+      ],
+      "answer": "Relative temporal proximity",
       "source_pages": [
         494
       ]
@@ -2953,13 +2953,13 @@
       "id": "MCQ047",
       "difficulty": "hard",
       "question": "Session windows end after?",
-      "choices": {
-        "A": "Inactivity",
-        "B": "Fixed one-minute boundary always",
-        "C": "Partition rotation",
-        "D": "Checkpoint"
-      },
-      "answer": "A",
+      "choices": [
+        "Fixed one-minute boundary always",
+        "Inactivity",
+        "Checkpoint",
+        "Partition rotation"
+      ],
+      "answer": "Inactivity",
       "source_pages": [
         494
       ]
@@ -2968,13 +2968,13 @@
       "id": "MCQ048",
       "difficulty": "hard",
       "question": "Stream-stream join usually requires?",
-      "choices": {
-        "A": "A bounded join window and state",
-        "B": "No state",
-        "C": "One static table only",
-        "D": "Global sort"
-      },
-      "answer": "A",
+      "choices": [
+        "Global sort",
+        "One static table only",
+        "A bounded join window and state",
+        "No state"
+      ],
+      "answer": "A bounded join window and state",
       "source_pages": [
         495
       ]
@@ -2983,13 +2983,13 @@
       "id": "MCQ049",
       "difficulty": "hard",
       "question": "Stream-table join is also called?",
-      "choices": {
-        "A": "Enrichment",
-        "B": "Compaction",
-        "C": "Fan-out",
-        "D": "Checkpointing"
-      },
-      "answer": "A",
+      "choices": [
+        "Enrichment",
+        "Compaction",
+        "Fan-out",
+        "Checkpointing"
+      ],
+      "answer": "Enrichment",
       "source_pages": [
         495,
         496
@@ -2999,13 +2999,13 @@
       "id": "MCQ050",
       "difficulty": "hard",
       "question": "Stream-table local state can stay current using?",
-      "choices": {
-        "A": "CDC changelog",
-        "B": "Only remote RPC",
-        "C": "Only batch dump once",
-        "D": "No updates"
-      },
-      "answer": "A",
+      "choices": [
+        "CDC changelog",
+        "No updates",
+        "Only remote RPC",
+        "Only batch dump once"
+      ],
+      "answer": "CDC changelog",
       "source_pages": [
         496
       ]
@@ -3014,13 +3014,13 @@
       "id": "MCQ051",
       "difficulty": "hard",
       "question": "Table-table streaming join commonly maintains?",
-      "choices": {
-        "A": "Materialized view",
-        "B": "Consumer queue only",
-        "C": "HTTP cache only",
-        "D": "No state"
-      },
-      "answer": "A",
+      "choices": [
+        "Materialized view",
+        "HTTP cache only",
+        "No state",
+        "Consumer queue only"
+      ],
+      "answer": "Materialized view",
       "source_pages": [
         496,
         497
@@ -3030,13 +3030,13 @@
       "id": "MCQ052",
       "difficulty": "hard",
       "question": "Historical tax-rate join illustrates?",
-      "choices": {
-        "A": "Time-dependent join",
-        "B": "Fan-out",
-        "C": "Backpressure",
-        "D": "CEP"
-      },
-      "answer": "A",
+      "choices": [
+        "Fan-out",
+        "CEP",
+        "Backpressure",
+        "Time-dependent join"
+      ],
+      "answer": "Time-dependent join",
       "source_pages": [
         498
       ]
@@ -3045,13 +3045,13 @@
       "id": "MCQ053",
       "difficulty": "hard",
       "question": "Slowly changing dimension can make join deterministic by?",
-      "choices": {
-        "A": "Versioning reference data",
-        "B": "Dropping timestamps",
-        "C": "Using current value only",
-        "D": "Deleting history"
-      },
-      "answer": "A",
+      "choices": [
+        "Deleting history",
+        "Dropping timestamps",
+        "Using current value only",
+        "Versioning reference data"
+      ],
+      "answer": "Versioning reference data",
       "source_pages": [
         498
       ]
@@ -3060,13 +3060,13 @@
       "id": "MCQ054",
       "difficulty": "hard",
       "question": "Exactly-once here really means?",
-      "choices": {
-        "A": "Visible effect as if once",
-        "B": "Physical processing exactly once with no retry",
-        "C": "No failure",
-        "D": "No checkpoint"
-      },
-      "answer": "A",
+      "choices": [
+        "Visible effect as if once",
+        "No checkpoint",
+        "No failure",
+        "Physical processing exactly once with no retry"
+      ],
+      "answer": "Visible effect as if once",
       "source_pages": [
         498
       ]
@@ -3075,13 +3075,13 @@
       "id": "MCQ055",
       "difficulty": "hard",
       "question": "Microbatching is cited in?",
-      "choices": {
-        "A": "Spark Streaming",
-        "B": "HDFS NameNode",
-        "C": "ZooKeeper only",
-        "D": "RabbitMQ"
-      },
-      "answer": "A",
+      "choices": [
+        "HDFS NameNode",
+        "RabbitMQ",
+        "Spark Streaming",
+        "ZooKeeper only"
+      ],
+      "answer": "Spark Streaming",
       "source_pages": [
         499
       ]
@@ -3090,13 +3090,13 @@
       "id": "MCQ056",
       "difficulty": "hard",
       "question": "Checkpoint barriers are cited with?",
-      "choices": {
-        "A": "Flink",
-        "B": "JMS only",
-        "C": "UDP multicast",
-        "D": "HDFS sort"
-      },
-      "answer": "A",
+      "choices": [
+        "JMS only",
+        "Flink",
+        "UDP multicast",
+        "HDFS sort"
+      ],
+      "answer": "Flink",
       "source_pages": [
         499
       ]
@@ -3105,13 +3105,13 @@
       "id": "MCQ057",
       "difficulty": "hard",
       "question": "Why aren't checkpoints enough for emails?",
-      "choices": {
-        "A": "External side effect cannot be rolled back by framework",
-        "B": "Email is idempotent automatically",
-        "C": "Offsets are global",
-        "D": "Windows are infinite"
-      },
-      "answer": "A",
+      "choices": [
+        "External side effect cannot be rolled back by framework",
+        "Email is idempotent automatically",
+        "Windows are infinite",
+        "Offsets are global"
+      ],
+      "answer": "External side effect cannot be rolled back by framework",
       "source_pages": [
         499
       ]
@@ -3120,13 +3120,13 @@
       "id": "MCQ058",
       "difficulty": "hard",
       "question": "Atomic stream commit coordinates?",
-      "choices": {
-        "A": "Input progress, state, and outputs",
-        "B": "Only timestamps",
-        "C": "Only partitions",
-        "D": "Only producer IDs"
-      },
-      "answer": "A",
+      "choices": [
+        "Only partitions",
+        "Only producer IDs",
+        "Only timestamps",
+        "Input progress, state, and outputs"
+      ],
+      "answer": "Input progress, state, and outputs",
       "source_pages": [
         499,
         500
@@ -3136,13 +3136,13 @@
       "id": "MCQ059",
       "difficulty": "hard",
       "question": "Idempotent operation example?",
-      "choices": {
-        "A": "Set key to fixed value",
-        "B": "Increment counter",
-        "C": "Append duplicate email",
-        "D": "Charge card twice"
-      },
-      "answer": "A",
+      "choices": [
+        "Set key to fixed value",
+        "Increment counter",
+        "Append duplicate email",
+        "Charge card twice"
+      ],
+      "answer": "Set key to fixed value",
       "source_pages": [
         500
       ]
@@ -3151,13 +3151,13 @@
       "id": "MCQ060",
       "difficulty": "hard",
       "question": "Non-idempotent example?",
-      "choices": {
-        "A": "Increment counter",
-        "B": "Set fixed value repeatedly",
-        "C": "Overwrite same value",
-        "D": "Read key"
-      },
-      "answer": "A",
+      "choices": [
+        "Set fixed value repeatedly",
+        "Overwrite same value",
+        "Read key",
+        "Increment counter"
+      ],
+      "answer": "Increment counter",
       "source_pages": [
         500
       ]
@@ -3166,13 +3166,13 @@
       "id": "MCQ061",
       "difficulty": "hard",
       "question": "Offset-based dedupe works by?",
-      "choices": {
-        "A": "Recording source offset with output",
-        "B": "Deleting offsets",
-        "C": "Using wall clock only",
-        "D": "Randomizing writes"
-      },
-      "answer": "A",
+      "choices": [
+        "Randomizing writes",
+        "Using wall clock only",
+        "Recording source offset with output",
+        "Deleting offsets"
+      ],
+      "answer": "Recording source offset with output",
       "source_pages": [
         500
       ]
@@ -3181,13 +3181,13 @@
       "id": "MCQ062",
       "difficulty": "hard",
       "question": "Idempotence usually assumes processing is?",
-      "choices": {
-        "A": "Deterministic",
-        "B": "Random",
-        "C": "Concurrent on same key",
-        "D": "Unordered"
-      },
-      "answer": "A",
+      "choices": [
+        "Concurrent on same key",
+        "Deterministic",
+        "Random",
+        "Unordered"
+      ],
+      "answer": "Deterministic",
       "source_pages": [
         500
       ]
@@ -3196,13 +3196,13 @@
       "id": "MCQ063",
       "difficulty": "hard",
       "question": "Why might fencing be needed?",
-      "choices": {
-        "A": "Old failed-over processor may still write",
-        "B": "To create a window",
-        "C": "To compact log",
-        "D": "To fan out"
-      },
-      "answer": "A",
+      "choices": [
+        "Old failed-over processor may still write",
+        "To fan out",
+        "To compact log",
+        "To create a window"
+      ],
+      "answer": "Old failed-over processor may still write",
       "source_pages": [
         500
       ]
@@ -3211,13 +3211,13 @@
       "id": "MCQ064",
       "difficulty": "hard",
       "question": "Flink state recovery example uses?",
-      "choices": {
-        "A": "Durable snapshots",
-        "B": "Only remote DB queries",
-        "C": "No checkpoint",
-        "D": "Only email"
-      },
-      "answer": "A",
+      "choices": [
+        "No checkpoint",
+        "Durable snapshots",
+        "Only remote DB queries",
+        "Only email"
+      ],
+      "answer": "Durable snapshots",
       "source_pages": [
         501
       ]
@@ -3226,13 +3226,13 @@
       "id": "MCQ065",
       "difficulty": "hard",
       "question": "Samza/Kafka Streams can replicate state via?",
-      "choices": {
-        "A": "Compacted Kafka topic",
-        "B": "UDP only",
-        "C": "Filesystem lock",
-        "D": "Browser cache"
-      },
-      "answer": "A",
+      "choices": [
+        "Filesystem lock",
+        "Compacted Kafka topic",
+        "UDP only",
+        "Browser cache"
+      ],
+      "answer": "Compacted Kafka topic",
       "source_pages": [
         501
       ]
@@ -3241,13 +3241,13 @@
       "id": "MCQ066",
       "difficulty": "hard",
       "question": "Can state sometimes be rebuilt only by replay?",
-      "choices": {
-        "A": "Yes",
-        "B": "No",
-        "C": "Only for batch",
-        "D": "Only with XA"
-      },
-      "answer": "A",
+      "choices": [
+        "Only for batch",
+        "No",
+        "Yes",
+        "Only with XA"
+      ],
+      "answer": "Yes",
       "source_pages": [
         501
       ]
@@ -3256,13 +3256,13 @@
       "id": "MCQ067",
       "difficulty": "hard",
       "question": "AMQP/JMS style is well suited to?",
-      "choices": {
-        "A": "Task queues/asynchronous RPC",
-        "B": "Long-term replay logs",
-        "C": "Strong partition order always",
-        "D": "Historical rebuilds"
-      },
-      "answer": "A",
+      "choices": [
+        "Historical rebuilds",
+        "Strong partition order always",
+        "Task queues/asynchronous RPC",
+        "Long-term replay logs"
+      ],
+      "answer": "Task queues/asynchronous RPC",
       "source_pages": [
         501,
         502
@@ -3272,13 +3272,13 @@
       "id": "MCQ068",
       "difficulty": "hard",
       "question": "Log-based broker is well suited to?",
-      "choices": {
-        "A": "High-throughput ordered replayable streams",
-        "B": "Destructive one-shot RPC only",
-        "C": "No retention",
-        "D": "Per-message global load balancing"
-      },
-      "answer": "A",
+      "choices": [
+        "Per-message global load balancing",
+        "Destructive one-shot RPC only",
+        "No retention",
+        "High-throughput ordered replayable streams"
+      ],
+      "answer": "High-throughput ordered replayable streams",
       "source_pages": [
         502
       ]

@@ -1641,13 +1641,13 @@
       "id": "MCQ01",
       "difficulty": "easy",
       "question": "What scale does the design target?",
-      "choices": {
-        "A": "5M DAU",
-        "B": "50M DAU",
-        "C": "500M DAU",
-        "D": "1B DAU"
-      },
-      "answer": "B",
+      "choices": [
+        "1B DAU",
+        "5M DAU",
+        "500M DAU",
+        "50M DAU"
+      ],
+      "answer": "50M DAU",
       "source_pages": [
         179
       ]
@@ -1656,13 +1656,13 @@
       "id": "MCQ02",
       "difficulty": "easy",
       "question": "What is the maximum group size?",
-      "choices": {
-        "A": "50",
-        "B": "100",
-        "C": "500",
-        "D": "1000"
-      },
-      "answer": "B",
+      "choices": [
+        "100",
+        "500",
+        "50",
+        "1000"
+      ],
+      "answer": "100",
       "source_pages": [
         179
       ]
@@ -1671,13 +1671,13 @@
       "id": "MCQ03",
       "difficulty": "medium",
       "question": "What message type is in core scope?",
-      "choices": {
-        "A": "Text only",
-        "B": "Video only",
-        "C": "Voice only",
-        "D": "All media"
-      },
-      "answer": "A",
+      "choices": [
+        "Voice only",
+        "Text only",
+        "All media",
+        "Video only"
+      ],
+      "answer": "Text only",
       "source_pages": [
         179
       ]
@@ -1686,13 +1686,13 @@
       "id": "MCQ04",
       "difficulty": "medium",
       "question": "What is the text-length limit?",
-      "choices": {
-        "A": "<1,000 chars",
-        "B": "<10,000 chars",
-        "C": "<100,000 chars",
-        "D": "Unlimited"
-      },
-      "answer": "C",
+      "choices": [
+        "<10,000 chars",
+        "<100,000 chars",
+        "<1,000 chars",
+        "Unlimited"
+      ],
+      "answer": "<100,000 chars",
       "source_pages": [
         179
       ]
@@ -1701,13 +1701,13 @@
       "id": "MCQ05",
       "difficulty": "medium",
       "question": "How long is history retained?",
-      "choices": {
-        "A": "30 days",
-        "B": "1 year",
-        "C": "5 years",
-        "D": "Forever"
-      },
-      "answer": "D",
+      "choices": [
+        "Forever",
+        "30 days",
+        "5 years",
+        "1 year"
+      ],
+      "answer": "Forever",
       "source_pages": [
         179
       ]
@@ -1716,13 +1716,13 @@
       "id": "MCQ06",
       "difficulty": "medium",
       "question": "Which is NOT a fundamental chat-service operation?",
-      "choices": {
-        "A": "Receive messages",
-        "B": "Route messages",
-        "C": "Hold offline messages",
-        "D": "Render video thumbnails"
-      },
-      "answer": "D",
+      "choices": [
+        "Route messages",
+        "Render video thumbnails",
+        "Hold offline messages",
+        "Receive messages"
+      ],
+      "answer": "Render video thumbnails",
       "source_pages": [
         180
       ]
@@ -1731,13 +1731,13 @@
       "id": "MCQ07",
       "difficulty": "medium",
       "question": "Why is sender-side HTTP acceptable?",
-      "choices": {
-        "A": "Sending is client initiated",
-        "B": "HTTP is bidirectional",
-        "C": "HTTP has no TCP",
-        "D": "HTTP guarantees presence"
-      },
-      "answer": "A",
+      "choices": [
+        "HTTP guarantees presence",
+        "Sending is client initiated",
+        "HTTP has no TCP",
+        "HTTP is bidirectional"
+      ],
+      "answer": "Sending is client initiated",
       "source_pages": [
         180
       ]
@@ -1746,13 +1746,13 @@
       "id": "MCQ08",
       "difficulty": "medium",
       "question": "What reduces repeated TCP handshakes with HTTP?",
-      "choices": {
-        "A": "Keep-alive",
-        "B": "Polling",
-        "C": "Sharding",
-        "D": "ZooKeeper"
-      },
-      "answer": "A",
+      "choices": [
+        "ZooKeeper",
+        "Sharding",
+        "Keep-alive",
+        "Polling"
+      ],
+      "answer": "Keep-alive",
       "source_pages": [
         180
       ]
@@ -1761,13 +1761,13 @@
       "id": "MCQ09",
       "difficulty": "hard",
       "question": "What makes HTTP awkward for receiver-side delivery?",
-      "choices": {
-        "A": "It is client initiated",
-        "B": "It has no URLs",
-        "C": "It cannot carry text",
-        "D": "It uses TCP"
-      },
-      "answer": "A",
+      "choices": [
+        "It uses TCP",
+        "It cannot carry text",
+        "It is client initiated",
+        "It has no URLs"
+      ],
+      "answer": "It is client initiated",
       "source_pages": [
         180
       ]
@@ -1776,13 +1776,13 @@
       "id": "MCQ10",
       "difficulty": "medium",
       "question": "How does polling work?",
-      "choices": {
-        "A": "Client repeatedly asks for updates",
-        "B": "Server pushes continuously",
-        "C": "Client never connects",
-        "D": "Database broadcasts directly"
-      },
-      "answer": "A",
+      "choices": [
+        "Client never connects",
+        "Server pushes continuously",
+        "Database broadcasts directly",
+        "Client repeatedly asks for updates"
+      ],
+      "answer": "Client repeatedly asks for updates",
       "source_pages": [
         180,
         181
@@ -1792,13 +1792,13 @@
       "id": "MCQ11",
       "difficulty": "hard",
       "question": "Why is polling inefficient?",
-      "choices": {
-        "A": "Most checks may return no new message",
-        "B": "It needs a graph DB",
-        "C": "It cannot use HTTP",
-        "D": "It requires video"
-      },
-      "answer": "A",
+      "choices": [
+        "Most checks may return no new message",
+        "It requires video",
+        "It needs a graph DB",
+        "It cannot use HTTP"
+      ],
+      "answer": "Most checks may return no new message",
       "source_pages": [
         180
       ]
@@ -1807,13 +1807,13 @@
       "id": "MCQ12",
       "difficulty": "medium",
       "question": "What causes a long-poll request to complete?",
-      "choices": {
-        "A": "New message or timeout",
-        "B": "Only logout",
-        "C": "Only server restart",
-        "D": "Only DNS change"
-      },
-      "answer": "A",
+      "choices": [
+        "New message or timeout",
+        "Only server restart",
+        "Only logout",
+        "Only DNS change"
+      ],
+      "answer": "New message or timeout",
       "source_pages": [
         182
       ]
@@ -1822,13 +1822,13 @@
       "id": "MCQ13",
       "difficulty": "hard",
       "question": "What load-balancing problem affects long polling?",
-      "choices": {
-        "A": "Message and recipient connection may be on different servers",
-        "B": "All clients use one server",
-        "C": "No TCP exists",
-        "D": "Only one user can connect"
-      },
-      "answer": "A",
+      "choices": [
+        "Message and recipient connection may be on different servers",
+        "No TCP exists",
+        "All clients use one server",
+        "Only one user can connect"
+      ],
+      "answer": "Message and recipient connection may be on different servers",
       "source_pages": [
         182
       ]
@@ -1837,13 +1837,13 @@
       "id": "MCQ14",
       "difficulty": "medium",
       "question": "Which protocol is ultimately selected?",
-      "choices": {
-        "A": "Polling",
-        "B": "Long polling",
-        "C": "WebSocket",
-        "D": "FTP"
-      },
-      "answer": "C",
+      "choices": [
+        "Long polling",
+        "Polling",
+        "FTP",
+        "WebSocket"
+      ],
+      "answer": "WebSocket",
       "source_pages": [
         182,
         183
@@ -1853,13 +1853,13 @@
       "id": "MCQ15",
       "difficulty": "medium",
       "question": "Who initiates WebSocket?",
-      "choices": {
-        "A": "Client",
-        "B": "Database",
-        "C": "CDN",
-        "D": "Presence queue"
-      },
-      "answer": "A",
+      "choices": [
+        "Presence queue",
+        "CDN",
+        "Client",
+        "Database"
+      ],
+      "answer": "Client",
       "source_pages": [
         183
       ]
@@ -1868,13 +1868,13 @@
       "id": "MCQ16",
       "difficulty": "medium",
       "question": "Which describes WebSocket?",
-      "choices": {
-        "A": "Bidirectional and persistent",
-        "B": "Unidirectional and stateless",
-        "C": "Polling only",
-        "D": "Database-only"
-      },
-      "answer": "A",
+      "choices": [
+        "Database-only",
+        "Polling only",
+        "Unidirectional and stateless",
+        "Bidirectional and persistent"
+      ],
+      "answer": "Bidirectional and persistent",
       "source_pages": [
         183
       ]
@@ -1883,13 +1883,13 @@
       "id": "MCQ17",
       "difficulty": "hard",
       "question": "How does WebSocket begin?",
-      "choices": {
-        "A": "HTTP connection upgraded via handshake",
-        "B": "Direct database transaction",
-        "C": "DNS-only request",
-        "D": "Long-poll timeout"
-      },
-      "answer": "A",
+      "choices": [
+        "DNS-only request",
+        "HTTP connection upgraded via handshake",
+        "Long-poll timeout",
+        "Direct database transaction"
+      ],
+      "answer": "HTTP connection upgraded via handshake",
       "source_pages": [
         183
       ]
@@ -1898,13 +1898,13 @@
       "id": "MCQ18",
       "difficulty": "medium",
       "question": "What ports commonly let WebSocket pass firewalls?",
-      "choices": {
-        "A": "21/22",
-        "B": "25/53",
-        "C": "80/443",
-        "D": "3306/5432"
-      },
-      "answer": "C",
+      "choices": [
+        "21/22",
+        "80/443",
+        "25/53",
+        "3306/5432"
+      ],
+      "answer": "80/443",
       "source_pages": [
         183
       ]
@@ -1913,13 +1913,13 @@
       "id": "MCQ19",
       "difficulty": "hard",
       "question": "Why use WebSocket on both sender and receiver?",
-      "choices": {
-        "A": "Bidirectionality simplifies design",
-        "B": "It guarantees exactly-once delivery",
-        "C": "It removes storage",
-        "D": "It eliminates service discovery"
-      },
-      "answer": "A",
+      "choices": [
+        "Bidirectionality simplifies design",
+        "It guarantees exactly-once delivery",
+        "It removes storage",
+        "It eliminates service discovery"
+      ],
+      "answer": "Bidirectionality simplifies design",
       "source_pages": [
         183
       ]
@@ -1928,13 +1928,13 @@
       "id": "MCQ20",
       "difficulty": "medium",
       "question": "What three architecture categories are used?",
-      "choices": {
-        "A": "Stateless, stateful, third-party",
-        "B": "SQL, NoSQL, CDN",
-        "C": "Read, write, delete",
-        "D": "Push, pull, hybrid"
-      },
-      "answer": "A",
+      "choices": [
+        "SQL, NoSQL, CDN",
+        "Read, write, delete",
+        "Stateless, stateful, third-party",
+        "Push, pull, hybrid"
+      ],
+      "answer": "Stateless, stateful, third-party",
       "source_pages": [
         184
       ]
@@ -1943,13 +1943,13 @@
       "id": "MCQ21",
       "difficulty": "medium",
       "question": "Which feature belongs to stateless services?",
-      "choices": {
-        "A": "User profile",
-        "B": "Persistent chat connection",
-        "C": "Presence heartbeat socket only",
-        "D": "Message inbox only"
-      },
-      "answer": "A",
+      "choices": [
+        "Message inbox only",
+        "Persistent chat connection",
+        "Presence heartbeat socket only",
+        "User profile"
+      ],
+      "answer": "User profile",
       "source_pages": [
         184,
         185
@@ -1959,13 +1959,13 @@
       "id": "MCQ22",
       "difficulty": "hard",
       "question": "Why is chat service stateful?",
-      "choices": {
-        "A": "Clients keep persistent connections to specific chat servers",
-        "B": "It stores profiles in SQL",
-        "C": "It only uses GET requests",
-        "D": "It sends email"
-      },
-      "answer": "A",
+      "choices": [
+        "It sends email",
+        "Clients keep persistent connections to specific chat servers",
+        "It only uses GET requests",
+        "It stores profiles in SQL"
+      ],
+      "answer": "Clients keep persistent connections to specific chat servers",
       "source_pages": [
         185
       ]
@@ -1974,13 +1974,13 @@
       "id": "MCQ23",
       "difficulty": "medium",
       "question": "What is the key third-party integration?",
-      "choices": {
-        "A": "Push notification",
-        "B": "Search autocomplete",
-        "C": "Video transcoding",
-        "D": "Payment gateway"
-      },
-      "answer": "A",
+      "choices": [
+        "Push notification",
+        "Video transcoding",
+        "Payment gateway",
+        "Search autocomplete"
+      ],
+      "answer": "Push notification",
       "source_pages": [
         185
       ]
@@ -1989,13 +1989,13 @@
       "id": "MCQ24",
       "difficulty": "hard",
       "question": "What is the rough memory estimate for 1M connections at 10KB each?",
-      "choices": {
-        "A": "1GB",
-        "B": "10GB",
-        "C": "100GB",
-        "D": "1TB"
-      },
-      "answer": "B",
+      "choices": [
+        "10GB",
+        "1TB",
+        "100GB",
+        "1GB"
+      ],
+      "answer": "10GB",
       "source_pages": [
         185
       ]
@@ -2004,13 +2004,13 @@
       "id": "MCQ25",
       "difficulty": "hard",
       "question": "Why reject one-server architecture anyway?",
-      "choices": {
-        "A": "Single point of failure",
-        "B": "10GB cannot exist",
-        "C": "WebSocket forbids it",
-        "D": "No database works"
-      },
-      "answer": "A",
+      "choices": [
+        "No database works",
+        "Single point of failure",
+        "10GB cannot exist",
+        "WebSocket forbids it"
+      ],
+      "answer": "Single point of failure",
       "source_pages": [
         185
       ]
@@ -2019,13 +2019,13 @@
       "id": "MCQ26",
       "difficulty": "medium",
       "question": "Which component tracks online/offline state?",
-      "choices": {
-        "A": "Presence servers",
-        "B": "API servers",
-        "C": "Notification servers",
-        "D": "Relational DB only"
-      },
-      "answer": "A",
+      "choices": [
+        "Relational DB only",
+        "Notification servers",
+        "API servers",
+        "Presence servers"
+      ],
+      "answer": "Presence servers",
       "source_pages": [
         186
       ]
@@ -2034,13 +2034,13 @@
       "id": "MCQ27",
       "difficulty": "medium",
       "question": "Which component stores chat history?",
-      "choices": {
-        "A": "KV store",
-        "B": "Load balancer",
-        "C": "Push server",
-        "D": "DNS"
-      },
-      "answer": "A",
+      "choices": [
+        "KV store",
+        "Push server",
+        "DNS",
+        "Load balancer"
+      ],
+      "answer": "KV store",
       "source_pages": [
         186
       ]
@@ -2049,13 +2049,13 @@
       "id": "MCQ28",
       "difficulty": "medium",
       "question": "Where does generic user/profile data go?",
-      "choices": {
-        "A": "Relational DB",
-        "B": "Only KV chat history store",
-        "C": "Message sync queue",
-        "D": "WebSocket"
-      },
-      "answer": "A",
+      "choices": [
+        "Relational DB",
+        "WebSocket",
+        "Message sync queue",
+        "Only KV chat history store"
+      ],
+      "answer": "Relational DB",
       "source_pages": [
         187
       ]
@@ -2064,13 +2064,13 @@
       "id": "MCQ29",
       "difficulty": "hard",
       "question": "What read/write ratio is stated for 1:1 chat?",
-      "choices": {
-        "A": "10:1",
-        "B": "1:10",
-        "C": "1:1",
-        "D": "100:1"
-      },
-      "answer": "C",
+      "choices": [
+        "1:1",
+        "1:10",
+        "10:1",
+        "100:1"
+      ],
+      "answer": "1:1",
       "source_pages": [
         187
       ]
@@ -2079,13 +2079,13 @@
       "id": "MCQ30",
       "difficulty": "hard",
       "question": "Why are KV stores recommended for history?",
-      "choices": {
-        "A": "Horizontal scale and low-latency random access",
-        "B": "They provide SQL joins",
-        "C": "They eliminate IDs",
-        "D": "They require no persistence"
-      },
-      "answer": "A",
+      "choices": [
+        "They eliminate IDs",
+        "Horizontal scale and low-latency random access",
+        "They provide SQL joins",
+        "They require no persistence"
+      ],
+      "answer": "Horizontal scale and low-latency random access",
       "source_pages": [
         187
       ]
@@ -2094,13 +2094,13 @@
       "id": "MCQ31",
       "difficulty": "medium",
       "question": "Which storage does Messenger use according to the chapter?",
-      "choices": {
-        "A": "HBase",
-        "B": "MySQL only",
-        "C": "Redis only",
-        "D": "MongoDB"
-      },
-      "answer": "A",
+      "choices": [
+        "HBase",
+        "Redis only",
+        "MongoDB",
+        "MySQL only"
+      ],
+      "answer": "HBase",
       "source_pages": [
         187
       ]
@@ -2109,13 +2109,13 @@
       "id": "MCQ32",
       "difficulty": "medium",
       "question": "Which storage does Discord use according to the chapter?",
-      "choices": {
-        "A": "Cassandra",
-        "B": "HBase",
-        "C": "PostgreSQL only",
-        "D": "SQLite"
-      },
-      "answer": "A",
+      "choices": [
+        "HBase",
+        "Cassandra",
+        "SQLite",
+        "PostgreSQL only"
+      ],
+      "answer": "Cassandra",
       "source_pages": [
         187
       ]
@@ -2124,13 +2124,13 @@
       "id": "MCQ33",
       "difficulty": "medium",
       "question": "What is the one-on-one message-table primary key?",
-      "choices": {
-        "A": "message_id",
-        "B": "created_at",
-        "C": "message_to",
-        "D": "content"
-      },
-      "answer": "A",
+      "choices": [
+        "message_to",
+        "content",
+        "message_id",
+        "created_at"
+      ],
+      "answer": "message_id",
       "source_pages": [
         187,
         188
@@ -2140,13 +2140,13 @@
       "id": "MCQ34",
       "difficulty": "hard",
       "question": "Why not rely on created_at for ordering?",
-      "choices": {
-        "A": "Two messages can share the same timestamp",
-        "B": "created_at is never stored",
-        "C": "Timestamps are strings",
-        "D": "NoSQL forbids timestamps"
-      },
-      "answer": "A",
+      "choices": [
+        "created_at is never stored",
+        "Timestamps are strings",
+        "NoSQL forbids timestamps",
+        "Two messages can share the same timestamp"
+      ],
+      "answer": "Two messages can share the same timestamp",
       "source_pages": [
         187
       ]
@@ -2155,13 +2155,13 @@
       "id": "MCQ35",
       "difficulty": "medium",
       "question": "What is the group-message composite primary key?",
-      "choices": {
-        "A": "(channel_id,message_id)",
-        "B": "(user_id,content)",
-        "C": "(created_at,user_id)",
-        "D": "(message_from,message_to)"
-      },
-      "answer": "A",
+      "choices": [
+        "(message_from,message_to)",
+        "(user_id,content)",
+        "(channel_id,message_id)",
+        "(created_at,user_id)"
+      ],
+      "answer": "(channel_id,message_id)",
       "source_pages": [
         188
       ]
@@ -2170,13 +2170,13 @@
       "id": "MCQ36",
       "difficulty": "hard",
       "question": "Why is channel_id the partition key?",
-      "choices": {
-        "A": "Group-chat queries operate within a channel",
-        "B": "It is globally increasing",
-        "C": "It stores text",
-        "D": "It is a timestamp"
-      },
-      "answer": "A",
+      "choices": [
+        "Group-chat queries operate within a channel",
+        "It stores text",
+        "It is a timestamp",
+        "It is globally increasing"
+      ],
+      "answer": "Group-chat queries operate within a channel",
       "source_pages": [
         188
       ]
@@ -2185,13 +2185,13 @@
       "id": "MCQ37",
       "difficulty": "medium",
       "question": "What two requirements apply to message IDs?",
-      "choices": {
-        "A": "Unique and time-sortable",
-        "B": "Random and textual",
-        "C": "Exactly 32-bit and signed",
-        "D": "Global only"
-      },
-      "answer": "A",
+      "choices": [
+        "Exactly 32-bit and signed",
+        "Unique and time-sortable",
+        "Random and textual",
+        "Global only"
+      ],
+      "answer": "Unique and time-sortable",
       "source_pages": [
         189
       ]
@@ -2200,13 +2200,13 @@
       "id": "MCQ38",
       "difficulty": "hard",
       "question": "Why can local sequence IDs work?",
-      "choices": {
-        "A": "Ordering only needs to be maintained within a conversation",
-        "B": "No uniqueness is needed",
-        "C": "created_at becomes unique",
-        "D": "They are always UUIDs"
-      },
-      "answer": "A",
+      "choices": [
+        "They are always UUIDs",
+        "No uniqueness is needed",
+        "created_at becomes unique",
+        "Ordering only needs to be maintained within a conversation"
+      ],
+      "answer": "Ordering only needs to be maintained within a conversation",
       "source_pages": [
         189
       ]
@@ -2215,13 +2215,13 @@
       "id": "MCQ39",
       "difficulty": "medium",
       "question": "Which service-discovery implementation is named?",
-      "choices": {
-        "A": "ZooKeeper",
-        "B": "APNS",
-        "C": "HBase",
-        "D": "FCM"
-      },
-      "answer": "A",
+      "choices": [
+        "APNS",
+        "HBase",
+        "ZooKeeper",
+        "FCM"
+      ],
+      "answer": "ZooKeeper",
       "source_pages": [
         190
       ]
@@ -2230,13 +2230,13 @@
       "id": "MCQ40",
       "difficulty": "hard",
       "question": "What criteria may service discovery use?",
-      "choices": {
-        "A": "Geography and server capacity",
-        "B": "Message text color",
-        "C": "User's profile picture",
-        "D": "Only timestamp"
-      },
-      "answer": "A",
+      "choices": [
+        "Only timestamp",
+        "User's profile picture",
+        "Geography and server capacity",
+        "Message text color"
+      ],
+      "answer": "Geography and server capacity",
       "source_pages": [
         190
       ]
@@ -2245,13 +2245,13 @@
       "id": "MCQ41",
       "difficulty": "medium",
       "question": "What happens after service discovery chooses a server?",
-      "choices": {
-        "A": "Client opens WebSocket to it",
-        "B": "Client opens SQL session",
-        "C": "Client sends directly to peer",
-        "D": "Client stops connecting"
-      },
-      "answer": "A",
+      "choices": [
+        "Client opens SQL session",
+        "Client stops connecting",
+        "Client sends directly to peer",
+        "Client opens WebSocket to it"
+      ],
+      "answer": "Client opens WebSocket to it",
       "source_pages": [
         190
       ]
@@ -2260,13 +2260,13 @@
       "id": "MCQ42",
       "difficulty": "medium",
       "question": "What does Chat Server 1 obtain before enqueueing a message?",
-      "choices": {
-        "A": "Message ID",
-        "B": "New device token",
-        "C": "Friend graph",
-        "D": "Heartbeat count"
-      },
-      "answer": "A",
+      "choices": [
+        "Message ID",
+        "Friend graph",
+        "New device token",
+        "Heartbeat count"
+      ],
+      "answer": "Message ID",
       "source_pages": [
         191
       ]
@@ -2275,13 +2275,13 @@
       "id": "MCQ43",
       "difficulty": "medium",
       "question": "Where is a message persisted in the 1:1 flow?",
-      "choices": {
-        "A": "KV store",
-        "B": "Presence server",
-        "C": "Load balancer",
-        "D": "ZooKeeper"
-      },
-      "answer": "A",
+      "choices": [
+        "KV store",
+        "Load balancer",
+        "ZooKeeper",
+        "Presence server"
+      ],
+      "answer": "KV store",
       "source_pages": [
         191
       ]
@@ -2290,13 +2290,13 @@
       "id": "MCQ44",
       "difficulty": "hard",
       "question": "What happens when the recipient is offline?",
-      "choices": {
-        "A": "Push notification is sent",
-        "B": "Message is discarded",
-        "C": "Sender reconnects",
-        "D": "Presence is ignored"
-      },
-      "answer": "A",
+      "choices": [
+        "Push notification is sent",
+        "Message is discarded",
+        "Sender reconnects",
+        "Presence is ignored"
+      ],
+      "answer": "Push notification is sent",
       "source_pages": [
         191
       ]
@@ -2305,13 +2305,13 @@
       "id": "MCQ45",
       "difficulty": "medium",
       "question": "What does cur_max_message_id represent?",
-      "choices": {
-        "A": "Latest synchronized message ID on a device",
-        "B": "Largest group size",
-        "C": "Chat-server ID",
-        "D": "Number of connections"
-      },
-      "answer": "A",
+      "choices": [
+        "Chat-server ID",
+        "Largest group size",
+        "Latest synchronized message ID on a device",
+        "Number of connections"
+      ],
+      "answer": "Latest synchronized message ID on a device",
       "source_pages": [
         192
       ]
@@ -2320,13 +2320,13 @@
       "id": "MCQ46",
       "difficulty": "hard",
       "question": "What makes a KV message new for a device?",
-      "choices": {
-        "A": "Correct recipient and ID > cur_max_message_id",
-        "B": "created_at is today",
-        "C": "Content is unreadable",
-        "D": "Sender is online"
-      },
-      "answer": "A",
+      "choices": [
+        "created_at is today",
+        "Correct recipient and ID > cur_max_message_id",
+        "Sender is online",
+        "Content is unreadable"
+      ],
+      "answer": "Correct recipient and ID > cur_max_message_id",
       "source_pages": [
         192
       ]
@@ -2335,13 +2335,13 @@
       "id": "MCQ47",
       "difficulty": "hard",
       "question": "How is a small-group message distributed?",
-      "choices": {
-        "A": "Copy to each recipient inbox/sync queue",
-        "B": "One global queue only with no copies",
-        "C": "Direct peer-to-peer only",
-        "D": "Store only on sender device"
-      },
-      "answer": "A",
+      "choices": [
+        "Store only on sender device",
+        "Direct peer-to-peer only",
+        "One global queue only with no copies",
+        "Copy to each recipient inbox/sync queue"
+      ],
+      "answer": "Copy to each recipient inbox/sync queue",
       "source_pages": [
         193
       ]
@@ -2350,13 +2350,13 @@
       "id": "MCQ48",
       "difficulty": "hard",
       "question": "Why is per-recipient copying acceptable for small groups?",
-      "choices": {
-        "A": "Inbox sync is simple and copy count is manageable",
-        "B": "Messages are not stored",
-        "C": "Groups have no recipients",
-        "D": "Each group uses SQL join"
-      },
-      "answer": "A",
+      "choices": [
+        "Groups have no recipients",
+        "Inbox sync is simple and copy count is manageable",
+        "Each group uses SQL join",
+        "Messages are not stored"
+      ],
+      "answer": "Inbox sync is simple and copy count is manageable",
       "source_pages": [
         193
       ]
@@ -2365,13 +2365,13 @@
       "id": "MCQ49",
       "difficulty": "hard",
       "question": "What is the large-group weakness of per-recipient copying?",
-      "choices": {
-        "A": "Too many message copies",
-        "B": "No ordering",
-        "C": "No device support",
-        "D": "Cannot send text"
-      },
-      "answer": "A",
+      "choices": [
+        "No device support",
+        "Cannot send text",
+        "Too many message copies",
+        "No ordering"
+      ],
+      "answer": "Too many message copies",
       "source_pages": [
         193
       ]
@@ -2380,13 +2380,13 @@
       "id": "MCQ50",
       "difficulty": "medium",
       "question": "What is stored on presence login?",
-      "choices": {
-        "A": "Online status and last_active_at",
-        "B": "Only message text",
-        "C": "Only group size",
-        "D": "Only device model"
-      },
-      "answer": "A",
+      "choices": [
+        "Only message text",
+        "Only device model",
+        "Only group size",
+        "Online status and last_active_at"
+      ],
+      "answer": "Online status and last_active_at",
       "source_pages": [
         194
       ]
@@ -2395,13 +2395,13 @@
       "id": "MCQ51",
       "difficulty": "hard",
       "question": "Why not mark offline instantly on every disconnect?",
-      "choices": {
-        "A": "Transient network changes would cause presence flicker",
-        "B": "KV stores cannot update",
-        "C": "WebSocket never disconnects",
-        "D": "Logout is impossible"
-      },
-      "answer": "A",
+      "choices": [
+        "WebSocket never disconnects",
+        "Logout is impossible",
+        "KV stores cannot update",
+        "Transient network changes would cause presence flicker"
+      ],
+      "answer": "Transient network changes would cause presence flicker",
       "source_pages": [
         195
       ]
@@ -2410,13 +2410,13 @@
       "id": "MCQ52",
       "difficulty": "medium",
       "question": "What mechanism smooths transient disconnects?",
-      "choices": {
-        "A": "Heartbeat",
-        "B": "Polling history",
-        "C": "Snowflake",
-        "D": "Sharding"
-      },
-      "answer": "A",
+      "choices": [
+        "Snowflake",
+        "Polling history",
+        "Heartbeat",
+        "Sharding"
+      ],
+      "answer": "Heartbeat",
       "source_pages": [
         195,
         196
@@ -2426,13 +2426,13 @@
       "id": "MCQ53",
       "difficulty": "medium",
       "question": "What heartbeat interval is shown?",
-      "choices": {
-        "A": "1s",
-        "B": "5s",
-        "C": "30s",
-        "D": "60s"
-      },
-      "answer": "B",
+      "choices": [
+        "30s",
+        "1s",
+        "60s",
+        "5s"
+      ],
+      "answer": "5s",
       "source_pages": [
         195,
         196
@@ -2442,13 +2442,13 @@
       "id": "MCQ54",
       "difficulty": "medium",
       "question": "What example offline threshold x is shown?",
-      "choices": {
-        "A": "5s",
-        "B": "10s",
-        "C": "30s",
-        "D": "5m"
-      },
-      "answer": "C",
+      "choices": [
+        "10s",
+        "30s",
+        "5s",
+        "5m"
+      ],
+      "answer": "30s",
       "source_pages": [
         195,
         196
@@ -2458,13 +2458,13 @@
       "id": "MCQ55",
       "difficulty": "hard",
       "question": "What model distributes small-group presence changes?",
-      "choices": {
-        "A": "Publish-subscribe",
-        "B": "Batch ETL",
-        "C": "MapReduce",
-        "D": "Polling-only"
-      },
-      "answer": "A",
+      "choices": [
+        "Batch ETL",
+        "Polling-only",
+        "MapReduce",
+        "Publish-subscribe"
+      ],
+      "answer": "Publish-subscribe",
       "source_pages": [
         196
       ]
@@ -2473,13 +2473,13 @@
       "id": "MCQ56",
       "difficulty": "hard",
       "question": "Why does presence pub-sub struggle with 100,000-member groups?",
-      "choices": {
-        "A": "One status change may create 100,000 events",
-        "B": "WebSocket supports only 100 users",
-        "C": "KV stores fail",
-        "D": "No channels exist"
-      },
-      "answer": "A",
+      "choices": [
+        "KV stores fail",
+        "One status change may create 100,000 events",
+        "No channels exist",
+        "WebSocket supports only 100 users"
+      ],
+      "answer": "One status change may create 100,000 events",
       "source_pages": [
         197
       ]
@@ -2488,13 +2488,13 @@
       "id": "MCQ57",
       "difficulty": "hard",
       "question": "What alternative is suggested for huge-group presence?",
-      "choices": {
-        "A": "Fetch status on group entry or manual refresh",
-        "B": "Publish to every member continuously",
-        "C": "Disable presence globally",
-        "D": "Use created_at ordering"
-      },
-      "answer": "A",
+      "choices": [
+        "Disable presence globally",
+        "Use created_at ordering",
+        "Publish to every member continuously",
+        "Fetch status on group entry or manual refresh"
+      ],
+      "answer": "Fetch status on group entry or manual refresh",
       "source_pages": [
         197
       ]
@@ -2503,13 +2503,13 @@
       "id": "MCQ58",
       "difficulty": "medium",
       "question": "What helps recover from a chat-server failure?",
-      "choices": {
-        "A": "Service discovery assigns a new server",
-        "B": "Delete the account",
-        "C": "Disable WebSocket",
-        "D": "Remove the KV store"
-      },
-      "answer": "A",
+      "choices": [
+        "Service discovery assigns a new server",
+        "Remove the KV store",
+        "Delete the account",
+        "Disable WebSocket"
+      ],
+      "answer": "Service discovery assigns a new server",
       "source_pages": [
         198
       ]
@@ -2518,13 +2518,13 @@
       "id": "MCQ59",
       "difficulty": "medium",
       "question": "What message-resend techniques are named?",
-      "choices": {
-        "A": "Retry and queueing",
-        "B": "Only compression",
-        "C": "Only sharding",
-        "D": "Only encryption"
-      },
-      "answer": "A",
+      "choices": [
+        "Only compression",
+        "Only sharding",
+        "Retry and queueing",
+        "Only encryption"
+      ],
+      "answer": "Retry and queueing",
       "source_pages": [
         198
       ]

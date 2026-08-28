@@ -1439,13 +1439,13 @@
       "id": "MCQ01",
       "difficulty": "easy",
       "question": "A key-value store is what kind of database?",
-      "choices": {
-        "A": "Relational",
-        "B": "Non-relational",
-        "C": "Graph-only",
-        "D": "Time-series only"
-      },
-      "answer": "B",
+      "choices": [
+        "Relational",
+        "Time-series only",
+        "Non-relational",
+        "Graph-only"
+      ],
+      "answer": "Non-relational",
       "source_pages": [
         87
       ]
@@ -1454,13 +1454,13 @@
       "id": "MCQ02",
       "difficulty": "easy",
       "question": "Which operation retrieves the value associated with a key?",
-      "choices": {
-        "A": "put(key,value)",
-        "B": "get(key)",
-        "C": "hash(key)",
-        "D": "deleteNode()"
-      },
-      "answer": "B",
+      "choices": [
+        "put(key,value)",
+        "deleteNode()",
+        "hash(key)",
+        "get(key)"
+      ],
+      "answer": "get(key)",
       "source_pages": [
         87
       ]
@@ -1469,13 +1469,13 @@
       "id": "MCQ03",
       "difficulty": "medium",
       "question": "What key-value pair size does the design target?",
-      "choices": {
-        "A": "<10 KB",
-        "B": "<10 MB",
-        "C": "<1 GB",
-        "D": "Unlimited"
-      },
-      "answer": "A",
+      "choices": [
+        "<10 MB",
+        "<1 GB",
+        "Unlimited",
+        "<10 KB"
+      ],
+      "answer": "<10 KB",
       "source_pages": [
         88
       ]
@@ -1484,13 +1484,13 @@
       "id": "MCQ04",
       "difficulty": "medium",
       "question": "Which is NOT one of the stated requirements?",
-      "choices": {
-        "A": "Tunable consistency",
-        "B": "Automatic scaling",
-        "C": "Low latency",
-        "D": "Mandatory SQL joins"
-      },
-      "answer": "D",
+      "choices": [
+        "Mandatory SQL joins",
+        "Low latency",
+        "Automatic scaling",
+        "Tunable consistency"
+      ],
+      "answer": "Mandatory SQL joins",
       "source_pages": [
         88
       ]
@@ -1499,13 +1499,13 @@
       "id": "MCQ05",
       "difficulty": "medium",
       "question": "What is the intuitive single-server implementation?",
-      "choices": {
-        "A": "In-memory hash table",
-        "B": "Merkle tree only",
-        "C": "Bloom filter only",
-        "D": "Message queue"
-      },
-      "answer": "A",
+      "choices": [
+        "In-memory hash table",
+        "Message queue",
+        "Bloom filter only",
+        "Merkle tree only"
+      ],
+      "answer": "In-memory hash table",
       "source_pages": [
         89
       ]
@@ -1514,13 +1514,13 @@
       "id": "MCQ06",
       "difficulty": "medium",
       "question": "Which two optimizations are suggested for a single server?",
-      "choices": {
-        "A": "Compression and hot-data-in-memory/cold-data-on-disk",
-        "B": "Replication and quorum",
-        "C": "Gossip and Merkle trees",
-        "D": "DNS and CDN"
-      },
-      "answer": "A",
+      "choices": [
+        "Replication and quorum",
+        "Gossip and Merkle trees",
+        "Compression and hot-data-in-memory/cold-data-on-disk",
+        "DNS and CDN"
+      ],
+      "answer": "Compression and hot-data-in-memory/cold-data-on-disk",
       "source_pages": [
         89
       ]
@@ -1529,13 +1529,13 @@
       "id": "MCQ07",
       "difficulty": "easy",
       "question": "What does CAP's C mean?",
-      "choices": {
-        "A": "Caching",
-        "B": "Consistency",
-        "C": "Concurrency",
-        "D": "Compression"
-      },
-      "answer": "B",
+      "choices": [
+        "Compression",
+        "Caching",
+        "Consistency",
+        "Concurrency"
+      ],
+      "answer": "Consistency",
       "source_pages": [
         90
       ]
@@ -1544,13 +1544,13 @@
       "id": "MCQ08",
       "difficulty": "easy",
       "question": "What does CAP's A mean?",
-      "choices": {
-        "A": "Availability",
-        "B": "Atomicity",
-        "C": "Authentication",
-        "D": "Allocation"
-      },
-      "answer": "A",
+      "choices": [
+        "Availability",
+        "Authentication",
+        "Allocation",
+        "Atomicity"
+      ],
+      "answer": "Availability",
       "source_pages": [
         90
       ]
@@ -1559,13 +1559,13 @@
       "id": "MCQ09",
       "difficulty": "easy",
       "question": "What does CAP's P mean?",
-      "choices": {
-        "A": "Persistence",
-        "B": "Partition tolerance",
-        "C": "Performance",
-        "D": "Proxy"
-      },
-      "answer": "B",
+      "choices": [
+        "Partition tolerance",
+        "Performance",
+        "Proxy",
+        "Persistence"
+      ],
+      "answer": "Partition tolerance",
       "source_pages": [
         90
       ]
@@ -1574,13 +1574,13 @@
       "id": "MCQ10",
       "difficulty": "medium",
       "question": "A CP store sacrifices which property during a partition?",
-      "choices": {
-        "A": "Consistency",
-        "B": "Availability",
-        "C": "Partition tolerance",
-        "D": "Replication"
-      },
-      "answer": "B",
+      "choices": [
+        "Consistency",
+        "Partition tolerance",
+        "Replication",
+        "Availability"
+      ],
+      "answer": "Availability",
       "source_pages": [
         90
       ]
@@ -1589,13 +1589,13 @@
       "id": "MCQ11",
       "difficulty": "medium",
       "question": "An AP store sacrifices which property?",
-      "choices": {
-        "A": "Consistency",
-        "B": "Availability",
-        "C": "Partition tolerance",
-        "D": "Scalability"
-      },
-      "answer": "A",
+      "choices": [
+        "Partition tolerance",
+        "Availability",
+        "Consistency",
+        "Scalability"
+      ],
+      "answer": "Consistency",
       "source_pages": [
         90
       ]
@@ -1604,13 +1604,13 @@
       "id": "MCQ12",
       "difficulty": "hard",
       "question": "Why does the chapter say a CA distributed system cannot exist in real-world applications?",
-      "choices": {
-        "A": "Keys are too large",
-        "B": "Network partition cannot be ignored",
-        "C": "Quorum is impossible",
-        "D": "Hash rings require replicas"
-      },
-      "answer": "B",
+      "choices": [
+        "Quorum is impossible",
+        "Network partition cannot be ignored",
+        "Keys are too large",
+        "Hash rings require replicas"
+      ],
+      "answer": "Network partition cannot be ignored",
       "source_pages": [
         91
       ]
@@ -1619,13 +1619,13 @@
       "id": "MCQ13",
       "difficulty": "hard",
       "question": "During a partition, what does the CP bank-style example do?",
-      "choices": {
-        "A": "Accept every write",
-        "B": "Block writes to avoid inconsistency",
-        "C": "Return random data",
-        "D": "Disable replication forever"
-      },
-      "answer": "B",
+      "choices": [
+        "Block writes to avoid inconsistency",
+        "Disable replication forever",
+        "Accept every write",
+        "Return random data"
+      ],
+      "answer": "Block writes to avoid inconsistency",
       "source_pages": [
         92
       ]
@@ -1634,13 +1634,13 @@
       "id": "MCQ14",
       "difficulty": "hard",
       "question": "What does the AP example permit?",
-      "choices": {
-        "A": "Reads/writes continue even if some data may be stale",
-        "B": "No responses",
-        "C": "Only local-memory reads",
-        "D": "No later synchronization"
-      },
-      "answer": "A",
+      "choices": [
+        "Reads/writes continue even if some data may be stale",
+        "Only local-memory reads",
+        "No later synchronization",
+        "No responses"
+      ],
+      "answer": "Reads/writes continue even if some data may be stale",
       "source_pages": [
         92
       ]
@@ -1649,13 +1649,13 @@
       "id": "MCQ15",
       "difficulty": "medium",
       "question": "Which technique solves the chapter's two partitioning challenges?",
-      "choices": {
-        "A": "Consistent hashing",
-        "B": "All-to-all multicast",
-        "C": "Commit log",
-        "D": "Vector clock"
-      },
-      "answer": "A",
+      "choices": [
+        "All-to-all multicast",
+        "Commit log",
+        "Consistent hashing",
+        "Vector clock"
+      ],
+      "answer": "Consistent hashing",
       "source_pages": [
         93
       ]
@@ -1664,13 +1664,13 @@
       "id": "MCQ16",
       "difficulty": "hard",
       "question": "How does the design account for heterogeneous server capacity?",
-      "choices": {
-        "A": "Give higher-capacity servers more virtual nodes",
-        "B": "Give every server zero virtual nodes",
-        "C": "Store more on the coordinator",
-        "D": "Increase W only"
-      },
-      "answer": "A",
+      "choices": [
+        "Give every server zero virtual nodes",
+        "Give higher-capacity servers more virtual nodes",
+        "Store more on the coordinator",
+        "Increase W only"
+      ],
+      "answer": "Give higher-capacity servers more virtual nodes",
       "source_pages": [
         94
       ]
@@ -1679,13 +1679,13 @@
       "id": "MCQ17",
       "difficulty": "medium",
       "question": "With N=3 in Figure 6-5, where is key0 replicated?",
-      "choices": {
-        "A": "s1,s2,s3",
-        "B": "s0,s4,s7",
-        "C": "s1 only",
-        "D": "All eight servers"
-      },
-      "answer": "A",
+      "choices": [
+        "All eight servers",
+        "s1,s2,s3",
+        "s0,s4,s7",
+        "s1 only"
+      ],
+      "answer": "s1,s2,s3",
       "source_pages": [
         94
       ]
@@ -1694,13 +1694,13 @@
       "id": "MCQ18",
       "difficulty": "hard",
       "question": "Why choose unique physical servers when walking virtual nodes?",
-      "choices": {
-        "A": "Several virtual nodes may belong to the same physical server",
-        "B": "Physical servers cannot hash keys",
-        "C": "Virtual nodes are always offline",
-        "D": "To disable redundancy"
-      },
-      "answer": "A",
+      "choices": [
+        "To disable redundancy",
+        "Several virtual nodes may belong to the same physical server",
+        "Virtual nodes are always offline",
+        "Physical servers cannot hash keys"
+      ],
+      "answer": "Several virtual nodes may belong to the same physical server",
       "source_pages": [
         94
       ]
@@ -1709,13 +1709,13 @@
       "id": "MCQ19",
       "difficulty": "medium",
       "question": "What is W?",
-      "choices": {
-        "A": "Write quorum size",
-        "B": "Number of workers",
-        "C": "Window size",
-        "D": "Number of data centers"
-      },
-      "answer": "A",
+      "choices": [
+        "Number of workers",
+        "Window size",
+        "Write quorum size",
+        "Number of data centers"
+      ],
+      "answer": "Write quorum size",
       "source_pages": [
         95
       ]
@@ -1724,13 +1724,13 @@
       "id": "MCQ20",
       "difficulty": "medium",
       "question": "What is R?",
-      "choices": {
-        "A": "Replication factor",
-        "B": "Read quorum size",
-        "C": "Retry count",
-        "D": "Ring size"
-      },
-      "answer": "B",
+      "choices": [
+        "Read quorum size",
+        "Ring size",
+        "Replication factor",
+        "Retry count"
+      ],
+      "answer": "Read quorum size",
       "source_pages": [
         95
       ]
@@ -1739,13 +1739,13 @@
       "id": "MCQ21",
       "difficulty": "hard",
       "question": "What does W=1 mean?",
-      "choices": {
-        "A": "Only one replica stores data",
-        "B": "One acknowledgement is enough for write success",
-        "C": "N must equal 1",
-        "D": "No replication occurs"
-      },
-      "answer": "B",
+      "choices": [
+        "N must equal 1",
+        "No replication occurs",
+        "Only one replica stores data",
+        "One acknowledgement is enough for write success"
+      ],
+      "answer": "One acknowledgement is enough for write success",
       "source_pages": [
         95
       ]
@@ -1754,13 +1754,13 @@
       "id": "MCQ22",
       "difficulty": "hard",
       "question": "Which condition guarantees strong consistency in the chapter?",
-      "choices": {
-        "A": "W+R>N",
-        "B": "W+R<N",
-        "C": "W=0",
-        "D": "R=0"
-      },
-      "answer": "A",
+      "choices": [
+        "W=0",
+        "W+R>N",
+        "W+R<N",
+        "R=0"
+      ],
+      "answer": "W+R>N",
       "source_pages": [
         95,
         96
@@ -1770,13 +1770,13 @@
       "id": "MCQ23",
       "difficulty": "medium",
       "question": "Which configuration is optimized for fast reads?",
-      "choices": {
-        "A": "R=1,W=N",
-        "B": "R=N,W=1",
-        "C": "R=N,W=N",
-        "D": "R=0,W=0"
-      },
-      "answer": "A",
+      "choices": [
+        "R=0,W=0",
+        "R=1,W=N",
+        "R=N,W=N",
+        "R=N,W=1"
+      ],
+      "answer": "R=1,W=N",
       "source_pages": [
         96
       ]
@@ -1785,13 +1785,13 @@
       "id": "MCQ24",
       "difficulty": "medium",
       "question": "Which configuration is optimized for fast writes?",
-      "choices": {
-        "A": "W=1,R=N",
-        "B": "W=N,R=1",
-        "C": "W=N,R=N",
-        "D": "W=0,R=0"
-      },
-      "answer": "A",
+      "choices": [
+        "W=N,R=1",
+        "W=N,R=N",
+        "W=0,R=0",
+        "W=1,R=N"
+      ],
+      "answer": "W=1,R=N",
       "source_pages": [
         96
       ]
@@ -1800,13 +1800,13 @@
       "id": "MCQ25",
       "difficulty": "medium",
       "question": "Which consistency model does the chapter recommend?",
-      "choices": {
-        "A": "Eventual consistency",
-        "B": "Strong consistency only",
-        "C": "No consistency",
-        "D": "CA consistency"
-      },
-      "answer": "A",
+      "choices": [
+        "Strong consistency only",
+        "Eventual consistency",
+        "No consistency",
+        "CA consistency"
+      ],
+      "answer": "Eventual consistency",
       "source_pages": [
         96
       ]
@@ -1815,13 +1815,13 @@
       "id": "MCQ26",
       "difficulty": "hard",
       "question": "What problem does versioning address?",
-      "choices": {
-        "A": "Concurrent conflicting writes",
-        "B": "DNS lookup",
-        "C": "Key compression",
-        "D": "Server naming"
-      },
-      "answer": "A",
+      "choices": [
+        "Server naming",
+        "DNS lookup",
+        "Key compression",
+        "Concurrent conflicting writes"
+      ],
+      "answer": "Concurrent conflicting writes",
       "source_pages": [
         97
       ]
@@ -1830,13 +1830,13 @@
       "id": "MCQ27",
       "difficulty": "medium",
       "question": "What is a vector clock composed of?",
-      "choices": {
-        "A": "[server,version] pairs",
-        "B": "[key,value] only",
-        "C": "[server,IP] only",
-        "D": "[timestamp,TTL] only"
-      },
-      "answer": "A",
+      "choices": [
+        "[server,version] pairs",
+        "[timestamp,TTL] only",
+        "[server,IP] only",
+        "[key,value] only"
+      ],
+      "answer": "[server,version] pairs",
       "source_pages": [
         98
       ]
@@ -1845,13 +1845,13 @@
       "id": "MCQ28",
       "difficulty": "hard",
       "question": "Which two versions conflict in Figure 6-9?",
-      "choices": {
-        "A": "D1 and D2",
-        "B": "D2 and D3",
-        "C": "D3 and D4",
-        "D": "D4 and D5 only"
-      },
-      "answer": "C",
+      "choices": [
+        "D3 and D4",
+        "D2 and D3",
+        "D1 and D2",
+        "D4 and D5 only"
+      ],
+      "answer": "D3 and D4",
       "source_pages": [
         98,
         99
@@ -1861,13 +1861,13 @@
       "id": "MCQ29",
       "difficulty": "hard",
       "question": "Which condition indicates an ancestor/no-conflict relationship?",
-      "choices": {
-        "A": "Y's corresponding counters are all >= X's",
-        "B": "Every Y counter is smaller",
-        "C": "Servers are identical strings",
-        "D": "Vector clocks have equal lengths only"
-      },
-      "answer": "A",
+      "choices": [
+        "Y's corresponding counters are all >= X's",
+        "Servers are identical strings",
+        "Every Y counter is smaller",
+        "Vector clocks have equal lengths only"
+      ],
+      "answer": "Y's corresponding counters are all >= X's",
       "source_pages": [
         99
       ]
@@ -1876,13 +1876,13 @@
       "id": "MCQ30",
       "difficulty": "hard",
       "question": "What is one downside of bounding vector-clock length by removing oldest entries?",
-      "choices": {
-        "A": "Ancestor relationships may become impossible to determine accurately",
-        "B": "All conflicts disappear",
-        "C": "Every node becomes a coordinator",
-        "D": "No writes can happen"
-      },
-      "answer": "A",
+      "choices": [
+        "No writes can happen",
+        "All conflicts disappear",
+        "Ancestor relationships may become impossible to determine accurately",
+        "Every node becomes a coordinator"
+      ],
+      "answer": "Ancestor relationships may become impossible to determine accurately",
       "source_pages": [
         99
       ]
@@ -1891,13 +1891,13 @@
       "id": "MCQ31",
       "difficulty": "medium",
       "question": "What failure-detection approach scales better than all-to-all multicasting?",
-      "choices": {
-        "A": "Gossip protocol",
-        "B": "Strict quorum",
-        "C": "SSTable",
-        "D": "Bloom filter"
-      },
-      "answer": "A",
+      "choices": [
+        "SSTable",
+        "Bloom filter",
+        "Gossip protocol",
+        "Strict quorum"
+      ],
+      "answer": "Gossip protocol",
       "source_pages": [
         100
       ]
@@ -1906,13 +1906,13 @@
       "id": "MCQ32",
       "difficulty": "medium",
       "question": "What does a gossip membership list contain?",
-      "choices": {
-        "A": "Member IDs and heartbeat counters",
-        "B": "Only keys",
-        "C": "Only values",
-        "D": "Only quorum sizes"
-      },
-      "answer": "A",
+      "choices": [
+        "Member IDs and heartbeat counters",
+        "Only keys",
+        "Only values",
+        "Only quorum sizes"
+      ],
+      "answer": "Member IDs and heartbeat counters",
       "source_pages": [
         100
       ]
@@ -1921,13 +1921,13 @@
       "id": "MCQ33",
       "difficulty": "hard",
       "question": "What is sloppy quorum designed to improve?",
-      "choices": {
-        "A": "Availability during failures",
-        "B": "Key length",
-        "C": "Compression",
-        "D": "Disk sorting"
-      },
-      "answer": "A",
+      "choices": [
+        "Availability during failures",
+        "Compression",
+        "Key length",
+        "Disk sorting"
+      ],
+      "answer": "Availability during failures",
       "source_pages": [
         101
       ]
@@ -1936,13 +1936,13 @@
       "id": "MCQ34",
       "difficulty": "hard",
       "question": "What is hinted handoff?",
-      "choices": {
-        "A": "A healthy node temporarily stores/serves data for an unavailable replica and returns it later",
-        "B": "A new hash function",
-        "C": "A strong-consistency quorum formula",
-        "D": "A cache eviction method"
-      },
-      "answer": "A",
+      "choices": [
+        "A cache eviction method",
+        "A strong-consistency quorum formula",
+        "A new hash function",
+        "A healthy node temporarily stores/serves data for an unavailable replica and returns it later"
+      ],
+      "answer": "A healthy node temporarily stores/serves data for an unavailable replica and returns it later",
       "source_pages": [
         101
       ]
@@ -1951,13 +1951,13 @@
       "id": "MCQ35",
       "difficulty": "medium",
       "question": "What technique is used for permanent-failure replica synchronization?",
-      "choices": {
-        "A": "Merkle tree / anti-entropy",
-        "B": "Sticky sessions",
-        "C": "Rate limiting",
-        "D": "DNS"
-      },
-      "answer": "A",
+      "choices": [
+        "Rate limiting",
+        "Merkle tree / anti-entropy",
+        "Sticky sessions",
+        "DNS"
+      ],
+      "answer": "Merkle tree / anti-entropy",
       "source_pages": [
         102
       ]
@@ -1966,13 +1966,13 @@
       "id": "MCQ36",
       "difficulty": "hard",
       "question": "Why are Merkle trees efficient for replica repair?",
-      "choices": {
-        "A": "They allow synchronization proportional to differing regions rather than total data size",
-        "B": "They eliminate hashing",
-        "C": "They store only one key",
-        "D": "They avoid replication"
-      },
-      "answer": "A",
+      "choices": [
+        "They store only one key",
+        "They eliminate hashing",
+        "They allow synchronization proportional to differing regions rather than total data size",
+        "They avoid replication"
+      ],
+      "answer": "They allow synchronization proportional to differing regions rather than total data size",
       "source_pages": [
         103
       ]
@@ -1981,13 +1981,13 @@
       "id": "MCQ37",
       "difficulty": "medium",
       "question": "How does the design handle data-center outage?",
-      "choices": {
-        "A": "Cross-data-center replication",
-        "B": "One data center only",
-        "C": "Disable replicas",
-        "D": "Store everything in client cache"
-      },
-      "answer": "A",
+      "choices": [
+        "Cross-data-center replication",
+        "Store everything in client cache",
+        "One data center only",
+        "Disable replicas"
+      ],
+      "answer": "Cross-data-center replication",
       "source_pages": [
         103
       ]
@@ -1996,13 +1996,13 @@
       "id": "MCQ38",
       "difficulty": "medium",
       "question": "What does the coordinator do in the architecture?",
-      "choices": {
-        "A": "Acts as a proxy between client and store nodes",
-        "B": "Stores all data alone",
-        "C": "Replaces every node",
-        "D": "Only detects failures"
-      },
-      "answer": "A",
+      "choices": [
+        "Only detects failures",
+        "Stores all data alone",
+        "Acts as a proxy between client and store nodes",
+        "Replaces every node"
+      ],
+      "answer": "Acts as a proxy between client and store nodes",
       "source_pages": [
         104
       ]
@@ -2011,13 +2011,13 @@
       "id": "MCQ39",
       "difficulty": "medium",
       "question": "What is the first step of the write path?",
-      "choices": {
-        "A": "Persist to commit log",
-        "B": "Query Bloom filter",
-        "C": "Delete SSTable",
-        "D": "Read quorum"
-      },
-      "answer": "A",
+      "choices": [
+        "Query Bloom filter",
+        "Persist to commit log",
+        "Read quorum",
+        "Delete SSTable"
+      ],
+      "answer": "Persist to commit log",
       "source_pages": [
         105
       ]
@@ -2026,13 +2026,13 @@
       "id": "MCQ40",
       "difficulty": "medium",
       "question": "When is data flushed from memory cache to SSTable?",
-      "choices": {
-        "A": "When cache is full or reaches threshold",
-        "B": "Before every write",
-        "C": "Never",
-        "D": "Only after a data-center outage"
-      },
-      "answer": "A",
+      "choices": [
+        "Before every write",
+        "Never",
+        "Only after a data-center outage",
+        "When cache is full or reaches threshold"
+      ],
+      "answer": "When cache is full or reaches threshold",
       "source_pages": [
         106
       ]
@@ -2041,13 +2041,13 @@
       "id": "MCQ41",
       "difficulty": "medium",
       "question": "What does the read path check first?",
-      "choices": {
-        "A": "Memory cache",
-        "B": "Merkle root",
-        "C": "Gossip membership",
-        "D": "Commit-log tail"
-      },
-      "answer": "A",
+      "choices": [
+        "Gossip membership",
+        "Memory cache",
+        "Merkle root",
+        "Commit-log tail"
+      ],
+      "answer": "Memory cache",
       "source_pages": [
         106
       ]
@@ -2056,13 +2056,13 @@
       "id": "MCQ42",
       "difficulty": "medium",
       "question": "What does the Bloom filter help determine?",
-      "choices": {
-        "A": "Which SSTables might contain the key",
-        "B": "Which data center is CP",
-        "C": "Which node should gossip",
-        "D": "Which server owns the vector clock"
-      },
-      "answer": "A",
+      "choices": [
+        "Which data center is CP",
+        "Which SSTables might contain the key",
+        "Which node should gossip",
+        "Which server owns the vector clock"
+      ],
+      "answer": "Which SSTables might contain the key",
       "source_pages": [
         106,
         107

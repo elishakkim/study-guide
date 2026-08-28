@@ -1740,13 +1740,13 @@
       "id": "MCQ01",
       "difficulty": "easy",
       "question": "Which is another name for autocomplete?",
-      "choices": {
-        "A": "Typeahead",
-        "B": "Replication",
-        "C": "Sharding",
-        "D": "Polling"
-      },
-      "answer": "A",
+      "choices": [
+        "Typeahead",
+        "Sharding",
+        "Replication",
+        "Polling"
+      ],
+      "answer": "Typeahead",
       "source_pages": [
         200
       ]
@@ -1755,13 +1755,13 @@
       "id": "MCQ02",
       "difficulty": "medium",
       "question": "Where must the typed text match?",
-      "choices": {
-        "A": "Only the query prefix",
-        "B": "Anywhere in the query",
-        "C": "Only the final word",
-        "D": "Only exact full queries"
-      },
-      "answer": "A",
+      "choices": [
+        "Anywhere in the query",
+        "Only the query prefix",
+        "Only the final word",
+        "Only exact full queries"
+      ],
+      "answer": "Only the query prefix",
       "source_pages": [
         201
       ]
@@ -1770,13 +1770,13 @@
       "id": "MCQ03",
       "difficulty": "easy",
       "question": "How many suggestions are returned?",
-      "choices": {
-        "A": "3",
-        "B": "5",
-        "C": "10",
-        "D": "20"
-      },
-      "answer": "B",
+      "choices": [
+        "10",
+        "5",
+        "20",
+        "3"
+      ],
+      "answer": "5",
       "source_pages": [
         201
       ]
@@ -1785,13 +1785,13 @@
       "id": "MCQ04",
       "difficulty": "medium",
       "question": "What ranks suggestions?",
-      "choices": {
-        "A": "Historical query frequency",
-        "B": "Alphabetical order only",
-        "C": "Query length only",
-        "D": "Random score"
-      },
-      "answer": "A",
+      "choices": [
+        "Query length only",
+        "Random score",
+        "Historical query frequency",
+        "Alphabetical order only"
+      ],
+      "answer": "Historical query frequency",
       "source_pages": [
         201
       ]
@@ -1800,13 +1800,13 @@
       "id": "MCQ05",
       "difficulty": "medium",
       "question": "Is spell check supported?",
-      "choices": {
-        "A": "Yes",
-        "B": "No",
-        "C": "Only mobile",
-        "D": "Only English typos"
-      },
-      "answer": "B",
+      "choices": [
+        "No",
+        "Only English typos",
+        "Yes",
+        "Only mobile"
+      ],
+      "answer": "No",
       "source_pages": [
         201
       ]
@@ -1815,13 +1815,13 @@
       "id": "MCQ06",
       "difficulty": "medium",
       "question": "Which character set is assumed in the core design?",
-      "choices": {
-        "A": "Lowercase English alphabetic",
-        "B": "All Unicode",
-        "C": "Digits only",
-        "D": "Uppercase only"
-      },
-      "answer": "A",
+      "choices": [
+        "Digits only",
+        "All Unicode",
+        "Lowercase English alphabetic",
+        "Uppercase only"
+      ],
+      "answer": "Lowercase English alphabetic",
       "source_pages": [
         201
       ]
@@ -1830,13 +1830,13 @@
       "id": "MCQ07",
       "difficulty": "medium",
       "question": "What DAU scale is assumed?",
-      "choices": {
-        "A": "1M",
-        "B": "10M",
-        "C": "100M",
-        "D": "1B"
-      },
-      "answer": "B",
+      "choices": [
+        "100M",
+        "1B",
+        "1M",
+        "10M"
+      ],
+      "answer": "10M",
       "source_pages": [
         201
       ]
@@ -1845,13 +1845,13 @@
       "id": "MCQ08",
       "difficulty": "medium",
       "question": "What response-time target is mentioned?",
-      "choices": {
-        "A": "10 ms",
-        "B": "100 ms",
-        "C": "1 second",
-        "D": "5 seconds"
-      },
-      "answer": "B",
+      "choices": [
+        "10 ms",
+        "1 second",
+        "100 ms",
+        "5 seconds"
+      ],
+      "answer": "100 ms",
       "source_pages": [
         201
       ]
@@ -1860,13 +1860,13 @@
       "id": "MCQ09",
       "difficulty": "medium",
       "question": "What average query size is assumed?",
-      "choices": {
-        "A": "5 bytes",
-        "B": "20 bytes",
-        "C": "100 bytes",
-        "D": "1 KB"
-      },
-      "answer": "B",
+      "choices": [
+        "20 bytes",
+        "5 bytes",
+        "100 bytes",
+        "1 KB"
+      ],
+      "answer": "20 bytes",
       "source_pages": [
         201
       ]
@@ -1875,13 +1875,13 @@
       "id": "MCQ10",
       "difficulty": "medium",
       "question": "How many searches/day per user are assumed?",
-      "choices": {
-        "A": "1",
-        "B": "5",
-        "C": "10",
-        "D": "20"
-      },
-      "answer": "C",
+      "choices": [
+        "10",
+        "20",
+        "5",
+        "1"
+      ],
+      "answer": "10",
       "source_pages": [
         201
       ]
@@ -1890,13 +1890,13 @@
       "id": "MCQ11",
       "difficulty": "hard",
       "question": "Why are 20 autocomplete requests assumed per search?",
-      "choices": {
-        "A": "One request per typed character",
-        "B": "20 data centers",
-        "C": "20 result pages",
-        "D": "20 shards"
-      },
-      "answer": "A",
+      "choices": [
+        "20 shards",
+        "One request per typed character",
+        "20 data centers",
+        "20 result pages"
+      ],
+      "answer": "One request per typed character",
       "source_pages": [
         201
       ]
@@ -1905,13 +1905,13 @@
       "id": "MCQ12",
       "difficulty": "medium",
       "question": "What is average autocomplete QPS?",
-      "choices": {
-        "A": "2,400",
-        "B": "24,000",
-        "C": "48,000",
-        "D": "240,000"
-      },
-      "answer": "B",
+      "choices": [
+        "24,000",
+        "2,400",
+        "240,000",
+        "48,000"
+      ],
+      "answer": "24,000",
       "source_pages": [
         202
       ]
@@ -1920,13 +1920,13 @@
       "id": "MCQ13",
       "difficulty": "medium",
       "question": "What is peak QPS?",
-      "choices": {
-        "A": "12,000",
-        "B": "24,000",
-        "C": "48,000",
-        "D": "96,000"
-      },
-      "answer": "C",
+      "choices": [
+        "48,000",
+        "12,000",
+        "96,000",
+        "24,000"
+      ],
+      "answer": "48,000",
       "source_pages": [
         202
       ]
@@ -1935,13 +1935,13 @@
       "id": "MCQ14",
       "difficulty": "medium",
       "question": "What fraction of daily queries are assumed new?",
-      "choices": {
-        "A": "5%",
-        "B": "10%",
-        "C": "20%",
-        "D": "50%"
-      },
-      "answer": "C",
+      "choices": [
+        "50%",
+        "20%",
+        "10%",
+        "5%"
+      ],
+      "answer": "20%",
       "source_pages": [
         202
       ]
@@ -1950,13 +1950,13 @@
       "id": "MCQ15",
       "difficulty": "hard",
       "question": "How much new data is estimated per day?",
-      "choices": {
-        "A": "0.04 GB",
-        "B": "0.4 GB",
-        "C": "4 GB",
-        "D": "40 GB"
-      },
-      "answer": "B",
+      "choices": [
+        "40 GB",
+        "0.4 GB",
+        "0.04 GB",
+        "4 GB"
+      ],
+      "answer": "0.4 GB",
       "source_pages": [
         202
       ]
@@ -1965,13 +1965,13 @@
       "id": "MCQ16",
       "difficulty": "medium",
       "question": "What are the two high-level services?",
-      "choices": {
-        "A": "Data gathering and query service",
-        "B": "Chat and presence",
-        "C": "Upload and CDN",
-        "D": "Write and replica"
-      },
-      "answer": "A",
+      "choices": [
+        "Upload and CDN",
+        "Write and replica",
+        "Data gathering and query service",
+        "Chat and presence"
+      ],
+      "answer": "Data gathering and query service",
       "source_pages": [
         203
       ]
@@ -1980,13 +1980,13 @@
       "id": "MCQ17",
       "difficulty": "medium",
       "question": "What does query service return?",
-      "choices": {
-        "A": "Top 5 matching frequent queries",
-        "B": "All queries",
-        "C": "Only exact matches",
-        "D": "Spell corrections"
-      },
-      "answer": "A",
+      "choices": [
+        "Only exact matches",
+        "All queries",
+        "Spell corrections",
+        "Top 5 matching frequent queries"
+      ],
+      "answer": "Top 5 matching frequent queries",
       "source_pages": [
         203
       ]
@@ -1995,13 +1995,13 @@
       "id": "MCQ18",
       "difficulty": "medium",
       "question": "What are the frequency table fields?",
-      "choices": {
-        "A": "query, frequency",
-        "B": "user, password",
-        "C": "prefix, shard only",
-        "D": "query, IP"
-      },
-      "answer": "A",
+      "choices": [
+        "query, frequency",
+        "query, IP",
+        "prefix, shard only",
+        "user, password"
+      ],
+      "answer": "query, frequency",
       "source_pages": [
         203
       ]
@@ -2010,13 +2010,13 @@
       "id": "MCQ19",
       "difficulty": "hard",
       "question": "Why does the initial relational design fail at scale?",
-      "choices": {
-        "A": "Database access becomes a bottleneck",
-        "B": "SQL cannot sort",
-        "C": "Queries cannot store strings",
-        "D": "Frequency cannot be counted"
-      },
-      "answer": "A",
+      "choices": [
+        "Frequency cannot be counted",
+        "Database access becomes a bottleneck",
+        "SQL cannot sort",
+        "Queries cannot store strings"
+      ],
+      "answer": "Database access becomes a bottleneck",
       "source_pages": [
         205
       ]
@@ -2025,13 +2025,13 @@
       "id": "MCQ20",
       "difficulty": "medium",
       "question": "What data structure replaces direct relational lookup?",
-      "choices": {
-        "A": "Trie",
-        "B": "Linked list",
-        "C": "Stack",
-        "D": "Bloom filter only"
-      },
-      "answer": "A",
+      "choices": [
+        "Stack",
+        "Bloom filter only",
+        "Linked list",
+        "Trie"
+      ],
+      "answer": "Trie",
       "source_pages": [
         206
       ]
@@ -2040,13 +2040,13 @@
       "id": "MCQ21",
       "difficulty": "medium",
       "question": "What does the trie root represent?",
-      "choices": {
-        "A": "Empty string",
-        "B": "Most popular query",
-        "C": "First character",
-        "D": "Shard ID"
-      },
-      "answer": "A",
+      "choices": [
+        "Empty string",
+        "Shard ID",
+        "Most popular query",
+        "First character"
+      ],
+      "answer": "Empty string",
       "source_pages": [
         206
       ]
@@ -2055,13 +2055,13 @@
       "id": "MCQ22",
       "difficulty": "medium",
       "question": "Under lowercase English, how many child positions may each node have?",
-      "choices": {
-        "A": "10",
-        "B": "26",
-        "C": "52",
-        "D": "62"
-      },
-      "answer": "B",
+      "choices": [
+        "52",
+        "26",
+        "62",
+        "10"
+      ],
+      "answer": "26",
       "source_pages": [
         206
       ]
@@ -2070,13 +2070,13 @@
       "id": "MCQ23",
       "difficulty": "hard",
       "question": "What extra data must trie nodes include for popularity ranking?",
-      "choices": {
-        "A": "Frequency",
-        "B": "Password",
-        "C": "IP address",
-        "D": "Video ID"
-      },
-      "answer": "A",
+      "choices": [
+        "Video ID",
+        "IP address",
+        "Frequency",
+        "Password"
+      ],
+      "answer": "Frequency",
       "source_pages": [
         207
       ]
@@ -2085,13 +2085,13 @@
       "id": "MCQ24",
       "difficulty": "medium",
       "question": "What does p denote?",
-      "choices": {
-        "A": "Prefix length",
-        "B": "Number of shards",
-        "C": "Popularity score",
-        "D": "Peak QPS"
-      },
-      "answer": "A",
+      "choices": [
+        "Popularity score",
+        "Prefix length",
+        "Number of shards",
+        "Peak QPS"
+      ],
+      "answer": "Prefix length",
       "source_pages": [
         208
       ]
@@ -2100,13 +2100,13 @@
       "id": "MCQ25",
       "difficulty": "hard",
       "question": "What is the prefix lookup complexity before optimization?",
-      "choices": {
-        "A": "O(1)",
-        "B": "O(p)",
-        "C": "O(c)",
-        "D": "O(n log n)"
-      },
-      "answer": "B",
+      "choices": [
+        "O(p)",
+        "O(n log n)",
+        "O(1)",
+        "O(c)"
+      ],
+      "answer": "O(p)",
       "source_pages": [
         208
       ]
@@ -2115,13 +2115,13 @@
       "id": "MCQ26",
       "difficulty": "hard",
       "question": "What is candidate sorting complexity?",
-      "choices": {
-        "A": "O(c log c)",
-        "B": "O(1)",
-        "C": "O(p)",
-        "D": "O(log p)"
-      },
-      "answer": "A",
+      "choices": [
+        "O(1)",
+        "O(p)",
+        "O(c log c)",
+        "O(log p)"
+      ],
+      "answer": "O(c log c)",
       "source_pages": [
         208
       ]
@@ -2130,13 +2130,13 @@
       "id": "MCQ27",
       "difficulty": "hard",
       "question": "What top-two results are returned for prefix 'tr' in the example?",
-      "choices": {
-        "A": "true and try",
-        "B": "tree and toy",
-        "C": "wish and win",
-        "D": "try and tree"
-      },
-      "answer": "A",
+      "choices": [
+        "true and try",
+        "wish and win",
+        "try and tree",
+        "tree and toy"
+      ],
+      "answer": "true and try",
       "source_pages": [
         208
       ]
@@ -2145,13 +2145,13 @@
       "id": "MCQ28",
       "difficulty": "hard",
       "question": "What makes the basic algorithm too slow?",
-      "choices": {
-        "A": "Worst-case subtree traversal",
-        "B": "The root stores no character",
-        "C": "Queries are lowercase",
-        "D": "There are only five results"
-      },
-      "answer": "A",
+      "choices": [
+        "Worst-case subtree traversal",
+        "The root stores no character",
+        "There are only five results",
+        "Queries are lowercase"
+      ],
+      "answer": "Worst-case subtree traversal",
       "source_pages": [
         209
       ]
@@ -2160,13 +2160,13 @@
       "id": "MCQ29",
       "difficulty": "medium",
       "question": "What are the two key trie query optimizations?",
-      "choices": {
-        "A": "Bound prefix length and cache top K at each node",
-        "B": "Delete frequency and use SQL",
-        "C": "Poll and long-poll",
-        "D": "Add spellcheck and OCR"
-      },
-      "answer": "A",
+      "choices": [
+        "Bound prefix length and cache top K at each node",
+        "Delete frequency and use SQL",
+        "Poll and long-poll",
+        "Add spellcheck and OCR"
+      ],
+      "answer": "Bound prefix length and cache top K at each node",
       "source_pages": [
         209
       ]
@@ -2175,13 +2175,13 @@
       "id": "MCQ30",
       "difficulty": "medium",
       "question": "What maximum prefix length is used as an example?",
-      "choices": {
-        "A": "10",
-        "B": "20",
-        "C": "50",
-        "D": "100"
-      },
-      "answer": "C",
+      "choices": [
+        "20",
+        "100",
+        "50",
+        "10"
+      ],
+      "answer": "50",
       "source_pages": [
         209
       ]
@@ -2190,13 +2190,13 @@
       "id": "MCQ31",
       "difficulty": "hard",
       "question": "Why does caching top K at nodes speed reads?",
-      "choices": {
-        "A": "It avoids subtree traversal and sorting",
-        "B": "It reduces alphabet size",
-        "C": "It eliminates prefixes",
-        "D": "It guarantees no cache misses"
-      },
-      "answer": "A",
+      "choices": [
+        "It avoids subtree traversal and sorting",
+        "It eliminates prefixes",
+        "It guarantees no cache misses",
+        "It reduces alphabet size"
+      ],
+      "answer": "It avoids subtree traversal and sorting",
       "source_pages": [
         209
       ]
@@ -2205,13 +2205,13 @@
       "id": "MCQ32",
       "difficulty": "hard",
       "question": "What is the tradeoff of node-level top-K caching?",
-      "choices": {
-        "A": "More memory for faster reads",
-        "B": "More latency for less memory",
-        "C": "No persistent storage",
-        "D": "No ranking"
-      },
-      "answer": "A",
+      "choices": [
+        "No ranking",
+        "More memory for faster reads",
+        "More latency for less memory",
+        "No persistent storage"
+      ],
+      "answer": "More memory for faster reads",
       "source_pages": [
         209
       ]
@@ -2220,13 +2220,13 @@
       "id": "MCQ33",
       "difficulty": "hard",
       "question": "What overall complexity does the chapter claim after optimization?",
-      "choices": {
-        "A": "O(1)",
-        "B": "O(p)",
-        "C": "O(c log c)",
-        "D": "O(n)"
-      },
-      "answer": "A",
+      "choices": [
+        "O(p)",
+        "O(1)",
+        "O(n)",
+        "O(c log c)"
+      ],
+      "answer": "O(1)",
       "source_pages": [
         210
       ]
@@ -2235,13 +2235,13 @@
       "id": "MCQ34",
       "difficulty": "hard",
       "question": "Why is real-time trie updating impractical?",
-      "choices": {
-        "A": "Huge query volume would slow query serving",
-        "B": "Tries cannot be updated",
-        "C": "Logs cannot be stored",
-        "D": "Queries have no frequency"
-      },
-      "answer": "A",
+      "choices": [
+        "Tries cannot be updated",
+        "Logs cannot be stored",
+        "Queries have no frequency",
+        "Huge query volume would slow query serving"
+      ],
+      "answer": "Huge query volume would slow query serving",
       "source_pages": [
         210
       ]
@@ -2250,13 +2250,13 @@
       "id": "MCQ35",
       "difficulty": "medium",
       "question": "What rebuild frequency is assumed?",
-      "choices": {
-        "A": "Every second",
-        "B": "Hourly",
-        "C": "Daily",
-        "D": "Weekly"
-      },
-      "answer": "D",
+      "choices": [
+        "Every second",
+        "Hourly",
+        "Weekly",
+        "Daily"
+      ],
+      "answer": "Weekly",
       "source_pages": [
         211
       ]
@@ -2265,13 +2265,13 @@
       "id": "MCQ36",
       "difficulty": "medium",
       "question": "What are Analytics Logs?",
-      "choices": {
-        "A": "Append-only raw query data",
-        "B": "The final trie",
-        "C": "User profiles",
-        "D": "CDN objects"
-      },
-      "answer": "A",
+      "choices": [
+        "User profiles",
+        "The final trie",
+        "Append-only raw query data",
+        "CDN objects"
+      ],
+      "answer": "Append-only raw query data",
       "source_pages": [
         211
       ]
@@ -2280,13 +2280,13 @@
       "id": "MCQ37",
       "difficulty": "medium",
       "question": "What do aggregators produce?",
-      "choices": {
-        "A": "Aggregated query-frequency data",
-        "B": "WebSocket sessions",
-        "C": "Search spell corrections",
-        "D": "Image thumbnails"
-      },
-      "answer": "A",
+      "choices": [
+        "Search spell corrections",
+        "Image thumbnails",
+        "WebSocket sessions",
+        "Aggregated query-frequency data"
+      ],
+      "answer": "Aggregated query-frequency data",
       "source_pages": [
         211
       ]
@@ -2295,13 +2295,13 @@
       "id": "MCQ38",
       "difficulty": "medium",
       "question": "What do workers build?",
-      "choices": {
-        "A": "The trie",
-        "B": "Browser cache only",
-        "C": "DNS records",
-        "D": "Friend graph"
-      },
-      "answer": "A",
+      "choices": [
+        "Friend graph",
+        "Browser cache only",
+        "The trie",
+        "DNS records"
+      ],
+      "answer": "The trie",
       "source_pages": [
         212
       ]
@@ -2310,13 +2310,13 @@
       "id": "MCQ39",
       "difficulty": "medium",
       "question": "What is Trie Cache?",
-      "choices": {
-        "A": "Distributed in-memory trie storage",
-        "B": "Relational query log",
-        "C": "Client-only history",
-        "D": "Shard manager"
-      },
-      "answer": "A",
+      "choices": [
+        "Shard manager",
+        "Distributed in-memory trie storage",
+        "Relational query log",
+        "Client-only history"
+      ],
+      "answer": "Distributed in-memory trie storage",
       "source_pages": [
         212
       ]
@@ -2325,13 +2325,13 @@
       "id": "MCQ40",
       "difficulty": "medium",
       "question": "What is Trie DB?",
-      "choices": {
-        "A": "Persistent trie storage",
-        "B": "Only browser cache",
-        "C": "Rate limiter",
-        "D": "Search UI"
-      },
-      "answer": "A",
+      "choices": [
+        "Rate limiter",
+        "Only browser cache",
+        "Search UI",
+        "Persistent trie storage"
+      ],
+      "answer": "Persistent trie storage",
       "source_pages": [
         212
       ]
@@ -2340,13 +2340,13 @@
       "id": "MCQ41",
       "difficulty": "medium",
       "question": "What document DB is named?",
-      "choices": {
-        "A": "MongoDB",
-        "B": "HBase",
-        "C": "Cassandra",
-        "D": "SQLite"
-      },
-      "answer": "A",
+      "choices": [
+        "HBase",
+        "SQLite",
+        "Cassandra",
+        "MongoDB"
+      ],
+      "answer": "MongoDB",
       "source_pages": [
         212
       ]
@@ -2355,13 +2355,13 @@
       "id": "MCQ42",
       "difficulty": "hard",
       "question": "How does a KV representation of a trie work?",
-      "choices": {
-        "A": "Prefix -> key, node data -> value",
-        "B": "Character -> server only",
-        "C": "Frequency -> HTTP header",
-        "D": "User -> trie root"
-      },
-      "answer": "A",
+      "choices": [
+        "Character -> server only",
+        "User -> trie root",
+        "Frequency -> HTTP header",
+        "Prefix -> key, node data -> value"
+      ],
+      "answer": "Prefix -> key, node data -> value",
       "source_pages": [
         212,
         213
@@ -2371,13 +2371,13 @@
       "id": "MCQ43",
       "difficulty": "medium",
       "question": "What serves autocomplete data first in the query path?",
-      "choices": {
-        "A": "Trie Cache",
-        "B": "Analytics Log",
-        "C": "Aggregator",
-        "D": "Worker"
-      },
-      "answer": "A",
+      "choices": [
+        "Worker",
+        "Aggregator",
+        "Analytics Log",
+        "Trie Cache"
+      ],
+      "answer": "Trie Cache",
       "source_pages": [
         214
       ]
@@ -2386,13 +2386,13 @@
       "id": "MCQ44",
       "difficulty": "hard",
       "question": "What happens after a Trie Cache miss?",
-      "choices": {
-        "A": "Read from Trie DB and refill cache",
-        "B": "Return no results forever",
-        "C": "Rebuild the entire trie synchronously",
-        "D": "Query analytics logs directly"
-      },
-      "answer": "A",
+      "choices": [
+        "Query analytics logs directly",
+        "Return no results forever",
+        "Rebuild the entire trie synchronously",
+        "Read from Trie DB and refill cache"
+      ],
+      "answer": "Read from Trie DB and refill cache",
       "source_pages": [
         214
       ]
@@ -2401,13 +2401,13 @@
       "id": "MCQ45",
       "difficulty": "medium",
       "question": "Why use AJAX?",
-      "choices": {
-        "A": "Fetch results without full page reload",
-        "B": "Persist trie snapshots",
-        "C": "Shard data",
-        "D": "Delete unsafe terms"
-      },
-      "answer": "A",
+      "choices": [
+        "Shard data",
+        "Delete unsafe terms",
+        "Persist trie snapshots",
+        "Fetch results without full page reload"
+      ],
+      "answer": "Fetch results without full page reload",
       "source_pages": [
         214
       ]
@@ -2416,13 +2416,13 @@
       "id": "MCQ46",
       "difficulty": "medium",
       "question": "What browser cache duration is shown in the Google example?",
-      "choices": {
-        "A": "1 minute",
-        "B": "10 minutes",
-        "C": "1 hour",
-        "D": "1 day"
-      },
-      "answer": "C",
+      "choices": [
+        "1 minute",
+        "1 hour",
+        "10 minutes",
+        "1 day"
+      ],
+      "answer": "1 hour",
       "source_pages": [
         215
       ]
@@ -2431,13 +2431,13 @@
       "id": "MCQ47",
       "difficulty": "hard",
       "question": "What does cache-control private mean?",
-      "choices": {
-        "A": "Only the individual user's cache should store it",
-        "B": "Only CDN should store it",
-        "C": "No cache allowed",
-        "D": "Only shared proxies cache it"
-      },
-      "answer": "A",
+      "choices": [
+        "Only CDN should store it",
+        "Only the individual user's cache should store it",
+        "No cache allowed",
+        "Only shared proxies cache it"
+      ],
+      "answer": "Only the individual user's cache should store it",
       "source_pages": [
         215
       ]
@@ -2446,13 +2446,13 @@
       "id": "MCQ48",
       "difficulty": "medium",
       "question": "What is data sampling?",
-      "choices": {
-        "A": "Log only 1 in N requests",
-        "B": "Store every request twice",
-        "C": "Delete all logs",
-        "D": "Rank by random sample only"
-      },
-      "answer": "A",
+      "choices": [
+        "Rank by random sample only",
+        "Store every request twice",
+        "Delete all logs",
+        "Log only 1 in N requests"
+      ],
+      "answer": "Log only 1 in N requests",
       "source_pages": [
         215
       ]
@@ -2461,13 +2461,13 @@
       "id": "MCQ49",
       "difficulty": "medium",
       "question": "What is the preferred trie update method?",
-      "choices": {
-        "A": "Build new trie periodically and replace old one",
-        "B": "Synchronously update every node on every query",
-        "C": "Never update",
-        "D": "Use only SQL"
-      },
-      "answer": "A",
+      "choices": [
+        "Synchronously update every node on every query",
+        "Build new trie periodically and replace old one",
+        "Use only SQL",
+        "Never update"
+      ],
+      "answer": "Build new trie periodically and replace old one",
       "source_pages": [
         215
       ]
@@ -2476,13 +2476,13 @@
       "id": "MCQ50",
       "difficulty": "hard",
       "question": "Why must ancestors change after a direct node update?",
-      "choices": {
-        "A": "They cache top queries from descendants",
-        "B": "They store passwords",
-        "C": "They are separate shards",
-        "D": "They contain timestamps only"
-      },
-      "answer": "A",
+      "choices": [
+        "They cache top queries from descendants",
+        "They are separate shards",
+        "They store passwords",
+        "They contain timestamps only"
+      ],
+      "answer": "They cache top queries from descendants",
       "source_pages": [
         215
       ]
@@ -2491,13 +2491,13 @@
       "id": "MCQ51",
       "difficulty": "medium",
       "question": "What is placed in front of Trie Cache for unsafe suggestions?",
-      "choices": {
-        "A": "Filter layer",
-        "B": "DNS resolver",
-        "C": "Message queue",
-        "D": "Load balancer only"
-      },
-      "answer": "A",
+      "choices": [
+        "Load balancer only",
+        "Message queue",
+        "DNS resolver",
+        "Filter layer"
+      ],
+      "answer": "Filter layer",
       "source_pages": [
         216
       ]
@@ -2506,13 +2506,13 @@
       "id": "MCQ52",
       "difficulty": "hard",
       "question": "When is unwanted data physically removed from storage?",
-      "choices": {
-        "A": "Asynchronously",
-        "B": "Never",
-        "C": "Before every read synchronously",
-        "D": "Only in browser"
-      },
-      "answer": "A",
+      "choices": [
+        "Before every read synchronously",
+        "Asynchronously",
+        "Only in browser",
+        "Never"
+      ],
+      "answer": "Asynchronously",
       "source_pages": [
         216
       ]
@@ -2521,13 +2521,13 @@
       "id": "MCQ53",
       "difficulty": "medium",
       "question": "What is first-level sharding based on?",
-      "choices": {
-        "A": "First character",
-        "B": "User ID",
-        "C": "Timestamp",
-        "D": "Query frequency only"
-      },
-      "answer": "A",
+      "choices": [
+        "First character",
+        "User ID",
+        "Timestamp",
+        "Query frequency only"
+      ],
+      "answer": "First character",
       "source_pages": [
         216
       ]
@@ -2536,13 +2536,13 @@
       "id": "MCQ54",
       "difficulty": "medium",
       "question": "How many first-level English alphabet shards are possible?",
-      "choices": {
-        "A": "10",
-        "B": "26",
-        "C": "52",
-        "D": "62"
-      },
-      "answer": "B",
+      "choices": [
+        "52",
+        "62",
+        "26",
+        "10"
+      ],
+      "answer": "26",
       "source_pages": [
         216
       ]
@@ -2551,13 +2551,13 @@
       "id": "MCQ55",
       "difficulty": "hard",
       "question": "Why is equal alphabetical partitioning insufficient?",
-      "choices": {
-        "A": "Starting-letter query distributions are uneven",
-        "B": "There are too few databases",
-        "C": "Every letter has identical load",
-        "D": "Trie cannot be partitioned"
-      },
-      "answer": "A",
+      "choices": [
+        "Trie cannot be partitioned",
+        "Starting-letter query distributions are uneven",
+        "Every letter has identical load",
+        "There are too few databases"
+      ],
+      "answer": "Starting-letter query distributions are uneven",
       "source_pages": [
         216
       ]
@@ -2566,13 +2566,13 @@
       "id": "MCQ56",
       "difficulty": "hard",
       "question": "What component enables distribution-aware sharding?",
-      "choices": {
-        "A": "Shard map manager",
-        "B": "Browser cache",
-        "C": "AJAX",
-        "D": "Trie worker only"
-      },
-      "answer": "A",
+      "choices": [
+        "AJAX",
+        "Browser cache",
+        "Shard map manager",
+        "Trie worker only"
+      ],
+      "answer": "Shard map manager",
       "source_pages": [
         217
       ]
@@ -2581,13 +2581,13 @@
       "id": "MCQ57",
       "difficulty": "medium",
       "question": "How is multilingual support proposed?",
-      "choices": {
-        "A": "Store Unicode in trie nodes",
-        "B": "Use ASCII only",
-        "C": "Build one node per country",
-        "D": "Use SQL LIKE only"
-      },
-      "answer": "A",
+      "choices": [
+        "Use SQL LIKE only",
+        "Build one node per country",
+        "Use ASCII only",
+        "Store Unicode in trie nodes"
+      ],
+      "answer": "Store Unicode in trie nodes",
       "source_pages": [
         218
       ]
@@ -2596,13 +2596,13 @@
       "id": "MCQ58",
       "difficulty": "medium",
       "question": "How should country-specific popularity be handled?",
-      "choices": {
-        "A": "Different tries per country",
-        "B": "One universal ranking only",
-        "C": "Disable ranking",
-        "D": "Use spell check"
-      },
-      "answer": "A",
+      "choices": [
+        "Disable ranking",
+        "Different tries per country",
+        "One universal ranking only",
+        "Use spell check"
+      ],
+      "answer": "Different tries per country",
       "source_pages": [
         218
       ]
@@ -2611,13 +2611,13 @@
       "id": "MCQ59",
       "difficulty": "medium",
       "question": "Where can country-specific tries be stored for latency?",
-      "choices": {
-        "A": "CDNs",
-        "B": "Only analytics logs",
-        "C": "Only browser cookies",
-        "D": "Message queues"
-      },
-      "answer": "A",
+      "choices": [
+        "Only browser cookies",
+        "Message queues",
+        "Only analytics logs",
+        "CDNs"
+      ],
+      "answer": "CDNs",
       "source_pages": [
         218
       ]
@@ -2626,13 +2626,13 @@
       "id": "MCQ60",
       "difficulty": "hard",
       "question": "Why does weekly rebuilding not support sudden trends?",
-      "choices": {
-        "A": "The rebuild schedule and build time are too slow",
-        "B": "Trie cannot rank queries",
-        "C": "Unicode is missing",
-        "D": "CDN is too fast"
-      },
-      "answer": "A",
+      "choices": [
+        "CDN is too fast",
+        "Unicode is missing",
+        "Trie cannot rank queries",
+        "The rebuild schedule and build time are too slow"
+      ],
+      "answer": "The rebuild schedule and build time are too slow",
       "source_pages": [
         218
       ]
@@ -2641,13 +2641,13 @@
       "id": "MCQ61",
       "difficulty": "hard",
       "question": "What ranking change is suggested for trending search?",
-      "choices": {
-        "A": "Weight recent searches more heavily",
-        "B": "Ignore recent data",
-        "C": "Sort alphabetically",
-        "D": "Remove frequency"
-      },
-      "answer": "A",
+      "choices": [
+        "Ignore recent data",
+        "Weight recent searches more heavily",
+        "Remove frequency",
+        "Sort alphabetically"
+      ],
+      "answer": "Weight recent searches more heavily",
       "source_pages": [
         218
       ]
@@ -2656,13 +2656,13 @@
       "id": "MCQ62",
       "difficulty": "medium",
       "question": "Which technology is named for stream-processing discussion?",
-      "choices": {
-        "A": "Apache Kafka",
-        "B": "APNS",
-        "C": "ZooKeeper only",
-        "D": "HBase only"
-      },
-      "answer": "A",
+      "choices": [
+        "Apache Kafka",
+        "HBase only",
+        "APNS",
+        "ZooKeeper only"
+      ],
+      "answer": "Apache Kafka",
       "source_pages": [
         218
       ]

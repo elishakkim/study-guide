@@ -1431,13 +1431,13 @@
       "id": "MCQ01",
       "difficulty": "easy",
       "question": "Which notification types are in scope?",
-      "choices": {
-        "A": "Push, SMS, email",
-        "B": "Email only",
-        "C": "Push only",
-        "D": "Voice calls only"
-      },
-      "answer": "A",
+      "choices": [
+        "Push, SMS, email",
+        "Voice calls only",
+        "Email only",
+        "Push only"
+      ],
+      "answer": "Push, SMS, email",
       "source_pages": [
         151,
         152
@@ -1447,13 +1447,13 @@
       "id": "MCQ02",
       "difficulty": "medium",
       "question": "What kind of real-time behavior is required?",
-      "choices": {
-        "A": "Hard real-time",
-        "B": "Soft real-time",
-        "C": "Offline only",
-        "D": "Batch-only"
-      },
-      "answer": "B",
+      "choices": [
+        "Offline only",
+        "Soft real-time",
+        "Batch-only",
+        "Hard real-time"
+      ],
+      "answer": "Soft real-time",
       "source_pages": [
         152
       ]
@@ -1462,13 +1462,13 @@
       "id": "MCQ03",
       "difficulty": "medium",
       "question": "How many mobile push notifications/day are assumed?",
-      "choices": {
-        "A": "1M",
-        "B": "5M",
-        "C": "10M",
-        "D": "100M"
-      },
-      "answer": "C",
+      "choices": [
+        "100M",
+        "1M",
+        "5M",
+        "10M"
+      ],
+      "answer": "10M",
       "source_pages": [
         152
       ]
@@ -1477,13 +1477,13 @@
       "id": "MCQ04",
       "difficulty": "medium",
       "question": "How many SMS messages/day are assumed?",
-      "choices": {
-        "A": "1M",
-        "B": "5M",
-        "C": "10M",
-        "D": "16M"
-      },
-      "answer": "A",
+      "choices": [
+        "1M",
+        "10M",
+        "5M",
+        "16M"
+      ],
+      "answer": "1M",
       "source_pages": [
         152
       ]
@@ -1492,13 +1492,13 @@
       "id": "MCQ05",
       "difficulty": "medium",
       "question": "How many emails/day are assumed?",
-      "choices": {
-        "A": "1M",
-        "B": "5M",
-        "C": "10M",
-        "D": "50M"
-      },
-      "answer": "B",
+      "choices": [
+        "50M",
+        "10M",
+        "5M",
+        "1M"
+      ],
+      "answer": "5M",
       "source_pages": [
         152
       ]
@@ -1507,13 +1507,13 @@
       "id": "MCQ06",
       "difficulty": "easy",
       "question": "What Apple service delivers iOS push notifications?",
-      "choices": {
-        "A": "APNS",
-        "B": "FCM",
-        "C": "Twilio",
-        "D": "Mailchimp"
-      },
-      "answer": "A",
+      "choices": [
+        "APNS",
+        "Twilio",
+        "FCM",
+        "Mailchimp"
+      ],
+      "answer": "APNS",
       "source_pages": [
         153
       ]
@@ -1522,13 +1522,13 @@
       "id": "MCQ07",
       "difficulty": "easy",
       "question": "What service is commonly used for Android push?",
-      "choices": {
-        "A": "APNS",
-        "B": "FCM",
-        "C": "Nexmo",
-        "D": "Sendgrid"
-      },
-      "answer": "B",
+      "choices": [
+        "APNS",
+        "FCM",
+        "Nexmo",
+        "Sendgrid"
+      ],
+      "answer": "FCM",
       "source_pages": [
         153,
         154
@@ -1538,13 +1538,13 @@
       "id": "MCQ08",
       "difficulty": "medium",
       "question": "What identifies a destination device for push?",
-      "choices": {
-        "A": "Device token",
-        "B": "PageRank",
-        "C": "Queue depth",
-        "D": "Event log"
-      },
-      "answer": "A",
+      "choices": [
+        "Device token",
+        "Event log",
+        "Queue depth",
+        "PageRank"
+      ],
+      "answer": "Device token",
       "source_pages": [
         153
       ]
@@ -1553,13 +1553,13 @@
       "id": "MCQ09",
       "difficulty": "medium",
       "question": "What is a push payload?",
-      "choices": {
-        "A": "JSON dictionary",
-        "B": "Database shard",
-        "C": "DNS record",
-        "D": "Worker pool"
-      },
-      "answer": "A",
+      "choices": [
+        "JSON dictionary",
+        "Worker pool",
+        "DNS record",
+        "Database shard"
+      ],
+      "answer": "JSON dictionary",
       "source_pages": [
         153
       ]
@@ -1568,13 +1568,13 @@
       "id": "MCQ10",
       "difficulty": "medium",
       "question": "Which two SMS providers are named?",
-      "choices": {
-        "A": "Twilio and Nexmo",
-        "B": "APNS and FCM",
-        "C": "Sendgrid and Mailchimp",
-        "D": "Jpush and APNS"
-      },
-      "answer": "A",
+      "choices": [
+        "APNS and FCM",
+        "Jpush and APNS",
+        "Sendgrid and Mailchimp",
+        "Twilio and Nexmo"
+      ],
+      "answer": "Twilio and Nexmo",
       "source_pages": [
         154
       ]
@@ -1583,13 +1583,13 @@
       "id": "MCQ11",
       "difficulty": "medium",
       "question": "Which two email providers are named?",
-      "choices": {
-        "A": "Twilio and Nexmo",
-        "B": "Sendgrid and Mailchimp",
-        "C": "APNS and FCM",
-        "D": "Jpush and PushY"
-      },
-      "answer": "B",
+      "choices": [
+        "APNS and FCM",
+        "Twilio and Nexmo",
+        "Jpush and PushY",
+        "Sendgrid and Mailchimp"
+      ],
+      "answer": "Sendgrid and Mailchimp",
       "source_pages": [
         154
       ]
@@ -1598,13 +1598,13 @@
       "id": "MCQ12",
       "difficulty": "medium",
       "question": "When is contact info gathered?",
-      "choices": {
-        "A": "At app install or sign-up",
-        "B": "Only after logout",
-        "C": "Only during retry",
-        "D": "Only after an email fails"
-      },
-      "answer": "A",
+      "choices": [
+        "Only after an email fails",
+        "Only during retry",
+        "At app install or sign-up",
+        "Only after logout"
+      ],
+      "answer": "At app install or sign-up",
       "source_pages": [
         155
       ]
@@ -1613,13 +1613,13 @@
       "id": "MCQ13",
       "difficulty": "hard",
       "question": "Where are device tokens stored in the simplified schema?",
-      "choices": {
-        "A": "Device table",
-        "B": "User table only",
-        "C": "Queue table",
-        "D": "Notification log only"
-      },
-      "answer": "A",
+      "choices": [
+        "Queue table",
+        "Device table",
+        "User table only",
+        "Notification log only"
+      ],
+      "answer": "Device table",
       "source_pages": [
         155,
         156
@@ -1629,13 +1629,13 @@
       "id": "MCQ14",
       "difficulty": "hard",
       "question": "Why can one user have multiple device tokens?",
-      "choices": {
-        "A": "A user can have multiple devices",
-        "B": "APNS requires duplicates",
-        "C": "Each SMS creates a token",
-        "D": "Each email creates a device"
-      },
-      "answer": "A",
+      "choices": [
+        "A user can have multiple devices",
+        "APNS requires duplicates",
+        "Each SMS creates a token",
+        "Each email creates a device"
+      ],
+      "answer": "A user can have multiple devices",
       "source_pages": [
         156
       ]
@@ -1644,13 +1644,13 @@
       "id": "MCQ15",
       "difficulty": "medium",
       "question": "Which is NOT a possible Service 1..N trigger source?",
-      "choices": {
-        "A": "Microservice",
-        "B": "Cron job",
-        "C": "Distributed system",
-        "D": "Only APNS"
-      },
-      "answer": "D",
+      "choices": [
+        "Microservice",
+        "Distributed system",
+        "Cron job",
+        "Only APNS"
+      ],
+      "answer": "Only APNS",
       "source_pages": [
         156
       ]
@@ -1659,13 +1659,13 @@
       "id": "MCQ16",
       "difficulty": "hard",
       "question": "What are the three problems of the initial notification-server design?",
-      "choices": {
-        "A": "SPOF, hard to scale, performance bottleneck",
-        "B": "No database, no email, no devices",
-        "C": "No DNS, no CDN, no cache",
-        "D": "Only duplicate content"
-      },
-      "answer": "A",
+      "choices": [
+        "Only duplicate content",
+        "SPOF, hard to scale, performance bottleneck",
+        "No DNS, no CDN, no cache",
+        "No database, no email, no devices"
+      ],
+      "answer": "SPOF, hard to scale, performance bottleneck",
       "source_pages": [
         157
       ]
@@ -1674,13 +1674,13 @@
       "id": "MCQ17",
       "difficulty": "medium",
       "question": "What is the first architectural improvement?",
-      "choices": {
-        "A": "Move DB/cache out of notification server",
-        "B": "Remove all queues",
-        "C": "Use one worker",
-        "D": "Store everything locally"
-      },
-      "answer": "A",
+      "choices": [
+        "Move DB/cache out of notification server",
+        "Remove all queues",
+        "Use one worker",
+        "Store everything locally"
+      ],
+      "answer": "Move DB/cache out of notification server",
       "source_pages": [
         157
       ]
@@ -1689,13 +1689,13 @@
       "id": "MCQ18",
       "difficulty": "medium",
       "question": "What scaling improvement is introduced?",
-      "choices": {
-        "A": "Multiple notification servers with auto horizontal scaling",
-        "B": "One larger server only",
-        "C": "No scaling",
-        "D": "Only database scaling"
-      },
-      "answer": "A",
+      "choices": [
+        "Only database scaling",
+        "Multiple notification servers with auto horizontal scaling",
+        "No scaling",
+        "One larger server only"
+      ],
+      "answer": "Multiple notification servers with auto horizontal scaling",
       "source_pages": [
         157
       ]
@@ -1704,13 +1704,13 @@
       "id": "MCQ19",
       "difficulty": "medium",
       "question": "What decouples system components?",
-      "choices": {
-        "A": "Message queues",
-        "B": "Device tokens",
-        "C": "Email templates",
-        "D": "User table"
-      },
-      "answer": "A",
+      "choices": [
+        "Email templates",
+        "User table",
+        "Message queues",
+        "Device tokens"
+      ],
+      "answer": "Message queues",
       "source_pages": [
         157,
         159
@@ -1720,13 +1720,13 @@
       "id": "MCQ20",
       "difficulty": "hard",
       "question": "Why should the send APIs be internal or verified-client-only?",
-      "choices": {
-        "A": "Prevent spam",
-        "B": "Reduce device-token length",
-        "C": "Generate analytics",
-        "D": "Avoid databases"
-      },
-      "answer": "A",
+      "choices": [
+        "Avoid databases",
+        "Generate analytics",
+        "Prevent spam",
+        "Reduce device-token length"
+      ],
+      "answer": "Prevent spam",
       "source_pages": [
         158
       ]
@@ -1735,13 +1735,13 @@
       "id": "MCQ21",
       "difficulty": "medium",
       "question": "What does the cache store?",
-      "choices": {
-        "A": "User info, device info, templates",
-        "B": "Only raw SMS payloads",
-        "C": "Only event IDs",
-        "D": "Only API secrets"
-      },
-      "answer": "A",
+      "choices": [
+        "Only raw SMS payloads",
+        "User info, device info, templates",
+        "Only API secrets",
+        "Only event IDs"
+      ],
+      "answer": "User info, device info, templates",
       "source_pages": [
         159
       ]
@@ -1750,13 +1750,13 @@
       "id": "MCQ22",
       "difficulty": "medium",
       "question": "Why have a distinct queue for each notification type?",
-      "choices": {
-        "A": "Failure isolation across channels",
-        "B": "To force exactly-once delivery",
-        "C": "To remove workers",
-        "D": "To avoid third-party services"
-      },
-      "answer": "A",
+      "choices": [
+        "To force exactly-once delivery",
+        "Failure isolation across channels",
+        "To remove workers",
+        "To avoid third-party services"
+      ],
+      "answer": "Failure isolation across channels",
       "source_pages": [
         159
       ]
@@ -1765,13 +1765,13 @@
       "id": "MCQ23",
       "difficulty": "medium",
       "question": "What do workers do?",
-      "choices": {
-        "A": "Pull queued events and invoke third-party providers",
-        "B": "Only store user profiles",
-        "C": "Only generate device tokens",
-        "D": "Replace APNS"
-      },
-      "answer": "A",
+      "choices": [
+        "Only generate device tokens",
+        "Only store user profiles",
+        "Replace APNS",
+        "Pull queued events and invoke third-party providers"
+      ],
+      "answer": "Pull queued events and invoke third-party providers",
       "source_pages": [
         159
       ]
@@ -1780,13 +1780,13 @@
       "id": "MCQ24",
       "difficulty": "medium",
       "question": "What is the first step of the sending flow?",
-      "choices": {
-        "A": "Service calls notification API",
-        "B": "Third party sends to device",
-        "C": "Worker writes settings",
-        "D": "Queue deletes the event"
-      },
-      "answer": "A",
+      "choices": [
+        "Service calls notification API",
+        "Third party sends to device",
+        "Queue deletes the event",
+        "Worker writes settings"
+      ],
+      "answer": "Service calls notification API",
       "source_pages": [
         159
       ]
@@ -1795,13 +1795,13 @@
       "id": "MCQ25",
       "difficulty": "hard",
       "question": "What metadata may be fetched before queueing?",
-      "choices": {
-        "A": "User info, device token, settings",
-        "B": "Only database schema",
-        "C": "Only DNS records",
-        "D": "Only click rate"
-      },
-      "answer": "A",
+      "choices": [
+        "Only database schema",
+        "User info, device token, settings",
+        "Only DNS records",
+        "Only click rate"
+      ],
+      "answer": "User info, device token, settings",
       "source_pages": [
         159
       ]
@@ -1810,13 +1810,13 @@
       "id": "MCQ26",
       "difficulty": "hard",
       "question": "What is the reliability rule about data loss?",
-      "choices": {
-        "A": "Notifications may be delayed/reordered but should not be lost",
-        "B": "Loss is acceptable",
-        "C": "Duplicates are impossible",
-        "D": "Retries are prohibited"
-      },
-      "answer": "A",
+      "choices": [
+        "Loss is acceptable",
+        "Duplicates are impossible",
+        "Notifications may be delayed/reordered but should not be lost",
+        "Retries are prohibited"
+      ],
+      "answer": "Notifications may be delayed/reordered but should not be lost",
       "source_pages": [
         160
       ]
@@ -1825,13 +1825,13 @@
       "id": "MCQ27",
       "difficulty": "hard",
       "question": "How is notification data loss reduced?",
-      "choices": {
-        "A": "Persist data plus retries",
-        "B": "Only use cache",
-        "C": "Disable queues",
-        "D": "Use 301 redirects"
-      },
-      "answer": "A",
+      "choices": [
+        "Use 301 redirects",
+        "Persist data plus retries",
+        "Disable queues",
+        "Only use cache"
+      ],
+      "answer": "Persist data plus retries",
       "source_pages": [
         160
       ]
@@ -1840,13 +1840,13 @@
       "id": "MCQ28",
       "difficulty": "hard",
       "question": "Does the design guarantee exactly-once delivery?",
-      "choices": {
-        "A": "Yes, always",
-        "B": "No",
-        "C": "Only SMS",
-        "D": "Only email"
-      },
-      "answer": "B",
+      "choices": [
+        "Only SMS",
+        "Only email",
+        "Yes, always",
+        "No"
+      ],
+      "answer": "No",
       "source_pages": [
         160
       ]
@@ -1855,13 +1855,13 @@
       "id": "MCQ29",
       "difficulty": "medium",
       "question": "What does the basic dedupe mechanism check?",
-      "choices": {
-        "A": "Event ID",
-        "B": "Phone-country code only",
-        "C": "Queue name only",
-        "D": "Worker hostname"
-      },
-      "answer": "A",
+      "choices": [
+        "Phone-country code only",
+        "Queue name only",
+        "Worker hostname",
+        "Event ID"
+      ],
+      "answer": "Event ID",
       "source_pages": [
         160
       ]
@@ -1870,13 +1870,13 @@
       "id": "MCQ30",
       "difficulty": "medium",
       "question": "What happens to an already-seen event?",
-      "choices": {
-        "A": "Discard it",
-        "B": "Always resend",
-        "C": "Move it to another channel",
-        "D": "Create new user"
-      },
-      "answer": "A",
+      "choices": [
+        "Discard it",
+        "Create new user",
+        "Move it to another channel",
+        "Always resend"
+      ],
+      "answer": "Discard it",
       "source_pages": [
         160
       ]
@@ -1885,13 +1885,13 @@
       "id": "MCQ31",
       "difficulty": "medium",
       "question": "What is a notification template?",
-      "choices": {
-        "A": "Reusable preformatted notification",
-        "B": "A device token",
-        "C": "A queue partition",
-        "D": "A data center"
-      },
-      "answer": "A",
+      "choices": [
+        "A data center",
+        "A device token",
+        "Reusable preformatted notification",
+        "A queue partition"
+      ],
+      "answer": "Reusable preformatted notification",
       "source_pages": [
         161
       ]
@@ -1900,13 +1900,13 @@
       "id": "MCQ32",
       "difficulty": "hard",
       "question": "Which is NOT a listed template benefit?",
-      "choices": {
-        "A": "Consistent format",
-        "B": "Lower margin of error",
-        "C": "Save time",
-        "D": "Guarantee exactly-once delivery"
-      },
-      "answer": "D",
+      "choices": [
+        "Lower margin of error",
+        "Consistent format",
+        "Guarantee exactly-once delivery",
+        "Save time"
+      ],
+      "answer": "Guarantee exactly-once delivery",
       "source_pages": [
         161
       ]
@@ -1915,13 +1915,13 @@
       "id": "MCQ33",
       "difficulty": "medium",
       "question": "What field controls whether a user wants a channel?",
-      "choices": {
-        "A": "opt_in",
-        "B": "queue_depth",
-        "C": "worker_id",
-        "D": "retry_count only"
-      },
-      "answer": "A",
+      "choices": [
+        "retry_count only",
+        "queue_depth",
+        "opt_in",
+        "worker_id"
+      ],
+      "answer": "opt_in",
       "source_pages": [
         161
       ]
@@ -1930,13 +1930,13 @@
       "id": "MCQ34",
       "difficulty": "hard",
       "question": "What must occur before sending a notification?",
-      "choices": {
-        "A": "Check user opt-in setting",
-        "B": "Always send",
-        "C": "Delete device token",
-        "D": "Disable rate limits"
-      },
-      "answer": "A",
+      "choices": [
+        "Disable rate limits",
+        "Always send",
+        "Check user opt-in setting",
+        "Delete device token"
+      ],
+      "answer": "Check user opt-in setting",
       "source_pages": [
         161
       ]
@@ -1945,13 +1945,13 @@
       "id": "MCQ35",
       "difficulty": "medium",
       "question": "Why rate-limit notifications per user?",
-      "choices": {
-        "A": "Avoid overwhelming users",
-        "B": "Generate more duplicates",
-        "C": "Avoid using templates",
-        "D": "Increase queue size"
-      },
-      "answer": "A",
+      "choices": [
+        "Avoid overwhelming users",
+        "Increase queue size",
+        "Avoid using templates",
+        "Generate more duplicates"
+      ],
+      "answer": "Avoid overwhelming users",
       "source_pages": [
         161
       ]
@@ -1960,13 +1960,13 @@
       "id": "MCQ36",
       "difficulty": "hard",
       "question": "What happens after a third-party send failure?",
-      "choices": {
-        "A": "Requeue for retry",
-        "B": "Delete permanently immediately",
-        "C": "Disable all notification types",
-        "D": "Change user ID"
-      },
-      "answer": "A",
+      "choices": [
+        "Disable all notification types",
+        "Change user ID",
+        "Delete permanently immediately",
+        "Requeue for retry"
+      ],
+      "answer": "Requeue for retry",
       "source_pages": [
         161,
         163
@@ -1976,13 +1976,13 @@
       "id": "MCQ37",
       "difficulty": "medium",
       "question": "What happens if delivery failures persist?",
-      "choices": {
-        "A": "Alert developers",
-        "B": "Ignore forever",
-        "C": "Delete the user",
-        "D": "Switch to DFS"
-      },
-      "answer": "A",
+      "choices": [
+        "Ignore forever",
+        "Switch to DFS",
+        "Alert developers",
+        "Delete the user"
+      ],
+      "answer": "Alert developers",
       "source_pages": [
         161
       ]
@@ -1991,13 +1991,13 @@
       "id": "MCQ38",
       "difficulty": "medium",
       "question": "What secures push notification APIs?",
-      "choices": {
-        "A": "appKey/appSecret",
-        "B": "PageRank",
-        "C": "Bloom filter",
-        "D": "Merkle tree"
-      },
-      "answer": "A",
+      "choices": [
+        "appKey/appSecret",
+        "Merkle tree",
+        "PageRank",
+        "Bloom filter"
+      ],
+      "answer": "appKey/appSecret",
       "source_pages": [
         161
       ]
@@ -2006,13 +2006,13 @@
       "id": "MCQ39",
       "difficulty": "hard",
       "question": "What does a large queue depth imply?",
-      "choices": {
-        "A": "Workers are not processing fast enough",
-        "B": "Users have all opted out",
-        "C": "Database is empty",
-        "D": "APNS is always healthy"
-      },
-      "answer": "A",
+      "choices": [
+        "Users have all opted out",
+        "APNS is always healthy",
+        "Database is empty",
+        "Workers are not processing fast enough"
+      ],
+      "answer": "Workers are not processing fast enough",
       "source_pages": [
         161
       ]
@@ -2021,13 +2021,13 @@
       "id": "MCQ40",
       "difficulty": "medium",
       "question": "What should you do when queue depth remains too high?",
-      "choices": {
-        "A": "Add more workers",
-        "B": "Remove all workers",
-        "C": "Disable monitoring",
-        "D": "Delete the queue"
-      },
-      "answer": "A",
+      "choices": [
+        "Disable monitoring",
+        "Remove all workers",
+        "Add more workers",
+        "Delete the queue"
+      ],
+      "answer": "Add more workers",
       "source_pages": [
         161
       ]
@@ -2036,13 +2036,13 @@
       "id": "MCQ41",
       "difficulty": "medium",
       "question": "Which metrics are mentioned for event tracking?",
-      "choices": {
-        "A": "Open rate, click rate, engagement",
-        "B": "CPU model, RAM speed, disk brand",
-        "C": "DNS TTL only",
-        "D": "Hash collisions"
-      },
-      "answer": "A",
+      "choices": [
+        "DNS TTL only",
+        "Hash collisions",
+        "CPU model, RAM speed, disk brand",
+        "Open rate, click rate, engagement"
+      ],
+      "answer": "Open rate, click rate, engagement",
       "source_pages": [
         162
       ]
@@ -2051,13 +2051,13 @@
       "id": "MCQ42",
       "difficulty": "medium",
       "question": "What service handles event tracking?",
-      "choices": {
-        "A": "Analytics service",
-        "B": "DNS Resolver",
-        "C": "Ticket server",
-        "D": "URL Frontier"
-      },
-      "answer": "A",
+      "choices": [
+        "Ticket server",
+        "URL Frontier",
+        "Analytics service",
+        "DNS Resolver"
+      ],
+      "answer": "Analytics service",
       "source_pages": [
         162
       ]
@@ -2066,13 +2066,13 @@
       "id": "MCQ43",
       "difficulty": "hard",
       "question": "What two features are added directly to notification servers in the final design?",
-      "choices": {
-        "A": "Authentication and rate limiting",
-        "B": "Merkle trees and gossip",
-        "C": "PageRank and BFS",
-        "D": "301 and 302"
-      },
-      "answer": "A",
+      "choices": [
+        "PageRank and BFS",
+        "Merkle trees and gossip",
+        "301 and 302",
+        "Authentication and rate limiting"
+      ],
+      "answer": "Authentication and rate limiting",
       "source_pages": [
         163
       ]
@@ -2081,13 +2081,13 @@
       "id": "MCQ44",
       "difficulty": "medium",
       "question": "How many times does the updated design retry?",
-      "choices": {
-        "A": "A predefined number of times",
-        "B": "Exactly once",
-        "C": "Never",
-        "D": "Forever without limit"
-      },
-      "answer": "A",
+      "choices": [
+        "Exactly once",
+        "Forever without limit",
+        "A predefined number of times",
+        "Never"
+      ],
+      "answer": "A predefined number of times",
       "source_pages": [
         163
       ]
@@ -2096,13 +2096,13 @@
       "id": "MCQ45",
       "difficulty": "hard",
       "question": "What is the core purpose of channel-specific queues?",
-      "choices": {
-        "A": "Decoupling, buffering, parallelism, and failure isolation",
-        "B": "Storing user passwords",
-        "C": "Providing DNS",
-        "D": "Generating device tokens"
-      },
-      "answer": "A",
+      "choices": [
+        "Providing DNS",
+        "Storing user passwords",
+        "Decoupling, buffering, parallelism, and failure isolation",
+        "Generating device tokens"
+      ],
+      "answer": "Decoupling, buffering, parallelism, and failure isolation",
       "source_pages": [
         159
       ]
@@ -2111,13 +2111,13 @@
       "id": "MCQ46",
       "difficulty": "hard",
       "question": "Which statement best summarizes exactly-once semantics in the chapter?",
-      "choices": {
-        "A": "It is not guaranteed; dedupe reduces duplicates",
-        "B": "It is strictly guaranteed by message queues",
-        "C": "It is guaranteed only by retries",
-        "D": "It is guaranteed by appSecret"
-      },
-      "answer": "A",
+      "choices": [
+        "It is guaranteed only by retries",
+        "It is guaranteed by appSecret",
+        "It is not guaranteed; dedupe reduces duplicates",
+        "It is strictly guaranteed by message queues"
+      ],
+      "answer": "It is not guaranteed; dedupe reduces duplicates",
       "source_pages": [
         160
       ]

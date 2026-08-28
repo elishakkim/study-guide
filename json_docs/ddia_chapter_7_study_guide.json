@@ -1666,13 +1666,13 @@
       "id": "MCQ001",
       "difficulty": "medium",
       "question": "ACID atomicity mainly means?",
-      "choices": {
-        "A": "Abortability",
-        "B": "Isolation",
-        "C": "Replication",
-        "D": "Durability"
-      },
-      "answer": "A",
+      "choices": [
+        "Durability",
+        "Abortability",
+        "Isolation",
+        "Replication"
+      ],
+      "answer": "Abortability",
       "source_pages": [
         246
       ]
@@ -1681,13 +1681,13 @@
       "id": "MCQ002",
       "difficulty": "medium",
       "question": "ACID consistency mainly refers to?",
-      "choices": {
-        "A": "Application invariants",
-        "B": "Replica lag",
-        "C": "Hashing",
-        "D": "WAL"
-      },
-      "answer": "A",
+      "choices": [
+        "Application invariants",
+        "Hashing",
+        "Replica lag",
+        "WAL"
+      ],
+      "answer": "Application invariants",
       "source_pages": [
         247
       ]
@@ -1696,13 +1696,13 @@
       "id": "MCQ003",
       "difficulty": "medium",
       "question": "Serializable isolation means?",
-      "choices": {
-        "A": "Equivalent to serial execution",
-        "B": "No aborts",
-        "C": "One replica",
-        "D": "No locks ever"
-      },
-      "answer": "A",
+      "choices": [
+        "One replica",
+        "No aborts",
+        "Equivalent to serial execution",
+        "No locks ever"
+      ],
+      "answer": "Equivalent to serial execution",
       "source_pages": [
         247,
         248
@@ -1712,13 +1712,13 @@
       "id": "MCQ004",
       "difficulty": "medium",
       "question": "Durability guarantees are?",
-      "choices": {
-        "A": "Risk reduction, not perfection",
-        "B": "Perfect with SSD",
-        "C": "Perfect with replication",
-        "D": "Only in RAM"
-      },
-      "answer": "A",
+      "choices": [
+        "Perfect with replication",
+        "Perfect with SSD",
+        "Only in RAM",
+        "Risk reduction, not perfection"
+      ],
+      "answer": "Risk reduction, not perfection",
       "source_pages": [
         248,
         249
@@ -1728,13 +1728,13 @@
       "id": "MCQ005",
       "difficulty": "medium",
       "question": "Multi-object isolation means?",
-      "choices": {
-        "A": "See all or none of grouped writes",
-        "B": "Only one object exists",
-        "C": "No concurrent reads",
-        "D": "No indexes"
-      },
-      "answer": "A",
+      "choices": [
+        "Only one object exists",
+        "No concurrent reads",
+        "See all or none of grouped writes",
+        "No indexes"
+      ],
+      "answer": "See all or none of grouped writes",
       "source_pages": [
         250
       ]
@@ -1743,13 +1743,13 @@
       "id": "MCQ006",
       "difficulty": "medium",
       "question": "A multi-put API necessarily means transaction semantics?",
-      "choices": {
-        "A": "No",
-        "B": "Yes",
-        "C": "Only in key-value stores",
-        "D": "Only if replicated"
-      },
-      "answer": "A",
+      "choices": [
+        "No",
+        "Yes",
+        "Only in key-value stores",
+        "Only if replicated"
+      ],
+      "answer": "No",
       "source_pages": [
         252
       ]
@@ -1758,13 +1758,13 @@
       "id": "MCQ007",
       "difficulty": "medium",
       "question": "Which motivates multi-object transactions?",
-      "choices": {
-        "A": "Secondary indexes",
-        "B": "Only compression",
-        "C": "DNS",
-        "D": "Hashing"
-      },
-      "answer": "A",
+      "choices": [
+        "Hashing",
+        "Secondary indexes",
+        "Only compression",
+        "DNS"
+      ],
+      "answer": "Secondary indexes",
       "source_pages": [
         253
       ]
@@ -1773,13 +1773,13 @@
       "id": "MCQ008",
       "difficulty": "medium",
       "question": "What can make retry duplicate a transaction?",
-      "choices": {
-        "A": "Lost commit acknowledgement",
-        "B": "A dirty read",
-        "C": "MVCC",
-        "D": "A shared lock"
-      },
-      "answer": "A",
+      "choices": [
+        "A shared lock",
+        "A dirty read",
+        "MVCC",
+        "Lost commit acknowledgement"
+      ],
+      "answer": "Lost commit acknowledgement",
       "source_pages": [
         254
       ]
@@ -1788,13 +1788,13 @@
       "id": "MCQ009",
       "difficulty": "medium",
       "question": "Which should usually NOT be retried?",
-      "choices": {
-        "A": "Permanent constraint violation",
-        "B": "Deadlock",
-        "C": "Failover",
-        "D": "Temporary network interruption"
-      },
-      "answer": "A",
+      "choices": [
+        "Temporary network interruption",
+        "Failover",
+        "Permanent constraint violation",
+        "Deadlock"
+      ],
+      "answer": "Permanent constraint violation",
       "source_pages": [
         254
       ]
@@ -1803,13 +1803,13 @@
       "id": "MCQ010",
       "difficulty": "medium",
       "question": "Read committed guarantees?",
-      "choices": {
-        "A": "No dirty reads/writes",
-        "B": "No read skew",
-        "C": "No write skew",
-        "D": "Full serializability"
-      },
-      "answer": "A",
+      "choices": [
+        "No write skew",
+        "No dirty reads/writes",
+        "Full serializability",
+        "No read skew"
+      ],
+      "answer": "No dirty reads/writes",
       "source_pages": [
         256
       ]
@@ -1818,13 +1818,13 @@
       "id": "MCQ011",
       "difficulty": "medium",
       "question": "Dirty read means?",
-      "choices": {
-        "A": "Read uncommitted data",
-        "B": "Overwrite uncommitted data",
-        "C": "Read an old snapshot",
-        "D": "Read a phantom only"
-      },
-      "answer": "A",
+      "choices": [
+        "Read uncommitted data",
+        "Overwrite uncommitted data",
+        "Read an old snapshot",
+        "Read a phantom only"
+      ],
+      "answer": "Read uncommitted data",
       "source_pages": [
         256
       ]
@@ -1833,13 +1833,13 @@
       "id": "MCQ012",
       "difficulty": "medium",
       "question": "Dirty write means?",
-      "choices": {
-        "A": "Overwrite uncommitted data",
-        "B": "Read uncommitted data",
-        "C": "Lose a committed replica",
-        "D": "Read skew"
-      },
-      "answer": "A",
+      "choices": [
+        "Read skew",
+        "Lose a committed replica",
+        "Overwrite uncommitted data",
+        "Read uncommitted data"
+      ],
+      "answer": "Overwrite uncommitted data",
       "source_pages": [
         257
       ]
@@ -1848,13 +1848,13 @@
       "id": "MCQ013",
       "difficulty": "medium",
       "question": "How are dirty writes usually prevented?",
-      "choices": {
-        "A": "Write locks",
-        "B": "MVCC snapshots only",
-        "C": "LWW",
-        "D": "Hashing"
-      },
-      "answer": "A",
+      "choices": [
+        "LWW",
+        "Hashing",
+        "Write locks",
+        "MVCC snapshots only"
+      ],
+      "answer": "Write locks",
       "source_pages": [
         258
       ]
@@ -1863,13 +1863,13 @@
       "id": "MCQ014",
       "difficulty": "medium",
       "question": "Read skew means?",
-      "choices": {
-        "A": "Mixed points in time",
-        "B": "Uncommitted read",
-        "C": "Uncommitted overwrite",
-        "D": "Deadlock"
-      },
-      "answer": "A",
+      "choices": [
+        "Uncommitted read",
+        "Uncommitted overwrite",
+        "Mixed points in time",
+        "Deadlock"
+      ],
+      "answer": "Mixed points in time",
       "source_pages": [
         259,
         260
@@ -1879,13 +1879,13 @@
       "id": "MCQ015",
       "difficulty": "medium",
       "question": "What most commonly prevents read skew?",
-      "choices": {
-        "A": "Snapshot isolation",
-        "B": "Read committed",
-        "C": "Read uncommitted",
-        "D": "LWW"
-      },
-      "answer": "A",
+      "choices": [
+        "Snapshot isolation",
+        "LWW",
+        "Read uncommitted",
+        "Read committed"
+      ],
+      "answer": "Snapshot isolation",
       "source_pages": [
         260
       ]
@@ -1894,13 +1894,13 @@
       "id": "MCQ016",
       "difficulty": "medium",
       "question": "Snapshot isolation uses?",
-      "choices": {
-        "A": "Consistent transaction snapshot",
-        "B": "Latest value per statement only",
-        "C": "Exclusive read locks",
-        "D": "Serial thread only"
-      },
-      "answer": "A",
+      "choices": [
+        "Exclusive read locks",
+        "Consistent transaction snapshot",
+        "Latest value per statement only",
+        "Serial thread only"
+      ],
+      "answer": "Consistent transaction snapshot",
       "source_pages": [
         260
       ]
@@ -1909,13 +1909,13 @@
       "id": "MCQ017",
       "difficulty": "medium",
       "question": "MVCC stands for?",
-      "choices": {
-        "A": "Multi-Version Concurrency Control",
-        "B": "Multi-Value Commit Check",
-        "C": "Memory Version Clock Control",
-        "D": "Multi-Vector Consistency"
-      },
-      "answer": "A",
+      "choices": [
+        "Memory Version Clock Control",
+        "Multi-Version Concurrency Control",
+        "Multi-Value Commit Check",
+        "Multi-Vector Consistency"
+      ],
+      "answer": "Multi-Version Concurrency Control",
       "source_pages": [
         261
       ]
@@ -1924,13 +1924,13 @@
       "id": "MCQ018",
       "difficulty": "medium",
       "question": "MVCC updates are often represented as?",
-      "choices": {
-        "A": "Delete old + create new",
-        "B": "In-place only",
-        "C": "Drop index",
-        "D": "Commit log only"
-      },
-      "answer": "A",
+      "choices": [
+        "Commit log only",
+        "In-place only",
+        "Delete old + create new",
+        "Drop index"
+      ],
+      "answer": "Delete old + create new",
       "source_pages": [
         262
       ]
@@ -1939,13 +1939,13 @@
       "id": "MCQ019",
       "difficulty": "medium",
       "question": "Why keep old MVCC versions?",
-      "choices": {
-        "A": "Active transactions may still need them",
-        "B": "For hashing",
-        "C": "For replication only",
-        "D": "No reason"
-      },
-      "answer": "A",
+      "choices": [
+        "Active transactions may still need them",
+        "No reason",
+        "For hashing",
+        "For replication only"
+      ],
+      "answer": "Active transactions may still need them",
       "source_pages": [
         261,
         263
@@ -1955,13 +1955,13 @@
       "id": "MCQ020",
       "difficulty": "medium",
       "question": "What is lost update?",
-      "choices": {
-        "A": "Concurrent read-modify-write clobber",
-        "B": "Dirty read",
-        "C": "Read skew",
-        "D": "Phantom only"
-      },
-      "answer": "A",
+      "choices": [
+        "Read skew",
+        "Phantom only",
+        "Dirty read",
+        "Concurrent read-modify-write clobber"
+      ],
+      "answer": "Concurrent read-modify-write clobber",
       "source_pages": [
         265
       ]
@@ -1970,13 +1970,13 @@
       "id": "MCQ021",
       "difficulty": "medium",
       "question": "Best lost-update fix when possible?",
-      "choices": {
-        "A": "Atomic DB operation",
-        "B": "Sleep and retry",
-        "C": "LWW",
-        "D": "Random locking"
-      },
-      "answer": "A",
+      "choices": [
+        "Atomic DB operation",
+        "Random locking",
+        "Sleep and retry",
+        "LWW"
+      ],
+      "answer": "Atomic DB operation",
       "source_pages": [
         265
       ]
@@ -1985,13 +1985,13 @@
       "id": "MCQ022",
       "difficulty": "medium",
       "question": "SELECT FOR UPDATE provides?",
-      "choices": {
-        "A": "Explicit row locking",
-        "B": "Snapshot creation",
-        "C": "Replication",
-        "D": "Durability"
-      },
-      "answer": "A",
+      "choices": [
+        "Explicit row locking",
+        "Snapshot creation",
+        "Durability",
+        "Replication"
+      ],
+      "answer": "Explicit row locking",
       "source_pages": [
         266
       ]
@@ -2000,13 +2000,13 @@
       "id": "MCQ023",
       "difficulty": "medium",
       "question": "Automatic lost-update detection does what?",
-      "choices": {
-        "A": "Aborts a conflicting transaction",
-        "B": "Always blocks reads",
-        "C": "Keeps both values always",
-        "D": "Disables writes"
-      },
-      "answer": "A",
+      "choices": [
+        "Disables writes",
+        "Aborts a conflicting transaction",
+        "Keeps both values always",
+        "Always blocks reads"
+      ],
+      "answer": "Aborts a conflicting transaction",
       "source_pages": [
         267
       ]
@@ -2015,13 +2015,13 @@
       "id": "MCQ024",
       "difficulty": "medium",
       "question": "CAS writes only if?",
-      "choices": {
-        "A": "Value still matches prior read",
-        "B": "Timestamp is largest",
-        "C": "No transaction exists",
-        "D": "Replica is leader"
-      },
-      "answer": "A",
+      "choices": [
+        "Timestamp is largest",
+        "No transaction exists",
+        "Value still matches prior read",
+        "Replica is leader"
+      ],
+      "answer": "Value still matches prior read",
       "source_pages": [
         267
       ]
@@ -2030,13 +2030,13 @@
       "id": "MCQ025",
       "difficulty": "medium",
       "question": "Why may CAS fail semantically?",
-      "choices": {
-        "A": "Predicate may read old snapshot",
-        "B": "No WHERE clause",
-        "C": "It uses locks",
-        "D": "It is serializable"
-      },
-      "answer": "A",
+      "choices": [
+        "Predicate may read old snapshot",
+        "It is serializable",
+        "It uses locks",
+        "No WHERE clause"
+      ],
+      "answer": "Predicate may read old snapshot",
       "source_pages": [
         267
       ]
@@ -2045,13 +2045,13 @@
       "id": "MCQ026",
       "difficulty": "medium",
       "question": "Write skew differs from lost update because?",
-      "choices": {
-        "A": "Different objects may be updated",
-        "B": "No writes happen",
-        "C": "Only one transaction",
-        "D": "It is a dirty read"
-      },
-      "answer": "A",
+      "choices": [
+        "Only one transaction",
+        "It is a dirty read",
+        "No writes happen",
+        "Different objects may be updated"
+      ],
+      "answer": "Different objects may be updated",
       "source_pages": [
         269,
         270
@@ -2061,13 +2061,13 @@
       "id": "MCQ027",
       "difficulty": "medium",
       "question": "What generally prevents write skew?",
-      "choices": {
-        "A": "Serializable isolation",
-        "B": "Read committed",
-        "C": "Snapshot isolation alone",
-        "D": "Read uncommitted"
-      },
-      "answer": "A",
+      "choices": [
+        "Read committed",
+        "Read uncommitted",
+        "Serializable isolation",
+        "Snapshot isolation alone"
+      ],
+      "answer": "Serializable isolation",
       "source_pages": [
         270
       ]
@@ -2076,13 +2076,13 @@
       "id": "MCQ028",
       "difficulty": "medium",
       "question": "Concurrent username claims are simply handled by?",
-      "choices": {
-        "A": "Unique constraint",
-        "B": "LWW",
-        "C": "Read committed only",
-        "D": "No index"
-      },
-      "answer": "A",
+      "choices": [
+        "Read committed only",
+        "Unique constraint",
+        "No index",
+        "LWW"
+      ],
+      "answer": "Unique constraint",
       "source_pages": [
         272
       ]
@@ -2091,13 +2091,13 @@
       "id": "MCQ029",
       "difficulty": "medium",
       "question": "A phantom occurs when?",
-      "choices": {
-        "A": "A write changes a predicate result",
-        "B": "A read sees uncommitted data",
-        "C": "A writer overwrites uncommitted data",
-        "D": "A leader fails"
-      },
-      "answer": "A",
+      "choices": [
+        "A write changes a predicate result",
+        "A writer overwrites uncommitted data",
+        "A read sees uncommitted data",
+        "A leader fails"
+      ],
+      "answer": "A write changes a predicate result",
       "source_pages": [
         273
       ]
@@ -2106,13 +2106,13 @@
       "id": "MCQ030",
       "difficulty": "medium",
       "question": "Materializing conflicts means?",
-      "choices": {
-        "A": "Create rows to lock a phantom conflict",
-        "B": "Create snapshots",
-        "C": "Use LWW",
-        "D": "Use replication"
-      },
-      "answer": "A",
+      "choices": [
+        "Create rows to lock a phantom conflict",
+        "Use LWW",
+        "Create snapshots",
+        "Use replication"
+      ],
+      "answer": "Create rows to lock a phantom conflict",
       "source_pages": [
         273
       ]
@@ -2121,13 +2121,13 @@
       "id": "MCQ031",
       "difficulty": "medium",
       "question": "The three serializability approaches are?",
-      "choices": {
-        "A": "Serial execution, 2PL, SSI",
-        "B": "Read committed, MVCC, WAL",
-        "C": "LWW, quorum, CRDT",
-        "D": "Hash, range, local"
-      },
-      "answer": "A",
+      "choices": [
+        "LWW, quorum, CRDT",
+        "Serial execution, 2PL, SSI",
+        "Hash, range, local",
+        "Read committed, MVCC, WAL"
+      ],
+      "answer": "Serial execution, 2PL, SSI",
       "source_pages": [
         274
       ]
@@ -2136,13 +2136,13 @@
       "id": "MCQ032",
       "difficulty": "medium",
       "question": "Serial execution means?",
-      "choices": {
-        "A": "One transaction at a time",
-        "B": "One query at a time across entire company",
-        "C": "Many transactions with 2PL",
-        "D": "Only reads"
-      },
-      "answer": "A",
+      "choices": [
+        "Many transactions with 2PL",
+        "One query at a time across entire company",
+        "One transaction at a time",
+        "Only reads"
+      ],
+      "answer": "One transaction at a time",
       "source_pages": [
         274
       ]
@@ -2151,13 +2151,13 @@
       "id": "MCQ033",
       "difficulty": "medium",
       "question": "Why use stored procedures in serial execution?",
-      "choices": {
-        "A": "Avoid network round-trip idle time",
-        "B": "Cause deadlocks",
-        "C": "Enable read skew",
-        "D": "Add locks"
-      },
-      "answer": "A",
+      "choices": [
+        "Enable read skew",
+        "Add locks",
+        "Cause deadlocks",
+        "Avoid network round-trip idle time"
+      ],
+      "answer": "Avoid network round-trip idle time",
       "source_pages": [
         276
       ]
@@ -2166,13 +2166,13 @@
       "id": "MCQ034",
       "difficulty": "medium",
       "question": "Serial execution scales well when?",
-      "choices": {
-        "A": "Transactions are single-partition",
-        "B": "Every transaction spans all partitions",
-        "C": "Data is always on disk",
-        "D": "Transactions wait for users"
-      },
-      "answer": "A",
+      "choices": [
+        "Transactions wait for users",
+        "Transactions are single-partition",
+        "Every transaction spans all partitions",
+        "Data is always on disk"
+      ],
+      "answer": "Transactions are single-partition",
       "source_pages": [
         278
       ]
@@ -2181,13 +2181,13 @@
       "id": "MCQ035",
       "difficulty": "medium",
       "question": "2PL stands for?",
-      "choices": {
-        "A": "Two-Phase Locking",
-        "B": "Two-Phase Commit",
-        "C": "Two-Partition Logging",
-        "D": "Two-Process Lock"
-      },
-      "answer": "A",
+      "choices": [
+        "Two-Phase Commit",
+        "Two-Process Lock",
+        "Two-Partition Logging",
+        "Two-Phase Locking"
+      ],
+      "answer": "Two-Phase Locking",
       "source_pages": [
         279
       ]
@@ -2196,13 +2196,13 @@
       "id": "MCQ036",
       "difficulty": "medium",
       "question": "2PL and 2PC are?",
-      "choices": {
-        "A": "Different",
-        "B": "Identical",
-        "C": "Both snapshot levels",
-        "D": "Both locks"
-      },
-      "answer": "A",
+      "choices": [
+        "Different",
+        "Both locks",
+        "Both snapshot levels",
+        "Identical"
+      ],
+      "answer": "Different",
       "source_pages": [
         279
       ]
@@ -2211,13 +2211,13 @@
       "id": "MCQ037",
       "difficulty": "medium",
       "question": "What lock is used for reads under 2PL?",
-      "choices": {
-        "A": "Shared",
-        "B": "Exclusive",
-        "C": "Predicate-exclusive only",
-        "D": "None"
-      },
-      "answer": "A",
+      "choices": [
+        "None",
+        "Exclusive",
+        "Shared",
+        "Predicate-exclusive only"
+      ],
+      "answer": "Shared",
       "source_pages": [
         280
       ]
@@ -2226,13 +2226,13 @@
       "id": "MCQ038",
       "difficulty": "medium",
       "question": "What lock is used for writes under 2PL?",
-      "choices": {
-        "A": "Exclusive",
-        "B": "Shared",
-        "C": "Read",
-        "D": "None"
-      },
-      "answer": "A",
+      "choices": [
+        "Shared",
+        "Exclusive",
+        "Read",
+        "None"
+      ],
+      "answer": "Exclusive",
       "source_pages": [
         280
       ]
@@ -2241,13 +2241,13 @@
       "id": "MCQ039",
       "difficulty": "medium",
       "question": "Deadlock resolution typically requires?",
-      "choices": {
-        "A": "Abort one transaction",
-        "B": "Commit both",
-        "C": "Ignore locks",
-        "D": "Rebuild index"
-      },
-      "answer": "A",
+      "choices": [
+        "Abort one transaction",
+        "Rebuild index",
+        "Commit both",
+        "Ignore locks"
+      ],
+      "answer": "Abort one transaction",
       "source_pages": [
         280
       ]
@@ -2256,13 +2256,13 @@
       "id": "MCQ040",
       "difficulty": "medium",
       "question": "2PL tail latency can be high because?",
-      "choices": {
-        "A": "Transactions queue behind lock holders",
-        "B": "No blocking exists",
-        "C": "It is single-threaded only",
-        "D": "MVCC removes waits"
-      },
-      "answer": "A",
+      "choices": [
+        "Transactions queue behind lock holders",
+        "MVCC removes waits",
+        "It is single-threaded only",
+        "No blocking exists"
+      ],
+      "answer": "Transactions queue behind lock holders",
       "source_pages": [
         281
       ]
@@ -2271,13 +2271,13 @@
       "id": "MCQ041",
       "difficulty": "medium",
       "question": "Predicate locks cover?",
-      "choices": {
-        "A": "Search conditions including future rows",
-        "B": "Only one existing row",
-        "C": "Only indexes",
-        "D": "Only writers"
-      },
-      "answer": "A",
+      "choices": [
+        "Only indexes",
+        "Search conditions including future rows",
+        "Only one existing row",
+        "Only writers"
+      ],
+      "answer": "Search conditions including future rows",
       "source_pages": [
         281,
         282
@@ -2287,13 +2287,13 @@
       "id": "MCQ042",
       "difficulty": "medium",
       "question": "Next-key locking is?",
-      "choices": {
-        "A": "Index-range locking",
-        "B": "SSI",
-        "C": "Serial execution",
-        "D": "WAL"
-      },
-      "answer": "A",
+      "choices": [
+        "Serial execution",
+        "SSI",
+        "Index-range locking",
+        "WAL"
+      ],
+      "answer": "Index-range locking",
       "source_pages": [
         282
       ]
@@ -2302,13 +2302,13 @@
       "id": "MCQ043",
       "difficulty": "medium",
       "question": "Why use index-range locks?",
-      "choices": {
-        "A": "Cheaper approximation of predicate locks",
-        "B": "More precise than predicate locks",
-        "C": "No index needed",
-        "D": "No blocking"
-      },
-      "answer": "A",
+      "choices": [
+        "Cheaper approximation of predicate locks",
+        "No blocking",
+        "More precise than predicate locks",
+        "No index needed"
+      ],
+      "answer": "Cheaper approximation of predicate locks",
       "source_pages": [
         282
       ]
@@ -2317,13 +2317,13 @@
       "id": "MCQ044",
       "difficulty": "medium",
       "question": "SSI is?",
-      "choices": {
-        "A": "Optimistic",
-        "B": "Pessimistic 2PL",
-        "C": "Read uncommitted",
-        "D": "Leaderless"
-      },
-      "answer": "A",
+      "choices": [
+        "Pessimistic 2PL",
+        "Leaderless",
+        "Optimistic",
+        "Read uncommitted"
+      ],
+      "answer": "Optimistic",
       "source_pages": [
         283
       ]
@@ -2332,13 +2332,13 @@
       "id": "MCQ045",
       "difficulty": "hard",
       "question": "SSI builds on?",
-      "choices": {
-        "A": "Snapshot isolation",
-        "B": "Read committed only",
-        "C": "2PC",
-        "D": "WAL"
-      },
-      "answer": "A",
+      "choices": [
+        "2PC",
+        "Snapshot isolation",
+        "Read committed only",
+        "WAL"
+      ],
+      "answer": "Snapshot isolation",
       "source_pages": [
         284
       ]
@@ -2347,13 +2347,13 @@
       "id": "MCQ046",
       "difficulty": "hard",
       "question": "SSI additionally detects?",
-      "choices": {
-        "A": "Serialization conflicts",
-        "B": "Replication lag",
-        "C": "Disk corruption",
-        "D": "Hash skew"
-      },
-      "answer": "A",
+      "choices": [
+        "Serialization conflicts",
+        "Replication lag",
+        "Disk corruption",
+        "Hash skew"
+      ],
+      "answer": "Serialization conflicts",
       "source_pages": [
         284
       ]
@@ -2362,13 +2362,13 @@
       "id": "MCQ047",
       "difficulty": "hard",
       "question": "An outdated premise is?",
-      "choices": {
-        "A": "A decision based on state no longer true at commit",
-        "B": "A dirty write only",
-        "C": "A deadlock",
-        "D": "A failed disk"
-      },
-      "answer": "A",
+      "choices": [
+        "A dirty write only",
+        "A decision based on state no longer true at commit",
+        "A deadlock",
+        "A failed disk"
+      ],
+      "answer": "A decision based on state no longer true at commit",
       "source_pages": [
         284,
         285
@@ -2378,13 +2378,13 @@
       "id": "MCQ048",
       "difficulty": "hard",
       "question": "SSI read tracking behaves like?",
-      "choices": {
-        "A": "Nonblocking tripwire",
-        "B": "Blocking exclusive lock",
-        "C": "Global mutex",
-        "D": "Leader election"
-      },
-      "answer": "A",
+      "choices": [
+        "Nonblocking tripwire",
+        "Blocking exclusive lock",
+        "Global mutex",
+        "Leader election"
+      ],
+      "answer": "Nonblocking tripwire",
       "source_pages": [
         287
       ]
@@ -2393,13 +2393,13 @@
       "id": "MCQ049",
       "difficulty": "hard",
       "question": "High SSI contention causes?",
-      "choices": {
-        "A": "High abort rates",
-        "B": "No aborts",
-        "C": "Only blocking",
-        "D": "No retries"
-      },
-      "answer": "A",
+      "choices": [
+        "No retries",
+        "No aborts",
+        "Only blocking",
+        "High abort rates"
+      ],
+      "answer": "High abort rates",
       "source_pages": [
         284,
         288
@@ -2409,13 +2409,13 @@
       "id": "MCQ050",
       "difficulty": "hard",
       "question": "SSI vs 2PL latency is often?",
-      "choices": {
-        "A": "More predictable because readers/writers don't block",
-        "B": "Always worse",
-        "C": "Single-core only",
-        "D": "Identical"
-      },
-      "answer": "A",
+      "choices": [
+        "More predictable because readers/writers don't block",
+        "Single-core only",
+        "Identical",
+        "Always worse"
+      ],
+      "answer": "More predictable because readers/writers don't block",
       "source_pages": [
         287
       ]
@@ -2424,13 +2424,13 @@
       "id": "MCQ051",
       "difficulty": "hard",
       "question": "Which anomaly does read committed stop?",
-      "choices": {
-        "A": "Dirty reads",
-        "B": "Read skew",
-        "C": "Write skew",
-        "D": "All phantoms"
-      },
-      "answer": "A",
+      "choices": [
+        "Dirty reads",
+        "Read skew",
+        "All phantoms",
+        "Write skew"
+      ],
+      "answer": "Dirty reads",
       "source_pages": [
         288
       ]
@@ -2439,13 +2439,13 @@
       "id": "MCQ052",
       "difficulty": "hard",
       "question": "Which anomaly does snapshot isolation mainly stop beyond read committed?",
-      "choices": {
-        "A": "Read skew",
-        "B": "All write skew",
-        "C": "All lost updates in every DB",
-        "D": "Every phantom write-skew"
-      },
-      "answer": "A",
+      "choices": [
+        "All write skew",
+        "Every phantom write-skew",
+        "Read skew",
+        "All lost updates in every DB"
+      ],
+      "answer": "Read skew",
       "source_pages": [
         288,
         289
@@ -2455,13 +2455,13 @@
       "id": "MCQ053",
       "difficulty": "hard",
       "question": "Which anomaly generally requires serializable isolation?",
-      "choices": {
-        "A": "Write skew",
-        "B": "Dirty read",
-        "C": "Dirty write",
-        "D": "Single-object torn write"
-      },
-      "answer": "A",
+      "choices": [
+        "Write skew",
+        "Single-object torn write",
+        "Dirty read",
+        "Dirty write"
+      ],
+      "answer": "Write skew",
       "source_pages": [
         289
       ]
@@ -2470,13 +2470,13 @@
       "id": "MCQ054",
       "difficulty": "hard",
       "question": "Why is 'repeatable read' confusing?",
-      "choices": {
-        "A": "Different DBs implement different guarantees",
-        "B": "It always means serializable",
-        "C": "It always means snapshot isolation",
-        "D": "It means no reads"
-      },
-      "answer": "A",
+      "choices": [
+        "It always means snapshot isolation",
+        "Different DBs implement different guarantees",
+        "It always means serializable",
+        "It means no reads"
+      ],
+      "answer": "Different DBs implement different guarantees",
       "source_pages": [
         264
       ]
@@ -2485,13 +2485,13 @@
       "id": "MCQ055",
       "difficulty": "hard",
       "question": "Which cited implementation does not auto-detect lost updates?",
-      "choices": {
-        "A": "MySQL/InnoDB repeatable read",
-        "B": "PostgreSQL repeatable read",
-        "C": "Oracle serializable",
-        "D": "SQL Server snapshot isolation"
-      },
-      "answer": "A",
+      "choices": [
+        "PostgreSQL repeatable read",
+        "MySQL/InnoDB repeatable read",
+        "Oracle serializable",
+        "SQL Server snapshot isolation"
+      ],
+      "answer": "MySQL/InnoDB repeatable read",
       "source_pages": [
         267
       ]
@@ -2500,13 +2500,13 @@
       "id": "MCQ056",
       "difficulty": "hard",
       "question": "Which replicated policy can lose updates?",
-      "choices": {
-        "A": "LWW",
-        "B": "Commutative increment",
-        "C": "Sibling merge",
-        "D": "CRDT-style merge"
-      },
-      "answer": "A",
+      "choices": [
+        "CRDT-style merge",
+        "Commutative increment",
+        "Sibling merge",
+        "LWW"
+      ],
+      "answer": "LWW",
       "source_pages": [
         268
       ]
@@ -2515,13 +2515,13 @@
       "id": "MCQ057",
       "difficulty": "hard",
       "question": "Why can SELECT FOR UPDATE miss a phantom?",
-      "choices": {
-        "A": "No existing row may match and be locked",
-        "B": "It never locks rows",
-        "C": "It only works on indexes",
-        "D": "It is read-only"
-      },
-      "answer": "A",
+      "choices": [
+        "It is read-only",
+        "It only works on indexes",
+        "It never locks rows",
+        "No existing row may match and be locked"
+      ],
+      "answer": "No existing row may match and be locked",
       "source_pages": [
         273
       ]
@@ -2530,13 +2530,13 @@
       "id": "MCQ058",
       "difficulty": "hard",
       "question": "What limits serial execution throughput?",
-      "choices": {
-        "A": "One CPU core per serial partition/thread",
-        "B": "No memory",
-        "C": "No transactions",
-        "D": "Only replication"
-      },
-      "answer": "A",
+      "choices": [
+        "No transactions",
+        "One CPU core per serial partition/thread",
+        "No memory",
+        "Only replication"
+      ],
+      "answer": "One CPU core per serial partition/thread",
       "source_pages": [
         275,
         278
@@ -2546,13 +2546,13 @@
       "id": "MCQ059",
       "difficulty": "hard",
       "question": "What is a 2PL shared->exclusive change called?",
-      "choices": {
-        "A": "Lock upgrade",
-        "B": "Failover",
-        "C": "Commit",
-        "D": "Snapshot"
-      },
-      "answer": "A",
+      "choices": [
+        "Snapshot",
+        "Commit",
+        "Failover",
+        "Lock upgrade"
+      ],
+      "answer": "Lock upgrade",
       "source_pages": [
         280
       ]
@@ -2561,13 +2561,13 @@
       "id": "MCQ060",
       "difficulty": "hard",
       "question": "If no suitable index exists for predicate approximation?",
-      "choices": {
-        "A": "Whole-table shared lock may be used",
-        "B": "Serializable impossible",
-        "C": "Use read committed",
-        "D": "Use LWW"
-      },
-      "answer": "A",
+      "choices": [
+        "Use read committed",
+        "Serializable impossible",
+        "Use LWW",
+        "Whole-table shared lock may be used"
+      ],
+      "answer": "Whole-table shared lock may be used",
       "source_pages": [
         283
       ]
@@ -2576,13 +2576,13 @@
       "id": "MCQ061",
       "difficulty": "hard",
       "question": "SSI stale-read detection checks?",
-      "choices": {
-        "A": "Whether an ignored concurrent write committed before reader commit",
-        "B": "Only timestamps",
-        "C": "Only WAL",
-        "D": "Only locks"
-      },
-      "answer": "A",
+      "choices": [
+        "Only WAL",
+        "Only locks",
+        "Only timestamps",
+        "Whether an ignored concurrent write committed before reader commit"
+      ],
+      "answer": "Whether an ignored concurrent write committed before reader commit",
       "source_pages": [
         285,
         286
@@ -2592,13 +2592,13 @@
       "id": "MCQ062",
       "difficulty": "hard",
       "question": "Why defer SSI abort decision?",
-      "choices": {
-        "A": "The conflicting writer may abort and the reader may be read-only",
-        "B": "No conflict exists",
-        "C": "To wait for replication",
-        "D": "To create deadlock"
-      },
-      "answer": "A",
+      "choices": [
+        "To create deadlock",
+        "To wait for replication",
+        "No conflict exists",
+        "The conflicting writer may abort and the reader may be read-only"
+      ],
+      "answer": "The conflicting writer may abort and the reader may be read-only",
       "source_pages": [
         286
       ]
@@ -2607,13 +2607,13 @@
       "id": "MCQ063",
       "difficulty": "hard",
       "question": "What strongly determines SSI performance?",
-      "choices": {
-        "A": "Abort rate",
-        "B": "Hash function",
-        "C": "Disk block size only",
-        "D": "Replica count only"
-      },
-      "answer": "A",
+      "choices": [
+        "Abort rate",
+        "Hash function",
+        "Replica count only",
+        "Disk block size only"
+      ],
+      "answer": "Abort rate",
       "source_pages": [
         288
       ]

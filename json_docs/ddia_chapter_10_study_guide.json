@@ -1905,13 +1905,13 @@
       "id": "MCQ001",
       "difficulty": "medium",
       "question": "Primary performance measure of a batch job?",
-      "choices": {
-        "A": "Throughput",
-        "B": "Single-request latency",
-        "C": "Availability only",
-        "D": "Clock accuracy"
-      },
-      "answer": "A",
+      "choices": [
+        "Throughput",
+        "Clock accuracy",
+        "Availability only",
+        "Single-request latency"
+      ],
+      "answer": "Throughput",
       "source_pages": [
         412
       ]
@@ -1920,13 +1920,13 @@
       "id": "MCQ002",
       "difficulty": "medium",
       "question": "What makes a batch input distinctive?",
-      "choices": {
-        "A": "It is bounded/fixed",
-        "B": "It never ends",
-        "C": "It must be interactive",
-        "D": "It must be SQL"
-      },
-      "answer": "A",
+      "choices": [
+        "It must be SQL",
+        "It is bounded/fixed",
+        "It never ends",
+        "It must be interactive"
+      ],
+      "answer": "It is bounded/fixed",
       "source_pages": [
         412,
         452
@@ -1936,13 +1936,13 @@
       "id": "MCQ003",
       "difficulty": "medium",
       "question": "Unix log pipeline uses sort mainly to?",
-      "choices": {
-        "A": "Bring identical keys together",
-        "B": "Encrypt data",
-        "C": "Shard HDFS",
-        "D": "Create sessions"
-      },
-      "answer": "A",
+      "choices": [
+        "Create sessions",
+        "Shard HDFS",
+        "Bring identical keys together",
+        "Encrypt data"
+      ],
+      "answer": "Bring identical keys together",
       "source_pages": [
         413,
         414
@@ -1952,13 +1952,13 @@
       "id": "MCQ004",
       "difficulty": "medium",
       "question": "Hash aggregation working set depends mainly on?",
-      "choices": {
-        "A": "Distinct keys",
-        "B": "Total records only",
-        "C": "Disk blocks only",
-        "D": "Reducer count only"
-      },
-      "answer": "A",
+      "choices": [
+        "Reducer count only",
+        "Total records only",
+        "Disk blocks only",
+        "Distinct keys"
+      ],
+      "answer": "Distinct keys",
       "source_pages": [
         415
       ]
@@ -1967,13 +1967,13 @@
       "id": "MCQ005",
       "difficulty": "medium",
       "question": "External sorting works for large data because it can?",
-      "choices": {
-        "A": "Spill sorted runs to disk and merge",
-        "B": "Keep everything in RAM",
-        "C": "Avoid all I/O",
-        "D": "Use only hash tables"
-      },
-      "answer": "A",
+      "choices": [
+        "Keep everything in RAM",
+        "Avoid all I/O",
+        "Spill sorted runs to disk and merge",
+        "Use only hash tables"
+      ],
+      "answer": "Spill sorted runs to disk and merge",
       "source_pages": [
         416
       ]
@@ -1982,13 +1982,13 @@
       "id": "MCQ006",
       "difficulty": "medium",
       "question": "Unix philosophy emphasizes?",
-      "choices": {
-        "A": "Small programs that do one thing well",
-        "B": "Monolithic applications",
-        "C": "Mutable shared state",
-        "D": "Binary-only interfaces"
-      },
-      "answer": "A",
+      "choices": [
+        "Small programs that do one thing well",
+        "Mutable shared state",
+        "Binary-only interfaces",
+        "Monolithic applications"
+      ],
+      "answer": "Small programs that do one thing well",
       "source_pages": [
         416
       ]
@@ -1997,13 +1997,13 @@
       "id": "MCQ007",
       "difficulty": "medium",
       "question": "Unix composability relies on?",
-      "choices": {
-        "A": "Uniform file/stream interfaces",
-        "B": "One programming language",
-        "C": "One database",
-        "D": "One scheduler"
-      },
-      "answer": "A",
+      "choices": [
+        "One programming language",
+        "One database",
+        "Uniform file/stream interfaces",
+        "One scheduler"
+      ],
+      "answer": "Uniform file/stream interfaces",
       "source_pages": [
         417
       ]
@@ -2012,13 +2012,13 @@
       "id": "MCQ008",
       "difficulty": "medium",
       "question": "stdin/stdout primarily separate?",
-      "choices": {
-        "A": "Logic from wiring",
-        "B": "Storage from durability",
-        "C": "Leaders from followers",
-        "D": "Reads from writes"
-      },
-      "answer": "A",
+      "choices": [
+        "Storage from durability",
+        "Leaders from followers",
+        "Reads from writes",
+        "Logic from wiring"
+      ],
+      "answer": "Logic from wiring",
       "source_pages": [
         418
       ]
@@ -2027,13 +2027,13 @@
       "id": "MCQ009",
       "difficulty": "medium",
       "question": "Immutable inputs help because?",
-      "choices": {
-        "A": "Jobs can be rerun safely",
-        "B": "They eliminate sorting",
-        "C": "They create indexes",
-        "D": "They guarantee low latency"
-      },
-      "answer": "A",
+      "choices": [
+        "They guarantee low latency",
+        "They create indexes",
+        "Jobs can be rerun safely",
+        "They eliminate sorting"
+      ],
+      "answer": "Jobs can be rerun safely",
       "source_pages": [
         419
       ]
@@ -2042,13 +2042,13 @@
       "id": "MCQ010",
       "difficulty": "medium",
       "question": "MapReduce normally stores input/output in?",
-      "choices": {
-        "A": "Distributed filesystem",
-        "B": "Only RAM",
-        "C": "Browser cache",
-        "D": "Relational DB"
-      },
-      "answer": "A",
+      "choices": [
+        "Relational DB",
+        "Only RAM",
+        "Distributed filesystem",
+        "Browser cache"
+      ],
+      "answer": "Distributed filesystem",
       "source_pages": [
         420
       ]
@@ -2057,13 +2057,13 @@
       "id": "MCQ011",
       "difficulty": "medium",
       "question": "HDFS is based on?",
-      "choices": {
-        "A": "Shared-nothing",
-        "B": "Shared-disk only",
-        "C": "One disk appliance",
-        "D": "Peer-to-peer transactions"
-      },
-      "answer": "A",
+      "choices": [
+        "Shared-nothing",
+        "One disk appliance",
+        "Peer-to-peer transactions",
+        "Shared-disk only"
+      ],
+      "answer": "Shared-nothing",
       "source_pages": [
         420
       ]
@@ -2072,13 +2072,13 @@
       "id": "MCQ012",
       "difficulty": "medium",
       "question": "What does NameNode track?",
-      "choices": {
-        "A": "Block locations",
-        "B": "Mapper source code only",
-        "C": "Reducer counters",
-        "D": "Query plans"
-      },
-      "answer": "A",
+      "choices": [
+        "Query plans",
+        "Reducer counters",
+        "Mapper source code only",
+        "Block locations"
+      ],
+      "answer": "Block locations",
       "source_pages": [
         420
       ]
@@ -2087,13 +2087,13 @@
       "id": "MCQ013",
       "difficulty": "medium",
       "question": "What does mapper emit?",
-      "choices": {
-        "A": "Key-value pairs",
-        "B": "SQL rows only",
-        "C": "Network packets directly",
-        "D": "Transactions"
-      },
-      "answer": "A",
+      "choices": [
+        "Key-value pairs",
+        "SQL rows only",
+        "Network packets directly",
+        "Transactions"
+      ],
+      "answer": "Key-value pairs",
       "source_pages": [
         421
       ]
@@ -2102,13 +2102,13 @@
       "id": "MCQ014",
       "difficulty": "medium",
       "question": "Which step is implicit in MapReduce?",
-      "choices": {
-        "A": "Sort by key",
-        "B": "Schema migration",
-        "C": "Transaction commit",
-        "D": "Replication election"
-      },
-      "answer": "A",
+      "choices": [
+        "Schema migration",
+        "Replication election",
+        "Transaction commit",
+        "Sort by key"
+      ],
+      "answer": "Sort by key",
       "source_pages": [
         421
       ]
@@ -2117,13 +2117,13 @@
       "id": "MCQ015",
       "difficulty": "medium",
       "question": "Reducer receives?",
-      "choices": {
-        "A": "Key and iterator of values",
-        "B": "One raw input record only",
-        "C": "Only file name",
-        "D": "One network socket"
-      },
-      "answer": "A",
+      "choices": [
+        "Only file name",
+        "Key and iterator of values",
+        "One raw input record only",
+        "One network socket"
+      ],
+      "answer": "Key and iterator of values",
       "source_pages": [
         422
       ]
@@ -2132,13 +2132,13 @@
       "id": "MCQ016",
       "difficulty": "medium",
       "question": "Data locality means?",
-      "choices": {
-        "A": "Run compute near input data",
-        "B": "Put all data in memory",
-        "C": "Use one reducer",
-        "D": "Avoid partitioning"
-      },
-      "answer": "A",
+      "choices": [
+        "Use one reducer",
+        "Put all data in memory",
+        "Avoid partitioning",
+        "Run compute near input data"
+      ],
+      "answer": "Run compute near input data",
       "source_pages": [
         422
       ]
@@ -2147,13 +2147,13 @@
       "id": "MCQ017",
       "difficulty": "medium",
       "question": "What determines reducer routing?",
-      "choices": {
-        "A": "Hash of key",
-        "B": "Input filename only",
-        "C": "Timestamp only",
-        "D": "Random choice always"
-      },
-      "answer": "A",
+      "choices": [
+        "Random choice always",
+        "Timestamp only",
+        "Input filename only",
+        "Hash of key"
+      ],
+      "answer": "Hash of key",
       "source_pages": [
         423
       ]
@@ -2162,13 +2162,13 @@
       "id": "MCQ018",
       "difficulty": "medium",
       "question": "What is shuffle?",
-      "choices": {
-        "A": "Partition, sort, transfer mapper output",
-        "B": "Randomize input",
-        "C": "Replicate NameNode",
-        "D": "Commit transaction"
-      },
-      "answer": "A",
+      "choices": [
+        "Commit transaction",
+        "Partition, sort, transfer mapper output",
+        "Replicate NameNode",
+        "Randomize input"
+      ],
+      "answer": "Partition, sort, transfer mapper output",
       "source_pages": [
         424
       ]
@@ -2177,13 +2177,13 @@
       "id": "MCQ019",
       "difficulty": "medium",
       "question": "MapReduce workflows pass intermediate data via?",
-      "choices": {
-        "A": "HDFS directories",
-        "B": "Shared memory only",
-        "C": "HTTP requests",
-        "D": "Locks"
-      },
-      "answer": "A",
+      "choices": [
+        "HTTP requests",
+        "Shared memory only",
+        "HDFS directories",
+        "Locks"
+      ],
+      "answer": "HDFS directories",
       "source_pages": [
         424
       ]
@@ -2192,13 +2192,13 @@
       "id": "MCQ020",
       "difficulty": "medium",
       "question": "Batch joins usually favor?",
-      "choices": {
-        "A": "Local scans over per-record remote lookups",
-        "B": "Remote DB query for every row",
-        "C": "Single-threaded index probes",
-        "D": "No partitioning"
-      },
-      "answer": "A",
+      "choices": [
+        "No partitioning",
+        "Local scans over per-record remote lookups",
+        "Remote DB query for every row",
+        "Single-threaded index probes"
+      ],
+      "answer": "Local scans over per-record remote lookups",
       "source_pages": [
         426,
         427
@@ -2208,13 +2208,13 @@
       "id": "MCQ021",
       "difficulty": "medium",
       "question": "Sort-merge join routes equal join keys to?",
-      "choices": {
-        "A": "Same reducer",
-        "B": "Random client",
-        "C": "NameNode",
-        "D": "Different reducers"
-      },
-      "answer": "A",
+      "choices": [
+        "Same reducer",
+        "Random client",
+        "NameNode",
+        "Different reducers"
+      ],
+      "answer": "Same reducer",
       "source_pages": [
         427,
         428
@@ -2224,13 +2224,13 @@
       "id": "MCQ022",
       "difficulty": "medium",
       "question": "Secondary sort can order?",
-      "choices": {
-        "A": "Different record types and event order within a key",
-        "B": "Only file blocks",
-        "C": "Only reducer count",
-        "D": "Only network packets"
-      },
-      "answer": "A",
+      "choices": [
+        "Different record types and event order within a key",
+        "Only file blocks",
+        "Only network packets",
+        "Only reducer count"
+      ],
+      "answer": "Different record types and event order within a key",
       "source_pages": [
         428
       ]
@@ -2239,13 +2239,13 @@
       "id": "MCQ023",
       "difficulty": "medium",
       "question": "GROUP BY in MapReduce works by?",
-      "choices": {
-        "A": "Using grouping key as mapper key",
-        "B": "Using wall clock",
-        "C": "Avoiding reducers",
-        "D": "One global hash table"
-      },
-      "answer": "A",
+      "choices": [
+        "Using wall clock",
+        "Using grouping key as mapper key",
+        "Avoiding reducers",
+        "One global hash table"
+      ],
+      "answer": "Using grouping key as mapper key",
       "source_pages": [
         428,
         429
@@ -2255,13 +2255,13 @@
       "id": "MCQ024",
       "difficulty": "medium",
       "question": "A hot key causes?",
-      "choices": {
-        "A": "Skew/straggler reducer",
-        "B": "Better balance",
-        "C": "No shuffle",
-        "D": "Less work"
-      },
-      "answer": "A",
+      "choices": [
+        "No shuffle",
+        "Skew/straggler reducer",
+        "Less work",
+        "Better balance"
+      ],
+      "answer": "Skew/straggler reducer",
       "source_pages": [
         429
       ]
@@ -2270,13 +2270,13 @@
       "id": "MCQ025",
       "difficulty": "medium",
       "question": "One hot-key mitigation?",
-      "choices": {
-        "A": "Spread hot-key records across several reducers",
-        "B": "Force one reducer",
-        "C": "Disable partitioning",
-        "D": "Use one mapper"
-      },
-      "answer": "A",
+      "choices": [
+        "Disable partitioning",
+        "Spread hot-key records across several reducers",
+        "Force one reducer",
+        "Use one mapper"
+      ],
+      "answer": "Spread hot-key records across several reducers",
       "source_pages": [
         429,
         430
@@ -2286,13 +2286,13 @@
       "id": "MCQ026",
       "difficulty": "medium",
       "question": "Reduce-side join advantage?",
-      "choices": {
-        "A": "No layout assumptions",
-        "B": "No sort",
-        "C": "No network copy",
-        "D": "Requires small dimension"
-      },
-      "answer": "A",
+      "choices": [
+        "No sort",
+        "No layout assumptions",
+        "Requires small dimension",
+        "No network copy"
+      ],
+      "answer": "No layout assumptions",
       "source_pages": [
         430
       ]
@@ -2301,13 +2301,13 @@
       "id": "MCQ027",
       "difficulty": "medium",
       "question": "Map-side join advantage?",
-      "choices": {
-        "A": "Avoid reducer/sort when assumptions hold",
-        "B": "Works for every input without assumptions",
-        "C": "Requires more shuffles",
-        "D": "Always slower"
-      },
-      "answer": "A",
+      "choices": [
+        "Avoid reducer/sort when assumptions hold",
+        "Always slower",
+        "Requires more shuffles",
+        "Works for every input without assumptions"
+      ],
+      "answer": "Avoid reducer/sort when assumptions hold",
       "source_pages": [
         430
       ]
@@ -2316,13 +2316,13 @@
       "id": "MCQ028",
       "difficulty": "medium",
       "question": "Broadcast hash join requires?",
-      "choices": {
-        "A": "One small input",
-        "B": "Both inputs same partitioning",
-        "C": "Both inputs sorted",
-        "D": "No memory"
-      },
-      "answer": "A",
+      "choices": [
+        "One small input",
+        "No memory",
+        "Both inputs same partitioning",
+        "Both inputs sorted"
+      ],
+      "answer": "One small input",
       "source_pages": [
         431
       ]
@@ -2331,13 +2331,13 @@
       "id": "MCQ029",
       "difficulty": "medium",
       "question": "Partitioned hash join requires?",
-      "choices": {
-        "A": "Same partitioning",
-        "B": "One small global input",
-        "C": "Both globally sorted",
-        "D": "One reducer"
-      },
-      "answer": "A",
+      "choices": [
+        "Both globally sorted",
+        "One small global input",
+        "Same partitioning",
+        "One reducer"
+      ],
+      "answer": "Same partitioning",
       "source_pages": [
         431,
         432
@@ -2347,13 +2347,13 @@
       "id": "MCQ030",
       "difficulty": "medium",
       "question": "Map-side merge join requires?",
-      "choices": {
-        "A": "Same partitioning and sort order",
-        "B": "Only one input",
-        "C": "Random partitions",
-        "D": "No keys"
-      },
-      "answer": "A",
+      "choices": [
+        "Same partitioning and sort order",
+        "No keys",
+        "Only one input",
+        "Random partitions"
+      ],
+      "answer": "Same partitioning and sort order",
       "source_pages": [
         432
       ]
@@ -2362,13 +2362,13 @@
       "id": "MCQ031",
       "difficulty": "medium",
       "question": "Hadoop layout metadata may live in?",
-      "choices": {
-        "A": "Hive metastore/HCatalog",
-        "B": "NameNode only",
-        "C": "TCP stack",
-        "D": "Browser"
-      },
-      "answer": "A",
+      "choices": [
+        "TCP stack",
+        "Hive metastore/HCatalog",
+        "Browser",
+        "NameNode only"
+      ],
+      "answer": "Hive metastore/HCatalog",
       "source_pages": [
         432
       ]
@@ -2377,13 +2377,13 @@
       "id": "MCQ032",
       "difficulty": "medium",
       "question": "Batch output often builds?",
-      "choices": {
-        "A": "Indexes/databases serving later queries",
-        "B": "Only human reports",
-        "C": "Only logs",
-        "D": "Only temporary memory"
-      },
-      "answer": "A",
+      "choices": [
+        "Only temporary memory",
+        "Only human reports",
+        "Indexes/databases serving later queries",
+        "Only logs"
+      ],
+      "answer": "Indexes/databases serving later queries",
       "source_pages": [
         433,
         434
@@ -2393,13 +2393,13 @@
       "id": "MCQ033",
       "difficulty": "medium",
       "question": "Why avoid direct external DB writes from tasks?",
-      "choices": {
-        "A": "Slow, overload risk, side effects break retry semantics",
-        "B": "DBs cannot accept writes",
-        "C": "HDFS forbids networking",
-        "D": "Reducers cannot emit values"
-      },
-      "answer": "A",
+      "choices": [
+        "Reducers cannot emit values",
+        "Slow, overload risk, side effects break retry semantics",
+        "DBs cannot accept writes",
+        "HDFS forbids networking"
+      ],
+      "answer": "Slow, overload risk, side effects break retry semantics",
       "source_pages": [
         434,
         435
@@ -2409,13 +2409,13 @@
       "id": "MCQ034",
       "difficulty": "medium",
       "question": "Preferred pattern for serving batch output?",
-      "choices": {
-        "A": "Build immutable files then bulk-load/switch",
-        "B": "Write every record directly to prod DB",
-        "C": "Use client-side cache only",
-        "D": "Modify input files"
-      },
-      "answer": "A",
+      "choices": [
+        "Write every record directly to prod DB",
+        "Build immutable files then bulk-load/switch",
+        "Modify input files",
+        "Use client-side cache only"
+      ],
+      "answer": "Build immutable files then bulk-load/switch",
       "source_pages": [
         435
       ]
@@ -2424,13 +2424,13 @@
       "id": "MCQ035",
       "difficulty": "medium",
       "question": "Human fault tolerance means?",
-      "choices": {
-        "A": "Recover from buggy code by rerunning/reverting outputs",
-        "B": "Prevent all human errors",
-        "C": "Use more replicas",
-        "D": "Avoid testing"
-      },
-      "answer": "A",
+      "choices": [
+        "Use more replicas",
+        "Recover from buggy code by rerunning/reverting outputs",
+        "Prevent all human errors",
+        "Avoid testing"
+      ],
+      "answer": "Recover from buggy code by rerunning/reverting outputs",
       "source_pages": [
         436
       ]
@@ -2439,13 +2439,13 @@
       "id": "MCQ036",
       "difficulty": "medium",
       "question": "Hadoop compared with MPP DBs offers more?",
-      "choices": {
-        "A": "Storage/processing flexibility",
-        "B": "Only SQL",
-        "C": "Only fixed schemas",
-        "D": "Only in-memory processing"
-      },
-      "answer": "A",
+      "choices": [
+        "Only in-memory processing",
+        "Storage/processing flexibility",
+        "Only fixed schemas",
+        "Only SQL"
+      ],
+      "answer": "Storage/processing flexibility",
       "source_pages": [
         437,
         438
@@ -2455,13 +2455,13 @@
       "id": "MCQ037",
       "difficulty": "medium",
       "question": "Schema-on-read means?",
-      "choices": {
-        "A": "Interpret/model data when consuming it",
-        "B": "Schema fixed before collection",
-        "C": "No schema ever",
-        "D": "Schema stored in NameNode"
-      },
-      "answer": "A",
+      "choices": [
+        "Interpret/model data when consuming it",
+        "Schema fixed before collection",
+        "Schema stored in NameNode",
+        "No schema ever"
+      ],
+      "answer": "Interpret/model data when consuming it",
       "source_pages": [
         437,
         438
@@ -2471,13 +2471,13 @@
       "id": "MCQ038",
       "difficulty": "medium",
       "question": "MapReduce task recovery granularity?",
-      "choices": {
-        "A": "Individual task",
-        "B": "Entire cluster",
-        "C": "Only entire job",
-        "D": "Only reducer group"
-      },
-      "answer": "A",
+      "choices": [
+        "Only reducer group",
+        "Entire cluster",
+        "Individual task",
+        "Only entire job"
+      ],
+      "answer": "Individual task",
       "source_pages": [
         439
       ]
@@ -2486,13 +2486,13 @@
       "id": "MCQ039",
       "difficulty": "medium",
       "question": "Why was frequent task preemption acceptable at Google?",
-      "choices": {
-        "A": "Improves resource utilization",
-        "B": "Makes jobs linearizable",
-        "C": "Eliminates disk I/O",
-        "D": "Avoids retries"
-      },
-      "answer": "A",
+      "choices": [
+        "Makes jobs linearizable",
+        "Improves resource utilization",
+        "Avoids retries",
+        "Eliminates disk I/O"
+      ],
+      "answer": "Improves resource utilization",
       "source_pages": [
         440
       ]
@@ -2501,13 +2501,13 @@
       "id": "MCQ040",
       "difficulty": "medium",
       "question": "Materialization means?",
-      "choices": {
-        "A": "Write intermediate result eagerly",
-        "B": "Stream only in RAM",
-        "C": "Drop result",
-        "D": "Commit DB transaction"
-      },
-      "answer": "A",
+      "choices": [
+        "Drop result",
+        "Commit DB transaction",
+        "Write intermediate result eagerly",
+        "Stream only in RAM"
+      ],
+      "answer": "Write intermediate result eagerly",
       "source_pages": [
         442
       ]
@@ -2516,13 +2516,13 @@
       "id": "MCQ041",
       "difficulty": "medium",
       "question": "MapReduce materialization downside?",
-      "choices": {
-        "A": "Stage barriers and extra I/O",
-        "B": "Too little durability",
-        "C": "No fault tolerance",
-        "D": "No partitioning"
-      },
-      "answer": "A",
+      "choices": [
+        "Stage barriers and extra I/O",
+        "No fault tolerance",
+        "Too little durability",
+        "No partitioning"
+      ],
+      "answer": "Stage barriers and extra I/O",
       "source_pages": [
         442
       ]
@@ -2531,13 +2531,13 @@
       "id": "MCQ042",
       "difficulty": "medium",
       "question": "Which are dataflow engines?",
-      "choices": {
-        "A": "Spark, Tez, Flink",
-        "B": "MySQL, PostgreSQL, SQLite",
-        "C": "Kafka, RabbitMQ, NATS",
-        "D": "B-tree, LSM, SSTable"
-      },
-      "answer": "A",
+      "choices": [
+        "Kafka, RabbitMQ, NATS",
+        "MySQL, PostgreSQL, SQLite",
+        "Spark, Tez, Flink",
+        "B-tree, LSM, SSTable"
+      ],
+      "answer": "Spark, Tez, Flink",
       "source_pages": [
         443
       ]
@@ -2546,13 +2546,13 @@
       "id": "MCQ043",
       "difficulty": "medium",
       "question": "Dataflow engines treat workflow as?",
-      "choices": {
-        "A": "One graph/job",
-        "B": "Independent shell commands only",
-        "C": "One reducer",
-        "D": "One file"
-      },
-      "answer": "A",
+      "choices": [
+        "Independent shell commands only",
+        "One graph/job",
+        "One reducer",
+        "One file"
+      ],
+      "answer": "One graph/job",
       "source_pages": [
         443
       ]
@@ -2561,13 +2561,13 @@
       "id": "MCQ044",
       "difficulty": "medium",
       "question": "Why avoid unconditional sorting?",
-      "choices": {
-        "A": "Sorting is expensive and not always needed",
-        "B": "Sorting breaks fault tolerance",
-        "C": "Sorting cannot be distributed",
-        "D": "Sorting requires SQL"
-      },
-      "answer": "A",
+      "choices": [
+        "Sorting breaks fault tolerance",
+        "Sorting is expensive and not always needed",
+        "Sorting requires SQL",
+        "Sorting cannot be distributed"
+      ],
+      "answer": "Sorting is expensive and not always needed",
       "source_pages": [
         443,
         444
@@ -2577,13 +2577,13 @@
       "id": "MCQ045",
       "difficulty": "medium",
       "question": "Intermediate data in dataflow engines often stays?",
-      "choices": {
-        "A": "Memory/local disk",
-        "B": "Always replicated HDFS",
-        "C": "External prod DB",
-        "D": "Only client cache"
-      },
-      "answer": "A",
+      "choices": [
+        "Memory/local disk",
+        "Always replicated HDFS",
+        "External prod DB",
+        "Only client cache"
+      ],
+      "answer": "Memory/local disk",
       "source_pages": [
         444
       ]
@@ -2592,13 +2592,13 @@
       "id": "MCQ046",
       "difficulty": "hard",
       "question": "Spark tracks data lineage through?",
-      "choices": {
-        "A": "RDD ancestry",
-        "B": "WAL only",
-        "C": "NameNode metadata only",
-        "D": "Paxos terms"
-      },
-      "answer": "A",
+      "choices": [
+        "Paxos terms",
+        "WAL only",
+        "NameNode metadata only",
+        "RDD ancestry"
+      ],
+      "answer": "RDD ancestry",
       "source_pages": [
         444
       ]
@@ -2607,13 +2607,13 @@
       "id": "MCQ047",
       "difficulty": "hard",
       "question": "Flink recovery uses?",
-      "choices": {
-        "A": "Operator checkpoints",
-        "B": "Only HDFS replication",
-        "C": "2PC",
-        "D": "Read repair"
-      },
-      "answer": "A",
+      "choices": [
+        "2PC",
+        "Only HDFS replication",
+        "Operator checkpoints",
+        "Read repair"
+      ],
+      "answer": "Operator checkpoints",
       "source_pages": [
         444
       ]
@@ -2622,13 +2622,13 @@
       "id": "MCQ048",
       "difficulty": "hard",
       "question": "Why deterministic operators?",
-      "choices": {
-        "A": "Recomputation should reproduce compatible output",
-        "B": "They avoid partitioning",
-        "C": "They remove reducers",
-        "D": "They guarantee low latency"
-      },
-      "answer": "A",
+      "choices": [
+        "They remove reducers",
+        "Recomputation should reproduce compatible output",
+        "They guarantee low latency",
+        "They avoid partitioning"
+      ],
+      "answer": "Recomputation should reproduce compatible output",
       "source_pages": [
         445
       ]
@@ -2637,13 +2637,13 @@
       "id": "MCQ049",
       "difficulty": "hard",
       "question": "Which is nondeterministic source?",
-      "choices": {
-        "A": "System clock",
-        "B": "Fixed seed",
-        "C": "Immutable file",
-        "D": "Sorted input"
-      },
-      "answer": "A",
+      "choices": [
+        "Immutable file",
+        "System clock",
+        "Fixed seed",
+        "Sorted input"
+      ],
+      "answer": "System clock",
       "source_pages": [
         445
       ]
@@ -2652,13 +2652,13 @@
       "id": "MCQ050",
       "difficulty": "hard",
       "question": "When may materialization be cheaper than recomputation?",
-      "choices": {
-        "A": "Intermediate data is small or compute is expensive",
-        "B": "Always",
-        "C": "Never",
-        "D": "Only for streams"
-      },
-      "answer": "A",
+      "choices": [
+        "Intermediate data is small or compute is expensive",
+        "Never",
+        "Only for streams",
+        "Always"
+      ],
+      "answer": "Intermediate data is small or compute is expensive",
       "source_pages": [
         445
       ]
@@ -2667,13 +2667,13 @@
       "id": "MCQ051",
       "difficulty": "hard",
       "question": "Flink especially emphasizes?",
-      "choices": {
-        "A": "Pipelined execution",
-        "B": "Full HDFS materialization every stage",
-        "C": "One mapper",
-        "D": "No fault tolerance"
-      },
-      "answer": "A",
+      "choices": [
+        "One mapper",
+        "Full HDFS materialization every stage",
+        "No fault tolerance",
+        "Pipelined execution"
+      ],
+      "answer": "Pipelined execution",
       "source_pages": [
         445
       ]
@@ -2682,13 +2682,13 @@
       "id": "MCQ052",
       "difficulty": "hard",
       "question": "PageRank is a?",
-      "choices": {
-        "A": "Graph analysis/ranking algorithm",
-        "B": "Join algorithm",
-        "C": "Filesystem",
-        "D": "Transaction protocol"
-      },
-      "answer": "A",
+      "choices": [
+        "Filesystem",
+        "Transaction protocol",
+        "Graph analysis/ranking algorithm",
+        "Join algorithm"
+      ],
+      "answer": "Graph analysis/ranking algorithm",
       "source_pages": [
         446
       ]
@@ -2697,13 +2697,13 @@
       "id": "MCQ053",
       "difficulty": "hard",
       "question": "Pregel is based on?",
-      "choices": {
-        "A": "Bulk Synchronous Parallel",
-        "B": "Two-phase commit",
-        "C": "Snapshot isolation",
-        "D": "Read repair"
-      },
-      "answer": "A",
+      "choices": [
+        "Read repair",
+        "Two-phase commit",
+        "Bulk Synchronous Parallel",
+        "Snapshot isolation"
+      ],
+      "answer": "Bulk Synchronous Parallel",
       "source_pages": [
         447
       ]
@@ -2712,13 +2712,13 @@
       "id": "MCQ054",
       "difficulty": "hard",
       "question": "Pregel vertex communication uses?",
-      "choices": {
-        "A": "Messages",
-        "B": "Remote DB query per edge",
-        "C": "Shared global RAM",
-        "D": "SQL locks"
-      },
-      "answer": "A",
+      "choices": [
+        "Remote DB query per edge",
+        "Shared global RAM",
+        "Messages",
+        "SQL locks"
+      ],
+      "answer": "Messages",
       "source_pages": [
         447
       ]
@@ -2727,13 +2727,13 @@
       "id": "MCQ055",
       "difficulty": "hard",
       "question": "Pregel vertex state persists across?",
-      "choices": {
-        "A": "Iterations",
-        "B": "Only one message",
-        "C": "No iteration",
-        "D": "File blocks"
-      },
-      "answer": "A",
+      "choices": [
+        "Only one message",
+        "Iterations",
+        "No iteration",
+        "File blocks"
+      ],
+      "answer": "Iterations",
       "source_pages": [
         447
       ]
@@ -2742,13 +2742,13 @@
       "id": "MCQ056",
       "difficulty": "hard",
       "question": "Pregel synchronization occurs?",
-      "choices": {
-        "A": "Between iterations",
-        "B": "After every field",
-        "C": "Never",
-        "D": "Only at job start"
-      },
-      "answer": "A",
+      "choices": [
+        "Never",
+        "Between iterations",
+        "After every field",
+        "Only at job start"
+      ],
+      "answer": "Between iterations",
       "source_pages": [
         447
       ]
@@ -2757,13 +2757,13 @@
       "id": "MCQ057",
       "difficulty": "hard",
       "question": "Graph checkpointing supports?",
-      "choices": {
-        "A": "Fault recovery",
-        "B": "Join optimization",
-        "C": "Schema-on-read",
-        "D": "Data locality only"
-      },
-      "answer": "A",
+      "choices": [
+        "Data locality only",
+        "Fault recovery",
+        "Join optimization",
+        "Schema-on-read"
+      ],
+      "answer": "Fault recovery",
       "source_pages": [
         448
       ]
@@ -2772,13 +2772,13 @@
       "id": "MCQ058",
       "difficulty": "hard",
       "question": "Distributed graph processing can be slow due to?",
-      "choices": {
-        "A": "Cross-machine messaging",
-        "B": "No data",
-        "C": "No partitioning",
-        "D": "Too few edges"
-      },
-      "answer": "A",
+      "choices": [
+        "Too few edges",
+        "Cross-machine messaging",
+        "No data",
+        "No partitioning"
+      ],
+      "answer": "Cross-machine messaging",
       "source_pages": [
         448
       ]
@@ -2787,13 +2787,13 @@
       "id": "MCQ059",
       "difficulty": "hard",
       "question": "If graph fits on one machine, likely fastest option?",
-      "choices": {
-        "A": "Single-machine algorithm",
-        "B": "Pregel cluster always",
-        "C": "MapReduce always",
-        "D": "MPP SQL always"
-      },
-      "answer": "A",
+      "choices": [
+        "MPP SQL always",
+        "MapReduce always",
+        "Single-machine algorithm",
+        "Pregel cluster always"
+      ],
+      "answer": "Single-machine algorithm",
       "source_pages": [
         448
       ]
@@ -2802,13 +2802,13 @@
       "id": "MCQ060",
       "difficulty": "hard",
       "question": "High-level APIs expose?",
-      "choices": {
-        "A": "Relational-style join/group/filter/aggregate",
-        "B": "Only map/reduce callbacks",
-        "C": "Only file operations",
-        "D": "Only graph messages"
-      },
-      "answer": "A",
+      "choices": [
+        "Only graph messages",
+        "Only map/reduce callbacks",
+        "Only file operations",
+        "Relational-style join/group/filter/aggregate"
+      ],
+      "answer": "Relational-style join/group/filter/aggregate",
       "source_pages": [
         449
       ]
@@ -2817,13 +2817,13 @@
       "id": "MCQ061",
       "difficulty": "hard",
       "question": "Declarative joins allow optimizer to?",
-      "choices": {
-        "A": "Choose/reorder join algorithms",
-        "B": "Avoid all partitioning",
-        "C": "Guarantee no skew",
-        "D": "Disable code"
-      },
-      "answer": "A",
+      "choices": [
+        "Disable code",
+        "Avoid all partitioning",
+        "Choose/reorder join algorithms",
+        "Guarantee no skew"
+      ],
+      "answer": "Choose/reorder join algorithms",
       "source_pages": [
         449
       ]
@@ -2832,13 +2832,13 @@
       "id": "MCQ062",
       "difficulty": "hard",
       "question": "Columnar/vectorized optimization is easier when?",
-      "choices": {
-        "A": "Simple operations are declarative",
-        "B": "Everything is opaque callback code",
-        "C": "No schemas exist",
-        "D": "Data is randomized"
-      },
-      "answer": "A",
+      "choices": [
+        "Data is randomized",
+        "No schemas exist",
+        "Everything is opaque callback code",
+        "Simple operations are declarative"
+      ],
+      "answer": "Simple operations are declarative",
       "source_pages": [
         450
       ]
@@ -2847,13 +2847,13 @@
       "id": "MCQ063",
       "difficulty": "hard",
       "question": "Modern batch engines trend toward?",
-      "choices": {
-        "A": "Combining declarative optimization with arbitrary-code flexibility",
-        "B": "Removing optimizers",
-        "C": "Only SQL",
-        "D": "Only MapReduce"
-      },
-      "answer": "A",
+      "choices": [
+        "Only SQL",
+        "Removing optimizers",
+        "Only MapReduce",
+        "Combining declarative optimization with arbitrary-code flexibility"
+      ],
+      "answer": "Combining declarative optimization with arbitrary-code flexibility",
       "source_pages": [
         450,
         451
@@ -2863,13 +2863,13 @@
       "id": "MCQ064",
       "difficulty": "hard",
       "question": "Two core distributed batch concerns?",
-      "choices": {
-        "A": "Partitioning and fault tolerance",
-        "B": "CAP and consensus",
-        "C": "Indexes and transactions",
-        "D": "Caching and compression"
-      },
-      "answer": "A",
+      "choices": [
+        "Indexes and transactions",
+        "Partitioning and fault tolerance",
+        "Caching and compression",
+        "CAP and consensus"
+      ],
+      "answer": "Partitioning and fault tolerance",
       "source_pages": [
         451
       ]
@@ -2878,13 +2878,13 @@
       "id": "MCQ065",
       "difficulty": "hard",
       "question": "MapReduce fault tolerance favors?",
-      "choices": {
-        "A": "Disk materialization + easy task retry",
-        "B": "Only in-memory state",
-        "C": "No retries",
-        "D": "External side effects"
-      },
-      "answer": "A",
+      "choices": [
+        "Only in-memory state",
+        "No retries",
+        "Disk materialization + easy task retry",
+        "External side effects"
+      ],
+      "answer": "Disk materialization + easy task retry",
       "source_pages": [
         451
       ]
@@ -2893,13 +2893,13 @@
       "id": "MCQ066",
       "difficulty": "hard",
       "question": "Dataflow fault tolerance favors?",
-      "choices": {
-        "A": "Less materialization + recomputation",
-        "B": "No lineage",
-        "C": "Always full job restart",
-        "D": "No deterministic operators"
-      },
-      "answer": "A",
+      "choices": [
+        "No deterministic operators",
+        "Less materialization + recomputation",
+        "No lineage",
+        "Always full job restart"
+      ],
+      "answer": "Less materialization + recomputation",
       "source_pages": [
         451
       ]
@@ -2908,13 +2908,13 @@
       "id": "MCQ067",
       "difficulty": "hard",
       "question": "Framework-safe retries depend on tasks being?",
-      "choices": {
-        "A": "Stateless and side-effect-free except designated output",
-        "B": "Stateful with external writes",
-        "C": "Interactive",
-        "D": "Leader-elected"
-      },
-      "answer": "A",
+      "choices": [
+        "Stateful with external writes",
+        "Leader-elected",
+        "Stateless and side-effect-free except designated output",
+        "Interactive"
+      ],
+      "answer": "Stateless and side-effect-free except designated output",
       "source_pages": [
         452
       ]

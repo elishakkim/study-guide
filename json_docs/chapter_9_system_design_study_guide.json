@@ -1646,13 +1646,13 @@
       "id": "MCQ01",
       "difficulty": "easy",
       "question": "What is another common name for a web crawler?",
-      "choices": {
-        "A": "Robot or spider",
-        "B": "Compiler",
-        "C": "Proxy",
-        "D": "Scheduler"
-      },
-      "answer": "A",
+      "choices": [
+        "Compiler",
+        "Robot or spider",
+        "Proxy",
+        "Scheduler"
+      ],
+      "answer": "Robot or spider",
       "source_pages": [
         132
       ]
@@ -1661,13 +1661,13 @@
       "id": "MCQ02",
       "difficulty": "easy",
       "question": "What is the chapter's primary crawler use case?",
-      "choices": {
-        "A": "Search engine indexing",
-        "B": "Video transcoding",
-        "C": "Payment processing",
-        "D": "Chat delivery"
-      },
-      "answer": "A",
+      "choices": [
+        "Payment processing",
+        "Search engine indexing",
+        "Chat delivery",
+        "Video transcoding"
+      ],
+      "answer": "Search engine indexing",
       "source_pages": [
         134
       ]
@@ -1676,13 +1676,13 @@
       "id": "MCQ03",
       "difficulty": "medium",
       "question": "How many pages per month are in scope?",
-      "choices": {
-        "A": "1 million",
-        "B": "100 million",
-        "C": "1 billion",
-        "D": "10 billion"
-      },
-      "answer": "C",
+      "choices": [
+        "1 million",
+        "100 million",
+        "10 billion",
+        "1 billion"
+      ],
+      "answer": "1 billion",
       "source_pages": [
         134
       ]
@@ -1691,13 +1691,13 @@
       "id": "MCQ04",
       "difficulty": "medium",
       "question": "Which content type is in scope?",
-      "choices": {
-        "A": "HTML only",
-        "B": "Images only",
-        "C": "PDF only",
-        "D": "All media"
-      },
-      "answer": "A",
+      "choices": [
+        "All media",
+        "PDF only",
+        "HTML only",
+        "Images only"
+      ],
+      "answer": "HTML only",
       "source_pages": [
         134
       ]
@@ -1706,13 +1706,13 @@
       "id": "MCQ05",
       "difficulty": "medium",
       "question": "How long is crawled HTML retained?",
-      "choices": {
-        "A": "30 days",
-        "B": "1 year",
-        "C": "5 years",
-        "D": "Forever"
-      },
-      "answer": "C",
+      "choices": [
+        "1 year",
+        "30 days",
+        "5 years",
+        "Forever"
+      ],
+      "answer": "5 years",
       "source_pages": [
         134
       ]
@@ -1721,13 +1721,13 @@
       "id": "MCQ06",
       "difficulty": "medium",
       "question": "What should happen to duplicate-content pages?",
-      "choices": {
-        "A": "Store all copies",
-        "B": "Ignore them",
-        "C": "Only compress them",
-        "D": "Send them to DNS"
-      },
-      "answer": "B",
+      "choices": [
+        "Only compress them",
+        "Store all copies",
+        "Ignore them",
+        "Send them to DNS"
+      ],
+      "answer": "Ignore them",
       "source_pages": [
         134
       ]
@@ -1736,13 +1736,13 @@
       "id": "MCQ07",
       "difficulty": "easy",
       "question": "Which is NOT one of the four good-crawler characteristics?",
-      "choices": {
-        "A": "Scalability",
-        "B": "Robustness",
-        "C": "Politeness",
-        "D": "Strict SQL normalization"
-      },
-      "answer": "D",
+      "choices": [
+        "Scalability",
+        "Strict SQL normalization",
+        "Robustness",
+        "Politeness"
+      ],
+      "answer": "Strict SQL normalization",
       "source_pages": [
         134
       ]
@@ -1751,13 +1751,13 @@
       "id": "MCQ08",
       "difficulty": "medium",
       "question": "What average QPS does the chapter estimate?",
-      "choices": {
-        "A": "40",
-        "B": "400",
-        "C": "800",
-        "D": "4000"
-      },
-      "answer": "B",
+      "choices": [
+        "4000",
+        "40",
+        "800",
+        "400"
+      ],
+      "answer": "400",
       "source_pages": [
         135
       ]
@@ -1766,13 +1766,13 @@
       "id": "MCQ09",
       "difficulty": "medium",
       "question": "What peak QPS is assumed?",
-      "choices": {
-        "A": "400",
-        "B": "600",
-        "C": "800",
-        "D": "1600"
-      },
-      "answer": "C",
+      "choices": [
+        "800",
+        "600",
+        "1600",
+        "400"
+      ],
+      "answer": "800",
       "source_pages": [
         135
       ]
@@ -1781,13 +1781,13 @@
       "id": "MCQ10",
       "difficulty": "medium",
       "question": "What five-year storage is estimated?",
-      "choices": {
-        "A": "30 TB",
-        "B": "500 TB",
-        "C": "3 PB",
-        "D": "30 PB"
-      },
-      "answer": "D",
+      "choices": [
+        "30 PB",
+        "30 TB",
+        "3 PB",
+        "500 TB"
+      ],
+      "answer": "30 PB",
       "source_pages": [
         135
       ]
@@ -1796,13 +1796,13 @@
       "id": "MCQ11",
       "difficulty": "medium",
       "question": "What are seed URLs?",
-      "choices": {
-        "A": "Starting points for crawling",
-        "B": "Blocked URLs",
-        "C": "Already deleted URLs",
-        "D": "Only image URLs"
-      },
-      "answer": "A",
+      "choices": [
+        "Already deleted URLs",
+        "Only image URLs",
+        "Blocked URLs",
+        "Starting points for crawling"
+      ],
+      "answer": "Starting points for crawling",
       "source_pages": [
         136
       ]
@@ -1811,13 +1811,13 @@
       "id": "MCQ12",
       "difficulty": "medium",
       "question": "What does the URL Frontier store?",
-      "choices": {
-        "A": "URLs waiting to be downloaded",
-        "B": "Only DNS mappings",
-        "C": "Only page bodies",
-        "D": "Only robot rules"
-      },
-      "answer": "A",
+      "choices": [
+        "Only robot rules",
+        "Only page bodies",
+        "Only DNS mappings",
+        "URLs waiting to be downloaded"
+      ],
+      "answer": "URLs waiting to be downloaded",
       "source_pages": [
         136
       ]
@@ -1826,13 +1826,13 @@
       "id": "MCQ13",
       "difficulty": "medium",
       "question": "What does the DNS Resolver provide?",
-      "choices": {
-        "A": "Hostname-to-IP translation",
-        "B": "Page priority",
-        "C": "Page hash",
-        "D": "Content parsing"
-      },
-      "answer": "A",
+      "choices": [
+        "Page hash",
+        "Content parsing",
+        "Hostname-to-IP translation",
+        "Page priority"
+      ],
+      "answer": "Hostname-to-IP translation",
       "source_pages": [
         137
       ]
@@ -1841,13 +1841,13 @@
       "id": "MCQ14",
       "difficulty": "hard",
       "question": "Why is Content Parser separate from the crawl server?",
-      "choices": {
-        "A": "Parsing there would slow crawling",
-        "B": "Parsing requires a database",
-        "C": "DNS cannot parse",
-        "D": "It prevents all duplicates"
-      },
-      "answer": "A",
+      "choices": [
+        "Parsing there would slow crawling",
+        "DNS cannot parse",
+        "It prevents all duplicates",
+        "Parsing requires a database"
+      ],
+      "answer": "Parsing there would slow crawling",
       "source_pages": [
         137
       ]
@@ -1856,13 +1856,13 @@
       "id": "MCQ15",
       "difficulty": "medium",
       "question": "What does Content Seen? detect?",
-      "choices": {
-        "A": "Duplicate page content",
-        "B": "Duplicate machine IDs",
-        "C": "Slow DNS",
-        "D": "Robots rules"
-      },
-      "answer": "A",
+      "choices": [
+        "Robots rules",
+        "Duplicate page content",
+        "Duplicate machine IDs",
+        "Slow DNS"
+      ],
+      "answer": "Duplicate page content",
       "source_pages": [
         137
       ]
@@ -1871,13 +1871,13 @@
       "id": "MCQ16",
       "difficulty": "hard",
       "question": "Why compare page hashes instead of characters?",
-      "choices": {
-        "A": "It is more efficient at huge scale",
-        "B": "Characters cannot be compared",
-        "C": "Hashes preserve HTML formatting",
-        "D": "It removes DNS"
-      },
-      "answer": "A",
+      "choices": [
+        "It is more efficient at huge scale",
+        "Hashes preserve HTML formatting",
+        "Characters cannot be compared",
+        "It removes DNS"
+      ],
+      "answer": "It is more efficient at huge scale",
       "source_pages": [
         137
       ]
@@ -1886,13 +1886,13 @@
       "id": "MCQ17",
       "difficulty": "medium",
       "question": "Where is most crawled content stored?",
-      "choices": {
-        "A": "Disk",
-        "B": "CPU cache only",
-        "C": "Browser local storage",
-        "D": "DNS"
-      },
-      "answer": "A",
+      "choices": [
+        "Browser local storage",
+        "CPU cache only",
+        "Disk",
+        "DNS"
+      ],
+      "answer": "Disk",
       "source_pages": [
         137
       ]
@@ -1901,13 +1901,13 @@
       "id": "MCQ18",
       "difficulty": "medium",
       "question": "What does URL Filter exclude?",
-      "choices": {
-        "A": "Certain content types, file extensions, error links, blacklisted URLs",
-        "B": "Only valid pages",
-        "C": "Only HTTPS",
-        "D": "Only popular pages"
-      },
-      "answer": "A",
+      "choices": [
+        "Only popular pages",
+        "Only HTTPS",
+        "Only valid pages",
+        "Certain content types, file extensions, error links, blacklisted URLs"
+      ],
+      "answer": "Certain content types, file extensions, error links, blacklisted URLs",
       "source_pages": [
         138
       ]
@@ -1916,13 +1916,13 @@
       "id": "MCQ19",
       "difficulty": "medium",
       "question": "Which can implement URL Seen?",
-      "choices": {
-        "A": "Bloom filter or hash table",
-        "B": "Merkle tree only",
-        "C": "Vector clock only",
-        "D": "Ticket server"
-      },
-      "answer": "A",
+      "choices": [
+        "Vector clock only",
+        "Merkle tree only",
+        "Bloom filter or hash table",
+        "Ticket server"
+      ],
+      "answer": "Bloom filter or hash table",
       "source_pages": [
         138
       ]
@@ -1931,13 +1931,13 @@
       "id": "MCQ20",
       "difficulty": "hard",
       "question": "Why is URL Seen? needed?",
-      "choices": {
-        "A": "Avoid duplicate queueing and loops",
-        "B": "Generate HTML",
-        "C": "Resolve DNS",
-        "D": "Enforce robots.txt only"
-      },
-      "answer": "A",
+      "choices": [
+        "Generate HTML",
+        "Avoid duplicate queueing and loops",
+        "Resolve DNS",
+        "Enforce robots.txt only"
+      ],
+      "answer": "Avoid duplicate queueing and loops",
       "source_pages": [
         138
       ]
@@ -1946,13 +1946,13 @@
       "id": "MCQ21",
       "difficulty": "medium",
       "question": "What happens to duplicate content at step 6?",
-      "choices": {
-        "A": "Discard it",
-        "B": "Prioritize it",
-        "C": "Put it back in Frontier",
-        "D": "Send it to DNS"
-      },
-      "answer": "A",
+      "choices": [
+        "Put it back in Frontier",
+        "Send it to DNS",
+        "Prioritize it",
+        "Discard it"
+      ],
+      "answer": "Discard it",
       "source_pages": [
         139
       ]
@@ -1961,13 +1961,13 @@
       "id": "MCQ22",
       "difficulty": "medium",
       "question": "What happens to an unseen URL at step 11?",
-      "choices": {
-        "A": "Add it to URL Frontier",
-        "B": "Discard it",
-        "C": "Add it to Content Storage only",
-        "D": "Block it"
-      },
-      "answer": "A",
+      "choices": [
+        "Block it",
+        "Add it to Content Storage only",
+        "Add it to URL Frontier",
+        "Discard it"
+      ],
+      "answer": "Add it to URL Frontier",
       "source_pages": [
         139
       ]
@@ -1976,13 +1976,13 @@
       "id": "MCQ23",
       "difficulty": "hard",
       "question": "Why is DFS usually not preferred?",
-      "choices": {
-        "A": "Its depth may become extremely deep",
-        "B": "It cannot traverse graphs",
-        "C": "It is always impolite",
-        "D": "It requires DNS"
-      },
-      "answer": "A",
+      "choices": [
+        "It cannot traverse graphs",
+        "It requires DNS",
+        "Its depth may become extremely deep",
+        "It is always impolite"
+      ],
+      "answer": "Its depth may become extremely deep",
       "source_pages": [
         140
       ]
@@ -1991,13 +1991,13 @@
       "id": "MCQ24",
       "difficulty": "medium",
       "question": "Which traversal is commonly used?",
-      "choices": {
-        "A": "BFS",
-        "B": "DFS only",
-        "C": "Binary search",
-        "D": "Dijkstra only"
-      },
-      "answer": "A",
+      "choices": [
+        "DFS only",
+        "BFS",
+        "Dijkstra only",
+        "Binary search"
+      ],
+      "answer": "BFS",
       "source_pages": [
         140
       ]
@@ -2006,13 +2006,13 @@
       "id": "MCQ25",
       "difficulty": "medium",
       "question": "How is standard BFS implemented?",
-      "choices": {
-        "A": "FIFO queue",
-        "B": "LIFO stack",
-        "C": "Heap only",
-        "D": "Hash ring"
-      },
-      "answer": "A",
+      "choices": [
+        "LIFO stack",
+        "Hash ring",
+        "FIFO queue",
+        "Heap only"
+      ],
+      "answer": "FIFO queue",
       "source_pages": [
         140
       ]
@@ -2021,13 +2021,13 @@
       "id": "MCQ26",
       "difficulty": "hard",
       "question": "What is one problem with naïve BFS?",
-      "choices": {
-        "A": "It can flood one host",
-        "B": "It never discovers links",
-        "C": "It cannot use queues",
-        "D": "It requires a database transaction"
-      },
-      "answer": "A",
+      "choices": [
+        "It never discovers links",
+        "It requires a database transaction",
+        "It cannot use queues",
+        "It can flood one host"
+      ],
+      "answer": "It can flood one host",
       "source_pages": [
         140
       ]
@@ -2036,13 +2036,13 @@
       "id": "MCQ27",
       "difficulty": "hard",
       "question": "What is the second naïve-BFS problem?",
-      "choices": {
-        "A": "No URL prioritization",
-        "B": "No URLs are downloaded",
-        "C": "No duplicates exist",
-        "D": "No HTML is parsed"
-      },
-      "answer": "A",
+      "choices": [
+        "No URLs are downloaded",
+        "No HTML is parsed",
+        "No duplicates exist",
+        "No URL prioritization"
+      ],
+      "answer": "No URL prioritization",
       "source_pages": [
         141
       ]
@@ -2051,13 +2051,13 @@
       "id": "MCQ28",
       "difficulty": "medium",
       "question": "What does the URL Frontier manage?",
-      "choices": {
-        "A": "Politeness, priority, freshness",
-        "B": "Only storage",
-        "C": "Only parsing",
-        "D": "Only DNS"
-      },
-      "answer": "A",
+      "choices": [
+        "Only DNS",
+        "Only storage",
+        "Politeness, priority, freshness",
+        "Only parsing"
+      ],
+      "answer": "Politeness, priority, freshness",
       "source_pages": [
         141
       ]
@@ -2066,13 +2066,13 @@
       "id": "MCQ29",
       "difficulty": "hard",
       "question": "What is the core politeness rule?",
-      "choices": {
-        "A": "One page at a time from the same host with possible delay",
-        "B": "Unlimited parallel requests per host",
-        "C": "Never crawl twice",
-        "D": "Only crawl one host globally"
-      },
-      "answer": "A",
+      "choices": [
+        "Unlimited parallel requests per host",
+        "One page at a time from the same host with possible delay",
+        "Never crawl twice",
+        "Only crawl one host globally"
+      ],
+      "answer": "One page at a time from the same host with possible delay",
       "source_pages": [
         141
       ]
@@ -2081,13 +2081,13 @@
       "id": "MCQ30",
       "difficulty": "medium",
       "question": "What does the queue router guarantee?",
-      "choices": {
-        "A": "Each back queue contains URLs from one host",
-        "B": "Each queue has one URL total",
-        "C": "Each queue contains all hosts",
-        "D": "Each queue stores HTML"
-      },
-      "answer": "A",
+      "choices": [
+        "Each queue has one URL total",
+        "Each back queue contains URLs from one host",
+        "Each queue contains all hosts",
+        "Each queue stores HTML"
+      ],
+      "answer": "Each back queue contains URLs from one host",
       "source_pages": [
         142
       ]
@@ -2096,13 +2096,13 @@
       "id": "MCQ31",
       "difficulty": "medium",
       "question": "What does the mapping table map?",
-      "choices": {
-        "A": "Host to queue",
-        "B": "Key to value",
-        "C": "Page to DNS resolver",
-        "D": "Worker to content hash"
-      },
-      "answer": "A",
+      "choices": [
+        "Key to value",
+        "Worker to content hash",
+        "Page to DNS resolver",
+        "Host to queue"
+      ],
+      "answer": "Host to queue",
       "source_pages": [
         142
       ]
@@ -2111,13 +2111,13 @@
       "id": "MCQ32",
       "difficulty": "medium",
       "question": "What does the Prioritizer compute?",
-      "choices": {
-        "A": "URL priority",
-        "B": "DNS latency",
-        "C": "HTML validity only",
-        "D": "Robots rules"
-      },
-      "answer": "A",
+      "choices": [
+        "HTML validity only",
+        "URL priority",
+        "Robots rules",
+        "DNS latency"
+      ],
+      "answer": "URL priority",
       "source_pages": [
         142,
         143
@@ -2127,13 +2127,13 @@
       "id": "MCQ33",
       "difficulty": "hard",
       "question": "How are high-priority queues selected?",
-      "choices": {
-        "A": "With higher probability",
-        "B": "Never",
-        "C": "Exactly once per day",
-        "D": "Only after low-priority queues"
-      },
-      "answer": "A",
+      "choices": [
+        "Never",
+        "Exactly once per day",
+        "Only after low-priority queues",
+        "With higher probability"
+      ],
+      "answer": "With higher probability",
       "source_pages": [
         143
       ]
@@ -2142,13 +2142,13 @@
       "id": "MCQ34",
       "difficulty": "medium",
       "question": "What do front queues manage?",
-      "choices": {
-        "A": "Prioritization",
-        "B": "Politeness",
-        "C": "DNS",
-        "D": "Storage"
-      },
-      "answer": "A",
+      "choices": [
+        "Storage",
+        "Prioritization",
+        "DNS",
+        "Politeness"
+      ],
+      "answer": "Prioritization",
       "source_pages": [
         143
       ]
@@ -2157,13 +2157,13 @@
       "id": "MCQ35",
       "difficulty": "medium",
       "question": "What do back queues manage?",
-      "choices": {
-        "A": "Politeness",
-        "B": "Prioritization",
-        "C": "Content parsing",
-        "D": "Hashing"
-      },
-      "answer": "A",
+      "choices": [
+        "Politeness",
+        "Content parsing",
+        "Prioritization",
+        "Hashing"
+      ],
+      "answer": "Politeness",
       "source_pages": [
         143
       ]
@@ -2172,13 +2172,13 @@
       "id": "MCQ36",
       "difficulty": "hard",
       "question": "Which freshness strategy is listed?",
-      "choices": {
-        "A": "Recrawl based on update history",
-        "B": "Never recrawl",
-        "C": "Only recrawl alphabetically",
-        "D": "Recrawl all pages every minute"
-      },
-      "answer": "A",
+      "choices": [
+        "Only recrawl alphabetically",
+        "Recrawl all pages every minute",
+        "Never recrawl",
+        "Recrawl based on update history"
+      ],
+      "answer": "Recrawl based on update history",
       "source_pages": [
         145
       ]
@@ -2187,13 +2187,13 @@
       "id": "MCQ37",
       "difficulty": "hard",
       "question": "Why not store the entire Frontier in memory?",
-      "choices": {
-        "A": "Not durable or scalable",
-        "B": "Memory is slower than disk",
-        "C": "Queues cannot exist in memory",
-        "D": "Robots.txt forbids it"
-      },
-      "answer": "A",
+      "choices": [
+        "Not durable or scalable",
+        "Robots.txt forbids it",
+        "Memory is slower than disk",
+        "Queues cannot exist in memory"
+      ],
+      "answer": "Not durable or scalable",
       "source_pages": [
         145
       ]
@@ -2202,13 +2202,13 @@
       "id": "MCQ38",
       "difficulty": "hard",
       "question": "What Frontier storage strategy is used?",
-      "choices": {
-        "A": "Mostly disk plus memory buffers",
-        "B": "Memory only",
-        "C": "Disk only",
-        "D": "DNS only"
-      },
-      "answer": "A",
+      "choices": [
+        "DNS only",
+        "Memory only",
+        "Disk only",
+        "Mostly disk plus memory buffers"
+      ],
+      "answer": "Mostly disk plus memory buffers",
       "source_pages": [
         145
       ]
@@ -2217,13 +2217,13 @@
       "id": "MCQ39",
       "difficulty": "medium",
       "question": "What is robots.txt?",
-      "choices": {
-        "A": "Robots Exclusion Protocol",
-        "B": "A crawl database",
-        "C": "A hash table",
-        "D": "A priority score"
-      },
-      "answer": "A",
+      "choices": [
+        "A crawl database",
+        "A priority score",
+        "Robots Exclusion Protocol",
+        "A hash table"
+      ],
+      "answer": "Robots Exclusion Protocol",
       "source_pages": [
         145
       ]
@@ -2232,13 +2232,13 @@
       "id": "MCQ40",
       "difficulty": "hard",
       "question": "Why cache robots.txt?",
-      "choices": {
-        "A": "Avoid repeat downloads",
-        "B": "Increase spider traps",
-        "C": "Replace DNS",
-        "D": "Generate PageRank"
-      },
-      "answer": "A",
+      "choices": [
+        "Replace DNS",
+        "Avoid repeat downloads",
+        "Increase spider traps",
+        "Generate PageRank"
+      ],
+      "answer": "Avoid repeat downloads",
       "source_pages": [
         145
       ]
@@ -2247,13 +2247,13 @@
       "id": "MCQ41",
       "difficulty": "medium",
       "question": "Which is NOT one of the downloader optimizations?",
-      "choices": {
-        "A": "Distributed crawl",
-        "B": "DNS cache",
-        "C": "Locality",
-        "D": "Global lock for every request"
-      },
-      "answer": "D",
+      "choices": [
+        "Locality",
+        "DNS cache",
+        "Global lock for every request",
+        "Distributed crawl"
+      ],
+      "answer": "Global lock for every request",
       "source_pages": [
         145,
         146
@@ -2263,13 +2263,13 @@
       "id": "MCQ42",
       "difficulty": "medium",
       "question": "What DNS response range does the chapter cite?",
-      "choices": {
-        "A": "1-2 ms",
-        "B": "10-200 ms",
-        "C": "1-2 s always",
-        "D": "10-20 seconds"
-      },
-      "answer": "B",
+      "choices": [
+        "1-2 ms",
+        "10-20 seconds",
+        "10-200 ms",
+        "1-2 s always"
+      ],
+      "answer": "10-200 ms",
       "source_pages": [
         146
       ]
@@ -2278,13 +2278,13 @@
       "id": "MCQ43",
       "difficulty": "hard",
       "question": "Why does DNS hurt crawler throughput?",
-      "choices": {
-        "A": "Synchronous calls can block crawler threads",
-        "B": "DNS stores HTML",
-        "C": "DNS causes duplicates",
-        "D": "DNS disables caching"
-      },
-      "answer": "A",
+      "choices": [
+        "DNS causes duplicates",
+        "DNS stores HTML",
+        "Synchronous calls can block crawler threads",
+        "DNS disables caching"
+      ],
+      "answer": "Synchronous calls can block crawler threads",
       "source_pages": [
         146
       ]
@@ -2293,13 +2293,13 @@
       "id": "MCQ44",
       "difficulty": "medium",
       "question": "What is locality optimization?",
-      "choices": {
-        "A": "Place crawler infrastructure closer to target hosts",
-        "B": "Use only one data center",
-        "C": "Remove queues",
-        "D": "Store everything in memory"
-      },
-      "answer": "A",
+      "choices": [
+        "Place crawler infrastructure closer to target hosts",
+        "Remove queues",
+        "Store everything in memory",
+        "Use only one data center"
+      ],
+      "answer": "Place crawler infrastructure closer to target hosts",
       "source_pages": [
         146
       ]
@@ -2308,13 +2308,13 @@
       "id": "MCQ45",
       "difficulty": "medium",
       "question": "What is the purpose of a short timeout?",
-      "choices": {
-        "A": "Stop waiting on slow/unresponsive hosts",
-        "B": "Increase retry loops",
-        "C": "Force duplicates",
-        "D": "Block all hosts"
-      },
-      "answer": "A",
+      "choices": [
+        "Force duplicates",
+        "Increase retry loops",
+        "Stop waiting on slow/unresponsive hosts",
+        "Block all hosts"
+      ],
+      "answer": "Stop waiting on slow/unresponsive hosts",
       "source_pages": [
         146
       ]
@@ -2323,13 +2323,13 @@
       "id": "MCQ46",
       "difficulty": "hard",
       "question": "How does consistent hashing help the crawler?",
-      "choices": {
-        "A": "Distribute downloader load and support server add/remove",
-        "B": "Parse HTML",
-        "C": "Block robots.txt",
-        "D": "Replace URL Seen?"
-      },
-      "answer": "A",
+      "choices": [
+        "Parse HTML",
+        "Replace URL Seen?",
+        "Block robots.txt",
+        "Distribute downloader load and support server add/remove"
+      ],
+      "answer": "Distribute downloader load and support server add/remove",
       "source_pages": [
         146
       ]
@@ -2338,13 +2338,13 @@
       "id": "MCQ47",
       "difficulty": "medium",
       "question": "Why persist crawl state?",
-      "choices": {
-        "A": "Resume after failures",
-        "B": "Avoid all URLs",
-        "C": "Eliminate parsing",
-        "D": "Avoid DNS forever"
-      },
-      "answer": "A",
+      "choices": [
+        "Resume after failures",
+        "Avoid DNS forever",
+        "Eliminate parsing",
+        "Avoid all URLs"
+      ],
+      "answer": "Resume after failures",
       "source_pages": [
         146
       ]
@@ -2353,13 +2353,13 @@
       "id": "MCQ48",
       "difficulty": "medium",
       "question": "How does the chapter make the crawler extensible?",
-      "choices": {
-        "A": "Plug-in modules",
-        "B": "Hard-code one content type forever",
-        "C": "Use one worker",
-        "D": "Remove interfaces"
-      },
-      "answer": "A",
+      "choices": [
+        "Use one worker",
+        "Plug-in modules",
+        "Hard-code one content type forever",
+        "Remove interfaces"
+      ],
+      "answer": "Plug-in modules",
       "source_pages": [
         147
       ]
@@ -2368,13 +2368,13 @@
       "id": "MCQ49",
       "difficulty": "medium",
       "question": "What is a spider trap?",
-      "choices": {
-        "A": "A structure that can cause infinite crawling loops",
-        "B": "A DNS cache",
-        "C": "A priority queue",
-        "D": "A storage engine"
-      },
-      "answer": "A",
+      "choices": [
+        "A storage engine",
+        "A structure that can cause infinite crawling loops",
+        "A priority queue",
+        "A DNS cache"
+      ],
+      "answer": "A structure that can cause infinite crawling loops",
       "source_pages": [
         147
       ]
@@ -2383,13 +2383,13 @@
       "id": "MCQ50",
       "difficulty": "hard",
       "question": "What is one spider-trap mitigation?",
-      "choices": {
-        "A": "Maximum URL length",
-        "B": "Unlimited URL length",
-        "C": "Disable URL Seen?",
-        "D": "Remove timeouts"
-      },
-      "answer": "A",
+      "choices": [
+        "Remove timeouts",
+        "Maximum URL length",
+        "Unlimited URL length",
+        "Disable URL Seen?"
+      ],
+      "answer": "Maximum URL length",
       "source_pages": [
         147
       ]
@@ -2398,13 +2398,13 @@
       "id": "MCQ51",
       "difficulty": "medium",
       "question": "What does server-side rendering solve?",
-      "choices": {
-        "A": "Dynamically generated links from JavaScript/AJAX",
-        "B": "DNS latency",
-        "C": "Duplicate URLs only",
-        "D": "Storage capacity"
-      },
-      "answer": "A",
+      "choices": [
+        "Duplicate URLs only",
+        "Storage capacity",
+        "Dynamically generated links from JavaScript/AJAX",
+        "DNS latency"
+      ],
+      "answer": "Dynamically generated links from JavaScript/AJAX",
       "source_pages": [
         149
       ]
@@ -2413,13 +2413,13 @@
       "id": "MCQ52",
       "difficulty": "medium",
       "question": "What scaling property should crawler servers have?",
-      "choices": {
-        "A": "Statelessness",
-        "B": "Local-only state",
-        "C": "Single-thread only",
-        "D": "No load distribution"
-      },
-      "answer": "A",
+      "choices": [
+        "Local-only state",
+        "No load distribution",
+        "Single-thread only",
+        "Statelessness"
+      ],
+      "answer": "Statelessness",
       "source_pages": [
         149
       ]

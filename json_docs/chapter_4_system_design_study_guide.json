@@ -855,13 +855,13 @@
       "id": "MCQ01",
       "difficulty": "easy",
       "question": "What is the purpose of a rate limiter?",
-      "choices": {
-        "A": "Control request rate",
-        "B": "Encrypt traffic",
-        "C": "Shard databases",
-        "D": "Resolve DNS"
-      },
-      "answer": "A",
+      "choices": [
+        "Shard databases",
+        "Resolve DNS",
+        "Control request rate",
+        "Encrypt traffic"
+      ],
+      "answer": "Control request rate",
       "source_pages": [
         51
       ]
@@ -870,13 +870,13 @@
       "id": "MCQ02",
       "difficulty": "medium",
       "question": "Which is NOT a stated benefit?",
-      "choices": {
-        "A": "Reduce cost",
-        "B": "Prevent overload",
-        "C": "Prevent DoS-style resource starvation",
-        "D": "Guarantee zero latency"
-      },
-      "answer": "D",
+      "choices": [
+        "Prevent DoS-style resource starvation",
+        "Guarantee zero latency",
+        "Reduce cost",
+        "Prevent overload"
+      ],
+      "answer": "Guarantee zero latency",
       "source_pages": [
         51
       ]
@@ -885,13 +885,13 @@
       "id": "MCQ03",
       "difficulty": "medium",
       "question": "Which design is in scope?",
-      "choices": {
-        "A": "Client-only limiter",
-        "B": "Server-side API limiter",
-        "C": "CDN",
-        "D": "Database optimizer"
-      },
-      "answer": "B",
+      "choices": [
+        "Server-side API limiter",
+        "Database optimizer",
+        "CDN",
+        "Client-only limiter"
+      ],
+      "answer": "Server-side API limiter",
       "source_pages": [
         52
       ]
@@ -900,13 +900,13 @@
       "id": "MCQ04",
       "difficulty": "medium",
       "question": "Which requirement addresses cache-server failure?",
-      "choices": {
-        "A": "Fault tolerance",
-        "B": "Low memory",
-        "C": "Endpoint naming",
-        "D": "Static content"
-      },
-      "answer": "A",
+      "choices": [
+        "Low memory",
+        "Static content",
+        "Fault tolerance",
+        "Endpoint naming"
+      ],
+      "answer": "Fault tolerance",
       "source_pages": [
         52
       ]
@@ -915,13 +915,13 @@
       "id": "MCQ05",
       "difficulty": "medium",
       "question": "Why is client-side enforcement unreliable?",
-      "choices": {
-        "A": "Clients cannot use HTTP",
-        "B": "Requests can be forged and client code may be uncontrolled",
-        "C": "It always uses SQL",
-        "D": "It cannot count"
-      },
-      "answer": "B",
+      "choices": [
+        "It cannot count",
+        "Clients cannot use HTTP",
+        "It always uses SQL",
+        "Requests can be forged and client code may be uncontrolled"
+      ],
+      "answer": "Requests can be forged and client code may be uncontrolled",
       "source_pages": [
         53
       ]
@@ -930,13 +930,13 @@
       "id": "MCQ06",
       "difficulty": "easy",
       "question": "Which code means Too Many Requests?",
-      "choices": {
-        "A": "200",
-        "B": "401",
-        "C": "404",
-        "D": "429"
-      },
-      "answer": "D",
+      "choices": [
+        "401",
+        "429",
+        "404",
+        "200"
+      ],
+      "answer": "429",
       "source_pages": [
         53,
         64
@@ -946,13 +946,13 @@
       "id": "MCQ07",
       "difficulty": "medium",
       "question": "Which algorithm uses replenished tokens?",
-      "choices": {
-        "A": "Token bucket",
-        "B": "Fixed window",
-        "C": "Sliding log",
-        "D": "Leaking bucket"
-      },
-      "answer": "A",
+      "choices": [
+        "Leaking bucket",
+        "Token bucket",
+        "Sliding log",
+        "Fixed window"
+      ],
+      "answer": "Token bucket",
       "source_pages": [
         55
       ]
@@ -961,13 +961,13 @@
       "id": "MCQ08",
       "difficulty": "medium",
       "question": "What are token bucket's parameters?",
-      "choices": {
-        "A": "Bucket size and refill rate",
-        "B": "Queue size and retry code",
-        "C": "Window and SQL table",
-        "D": "IP and region"
-      },
-      "answer": "A",
+      "choices": [
+        "Queue size and retry code",
+        "Bucket size and refill rate",
+        "IP and region",
+        "Window and SQL table"
+      ],
+      "answer": "Bucket size and refill rate",
       "source_pages": [
         57
       ]
@@ -976,13 +976,13 @@
       "id": "MCQ09",
       "difficulty": "medium",
       "question": "Which algorithm allows bursts while tokens remain?",
-      "choices": {
-        "A": "Token bucket",
-        "B": "Leaking bucket",
-        "C": "Fixed window only",
-        "D": "None"
-      },
-      "answer": "A",
+      "choices": [
+        "Fixed window only",
+        "Leaking bucket",
+        "Token bucket",
+        "None"
+      ],
+      "answer": "Token bucket",
       "source_pages": [
         57
       ]
@@ -991,13 +991,13 @@
       "id": "MCQ10",
       "difficulty": "medium",
       "question": "Leaking bucket typically uses what structure?",
-      "choices": {
-        "A": "FIFO queue",
-        "B": "LIFO stack",
-        "C": "B-tree",
-        "D": "Heap"
-      },
-      "answer": "A",
+      "choices": [
+        "FIFO queue",
+        "Heap",
+        "B-tree",
+        "LIFO stack"
+      ],
+      "answer": "FIFO queue",
       "source_pages": [
         58
       ]
@@ -1006,13 +1006,13 @@
       "id": "MCQ11",
       "difficulty": "medium",
       "question": "What happens when the leaking-bucket queue is full?",
-      "choices": {
-        "A": "New request is dropped",
-        "B": "Output rate doubles",
-        "C": "Queue becomes infinite",
-        "D": "All old requests disappear"
-      },
-      "answer": "A",
+      "choices": [
+        "All old requests disappear",
+        "Output rate doubles",
+        "New request is dropped",
+        "Queue becomes infinite"
+      ],
+      "answer": "New request is dropped",
       "source_pages": [
         58
       ]
@@ -1021,13 +1021,13 @@
       "id": "MCQ12",
       "difficulty": "hard",
       "question": "What is the fixed-window counter's main weakness?",
-      "choices": {
-        "A": "Boundary spikes",
-        "B": "Cannot count",
-        "C": "Requires every timestamp",
-        "D": "No reset"
-      },
-      "answer": "A",
+      "choices": [
+        "Cannot count",
+        "Requires every timestamp",
+        "Boundary spikes",
+        "No reset"
+      ],
+      "answer": "Boundary spikes",
       "source_pages": [
         59,
         60
@@ -1037,13 +1037,13 @@
       "id": "MCQ13",
       "difficulty": "hard",
       "question": "With a 5/minute fixed-window limit, how many requests can the chapter's boundary example allow in the rolling interval?",
-      "choices": {
-        "A": "2",
-        "B": "5",
-        "C": "10",
-        "D": "20"
-      },
-      "answer": "C",
+      "choices": [
+        "2",
+        "10",
+        "20",
+        "5"
+      ],
+      "answer": "10",
       "source_pages": [
         59
       ]
@@ -1052,13 +1052,13 @@
       "id": "MCQ14",
       "difficulty": "medium",
       "question": "Which algorithm stores individual timestamps?",
-      "choices": {
-        "A": "Sliding window log",
-        "B": "Token bucket",
-        "C": "Leaking bucket",
-        "D": "Fixed window"
-      },
-      "answer": "A",
+      "choices": [
+        "Fixed window",
+        "Token bucket",
+        "Sliding window log",
+        "Leaking bucket"
+      ],
+      "answer": "Sliding window log",
       "source_pages": [
         60
       ]
@@ -1067,13 +1067,13 @@
       "id": "MCQ15",
       "difficulty": "hard",
       "question": "What is sliding window log's primary cost?",
-      "choices": {
-        "A": "Memory",
-        "B": "No accuracy",
-        "C": "No timestamps",
-        "D": "No expiration"
-      },
-      "answer": "A",
+      "choices": [
+        "No timestamps",
+        "No expiration",
+        "No accuracy",
+        "Memory"
+      ],
+      "answer": "Memory",
       "source_pages": [
         61
       ]
@@ -1082,13 +1082,13 @@
       "id": "MCQ16",
       "difficulty": "medium",
       "question": "Sliding window counter combines which two ideas?",
-      "choices": {
-        "A": "Fixed window counter + sliding window log",
-        "B": "Token + leak",
-        "C": "SQL + Redis",
-        "D": "Hard + soft"
-      },
-      "answer": "A",
+      "choices": [
+        "Hard + soft",
+        "Token + leak",
+        "Fixed window counter + sliding window log",
+        "SQL + Redis"
+      ],
+      "answer": "Fixed window counter + sliding window log",
       "source_pages": [
         61
       ]
@@ -1097,13 +1097,13 @@
       "id": "MCQ17",
       "difficulty": "hard",
       "question": "Why is sliding window counter approximate?",
-      "choices": {
-        "A": "It assumes previous requests are evenly distributed",
-        "B": "It ignores current traffic",
-        "C": "It never counts",
-        "D": "It requires a queue"
-      },
-      "answer": "A",
+      "choices": [
+        "It assumes previous requests are evenly distributed",
+        "It never counts",
+        "It ignores current traffic",
+        "It requires a queue"
+      ],
+      "answer": "It assumes previous requests are evenly distributed",
       "source_pages": [
         62
       ]
@@ -1112,13 +1112,13 @@
       "id": "MCQ18",
       "difficulty": "medium",
       "question": "Why use Redis instead of a database for counters?",
-      "choices": {
-        "A": "Disk access is too slow",
-        "B": "Databases cannot store numbers",
-        "C": "Redis is always persistent",
-        "D": "Redis has no memory"
-      },
-      "answer": "A",
+      "choices": [
+        "Redis is always persistent",
+        "Databases cannot store numbers",
+        "Disk access is too slow",
+        "Redis has no memory"
+      ],
+      "answer": "Disk access is too slow",
       "source_pages": [
         62
       ]
@@ -1127,13 +1127,13 @@
       "id": "MCQ19",
       "difficulty": "medium",
       "question": "Which Redis command increments a counter?",
-      "choices": {
-        "A": "INCR",
-        "B": "EXPIRE",
-        "C": "JOIN",
-        "D": "RETRY"
-      },
-      "answer": "A",
+      "choices": [
+        "EXPIRE",
+        "RETRY",
+        "JOIN",
+        "INCR"
+      ],
+      "answer": "INCR",
       "source_pages": [
         62
       ]
@@ -1142,13 +1142,13 @@
       "id": "MCQ20",
       "difficulty": "medium",
       "question": "Which Redis command sets a timeout?",
-      "choices": {
-        "A": "INCR",
-        "B": "EXPIRE",
-        "C": "SELECT",
-        "D": "APPEND"
-      },
-      "answer": "B",
+      "choices": [
+        "APPEND",
+        "INCR",
+        "SELECT",
+        "EXPIRE"
+      ],
+      "answer": "EXPIRE",
       "source_pages": [
         62
       ]
@@ -1157,13 +1157,13 @@
       "id": "MCQ21",
       "difficulty": "medium",
       "question": "Where are rate-limit rules generally stored?",
-      "choices": {
-        "A": "Config files on disk",
-        "B": "DNS",
-        "C": "Browser history",
-        "D": "Only Redis counters"
-      },
-      "answer": "A",
+      "choices": [
+        "Browser history",
+        "DNS",
+        "Only Redis counters",
+        "Config files on disk"
+      ],
+      "answer": "Config files on disk",
       "source_pages": [
         64
       ]
@@ -1172,13 +1172,13 @@
       "id": "MCQ22",
       "difficulty": "medium",
       "question": "What does X-Ratelimit-Remaining provide?",
-      "choices": {
-        "A": "Remaining quota",
-        "B": "Total servers",
-        "C": "Redis memory",
-        "D": "User ID"
-      },
-      "answer": "A",
+      "choices": [
+        "Total servers",
+        "Remaining quota",
+        "User ID",
+        "Redis memory"
+      ],
+      "answer": "Remaining quota",
       "source_pages": [
         64
       ]
@@ -1187,13 +1187,13 @@
       "id": "MCQ23",
       "difficulty": "medium",
       "question": "What does X-Ratelimit-Retry-After provide?",
-      "choices": {
-        "A": "Seconds to wait before retrying",
-        "B": "Request body size",
-        "C": "Server count",
-        "D": "Window name"
-      },
-      "answer": "A",
+      "choices": [
+        "Seconds to wait before retrying",
+        "Window name",
+        "Server count",
+        "Request body size"
+      ],
+      "answer": "Seconds to wait before retrying",
       "source_pages": [
         64,
         65
@@ -1203,13 +1203,13 @@
       "id": "MCQ24",
       "difficulty": "hard",
       "question": "What can happen to a blocked order request besides being dropped?",
-      "choices": {
-        "A": "Queue it for later",
-        "B": "Send it directly anyway",
-        "C": "Put it in DNS",
-        "D": "Convert it to a token"
-      },
-      "answer": "A",
+      "choices": [
+        "Put it in DNS",
+        "Convert it to a token",
+        "Queue it for later",
+        "Send it directly anyway"
+      ],
+      "answer": "Queue it for later",
       "source_pages": [
         64,
         65
@@ -1219,13 +1219,13 @@
       "id": "MCQ25",
       "difficulty": "hard",
       "question": "Two concurrent requests both read counter 3 and each writes 4. What problem is this?",
-      "choices": {
-        "A": "Race condition",
-        "B": "Boundary spike",
-        "C": "Cache miss",
-        "D": "DNS failure"
-      },
-      "answer": "A",
+      "choices": [
+        "DNS failure",
+        "Race condition",
+        "Cache miss",
+        "Boundary spike"
+      ],
+      "answer": "Race condition",
       "source_pages": [
         66
       ]
@@ -1234,13 +1234,13 @@
       "id": "MCQ26",
       "difficulty": "hard",
       "question": "What should the logically correct counter be after two increments from 3?",
-      "choices": {
-        "A": "3",
-        "B": "4",
-        "C": "5",
-        "D": "6"
-      },
-      "answer": "C",
+      "choices": [
+        "4",
+        "3",
+        "5",
+        "6"
+      ],
+      "answer": "5",
       "source_pages": [
         66
       ]
@@ -1249,13 +1249,13 @@
       "id": "MCQ27",
       "difficulty": "hard",
       "question": "Why not rely only on locks?",
-      "choices": {
-        "A": "They significantly slow the system",
-        "B": "They cannot protect counters",
-        "C": "They disable HTTP",
-        "D": "They require a CDN"
-      },
-      "answer": "A",
+      "choices": [
+        "They cannot protect counters",
+        "They require a CDN",
+        "They disable HTTP",
+        "They significantly slow the system"
+      ],
+      "answer": "They significantly slow the system",
       "source_pages": [
         66
       ]
@@ -1264,13 +1264,13 @@
       "id": "MCQ28",
       "difficulty": "medium",
       "question": "What alternatives are referenced for race conditions?",
-      "choices": {
-        "A": "Lua scripts and Redis sorted sets",
-        "B": "DNS and CDN",
-        "C": "SQL and FTP",
-        "D": "Sticky sessions only"
-      },
-      "answer": "A",
+      "choices": [
+        "Lua scripts and Redis sorted sets",
+        "SQL and FTP",
+        "DNS and CDN",
+        "Sticky sessions only"
+      ],
+      "answer": "Lua scripts and Redis sorted sets",
       "source_pages": [
         66
       ]
@@ -1279,13 +1279,13 @@
       "id": "MCQ29",
       "difficulty": "hard",
       "question": "Why are sticky sessions not preferred?",
-      "choices": {
-        "A": "Neither scalable nor flexible",
-        "B": "They are too accurate",
-        "C": "They require no state",
-        "D": "They use tokens"
-      },
-      "answer": "A",
+      "choices": [
+        "They are too accurate",
+        "They require no state",
+        "Neither scalable nor flexible",
+        "They use tokens"
+      ],
+      "answer": "Neither scalable nor flexible",
       "source_pages": [
         67
       ]
@@ -1294,13 +1294,13 @@
       "id": "MCQ30",
       "difficulty": "medium",
       "question": "What shared-state approach is preferred?",
-      "choices": {
-        "A": "Centralized Redis",
-        "B": "Independent local counters",
-        "C": "Client cookies only",
-        "D": "DNS"
-      },
-      "answer": "A",
+      "choices": [
+        "DNS",
+        "Centralized Redis",
+        "Client cookies only",
+        "Independent local counters"
+      ],
+      "answer": "Centralized Redis",
       "source_pages": [
         67
       ]
@@ -1309,13 +1309,13 @@
       "id": "MCQ31",
       "difficulty": "medium",
       "question": "Why use edge locations?",
-      "choices": {
-        "A": "Reduce latency",
-        "B": "Increase disk seeks",
-        "C": "Remove all caching",
-        "D": "Disable API gateways"
-      },
-      "answer": "A",
+      "choices": [
+        "Disable API gateways",
+        "Remove all caching",
+        "Increase disk seeks",
+        "Reduce latency"
+      ],
+      "answer": "Reduce latency",
       "source_pages": [
         67
       ]
@@ -1324,13 +1324,13 @@
       "id": "MCQ32",
       "difficulty": "medium",
       "question": "What consistency model is suggested?",
-      "choices": {
-        "A": "Eventual consistency",
-        "B": "No consistency",
-        "C": "Single-thread only",
-        "D": "Filesystem locking"
-      },
-      "answer": "A",
+      "choices": [
+        "Eventual consistency",
+        "Single-thread only",
+        "Filesystem locking",
+        "No consistency"
+      ],
+      "answer": "Eventual consistency",
       "source_pages": [
         68
       ]
@@ -1339,13 +1339,13 @@
       "id": "MCQ33",
       "difficulty": "medium",
       "question": "What should monitoring verify?",
-      "choices": {
-        "A": "Algorithm and rules are effective",
-        "B": "Only CPU",
-        "C": "Only user passwords",
-        "D": "Only DNS TTL"
-      },
-      "answer": "A",
+      "choices": [
+        "Only user passwords",
+        "Algorithm and rules are effective",
+        "Only CPU",
+        "Only DNS TTL"
+      ],
+      "answer": "Algorithm and rules are effective",
       "source_pages": [
         68
       ]
@@ -1354,13 +1354,13 @@
       "id": "MCQ34",
       "difficulty": "hard",
       "question": "Which algorithm does the chapter say is a good fit for sudden burst traffic?",
-      "choices": {
-        "A": "Token bucket",
-        "B": "Fixed window",
-        "C": "No limiter",
-        "D": "Sticky sessions"
-      },
-      "answer": "A",
+      "choices": [
+        "Token bucket",
+        "Sticky sessions",
+        "Fixed window",
+        "No limiter"
+      ],
+      "answer": "Token bucket",
       "source_pages": [
         68
       ]
@@ -1369,13 +1369,13 @@
       "id": "MCQ35",
       "difficulty": "medium",
       "question": "What is hard rate limiting?",
-      "choices": {
-        "A": "Threshold cannot be exceeded",
-        "B": "Threshold can be exceeded briefly",
-        "C": "Only IP limiting",
-        "D": "No errors"
-      },
-      "answer": "A",
+      "choices": [
+        "No errors",
+        "Threshold can be exceeded briefly",
+        "Threshold cannot be exceeded",
+        "Only IP limiting"
+      ],
+      "answer": "Threshold cannot be exceeded",
       "source_pages": [
         69
       ]
@@ -1384,13 +1384,13 @@
       "id": "MCQ36",
       "difficulty": "medium",
       "question": "Which client behavior is recommended?",
-      "choices": {
-        "A": "Immediate retry loop",
-        "B": "Backoff before retry",
-        "C": "Ignore 429",
-        "D": "Disable cache"
-      },
-      "answer": "B",
+      "choices": [
+        "Disable cache",
+        "Ignore 429",
+        "Backoff before retry",
+        "Immediate retry loop"
+      ],
+      "answer": "Backoff before retry",
       "source_pages": [
         69
       ]

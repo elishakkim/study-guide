@@ -1087,13 +1087,13 @@
       "id": "MCQ01",
       "difficulty": "easy",
       "question": "What is the target ID width?",
-      "choices": {
-        "A": "32 bits",
-        "B": "64 bits",
-        "C": "128 bits",
-        "D": "256 bits"
-      },
-      "answer": "B",
+      "choices": [
+        "32 bits",
+        "64 bits",
+        "256 bits",
+        "128 bits"
+      ],
+      "answer": "64 bits",
       "source_pages": [
         111
       ]
@@ -1102,13 +1102,13 @@
       "id": "MCQ02",
       "difficulty": "easy",
       "question": "What throughput must the system support?",
-      "choices": {
-        "A": "100 IDs/s",
-        "B": "1,000 IDs/s",
-        "C": "Over 10,000 IDs/s",
-        "D": "Exactly 1 million IDs/s"
-      },
-      "answer": "C",
+      "choices": [
+        "100 IDs/s",
+        "Over 10,000 IDs/s",
+        "Exactly 1 million IDs/s",
+        "1,000 IDs/s"
+      ],
+      "answer": "Over 10,000 IDs/s",
       "source_pages": [
         111
       ]
@@ -1117,13 +1117,13 @@
       "id": "MCQ03",
       "difficulty": "medium",
       "question": "Which is NOT a requirement?",
-      "choices": {
-        "A": "Unique",
-        "B": "Numeric",
-        "C": "64-bit",
-        "D": "Must increase exactly by 1"
-      },
-      "answer": "D",
+      "choices": [
+        "Must increase exactly by 1",
+        "64-bit",
+        "Numeric",
+        "Unique"
+      ],
+      "answer": "Must increase exactly by 1",
       "source_pages": [
         111
       ]
@@ -1132,13 +1132,13 @@
       "id": "MCQ04",
       "difficulty": "medium",
       "question": "In multi-master replication, the increment step k equals what?",
-      "choices": {
-        "A": "Number of IDs",
-        "B": "Number of database servers",
-        "C": "Number of bits",
-        "D": "Number of users"
-      },
-      "answer": "B",
+      "choices": [
+        "Number of users",
+        "Number of bits",
+        "Number of IDs",
+        "Number of database servers"
+      ],
+      "answer": "Number of database servers",
       "source_pages": [
         112
       ]
@@ -1147,13 +1147,13 @@
       "id": "MCQ05",
       "difficulty": "medium",
       "question": "With two multi-master databases, which sequences are shown?",
-      "choices": {
-        "A": "1,2,3 and 4,5,6",
-        "B": "1,3,5 and 2,4,6",
-        "C": "1,4,7 and 2,5,8",
-        "D": "Random UUIDs"
-      },
-      "answer": "B",
+      "choices": [
+        "1,3,5 and 2,4,6",
+        "Random UUIDs",
+        "1,4,7 and 2,5,8",
+        "1,2,3 and 4,5,6"
+      ],
+      "answer": "1,3,5 and 2,4,6",
       "source_pages": [
         112
       ]
@@ -1162,13 +1162,13 @@
       "id": "MCQ06",
       "difficulty": "hard",
       "question": "Which is a drawback of multi-master ID generation?",
-      "choices": {
-        "A": "No numeric IDs",
-        "B": "IDs do not increase with time across multiple servers",
-        "C": "Always 128-bit",
-        "D": "Requires no databases"
-      },
-      "answer": "B",
+      "choices": [
+        "Requires no databases",
+        "Always 128-bit",
+        "IDs do not increase with time across multiple servers",
+        "No numeric IDs"
+      ],
+      "answer": "IDs do not increase with time across multiple servers",
       "source_pages": [
         112
       ]
@@ -1177,13 +1177,13 @@
       "id": "MCQ07",
       "difficulty": "medium",
       "question": "How large is a UUID?",
-      "choices": {
-        "A": "32 bits",
-        "B": "64 bits",
-        "C": "96 bits",
-        "D": "128 bits"
-      },
-      "answer": "D",
+      "choices": [
+        "32 bits",
+        "128 bits",
+        "96 bits",
+        "64 bits"
+      ],
+      "answer": "128 bits",
       "source_pages": [
         112
       ]
@@ -1192,13 +1192,13 @@
       "id": "MCQ08",
       "difficulty": "medium",
       "question": "What is the primary distributed-generation advantage of UUID?",
-      "choices": {
-        "A": "Every server must coordinate",
-        "B": "Servers can generate independently",
-        "C": "UUIDs are always 64-bit",
-        "D": "UUIDs are time ordered"
-      },
-      "answer": "B",
+      "choices": [
+        "Servers can generate independently",
+        "Every server must coordinate",
+        "UUIDs are time ordered",
+        "UUIDs are always 64-bit"
+      ],
+      "answer": "Servers can generate independently",
       "source_pages": [
         112,
         113
@@ -1208,13 +1208,13 @@
       "id": "MCQ09",
       "difficulty": "hard",
       "question": "Why does UUID fail the chapter's requirements?",
-      "choices": {
-        "A": "It is 128-bit, not time ordered, and may be non-numeric",
-        "B": "It cannot be unique",
-        "C": "It requires one central ticket server",
-        "D": "It increments only by 2"
-      },
-      "answer": "A",
+      "choices": [
+        "It is 128-bit, not time ordered, and may be non-numeric",
+        "It cannot be unique",
+        "It requires one central ticket server",
+        "It increments only by 2"
+      ],
+      "answer": "It is 128-bit, not time ordered, and may be non-numeric",
       "source_pages": [
         113
       ]
@@ -1223,13 +1223,13 @@
       "id": "MCQ10",
       "difficulty": "medium",
       "question": "What is the ticket server based on?",
-      "choices": {
-        "A": "Centralized auto_increment",
-        "B": "UUID hashing",
-        "C": "Consistent hashing",
-        "D": "Vector clocks"
-      },
-      "answer": "A",
+      "choices": [
+        "Vector clocks",
+        "Consistent hashing",
+        "Centralized auto_increment",
+        "UUID hashing"
+      ],
+      "answer": "Centralized auto_increment",
       "source_pages": [
         113
       ]
@@ -1238,13 +1238,13 @@
       "id": "MCQ11",
       "difficulty": "medium",
       "question": "What is the ticket server's main failure concern?",
-      "choices": {
-        "A": "It cannot generate numeric IDs",
-        "B": "Single point of failure",
-        "C": "It is 128-bit",
-        "D": "It requires no storage"
-      },
-      "answer": "B",
+      "choices": [
+        "It cannot generate numeric IDs",
+        "It requires no storage",
+        "Single point of failure",
+        "It is 128-bit"
+      ],
+      "answer": "Single point of failure",
       "source_pages": [
         114
       ]
@@ -1253,13 +1253,13 @@
       "id": "MCQ12",
       "difficulty": "hard",
       "question": "What issue appears if multiple ticket servers are introduced?",
-      "choices": {
-        "A": "Data synchronization challenges",
-        "B": "UUID collisions only",
-        "C": "No numeric IDs",
-        "D": "No throughput"
-      },
-      "answer": "A",
+      "choices": [
+        "No numeric IDs",
+        "Data synchronization challenges",
+        "UUID collisions only",
+        "No throughput"
+      ],
+      "answer": "Data synchronization challenges",
       "source_pages": [
         114
       ]
@@ -1268,13 +1268,13 @@
       "id": "MCQ13",
       "difficulty": "easy",
       "question": "Which approach is selected?",
-      "choices": {
-        "A": "UUID",
-        "B": "Ticket server",
-        "C": "Snowflake-like generator",
-        "D": "Single auto_increment DB"
-      },
-      "answer": "C",
+      "choices": [
+        "UUID",
+        "Single auto_increment DB",
+        "Snowflake-like generator",
+        "Ticket server"
+      ],
+      "answer": "Snowflake-like generator",
       "source_pages": [
         114,
         117
@@ -1284,13 +1284,13 @@
       "id": "MCQ14",
       "difficulty": "medium",
       "question": "How many fields compose the Snowflake-style ID?",
-      "choices": {
-        "A": "3",
-        "B": "4",
-        "C": "5",
-        "D": "6"
-      },
-      "answer": "C",
+      "choices": [
+        "3",
+        "6",
+        "5",
+        "4"
+      ],
+      "answer": "5",
       "source_pages": [
         114,
         115
@@ -1300,13 +1300,13 @@
       "id": "MCQ15",
       "difficulty": "medium",
       "question": "Which is the correct bit layout?",
-      "choices": {
-        "A": "1/41/5/5/12",
-        "B": "1/32/10/10/11",
-        "C": "8/32/8/8/8",
-        "D": "0/64/0/0/0"
-      },
-      "answer": "A",
+      "choices": [
+        "0/64/0/0/0",
+        "1/41/5/5/12",
+        "8/32/8/8/8",
+        "1/32/10/10/11"
+      ],
+      "answer": "1/41/5/5/12",
       "source_pages": [
         114,
         115
@@ -1316,13 +1316,13 @@
       "id": "MCQ16",
       "difficulty": "medium",
       "question": "What is the sign bit set to?",
-      "choices": {
-        "A": "Always 0",
-        "B": "Always 1",
-        "C": "Random",
-        "D": "Current second"
-      },
-      "answer": "A",
+      "choices": [
+        "Always 1",
+        "Current second",
+        "Always 0",
+        "Random"
+      ],
+      "answer": "Always 0",
       "source_pages": [
         114
       ]
@@ -1331,13 +1331,13 @@
       "id": "MCQ17",
       "difficulty": "medium",
       "question": "How many bits are devoted to timestamp?",
-      "choices": {
-        "A": "12",
-        "B": "32",
-        "C": "41",
-        "D": "64"
-      },
-      "answer": "C",
+      "choices": [
+        "41",
+        "32",
+        "64",
+        "12"
+      ],
+      "answer": "41",
       "source_pages": [
         114
       ]
@@ -1346,13 +1346,13 @@
       "id": "MCQ18",
       "difficulty": "medium",
       "question": "What time unit does the timestamp field use?",
-      "choices": {
-        "A": "Seconds",
-        "B": "Milliseconds",
-        "C": "Microseconds",
-        "D": "Days"
-      },
-      "answer": "B",
+      "choices": [
+        "Seconds",
+        "Days",
+        "Milliseconds",
+        "Microseconds"
+      ],
+      "answer": "Milliseconds",
       "source_pages": [
         114
       ]
@@ -1361,13 +1361,13 @@
       "id": "MCQ19",
       "difficulty": "hard",
       "question": "Why are the IDs sortable by time?",
-      "choices": {
-        "A": "UUID section is first",
-        "B": "Timestamp grows with time",
-        "C": "Machine ID increments each request",
-        "D": "Sign bit is random"
-      },
-      "answer": "B",
+      "choices": [
+        "Machine ID increments each request",
+        "Timestamp grows with time",
+        "Sign bit is random",
+        "UUID section is first"
+      ],
+      "answer": "Timestamp grows with time",
       "source_pages": [
         115
       ]
@@ -1376,13 +1376,13 @@
       "id": "MCQ20",
       "difficulty": "medium",
       "question": "How many datacenters can the 5-bit datacenter field represent?",
-      "choices": {
-        "A": "5",
-        "B": "16",
-        "C": "32",
-        "D": "64"
-      },
-      "answer": "C",
+      "choices": [
+        "16",
+        "5",
+        "64",
+        "32"
+      ],
+      "answer": "32",
       "source_pages": [
         114
       ]
@@ -1391,13 +1391,13 @@
       "id": "MCQ21",
       "difficulty": "medium",
       "question": "How many machines per datacenter can the 5-bit machine field represent?",
-      "choices": {
-        "A": "12",
-        "B": "16",
-        "C": "32",
-        "D": "4096"
-      },
-      "answer": "C",
+      "choices": [
+        "12",
+        "16",
+        "32",
+        "4096"
+      ],
+      "answer": "32",
       "source_pages": [
         114
       ]
@@ -1406,13 +1406,13 @@
       "id": "MCQ22",
       "difficulty": "medium",
       "question": "How many sequence values does 12 bits provide?",
-      "choices": {
-        "A": "1024",
-        "B": "2048",
-        "C": "4096",
-        "D": "8192"
-      },
-      "answer": "C",
+      "choices": [
+        "2048",
+        "4096",
+        "8192",
+        "1024"
+      ],
+      "answer": "4096",
       "source_pages": [
         116
       ]
@@ -1421,13 +1421,13 @@
       "id": "MCQ23",
       "difficulty": "hard",
       "question": "When does the sequence number reset?",
-      "choices": {
-        "A": "Every second",
-        "B": "Every millisecond",
-        "C": "Every minute",
-        "D": "At server startup only"
-      },
-      "answer": "B",
+      "choices": [
+        "Every millisecond",
+        "Every minute",
+        "Every second",
+        "At server startup only"
+      ],
+      "answer": "Every millisecond",
       "source_pages": [
         114
       ]
@@ -1436,13 +1436,13 @@
       "id": "MCQ24",
       "difficulty": "hard",
       "question": "What is the theoretical per-machine capacity per millisecond?",
-      "choices": {
-        "A": "32 IDs",
-        "B": "64 IDs",
-        "C": "1024 IDs",
-        "D": "4096 IDs"
-      },
-      "answer": "D",
+      "choices": [
+        "1024 IDs",
+        "64 IDs",
+        "32 IDs",
+        "4096 IDs"
+      ],
+      "answer": "4096 IDs",
       "source_pages": [
         116
       ]
@@ -1451,13 +1451,13 @@
       "id": "MCQ25",
       "difficulty": "hard",
       "question": "Which fields are usually fixed once the generator starts?",
-      "choices": {
-        "A": "Timestamp and sequence",
-        "B": "Datacenter ID and machine ID",
-        "C": "Sign and timestamp only",
-        "D": "Sequence and sign"
-      },
-      "answer": "B",
+      "choices": [
+        "Sign and timestamp only",
+        "Datacenter ID and machine ID",
+        "Timestamp and sequence",
+        "Sequence and sign"
+      ],
+      "answer": "Datacenter ID and machine ID",
       "source_pages": [
         115
       ]
@@ -1466,13 +1466,13 @@
       "id": "MCQ26",
       "difficulty": "hard",
       "question": "Why must datacenter/machine IDs be changed carefully?",
-      "choices": {
-        "A": "They change UUID size",
-        "B": "Accidental changes can produce ID conflicts",
-        "C": "They make IDs non-numeric",
-        "D": "They disable timestamps"
-      },
-      "answer": "B",
+      "choices": [
+        "They make IDs non-numeric",
+        "Accidental changes can produce ID conflicts",
+        "They change UUID size",
+        "They disable timestamps"
+      ],
+      "answer": "Accidental changes can produce ID conflicts",
       "source_pages": [
         115
       ]
@@ -1481,13 +1481,13 @@
       "id": "MCQ27",
       "difficulty": "medium",
       "question": "What is the maximum 41-bit timestamp value?",
-      "choices": {
-        "A": "2^12-1",
-        "B": "2^32-1",
-        "C": "2^41-1",
-        "D": "2^64-1"
-      },
-      "answer": "C",
+      "choices": [
+        "2^41-1",
+        "2^64-1",
+        "2^12-1",
+        "2^32-1"
+      ],
+      "answer": "2^41-1",
       "source_pages": [
         116
       ]
@@ -1496,13 +1496,13 @@
       "id": "MCQ28",
       "difficulty": "medium",
       "question": "Approximately how long does the 41-bit millisecond timestamp last?",
-      "choices": {
-        "A": "6.9 years",
-        "B": "32 years",
-        "C": "69 years",
-        "D": "128 years"
-      },
-      "answer": "C",
+      "choices": [
+        "6.9 years",
+        "32 years",
+        "69 years",
+        "128 years"
+      ],
+      "answer": "69 years",
       "source_pages": [
         116
       ]
@@ -1511,13 +1511,13 @@
       "id": "MCQ29",
       "difficulty": "hard",
       "question": "Why choose a custom epoch close to deployment time?",
-      "choices": {
-        "A": "To make UUIDs numeric",
-        "B": "To delay timestamp overflow",
-        "C": "To eliminate machine IDs",
-        "D": "To reduce sequence capacity"
-      },
-      "answer": "B",
+      "choices": [
+        "To reduce sequence capacity",
+        "To make UUIDs numeric",
+        "To delay timestamp overflow",
+        "To eliminate machine IDs"
+      ],
+      "answer": "To delay timestamp overflow",
       "source_pages": [
         116
       ]
@@ -1526,13 +1526,13 @@
       "id": "MCQ30",
       "difficulty": "medium",
       "question": "What must happen after the timestamp space is exhausted?",
-      "choices": {
-        "A": "Use a new epoch or another migration technique",
-        "B": "Increase sign bit automatically",
-        "C": "Switch to UUID without changes",
-        "D": "Stop storing IDs forever"
-      },
-      "answer": "A",
+      "choices": [
+        "Switch to UUID without changes",
+        "Stop storing IDs forever",
+        "Use a new epoch or another migration technique",
+        "Increase sign bit automatically"
+      ],
+      "answer": "Use a new epoch or another migration technique",
       "source_pages": [
         116
       ]
@@ -1541,13 +1541,13 @@
       "id": "MCQ31",
       "difficulty": "medium",
       "question": "What clock technology does the chapter mention?",
-      "choices": {
-        "A": "NTP",
-        "B": "DNS",
-        "C": "TLS",
-        "D": "SMTP"
-      },
-      "answer": "A",
+      "choices": [
+        "DNS",
+        "SMTP",
+        "TLS",
+        "NTP"
+      ],
+      "answer": "NTP",
       "source_pages": [
         117
       ]
@@ -1556,13 +1556,13 @@
       "id": "MCQ32",
       "difficulty": "hard",
       "question": "For low concurrency and a very long desired lifetime, what tuning example does the chapter give?",
-      "choices": {
-        "A": "More sequence bits, fewer timestamp bits",
-        "B": "Fewer sequence bits, more timestamp bits",
-        "C": "Remove timestamp completely",
-        "D": "Use 128-bit UUIDs"
-      },
-      "answer": "B",
+      "choices": [
+        "Fewer sequence bits, more timestamp bits",
+        "Remove timestamp completely",
+        "More sequence bits, fewer timestamp bits",
+        "Use 128-bit UUIDs"
+      ],
+      "answer": "Fewer sequence bits, more timestamp bits",
       "source_pages": [
         117
       ]
@@ -1571,13 +1571,13 @@
       "id": "MCQ33",
       "difficulty": "medium",
       "question": "Why is high availability important?",
-      "choices": {
-        "A": "The ID generator is mission-critical",
-        "B": "UUIDs are 128-bit",
-        "C": "The sign bit is zero",
-        "D": "Ticket servers cannot use SQL"
-      },
-      "answer": "A",
+      "choices": [
+        "The ID generator is mission-critical",
+        "Ticket servers cannot use SQL",
+        "UUIDs are 128-bit",
+        "The sign bit is zero"
+      ],
+      "answer": "The ID generator is mission-critical",
       "source_pages": [
         117
       ]
@@ -1586,13 +1586,13 @@
       "id": "MCQ34",
       "difficulty": "hard",
       "question": "Which solution best satisfies all of the chapter's requirements?",
-      "choices": {
-        "A": "Multi-master replication",
-        "B": "UUID",
-        "C": "Single ticket server",
-        "D": "Snowflake-like generator"
-      },
-      "answer": "D",
+      "choices": [
+        "UUID",
+        "Single ticket server",
+        "Snowflake-like generator",
+        "Multi-master replication"
+      ],
+      "answer": "Snowflake-like generator",
       "source_pages": [
         114,
         117
@@ -1602,13 +1602,13 @@
       "id": "MCQ35",
       "difficulty": "hard",
       "question": "What does 1+41+5+5+12 equal?",
-      "choices": {
-        "A": "63",
-        "B": "64",
-        "C": "65",
-        "D": "128"
-      },
-      "answer": "B",
+      "choices": [
+        "64",
+        "65",
+        "128",
+        "63"
+      ],
+      "answer": "64",
       "explanation": "This verifies the complete Snowflake bit layout.",
       "source_pages": [
         114,
@@ -1619,13 +1619,13 @@
       "id": "MCQ36",
       "difficulty": "hard",
       "question": "Based directly on the 5-bit datacenter and 5-bit machine fields, how many datacenter-machine combinations are possible?",
-      "choices": {
-        "A": "64",
-        "B": "256",
-        "C": "1024",
-        "D": "4096"
-      },
-      "answer": "C",
+      "choices": [
+        "4096",
+        "1024",
+        "256",
+        "64"
+      ],
+      "answer": "1024",
       "explanation": "32 datacenters × 32 machines per datacenter = 1024 combinations. This is a derived study calculation.",
       "based_on_source_pages": [
         114

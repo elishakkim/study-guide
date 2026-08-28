@@ -1707,13 +1707,13 @@
       "id": "MCQ001",
       "difficulty": "medium",
       "question": "Why are data models important?",
-      "choices": {
-        "A": "They affect software and thought structure",
-        "B": "They only affect disk size",
-        "C": "They only affect UI",
-        "D": "They only affect CPU"
-      },
-      "answer": "A",
+      "choices": [
+        "They only affect CPU",
+        "They only affect UI",
+        "They affect software and thought structure",
+        "They only affect disk size"
+      ],
+      "answer": "They affect software and thought structure",
       "source_pages": [
         49
       ]
@@ -1722,13 +1722,13 @@
       "id": "MCQ002",
       "difficulty": "medium",
       "question": "What is a general-purpose model named in the chapter?",
-      "choices": {
-        "A": "JSON",
-        "B": "Assembly only",
-        "C": "CSS only",
-        "D": "TCP"
-      },
-      "answer": "A",
+      "choices": [
+        "JSON",
+        "TCP",
+        "Assembly only",
+        "CSS only"
+      ],
+      "answer": "JSON",
       "source_pages": [
         49
       ]
@@ -1737,13 +1737,13 @@
       "id": "MCQ003",
       "difficulty": "medium",
       "question": "What does each abstraction layer do?",
-      "choices": {
-        "A": "Hides lower-level complexity",
-        "B": "Exposes all hardware details",
-        "C": "Removes data",
-        "D": "Prevents APIs"
-      },
-      "answer": "A",
+      "choices": [
+        "Hides lower-level complexity",
+        "Prevents APIs",
+        "Exposes all hardware details",
+        "Removes data"
+      ],
+      "answer": "Hides lower-level complexity",
       "source_pages": [
         49,
         50
@@ -1753,13 +1753,13 @@
       "id": "MCQ004",
       "difficulty": "medium",
       "question": "Who proposed the relational model?",
-      "choices": {
-        "A": "Edgar Codd",
-        "B": "Alan Turing",
-        "C": "Tim Berners-Lee",
-        "D": "Leslie Lamport"
-      },
-      "answer": "A",
+      "choices": [
+        "Tim Berners-Lee",
+        "Alan Turing",
+        "Edgar Codd",
+        "Leslie Lamport"
+      ],
+      "answer": "Edgar Codd",
       "source_pages": [
         50
       ]
@@ -1768,13 +1768,13 @@
       "id": "MCQ005",
       "difficulty": "medium",
       "question": "In SQL, a relation is a?",
-      "choices": {
-        "A": "Table",
-        "B": "Queue",
-        "C": "Graph edge",
-        "D": "File"
-      },
-      "answer": "A",
+      "choices": [
+        "Table",
+        "Queue",
+        "Graph edge",
+        "File"
+      ],
+      "answer": "Table",
       "source_pages": [
         50
       ]
@@ -1783,13 +1783,13 @@
       "id": "MCQ006",
       "difficulty": "medium",
       "question": "What was a goal of the relational model?",
-      "choices": {
-        "A": "Hide internal representation",
-        "B": "Expose disk pointers",
-        "C": "Require access paths",
-        "D": "Remove querying"
-      },
-      "answer": "A",
+      "choices": [
+        "Expose disk pointers",
+        "Hide internal representation",
+        "Remove querying",
+        "Require access paths"
+      ],
+      "answer": "Hide internal representation",
       "source_pages": [
         50
       ]
@@ -1798,13 +1798,13 @@
       "id": "MCQ007",
       "difficulty": "medium",
       "question": "What was NoSQL originally?",
-      "choices": {
-        "A": "A meetup hashtag",
-        "B": "A formal language",
-        "C": "A storage engine",
-        "D": "A SQL extension"
-      },
-      "answer": "A",
+      "choices": [
+        "A formal language",
+        "A SQL extension",
+        "A storage engine",
+        "A meetup hashtag"
+      ],
+      "answer": "A meetup hashtag",
       "source_pages": [
         51
       ]
@@ -1813,13 +1813,13 @@
       "id": "MCQ008",
       "difficulty": "medium",
       "question": "What is one NoSQL driver?",
-      "choices": {
-        "A": "High write throughput",
-        "B": "Less flexibility",
-        "C": "Mandatory commercial licensing",
-        "D": "Only small datasets"
-      },
-      "answer": "A",
+      "choices": [
+        "High write throughput",
+        "Less flexibility",
+        "Only small datasets",
+        "Mandatory commercial licensing"
+      ],
+      "answer": "High write throughput",
       "source_pages": [
         51
       ]
@@ -1828,13 +1828,13 @@
       "id": "MCQ009",
       "difficulty": "medium",
       "question": "What is polyglot persistence?",
-      "choices": {
-        "A": "Using multiple datastore types",
-        "B": "Only SQL everywhere",
-        "C": "Only graph DBs",
-        "D": "No persistence"
-      },
-      "answer": "A",
+      "choices": [
+        "Using multiple datastore types",
+        "Only graph DBs",
+        "No persistence",
+        "Only SQL everywhere"
+      ],
+      "answer": "Using multiple datastore types",
       "source_pages": [
         51
       ]
@@ -1843,13 +1843,13 @@
       "id": "MCQ010",
       "difficulty": "medium",
       "question": "What is impedance mismatch?",
-      "choices": {
-        "A": "Mismatch between object and relational models",
-        "B": "Network packet loss",
-        "C": "Schema migration downtime",
-        "D": "Graph traversal"
-      },
-      "answer": "A",
+      "choices": [
+        "Mismatch between object and relational models",
+        "Schema migration downtime",
+        "Graph traversal",
+        "Network packet loss"
+      ],
+      "answer": "Mismatch between object and relational models",
       "source_pages": [
         52
       ]
@@ -1858,13 +1858,13 @@
       "id": "MCQ011",
       "difficulty": "medium",
       "question": "Which is an ORM?",
-      "choices": {
-        "A": "Hibernate",
-        "B": "Kafka",
-        "C": "RDF",
-        "D": "SPARQL"
-      },
-      "answer": "A",
+      "choices": [
+        "RDF",
+        "Kafka",
+        "Hibernate",
+        "SPARQL"
+      ],
+      "answer": "Hibernate",
       "source_pages": [
         52
       ]
@@ -1873,13 +1873,13 @@
       "id": "MCQ012",
       "difficulty": "medium",
       "question": "What is a good JSON/document fit?",
-      "choices": {
-        "A": "Self-contained résumé",
-        "B": "Dense arbitrary graph",
-        "C": "Fixed join-heavy OLTP only",
-        "D": "Access-path database"
-      },
-      "answer": "A",
+      "choices": [
+        "Dense arbitrary graph",
+        "Access-path database",
+        "Fixed join-heavy OLTP only",
+        "Self-contained résumé"
+      ],
+      "answer": "Self-contained résumé",
       "source_pages": [
         53,
         54
@@ -1889,13 +1889,13 @@
       "id": "MCQ013",
       "difficulty": "medium",
       "question": "Why can JSON improve locality?",
-      "choices": {
-        "A": "Related profile data sits together",
-        "B": "It always uses less disk",
-        "C": "It removes relationships",
-        "D": "It guarantees joins"
-      },
-      "answer": "A",
+      "choices": [
+        "It removes relationships",
+        "It guarantees joins",
+        "Related profile data sits together",
+        "It always uses less disk"
+      ],
+      "answer": "Related profile data sits together",
       "source_pages": [
         54
       ]
@@ -1904,13 +1904,13 @@
       "id": "MCQ014",
       "difficulty": "medium",
       "question": "Why use an ID for region/industry?",
-      "choices": {
-        "A": "Reduce duplicated human-readable data",
-        "B": "Make values harder to update",
-        "C": "Prevent search",
-        "D": "Force denormalization"
-      },
-      "answer": "A",
+      "choices": [
+        "Make values harder to update",
+        "Reduce duplicated human-readable data",
+        "Prevent search",
+        "Force denormalization"
+      ],
+      "answer": "Reduce duplicated human-readable data",
       "source_pages": [
         55
       ]
@@ -1919,13 +1919,13 @@
       "id": "MCQ015",
       "difficulty": "medium",
       "question": "What is normalization primarily about?",
-      "choices": {
-        "A": "Reducing duplication",
-        "B": "Increasing duplication",
-        "C": "Removing IDs",
-        "D": "Avoiding tables"
-      },
-      "answer": "A",
+      "choices": [
+        "Reducing duplication",
+        "Increasing duplication",
+        "Avoiding tables",
+        "Removing IDs"
+      ],
+      "answer": "Reducing duplication",
       "source_pages": [
         55
       ]
@@ -1934,13 +1934,13 @@
       "id": "MCQ016",
       "difficulty": "medium",
       "question": "What relationship does normalization often introduce?",
-      "choices": {
-        "A": "Many-to-one",
-        "B": "No relationship",
-        "C": "Only one-to-one",
-        "D": "Only tree root"
-      },
-      "answer": "A",
+      "choices": [
+        "Many-to-one",
+        "Only tree root",
+        "Only one-to-one",
+        "No relationship"
+      ],
+      "answer": "Many-to-one",
       "source_pages": [
         56
       ]
@@ -1949,13 +1949,13 @@
       "id": "MCQ017",
       "difficulty": "medium",
       "question": "What if a document DB lacks joins?",
-      "choices": {
-        "A": "Application performs multiple queries",
-        "B": "Relationships vanish",
-        "C": "The DB becomes relational",
-        "D": "No solution exists"
-      },
-      "answer": "A",
+      "choices": [
+        "No solution exists",
+        "Application performs multiple queries",
+        "Relationships vanish",
+        "The DB becomes relational"
+      ],
+      "answer": "Application performs multiple queries",
       "source_pages": [
         56
       ]
@@ -1964,13 +1964,13 @@
       "id": "MCQ018",
       "difficulty": "medium",
       "question": "What historical model resembles nested documents?",
-      "choices": {
-        "A": "Hierarchical model",
-        "B": "Relational model",
-        "C": "Columnar analytics only",
-        "D": "Vector model"
-      },
-      "answer": "A",
+      "choices": [
+        "Relational model",
+        "Columnar analytics only",
+        "Vector model",
+        "Hierarchical model"
+      ],
+      "answer": "Hierarchical model",
       "source_pages": [
         58
       ]
@@ -1979,13 +1979,13 @@
       "id": "MCQ019",
       "difficulty": "medium",
       "question": "Which database used the hierarchical model?",
-      "choices": {
-        "A": "IBM IMS",
-        "B": "PostgreSQL",
-        "C": "Neo4j",
-        "D": "MongoDB"
-      },
-      "answer": "A",
+      "choices": [
+        "IBM IMS",
+        "MongoDB",
+        "PostgreSQL",
+        "Neo4j"
+      ],
+      "answer": "IBM IMS",
       "source_pages": [
         58
       ]
@@ -1994,13 +1994,13 @@
       "id": "MCQ020",
       "difficulty": "medium",
       "question": "What does CODASYL allow that hierarchy does not?",
-      "choices": {
-        "A": "Multiple parents",
-        "B": "No links",
-        "C": "Only one parent",
-        "D": "Declarative SQL"
-      },
-      "answer": "A",
+      "choices": [
+        "Only one parent",
+        "Declarative SQL",
+        "No links",
+        "Multiple parents"
+      ],
+      "answer": "Multiple parents",
       "source_pages": [
         58
       ]
@@ -2009,13 +2009,13 @@
       "id": "MCQ021",
       "difficulty": "medium",
       "question": "What is an access path?",
-      "choices": {
-        "A": "Predefined traversal through links",
-        "B": "A SQL index only",
-        "C": "A document field",
-        "D": "An RDF URI"
-      },
-      "answer": "A",
+      "choices": [
+        "A SQL index only",
+        "Predefined traversal through links",
+        "An RDF URI",
+        "A document field"
+      ],
+      "answer": "Predefined traversal through links",
       "source_pages": [
         59
       ]
@@ -2024,13 +2024,13 @@
       "id": "MCQ022",
       "difficulty": "medium",
       "question": "Why was CODASYL inflexible?",
-      "choices": {
-        "A": "Application code depended on access paths",
-        "B": "It had no relationships",
-        "C": "It had automatic optimizers",
-        "D": "It was schema-free"
-      },
-      "answer": "A",
+      "choices": [
+        "It was schema-free",
+        "It had automatic optimizers",
+        "It had no relationships",
+        "Application code depended on access paths"
+      ],
+      "answer": "Application code depended on access paths",
       "source_pages": [
         59
       ]
@@ -2039,13 +2039,13 @@
       "id": "MCQ023",
       "difficulty": "medium",
       "question": "Who chooses access paths in relational databases?",
-      "choices": {
-        "A": "Query optimizer",
-        "B": "Application cursor code",
-        "C": "End user manually",
-        "D": "Network router"
-      },
-      "answer": "A",
+      "choices": [
+        "Application cursor code",
+        "Query optimizer",
+        "Network router",
+        "End user manually"
+      ],
+      "answer": "Query optimizer",
       "source_pages": [
         59,
         60
@@ -2055,13 +2055,13 @@
       "id": "MCQ024",
       "difficulty": "medium",
       "question": "Main document-model strengths?",
-      "choices": {
-        "A": "Schema flexibility and locality",
-        "B": "Only joins",
-        "C": "Fixed schema",
-        "D": "Pointer navigation"
-      },
-      "answer": "A",
+      "choices": [
+        "Pointer navigation",
+        "Schema flexibility and locality",
+        "Only joins",
+        "Fixed schema"
+      ],
+      "answer": "Schema flexibility and locality",
       "source_pages": [
         60
       ]
@@ -2070,13 +2070,13 @@
       "id": "MCQ025",
       "difficulty": "medium",
       "question": "Main relational strengths?",
-      "choices": {
-        "A": "Joins and many-to-many relationships",
-        "B": "No relationships",
-        "C": "Always better locality",
-        "D": "Schema-on-read only"
-      },
-      "answer": "A",
+      "choices": [
+        "Schema-on-read only",
+        "Always better locality",
+        "Joins and many-to-many relationships",
+        "No relationships"
+      ],
+      "answer": "Joins and many-to-many relationships",
       "source_pages": [
         60
       ]
@@ -2085,13 +2085,13 @@
       "id": "MCQ026",
       "difficulty": "medium",
       "question": "When is document model simpler?",
-      "choices": {
-        "A": "Tree-shaped data loaded together",
-        "B": "Highly interconnected graph",
-        "C": "Unknown-length traversal",
-        "D": "Many-to-many everywhere"
-      },
-      "answer": "A",
+      "choices": [
+        "Unknown-length traversal",
+        "Tree-shaped data loaded together",
+        "Highly interconnected graph",
+        "Many-to-many everywhere"
+      ],
+      "answer": "Tree-shaped data loaded together",
       "source_pages": [
         60,
         61
@@ -2101,13 +2101,13 @@
       "id": "MCQ027",
       "difficulty": "medium",
       "question": "What is a cost of denormalization?",
-      "choices": {
-        "A": "Application must maintain consistency",
-        "B": "No write overhead",
-        "C": "No duplicate data",
-        "D": "Automatic joins"
-      },
-      "answer": "A",
+      "choices": [
+        "No duplicate data",
+        "Application must maintain consistency",
+        "No write overhead",
+        "Automatic joins"
+      ],
+      "answer": "Application must maintain consistency",
       "source_pages": [
         61
       ]
@@ -2116,13 +2116,13 @@
       "id": "MCQ028",
       "difficulty": "medium",
       "question": "What is schema-on-read?",
-      "choices": {
-        "A": "Interpret implicit structure at read time",
-        "B": "Validate structure before write",
-        "C": "No structure exists anywhere",
-        "D": "Compile SQL"
-      },
-      "answer": "A",
+      "choices": [
+        "No structure exists anywhere",
+        "Interpret implicit structure at read time",
+        "Validate structure before write",
+        "Compile SQL"
+      ],
+      "answer": "Interpret implicit structure at read time",
       "source_pages": [
         61
       ]
@@ -2131,13 +2131,13 @@
       "id": "MCQ029",
       "difficulty": "medium",
       "question": "Schema-on-write is analogous to?",
-      "choices": {
-        "A": "Static type checking",
-        "B": "Dynamic type checking",
-        "C": "No types",
-        "D": "Garbage collection"
-      },
-      "answer": "A",
+      "choices": [
+        "Static type checking",
+        "Dynamic type checking",
+        "Garbage collection",
+        "No types"
+      ],
+      "answer": "Static type checking",
       "source_pages": [
         62
       ]
@@ -2146,13 +2146,13 @@
       "id": "MCQ030",
       "difficulty": "medium",
       "question": "Schema-on-read is useful for?",
-      "choices": {
-        "A": "Heterogeneous data",
-        "B": "Uniform enforced rows only",
-        "C": "Only relational joins",
-        "D": "Only graph traversal"
-      },
-      "answer": "A",
+      "choices": [
+        "Only relational joins",
+        "Heterogeneous data",
+        "Uniform enforced rows only",
+        "Only graph traversal"
+      ],
+      "answer": "Heterogeneous data",
       "source_pages": [
         62,
         63
@@ -2162,13 +2162,13 @@
       "id": "MCQ031",
       "difficulty": "medium",
       "question": "What is a document locality benefit?",
-      "choices": {
-        "A": "Fewer lookups when reading most of a document",
-        "B": "Free partial updates",
-        "C": "Unlimited document size",
-        "D": "No disk reads"
-      },
-      "answer": "A",
+      "choices": [
+        "Fewer lookups when reading most of a document",
+        "Free partial updates",
+        "Unlimited document size",
+        "No disk reads"
+      ],
+      "answer": "Fewer lookups when reading most of a document",
       "source_pages": [
         63
       ]
@@ -2177,13 +2177,13 @@
       "id": "MCQ032",
       "difficulty": "medium",
       "question": "What is a locality limitation?",
-      "choices": {
-        "A": "Whole document may be loaded/re-written",
-        "B": "Documents cannot be stored",
-        "C": "No fields can change",
-        "D": "All reads require joins"
-      },
-      "answer": "A",
+      "choices": [
+        "No fields can change",
+        "All reads require joins",
+        "Documents cannot be stored",
+        "Whole document may be loaded/re-written"
+      ],
+      "answer": "Whole document may be loaded/re-written",
       "source_pages": [
         63
       ]
@@ -2192,13 +2192,13 @@
       "id": "MCQ033",
       "difficulty": "medium",
       "question": "Which relational system is cited for interleaved locality?",
-      "choices": {
-        "A": "Spanner",
-        "B": "Redis",
-        "C": "Kafka",
-        "D": "Neo4j"
-      },
-      "answer": "A",
+      "choices": [
+        "Spanner",
+        "Kafka",
+        "Neo4j",
+        "Redis"
+      ],
+      "answer": "Spanner",
       "source_pages": [
         63
       ]
@@ -2207,13 +2207,13 @@
       "id": "MCQ034",
       "difficulty": "medium",
       "question": "What trend is observed between relational/document DBs?",
-      "choices": {
-        "A": "Convergence",
-        "B": "Increasing separation only",
-        "C": "Document DB disappearance",
-        "D": "SQL removal"
-      },
-      "answer": "A",
+      "choices": [
+        "SQL removal",
+        "Convergence",
+        "Document DB disappearance",
+        "Increasing separation only"
+      ],
+      "answer": "Convergence",
       "source_pages": [
         63,
         64
@@ -2223,13 +2223,13 @@
       "id": "MCQ035",
       "difficulty": "medium",
       "question": "What is an imperative query style?",
-      "choices": {
-        "A": "Specify execution steps/order",
-        "B": "Specify only desired pattern",
-        "C": "No operations",
-        "D": "Only indexes"
-      },
-      "answer": "A",
+      "choices": [
+        "Specify execution steps/order",
+        "No operations",
+        "Specify only desired pattern",
+        "Only indexes"
+      ],
+      "answer": "Specify execution steps/order",
       "source_pages": [
         65
       ]
@@ -2238,13 +2238,13 @@
       "id": "MCQ036",
       "difficulty": "medium",
       "question": "What is a declarative query style?",
-      "choices": {
-        "A": "Specify desired result",
-        "B": "Specify every loop",
-        "C": "Navigate pointer chains",
-        "D": "Write disk offsets"
-      },
-      "answer": "A",
+      "choices": [
+        "Specify every loop",
+        "Specify desired result",
+        "Navigate pointer chains",
+        "Write disk offsets"
+      ],
+      "answer": "Specify desired result",
       "source_pages": [
         65
       ]
@@ -2253,13 +2253,13 @@
       "id": "MCQ037",
       "difficulty": "medium",
       "question": "What is a major declarative advantage?",
-      "choices": {
-        "A": "Optimizer freedom",
-        "B": "No optimization possible",
-        "C": "Requires record order",
-        "D": "Cannot parallelize"
-      },
-      "answer": "A",
+      "choices": [
+        "Optimizer freedom",
+        "No optimization possible",
+        "Cannot parallelize",
+        "Requires record order"
+      ],
+      "answer": "Optimizer freedom",
       "source_pages": [
         65
       ]
@@ -2268,13 +2268,13 @@
       "id": "MCQ038",
       "difficulty": "medium",
       "question": "Which web technology is declarative?",
-      "choices": {
-        "A": "CSS",
-        "B": "Imperative DOM loops",
-        "C": "Assembly",
-        "D": "TCP"
-      },
-      "answer": "A",
+      "choices": [
+        "Assembly",
+        "Imperative DOM loops",
+        "TCP",
+        "CSS"
+      ],
+      "answer": "CSS",
       "source_pages": [
         66
       ]
@@ -2283,13 +2283,13 @@
       "id": "MCQ039",
       "difficulty": "medium",
       "question": "Why is CSS used as an analogy?",
-      "choices": {
-        "A": "It declares a pattern and lets browser manage updates",
-        "B": "It is a database",
-        "C": "It requires cursor traversal",
-        "D": "It stores graphs"
-      },
-      "answer": "A",
+      "choices": [
+        "It stores graphs",
+        "It requires cursor traversal",
+        "It declares a pattern and lets browser manage updates",
+        "It is a database"
+      ],
+      "answer": "It declares a pattern and lets browser manage updates",
       "source_pages": [
         66,
         67
@@ -2299,13 +2299,13 @@
       "id": "MCQ040",
       "difficulty": "medium",
       "question": "What is MapReduce used for?",
-      "choices": {
-        "A": "Bulk distributed data processing",
-        "B": "Only transactions",
-        "C": "Only graph edges",
-        "D": "CSS styling"
-      },
-      "answer": "A",
+      "choices": [
+        "CSS styling",
+        "Only graph edges",
+        "Bulk distributed data processing",
+        "Only transactions"
+      ],
+      "answer": "Bulk distributed data processing",
       "source_pages": [
         68
       ]
@@ -2314,13 +2314,13 @@
       "id": "MCQ041",
       "difficulty": "medium",
       "question": "Where is MapReduce on the declarative/imperative spectrum?",
-      "choices": {
-        "A": "In between",
-        "B": "Fully declarative only",
-        "C": "Fully imperative only",
-        "D": "Neither executable"
-      },
-      "answer": "A",
+      "choices": [
+        "Neither executable",
+        "Fully declarative only",
+        "In between",
+        "Fully imperative only"
+      ],
+      "answer": "In between",
       "source_pages": [
         68
       ]
@@ -2329,13 +2329,13 @@
       "id": "MCQ042",
       "difficulty": "medium",
       "question": "What does map emit?",
-      "choices": {
-        "A": "Key-value pairs",
-        "B": "Only SQL rows",
-        "C": "Only graph edges",
-        "D": "Nothing"
-      },
-      "answer": "A",
+      "choices": [
+        "Only SQL rows",
+        "Only graph edges",
+        "Nothing",
+        "Key-value pairs"
+      ],
+      "answer": "Key-value pairs",
       "source_pages": [
         69
       ]
@@ -2344,13 +2344,13 @@
       "id": "MCQ043",
       "difficulty": "medium",
       "question": "What does reduce do?",
-      "choices": {
-        "A": "Combine values by key",
-        "B": "Create schema",
-        "C": "Choose joins",
-        "D": "Render CSS"
-      },
-      "answer": "A",
+      "choices": [
+        "Combine values by key",
+        "Create schema",
+        "Render CSS",
+        "Choose joins"
+      ],
+      "answer": "Combine values by key",
       "source_pages": [
         69
       ]
@@ -2359,13 +2359,13 @@
       "id": "MCQ044",
       "difficulty": "medium",
       "question": "What must map/reduce functions avoid?",
-      "choices": {
-        "A": "Side effects",
-        "B": "Input data",
-        "C": "Calculations",
-        "D": "String parsing"
-      },
-      "answer": "A",
+      "choices": [
+        "Calculations",
+        "Input data",
+        "Side effects",
+        "String parsing"
+      ],
+      "answer": "Side effects",
       "source_pages": [
         70
       ]
@@ -2374,13 +2374,13 @@
       "id": "MCQ045",
       "difficulty": "hard",
       "question": "Why require purity?",
-      "choices": {
-        "A": "Allow arbitrary placement/order/retry",
-        "B": "Prevent distribution",
-        "C": "Force single-node use",
-        "D": "Disable recovery"
-      },
-      "answer": "A",
+      "choices": [
+        "Allow arbitrary placement/order/retry",
+        "Prevent distribution",
+        "Disable recovery",
+        "Force single-node use"
+      ],
+      "answer": "Allow arbitrary placement/order/retry",
       "source_pages": [
         70
       ]
@@ -2389,13 +2389,13 @@
       "id": "MCQ046",
       "difficulty": "hard",
       "question": "What did MongoDB add as a more declarative alternative?",
-      "choices": {
-        "A": "Aggregation pipeline",
-        "B": "Cypher",
-        "C": "SPARQL",
-        "D": "SQL recursive CTE"
-      },
-      "answer": "A",
+      "choices": [
+        "Cypher",
+        "Aggregation pipeline",
+        "SQL recursive CTE",
+        "SPARQL"
+      ],
+      "answer": "Aggregation pipeline",
       "source_pages": [
         70
       ]
@@ -2404,13 +2404,13 @@
       "id": "MCQ047",
       "difficulty": "hard",
       "question": "When are graph models natural?",
-      "choices": {
-        "A": "Dense many-to-many relationships",
-        "B": "Only self-contained trees",
-        "C": "No relationships",
-        "D": "Only batch files"
-      },
-      "answer": "A",
+      "choices": [
+        "Only self-contained trees",
+        "Only batch files",
+        "No relationships",
+        "Dense many-to-many relationships"
+      ],
+      "answer": "Dense many-to-many relationships",
       "source_pages": [
         71
       ]
@@ -2419,13 +2419,13 @@
       "id": "MCQ048",
       "difficulty": "hard",
       "question": "What are graph objects?",
-      "choices": {
-        "A": "Vertices and edges",
-        "B": "Rows and columns only",
-        "C": "Files and folders only",
-        "D": "Map and reduce"
-      },
-      "answer": "A",
+      "choices": [
+        "Rows and columns only",
+        "Map and reduce",
+        "Vertices and edges",
+        "Files and folders only"
+      ],
+      "answer": "Vertices and edges",
       "source_pages": [
         71
       ]
@@ -2434,13 +2434,13 @@
       "id": "MCQ049",
       "difficulty": "hard",
       "question": "Which is a graph example?",
-      "choices": {
-        "A": "Social network",
-        "B": "Single scalar",
-        "C": "Flat CSV with no relationships",
-        "D": "Cache counter"
-      },
-      "answer": "A",
+      "choices": [
+        "Social network",
+        "Cache counter",
+        "Single scalar",
+        "Flat CSV with no relationships"
+      ],
+      "answer": "Social network",
       "source_pages": [
         71
       ]
@@ -2449,13 +2449,13 @@
       "id": "MCQ050",
       "difficulty": "hard",
       "question": "What does a property-graph vertex contain?",
-      "choices": {
-        "A": "ID, edges, properties",
-        "B": "Only one string",
-        "C": "SQL join plan",
-        "D": "Map function"
-      },
-      "answer": "A",
+      "choices": [
+        "Map function",
+        "Only one string",
+        "SQL join plan",
+        "ID, edges, properties"
+      ],
+      "answer": "ID, edges, properties",
       "source_pages": [
         72,
         73
@@ -2465,13 +2465,13 @@
       "id": "MCQ051",
       "difficulty": "hard",
       "question": "What does a property-graph edge contain?",
-      "choices": {
-        "A": "Tail, head, label, properties",
-        "B": "Only a value",
-        "C": "Only subject",
-        "D": "Only schema"
-      },
-      "answer": "A",
+      "choices": [
+        "Only a value",
+        "Only schema",
+        "Only subject",
+        "Tail, head, label, properties"
+      ],
+      "answer": "Tail, head, label, properties",
       "source_pages": [
         72,
         73
@@ -2481,13 +2481,13 @@
       "id": "MCQ052",
       "difficulty": "hard",
       "question": "What is Cypher?",
-      "choices": {
-        "A": "Declarative property-graph language",
-        "B": "MapReduce framework",
-        "C": "RDF serialization only",
-        "D": "ORM"
-      },
-      "answer": "A",
+      "choices": [
+        "RDF serialization only",
+        "ORM",
+        "MapReduce framework",
+        "Declarative property-graph language"
+      ],
+      "answer": "Declarative property-graph language",
       "source_pages": [
         74
       ]
@@ -2496,13 +2496,13 @@
       "id": "MCQ053",
       "difficulty": "hard",
       "question": "What does *0.. mean in Cypher path syntax?",
-      "choices": {
-        "A": "Zero or more traversals",
-        "B": "Exactly zero",
-        "C": "Exactly one",
-        "D": "At most two"
-      },
-      "answer": "A",
+      "choices": [
+        "Zero or more traversals",
+        "Exactly zero",
+        "Exactly one",
+        "At most two"
+      ],
+      "answer": "Zero or more traversals",
       "source_pages": [
         76
       ]
@@ -2511,13 +2511,13 @@
       "id": "MCQ054",
       "difficulty": "hard",
       "question": "How can SQL perform recursive graph traversal?",
-      "choices": {
-        "A": "WITH RECURSIVE",
-        "B": "GROUP BY only",
-        "C": "ORDER BY only",
-        "D": "ALTER TABLE"
-      },
-      "answer": "A",
+      "choices": [
+        "ALTER TABLE",
+        "ORDER BY only",
+        "GROUP BY only",
+        "WITH RECURSIVE"
+      ],
+      "answer": "WITH RECURSIVE",
       "source_pages": [
         76
       ]
@@ -2526,13 +2526,13 @@
       "id": "MCQ055",
       "difficulty": "hard",
       "question": "Why is recursive graph SQL cumbersome?",
-      "choices": {
-        "A": "Unknown path length creates recursive joins",
-        "B": "SQL cannot query rows",
-        "C": "Graphs have no IDs",
-        "D": "No optimizer exists"
-      },
-      "answer": "A",
+      "choices": [
+        "SQL cannot query rows",
+        "Unknown path length creates recursive joins",
+        "No optimizer exists",
+        "Graphs have no IDs"
+      ],
+      "answer": "Unknown path length creates recursive joins",
       "source_pages": [
         76,
         77
@@ -2542,13 +2542,13 @@
       "id": "MCQ056",
       "difficulty": "hard",
       "question": "What is a triple?",
-      "choices": {
-        "A": "Subject-predicate-object",
-        "B": "Row-column-index",
-        "C": "Map-reduce-output",
-        "D": "Head-tail-only"
-      },
-      "answer": "A",
+      "choices": [
+        "Subject-predicate-object",
+        "Map-reduce-output",
+        "Row-column-index",
+        "Head-tail-only"
+      ],
+      "answer": "Subject-predicate-object",
       "source_pages": [
         77
       ]
@@ -2557,13 +2557,13 @@
       "id": "MCQ057",
       "difficulty": "hard",
       "question": "What is Turtle?",
-      "choices": {
-        "A": "Human-readable RDF/triple syntax",
-        "B": "SQL optimizer",
-        "C": "Graph engine",
-        "D": "ORM"
-      },
-      "answer": "A",
+      "choices": [
+        "Human-readable RDF/triple syntax",
+        "SQL optimizer",
+        "ORM",
+        "Graph engine"
+      ],
+      "answer": "Human-readable RDF/triple syntax",
       "source_pages": [
         78,
         79
@@ -2573,13 +2573,13 @@
       "id": "MCQ058",
       "difficulty": "hard",
       "question": "What does RDF stand for?",
-      "choices": {
-        "A": "Resource Description Framework",
-        "B": "Recursive Data Function",
-        "C": "Relational Document Format",
-        "D": "Runtime Data Flow"
-      },
-      "answer": "A",
+      "choices": [
+        "Relational Document Format",
+        "Resource Description Framework",
+        "Recursive Data Function",
+        "Runtime Data Flow"
+      ],
+      "answer": "Resource Description Framework",
       "source_pages": [
         79
       ]
@@ -2588,13 +2588,13 @@
       "id": "MCQ059",
       "difficulty": "hard",
       "question": "Why use URI namespaces in RDF?",
-      "choices": {
-        "A": "Avoid vocabulary collisions",
-        "B": "Improve CPU speed",
-        "C": "Replace all edges",
-        "D": "Force HTTP requests"
-      },
-      "answer": "A",
+      "choices": [
+        "Force HTTP requests",
+        "Improve CPU speed",
+        "Avoid vocabulary collisions",
+        "Replace all edges"
+      ],
+      "answer": "Avoid vocabulary collisions",
       "source_pages": [
         80
       ]
@@ -2603,13 +2603,13 @@
       "id": "MCQ060",
       "difficulty": "hard",
       "question": "What is SPARQL?",
-      "choices": {
-        "A": "RDF triple-store query language",
-        "B": "ORM",
-        "C": "Storage engine",
-        "D": "Map function"
-      },
-      "answer": "A",
+      "choices": [
+        "Storage engine",
+        "Map function",
+        "ORM",
+        "RDF triple-store query language"
+      ],
+      "answer": "RDF triple-store query language",
       "source_pages": [
         81
       ]
@@ -2618,13 +2618,13 @@
       "id": "MCQ061",
       "difficulty": "hard",
       "question": "How does a graph DB differ from CODASYL?",
-      "choices": {
-        "A": "Vertices can be directly found by ID/index",
-        "B": "Only access paths allowed",
-        "C": "Children must be ordered",
-        "D": "Queries are always imperative"
-      },
-      "answer": "A",
+      "choices": [
+        "Vertices can be directly found by ID/index",
+        "Queries are always imperative",
+        "Children must be ordered",
+        "Only access paths allowed"
+      ],
+      "answer": "Vertices can be directly found by ID/index",
       "source_pages": [
         82
       ]
@@ -2633,13 +2633,13 @@
       "id": "MCQ062",
       "difficulty": "hard",
       "question": "What is Datalog based around?",
-      "choices": {
-        "A": "Facts, predicates, and rules",
-        "B": "DOM elements",
-        "C": "Disk pages only",
-        "D": "CSS selectors only"
-      },
-      "answer": "A",
+      "choices": [
+        "DOM elements",
+        "Disk pages only",
+        "CSS selectors only",
+        "Facts, predicates, and rules"
+      ],
+      "answer": "Facts, predicates, and rules",
       "source_pages": [
         82,
         83
@@ -2649,13 +2649,13 @@
       "id": "MCQ063",
       "difficulty": "hard",
       "question": "Can Datalog rules call themselves recursively?",
-      "choices": {
-        "A": "Yes",
-        "B": "No",
-        "C": "Only in SQL",
-        "D": "Only in CSS"
-      },
-      "answer": "A",
+      "choices": [
+        "No",
+        "Only in CSS",
+        "Only in SQL",
+        "Yes"
+      ],
+      "answer": "Yes",
       "source_pages": [
         83,
         84
@@ -2665,13 +2665,13 @@
       "id": "MCQ064",
       "difficulty": "hard",
       "question": "What is Datalog especially useful for?",
-      "choices": {
-        "A": "Complex reusable rule-based queries",
-        "B": "Only simple one-off queries",
-        "C": "UI styling",
-        "D": "Binary encoding"
-      },
-      "answer": "A",
+      "choices": [
+        "UI styling",
+        "Binary encoding",
+        "Only simple one-off queries",
+        "Complex reusable rule-based queries"
+      ],
+      "answer": "Complex reusable rule-based queries",
       "source_pages": [
         85
       ]
@@ -2680,13 +2680,13 @@
       "id": "MCQ065",
       "difficulty": "hard",
       "question": "What data model fits self-contained documents?",
-      "choices": {
-        "A": "Document",
-        "B": "Graph only",
-        "C": "CODASYL only",
-        "D": "No model"
-      },
-      "answer": "A",
+      "choices": [
+        "Graph only",
+        "No model",
+        "Document",
+        "CODASYL only"
+      ],
+      "answer": "Document",
       "source_pages": [
         85
       ]
@@ -2695,13 +2695,13 @@
       "id": "MCQ066",
       "difficulty": "hard",
       "question": "What data model fits highly interconnected data?",
-      "choices": {
-        "A": "Graph",
-        "B": "Document only",
-        "C": "Flat file only",
-        "D": "Hierarchical only"
-      },
-      "answer": "A",
+      "choices": [
+        "Graph",
+        "Document only",
+        "Hierarchical only",
+        "Flat file only"
+      ],
+      "answer": "Graph",
       "source_pages": [
         85
       ]
@@ -2710,13 +2710,13 @@
       "id": "MCQ067",
       "difficulty": "hard",
       "question": "Can graph data be represented relationally?",
-      "choices": {
-        "A": "Yes, though often awkward",
-        "B": "No",
-        "C": "Only with RDF",
-        "D": "Only in memory"
-      },
-      "answer": "A",
+      "choices": [
+        "No",
+        "Only in memory",
+        "Only with RDF",
+        "Yes, though often awkward"
+      ],
+      "answer": "Yes, though often awkward",
       "source_pages": [
         85
       ]

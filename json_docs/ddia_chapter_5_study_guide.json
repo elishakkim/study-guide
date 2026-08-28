@@ -1167,13 +1167,13 @@
     {
       "id": "MCQ001",
       "question": "Which is NOT a replication purpose?",
-      "choices": {
-        "A": "Availability",
-        "B": "Latency reduction",
-        "C": "Read scaling",
-        "D": "Partitioning a large dataset"
-      },
-      "answer": "D",
+      "choices": [
+        "Read scaling",
+        "Availability",
+        "Partitioning a large dataset",
+        "Latency reduction"
+      ],
+      "answer": "Partitioning a large dataset",
       "source_pages": [
         173
       ]
@@ -1181,13 +1181,13 @@
     {
       "id": "MCQ002",
       "question": "Who accepts writes in single-leader replication?",
-      "choices": {
-        "A": "Leader",
-        "B": "Any follower",
-        "C": "Every replica directly",
-        "D": "Read replica"
-      },
-      "answer": "A",
+      "choices": [
+        "Every replica directly",
+        "Read replica",
+        "Any follower",
+        "Leader"
+      ],
+      "answer": "Leader",
       "source_pages": [
         174
       ]
@@ -1195,13 +1195,13 @@
     {
       "id": "MCQ003",
       "question": "What does synchronous replication wait for?",
-      "choices": {
-        "A": "Follower acknowledgement",
-        "B": "Client retry",
-        "C": "Compaction",
-        "D": "Leader election"
-      },
-      "answer": "A",
+      "choices": [
+        "Leader election",
+        "Compaction",
+        "Follower acknowledgement",
+        "Client retry"
+      ],
+      "answer": "Follower acknowledgement",
       "source_pages": [
         176
       ]
@@ -1209,13 +1209,13 @@
     {
       "id": "MCQ004",
       "question": "Main asynchronous risk?",
-      "choices": {
-        "A": "Acknowledged write loss on leader failure",
-        "B": "No writes possible",
-        "C": "No read scaling",
-        "D": "No followers"
-      },
-      "answer": "A",
+      "choices": [
+        "No followers",
+        "No read scaling",
+        "Acknowledged write loss on leader failure",
+        "No writes possible"
+      ],
+      "answer": "Acknowledged write loss on leader failure",
       "source_pages": [
         177
       ]
@@ -1223,13 +1223,13 @@
     {
       "id": "MCQ005",
       "question": "How should a new follower start?",
-      "choices": {
-        "A": "Consistent snapshot + log position",
-        "B": "Random file copy only",
-        "C": "Empty database only",
-        "D": "Leader election"
-      },
-      "answer": "A",
+      "choices": [
+        "Random file copy only",
+        "Consistent snapshot + log position",
+        "Empty database only",
+        "Leader election"
+      ],
+      "answer": "Consistent snapshot + log position",
       "source_pages": [
         177,
         178
@@ -1238,13 +1238,13 @@
     {
       "id": "MCQ006",
       "question": "What is follower recovery called?",
-      "choices": {
-        "A": "Catch-up recovery",
-        "B": "LWW",
-        "C": "Read repair",
-        "D": "Hinted handoff"
-      },
-      "answer": "A",
+      "choices": [
+        "LWW",
+        "Catch-up recovery",
+        "Read repair",
+        "Hinted handoff"
+      ],
+      "answer": "Catch-up recovery",
       "source_pages": [
         178
       ]
@@ -1252,13 +1252,13 @@
     {
       "id": "MCQ007",
       "question": "What is leader replacement called?",
-      "choices": {
-        "A": "Failover",
-        "B": "Compaction",
-        "C": "CDC",
-        "D": "Quorum"
-      },
-      "answer": "A",
+      "choices": [
+        "CDC",
+        "Quorum",
+        "Compaction",
+        "Failover"
+      ],
+      "answer": "Failover",
       "source_pages": [
         179
       ]
@@ -1266,13 +1266,13 @@
     {
       "id": "MCQ008",
       "question": "What is split brain?",
-      "choices": {
-        "A": "Two leaders accept writes",
-        "B": "Two followers read",
-        "C": "Two clients disconnect",
-        "D": "Two logs compact"
-      },
-      "answer": "A",
+      "choices": [
+        "Two logs compact",
+        "Two leaders accept writes",
+        "Two followers read",
+        "Two clients disconnect"
+      ],
+      "answer": "Two leaders accept writes",
       "source_pages": [
         180
       ]
@@ -1280,13 +1280,13 @@
     {
       "id": "MCQ009",
       "question": "Which replication log is most physically coupled?",
-      "choices": {
-        "A": "WAL shipping",
-        "B": "Logical row log",
-        "C": "Trigger log",
-        "D": "CDC"
-      },
-      "answer": "A",
+      "choices": [
+        "Logical row log",
+        "CDC",
+        "Trigger log",
+        "WAL shipping"
+      ],
+      "answer": "WAL shipping",
       "source_pages": [
         182
       ]
@@ -1294,13 +1294,13 @@
     {
       "id": "MCQ010",
       "question": "Which log is easiest for CDC consumers?",
-      "choices": {
-        "A": "Logical log",
-        "B": "Physical WAL only",
-        "C": "Statement only",
-        "D": "No log"
-      },
-      "answer": "A",
+      "choices": [
+        "Logical log",
+        "No log",
+        "Statement only",
+        "Physical WAL only"
+      ],
+      "answer": "Logical log",
       "source_pages": [
         182,
         183
@@ -1309,13 +1309,13 @@
     {
       "id": "MCQ011",
       "question": "What causes eventual-consistency anomalies?",
-      "choices": {
-        "A": "Replication lag",
-        "B": "B-tree depth",
-        "C": "Compression",
-        "D": "Schema registry"
-      },
-      "answer": "A",
+      "choices": [
+        "B-tree depth",
+        "Compression",
+        "Schema registry",
+        "Replication lag"
+      ],
+      "answer": "Replication lag",
       "source_pages": [
         184
       ]
@@ -1323,13 +1323,13 @@
     {
       "id": "MCQ012",
       "question": "What guarantees a user sees their own updates?",
-      "choices": {
-        "A": "Read-your-writes",
-        "B": "Monotonic only",
-        "C": "Consistent prefix only",
-        "D": "LWW"
-      },
-      "answer": "A",
+      "choices": [
+        "Monotonic only",
+        "Consistent prefix only",
+        "LWW",
+        "Read-your-writes"
+      ],
+      "answer": "Read-your-writes",
       "source_pages": [
         185
       ]
@@ -1337,13 +1337,13 @@
     {
       "id": "MCQ013",
       "question": "What prevents time from appearing to go backward for one user?",
-      "choices": {
-        "A": "Monotonic reads",
-        "B": "LWW",
-        "C": "Read repair",
-        "D": "Failover"
-      },
-      "answer": "A",
+      "choices": [
+        "Read repair",
+        "Failover",
+        "Monotonic reads",
+        "LWW"
+      ],
+      "answer": "Monotonic reads",
       "source_pages": [
         187
       ]
@@ -1351,13 +1351,13 @@
     {
       "id": "MCQ014",
       "question": "What preserves causal order such as question before answer?",
-      "choices": {
-        "A": "Consistent-prefix reads",
-        "B": "Read repair",
-        "C": "WAL shipping",
-        "D": "Sloppy quorum"
-      },
-      "answer": "A",
+      "choices": [
+        "Consistent-prefix reads",
+        "Read repair",
+        "Sloppy quorum",
+        "WAL shipping"
+      ],
+      "answer": "Consistent-prefix reads",
       "source_pages": [
         188
       ]
@@ -1365,13 +1365,13 @@
     {
       "id": "MCQ015",
       "question": "Which is a multi-leader use case?",
-      "choices": {
-        "A": "Multiple datacenters",
-        "B": "Single-node storage only",
-        "C": "No writes",
-        "D": "Pure batch compression"
-      },
-      "answer": "A",
+      "choices": [
+        "Pure batch compression",
+        "Multiple datacenters",
+        "Single-node storage only",
+        "No writes"
+      ],
+      "answer": "Multiple datacenters",
       "source_pages": [
         190,
         191
@@ -1380,13 +1380,13 @@
     {
       "id": "MCQ016",
       "question": "Main multi-leader downside?",
-      "choices": {
-        "A": "Conflicts",
-        "B": "No availability",
-        "C": "No replication",
-        "D": "No reads"
-      },
-      "answer": "A",
+      "choices": [
+        "No availability",
+        "No replication",
+        "Conflicts",
+        "No reads"
+      ],
+      "answer": "Conflicts",
       "source_pages": [
         192
       ]
@@ -1394,13 +1394,13 @@
     {
       "id": "MCQ017",
       "question": "Conflict avoidance means?",
-      "choices": {
-        "A": "Keep one record's writes on one leader",
-        "B": "Use random leaders",
-        "C": "Use more clocks",
-        "D": "Disable followers"
-      },
-      "answer": "A",
+      "choices": [
+        "Use more clocks",
+        "Use random leaders",
+        "Disable followers",
+        "Keep one record's writes on one leader"
+      ],
+      "answer": "Keep one record's writes on one leader",
       "source_pages": [
         194
       ]
@@ -1408,13 +1408,13 @@
     {
       "id": "MCQ018",
       "question": "What does LWW do?",
-      "choices": {
-        "A": "Picks one winner and discards others",
-        "B": "Preserves all siblings",
-        "C": "Disables concurrency",
-        "D": "Elects leader"
-      },
-      "answer": "A",
+      "choices": [
+        "Preserves all siblings",
+        "Elects leader",
+        "Picks one winner and discards others",
+        "Disables concurrency"
+      ],
+      "answer": "Picks one winner and discards others",
       "source_pages": [
         195,
         208
@@ -1423,13 +1423,13 @@
     {
       "id": "MCQ019",
       "question": "What is a CRDT?",
-      "choices": {
-        "A": "Conflict-free replicated datatype",
-        "B": "Change-replay transaction",
-        "C": "Consistent replica delay timer",
-        "D": "Client read data table"
-      },
-      "answer": "A",
+      "choices": [
+        "Change-replay transaction",
+        "Consistent replica delay timer",
+        "Client read data table",
+        "Conflict-free replicated datatype"
+      ],
+      "answer": "Conflict-free replicated datatype",
       "source_pages": [
         196
       ]
@@ -1437,13 +1437,13 @@
     {
       "id": "MCQ020",
       "question": "Which topology has every leader connected to every other?",
-      "choices": {
-        "A": "All-to-all",
-        "B": "Circular",
-        "C": "Star",
-        "D": "Single-leader"
-      },
-      "answer": "A",
+      "choices": [
+        "All-to-all",
+        "Star",
+        "Circular",
+        "Single-leader"
+      ],
+      "answer": "All-to-all",
       "source_pages": [
         197
       ]
@@ -1451,13 +1451,13 @@
     {
       "id": "MCQ021",
       "question": "All-to-all can cause?",
-      "choices": {
-        "A": "Causal message reordering",
-        "B": "No redundancy",
-        "C": "No paths",
-        "D": "One writer only"
-      },
-      "answer": "A",
+      "choices": [
+        "No redundancy",
+        "No paths",
+        "Causal message reordering",
+        "One writer only"
+      ],
+      "answer": "Causal message reordering",
       "source_pages": [
         198
       ]
@@ -1465,13 +1465,13 @@
     {
       "id": "MCQ022",
       "question": "What defines leaderless replication?",
-      "choices": {
-        "A": "Any replica can accept writes",
-        "B": "Exactly one leader",
-        "C": "Followers cannot read",
-        "D": "Only one node stores data"
-      },
-      "answer": "A",
+      "choices": [
+        "Only one node stores data",
+        "Exactly one leader",
+        "Followers cannot read",
+        "Any replica can accept writes"
+      ],
+      "answer": "Any replica can accept writes",
       "source_pages": [
         199
       ]
@@ -1479,13 +1479,13 @@
     {
       "id": "MCQ023",
       "question": "What is read repair?",
-      "choices": {
-        "A": "Repair stale replicas discovered during reads",
-        "B": "Rebuild WAL",
-        "C": "Elect leader",
-        "D": "Compact segments"
-      },
-      "answer": "A",
+      "choices": [
+        "Elect leader",
+        "Rebuild WAL",
+        "Compact segments",
+        "Repair stale replicas discovered during reads"
+      ],
+      "answer": "Repair stale replicas discovered during reads",
       "source_pages": [
         201
       ]
@@ -1493,13 +1493,13 @@
     {
       "id": "MCQ024",
       "question": "What is anti-entropy?",
-      "choices": {
-        "A": "Background replica reconciliation",
-        "B": "Strong leader election",
-        "C": "API versioning",
-        "D": "Schema migration"
-      },
-      "answer": "A",
+      "choices": [
+        "Background replica reconciliation",
+        "API versioning",
+        "Schema migration",
+        "Strong leader election"
+      ],
+      "answer": "Background replica reconciliation",
       "source_pages": [
         201
       ]
@@ -1507,13 +1507,13 @@
     {
       "id": "MCQ025",
       "question": "In n/w/r, what is n?",
-      "choices": {
-        "A": "Replica count",
-        "B": "Write acknowledgements",
-        "C": "Read acknowledgements",
-        "D": "Node failures"
-      },
-      "answer": "A",
+      "choices": [
+        "Replica count",
+        "Write acknowledgements",
+        "Node failures",
+        "Read acknowledgements"
+      ],
+      "answer": "Replica count",
       "source_pages": [
         201
       ]
@@ -1521,13 +1521,13 @@
     {
       "id": "MCQ026",
       "question": "What is w?",
-      "choices": {
-        "A": "Minimum successful writes",
-        "B": "Replica count",
-        "C": "Minimum reads",
-        "D": "Write latency"
-      },
-      "answer": "A",
+      "choices": [
+        "Minimum reads",
+        "Write latency",
+        "Minimum successful writes",
+        "Replica count"
+      ],
+      "answer": "Minimum successful writes",
       "source_pages": [
         201
       ]
@@ -1535,13 +1535,13 @@
     {
       "id": "MCQ027",
       "question": "What is r?",
-      "choices": {
-        "A": "Minimum read responses",
-        "B": "Replica count",
-        "C": "Minimum writes",
-        "D": "Replica lag"
-      },
-      "answer": "A",
+      "choices": [
+        "Minimum read responses",
+        "Minimum writes",
+        "Replica lag",
+        "Replica count"
+      ],
+      "answer": "Minimum read responses",
       "source_pages": [
         201
       ]
@@ -1549,13 +1549,13 @@
     {
       "id": "MCQ028",
       "question": "What strict quorum condition is used?",
-      "choices": {
-        "A": "w+r>n",
-        "B": "w+r<n",
-        "C": "w=r=n always",
-        "D": "w*r=n"
-      },
-      "answer": "A",
+      "choices": [
+        "w*r=n",
+        "w+r<n",
+        "w=r=n always",
+        "w+r>n"
+      ],
+      "answer": "w+r>n",
       "source_pages": [
         201
       ]
@@ -1563,13 +1563,13 @@
     {
       "id": "MCQ029",
       "question": "n=3,w=2,r=2 tolerates?",
-      "choices": {
-        "A": "1 unavailable node",
-        "B": "0",
-        "C": "2",
-        "D": "3"
-      },
-      "answer": "A",
+      "choices": [
+        "3",
+        "0",
+        "1 unavailable node",
+        "2"
+      ],
+      "answer": "1 unavailable node",
       "source_pages": [
         202
       ]
@@ -1577,13 +1577,13 @@
     {
       "id": "MCQ030",
       "question": "n=5,w=3,r=3 tolerates?",
-      "choices": {
-        "A": "2 unavailable nodes",
-        "B": "1",
-        "C": "3",
-        "D": "4"
-      },
-      "answer": "A",
+      "choices": [
+        "4",
+        "3",
+        "2 unavailable nodes",
+        "1"
+      ],
+      "answer": "2 unavailable nodes",
       "source_pages": [
         202
       ]
@@ -1591,13 +1591,13 @@
     {
       "id": "MCQ031",
       "question": "What does w=n,r=1 optimize?",
-      "choices": {
-        "A": "Reads",
-        "B": "Writes",
-        "C": "Conflict merging",
-        "D": "Storage"
-      },
-      "answer": "A",
+      "choices": [
+        "Conflict merging",
+        "Writes",
+        "Reads",
+        "Storage"
+      ],
+      "answer": "Reads",
       "source_pages": [
         202
       ]
@@ -1605,13 +1605,13 @@
     {
       "id": "MCQ032",
       "question": "Must a quorum be a majority?",
-      "choices": {
-        "A": "No",
-        "B": "Yes",
-        "C": "Only reads",
-        "D": "Only writes"
-      },
-      "answer": "A",
+      "choices": [
+        "Only writes",
+        "Yes",
+        "Only reads",
+        "No"
+      ],
+      "answer": "No",
       "source_pages": [
         203
       ]
@@ -1619,13 +1619,13 @@
     {
       "id": "MCQ033",
       "question": "Can w+r>n still return stale values?",
-      "choices": {
-        "A": "Yes",
-        "B": "No",
-        "C": "Only on B-trees",
-        "D": "Only in SQL"
-      },
-      "answer": "A",
+      "choices": [
+        "Yes",
+        "Only in SQL",
+        "No",
+        "Only on B-trees"
+      ],
+      "answer": "Yes",
       "source_pages": [
         203,
         204
@@ -1634,13 +1634,13 @@
     {
       "id": "MCQ034",
       "question": "What is a sloppy quorum?",
-      "choices": {
-        "A": "Use reachable non-home replicas",
-        "B": "Use only home replicas",
-        "C": "Use leader only",
-        "D": "No quorum"
-      },
-      "answer": "A",
+      "choices": [
+        "Use leader only",
+        "Use reachable non-home replicas",
+        "No quorum",
+        "Use only home replicas"
+      ],
+      "answer": "Use reachable non-home replicas",
       "source_pages": [
         205
       ]
@@ -1648,13 +1648,13 @@
     {
       "id": "MCQ035",
       "question": "What is hinted handoff?",
-      "choices": {
-        "A": "Transfer temporary writes back home later",
-        "B": "Follower election",
-        "C": "Log compaction",
-        "D": "Read pinning"
-      },
-      "answer": "A",
+      "choices": [
+        "Follower election",
+        "Log compaction",
+        "Read pinning",
+        "Transfer temporary writes back home later"
+      ],
+      "answer": "Transfer temporary writes back home later",
       "source_pages": [
         206
       ]
@@ -1662,13 +1662,13 @@
     {
       "id": "MCQ036",
       "question": "Sloppy quorum mainly increases?",
-      "choices": {
-        "A": "Availability",
-        "B": "Strong consistency",
-        "C": "Global ordering",
-        "D": "Clock accuracy"
-      },
-      "answer": "A",
+      "choices": [
+        "Strong consistency",
+        "Global ordering",
+        "Clock accuracy",
+        "Availability"
+      ],
+      "answer": "Availability",
       "source_pages": [
         205,
         206
@@ -1677,13 +1677,13 @@
     {
       "id": "MCQ037",
       "question": "What can concurrent leaderless writes do?",
-      "choices": {
-        "A": "Arrive in different orders on different replicas",
-        "B": "Always arrive same order",
-        "C": "Never conflict",
-        "D": "Require leader"
-      },
-      "answer": "A",
+      "choices": [
+        "Require leader",
+        "Arrive in different orders on different replicas",
+        "Always arrive same order",
+        "Never conflict"
+      ],
+      "answer": "Arrive in different orders on different replicas",
       "source_pages": [
         207
       ]
@@ -1691,13 +1691,13 @@
     {
       "id": "MCQ038",
       "question": "What does LWW risk?",
-      "choices": {
-        "A": "Data loss",
-        "B": "No convergence",
-        "C": "No timestamps",
-        "D": "No writes"
-      },
-      "answer": "A",
+      "choices": [
+        "No convergence",
+        "No writes",
+        "No timestamps",
+        "Data loss"
+      ],
+      "answer": "Data loss",
       "source_pages": [
         208
       ]
@@ -1705,13 +1705,13 @@
     {
       "id": "MCQ039",
       "question": "When is LWW safest?",
-      "choices": {
-        "A": "Immutable unique keys",
-        "B": "Hot mutable key",
-        "C": "Shared counter",
-        "D": "Repeated same-key updates"
-      },
-      "answer": "A",
+      "choices": [
+        "Shared counter",
+        "Repeated same-key updates",
+        "Immutable unique keys",
+        "Hot mutable key"
+      ],
+      "answer": "Immutable unique keys",
       "source_pages": [
         208
       ]
@@ -1719,13 +1719,13 @@
     {
       "id": "MCQ040",
       "question": "What is happens-before?",
-      "choices": {
-        "A": "Causal dependency relation",
-        "B": "Wall-clock equality",
-        "C": "Quorum overlap",
-        "D": "Replica count"
-      },
-      "answer": "A",
+      "choices": [
+        "Quorum overlap",
+        "Wall-clock equality",
+        "Replica count",
+        "Causal dependency relation"
+      ],
+      "answer": "Causal dependency relation",
       "source_pages": [
         209
       ]
@@ -1733,13 +1733,13 @@
     {
       "id": "MCQ041",
       "question": "When are A and B concurrent?",
-      "choices": {
-        "A": "Neither happens before the other",
-        "B": "Same timestamp",
-        "C": "Same node",
-        "D": "Within one second"
-      },
-      "answer": "A",
+      "choices": [
+        "Within one second",
+        "Same node",
+        "Same timestamp",
+        "Neither happens before the other"
+      ],
+      "answer": "Neither happens before the other",
       "source_pages": [
         209
       ]
@@ -1747,13 +1747,13 @@
     {
       "id": "MCQ042",
       "question": "What are Riak siblings?",
-      "choices": {
-        "A": "Concurrent versions",
-        "B": "Followers",
-        "C": "Leaders",
-        "D": "Hints"
-      },
-      "answer": "A",
+      "choices": [
+        "Leaders",
+        "Followers",
+        "Concurrent versions",
+        "Hints"
+      ],
+      "answer": "Concurrent versions",
       "source_pages": [
         212
       ]
@@ -1761,13 +1761,13 @@
     {
       "id": "MCQ043",
       "question": "What preserves deletion during sibling merges?",
-      "choices": {
-        "A": "Tombstone",
-        "B": "WAL",
-        "C": "Follower",
-        "D": "Bloom filter"
-      },
-      "answer": "A",
+      "choices": [
+        "WAL",
+        "Follower",
+        "Tombstone",
+        "Bloom filter"
+      ],
+      "answer": "Tombstone",
       "source_pages": [
         213
       ]
@@ -1775,13 +1775,13 @@
     {
       "id": "MCQ044",
       "question": "What is a version vector?",
-      "choices": {
-        "A": "Per-replica causal version state",
-        "B": "One timestamp",
-        "C": "One scalar global counter",
-        "D": "Node list"
-      },
-      "answer": "A",
+      "choices": [
+        "One scalar global counter",
+        "Per-replica causal version state",
+        "One timestamp",
+        "Node list"
+      ],
+      "answer": "Per-replica causal version state",
       "source_pages": [
         213
       ]
@@ -1789,13 +1789,13 @@
     {
       "id": "MCQ045",
       "question": "What does Riak call version-vector context?",
-      "choices": {
-        "A": "Causal context",
-        "B": "Read repair",
-        "C": "Hinted handoff",
-        "D": "Prefix"
-      },
-      "answer": "A",
+      "choices": [
+        "Prefix",
+        "Read repair",
+        "Hinted handoff",
+        "Causal context"
+      ],
+      "answer": "Causal context",
       "source_pages": [
         213
       ]
@@ -1803,13 +1803,13 @@
     {
       "id": "MCQ046",
       "question": "What is easiest to reason about according to the chapter summary?",
-      "choices": {
-        "A": "Single-leader",
-        "B": "Multi-leader",
-        "C": "Leaderless",
-        "D": "All identical"
-      },
-      "answer": "A",
+      "choices": [
+        "Single-leader",
+        "Leaderless",
+        "All identical",
+        "Multi-leader"
+      ],
+      "answer": "Single-leader",
       "source_pages": [
         214,
         215

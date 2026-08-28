@@ -920,13 +920,13 @@
       "id": "MCQ01",
       "difficulty": "easy",
       "question": "What is the most accurate description of a system design interview according to Chapter 3?",
-      "choices": {
-        "A": "A trivia test with one correct architecture",
-        "B": "A collaborative exercise for solving an ambiguous problem",
-        "C": "A coding speed competition",
-        "D": "A test of memorized infrastructure diagrams"
-      },
-      "answer": "B",
+      "choices": [
+        "A trivia test with one correct architecture",
+        "A test of memorized infrastructure diagrams",
+        "A coding speed competition",
+        "A collaborative exercise for solving an ambiguous problem"
+      ],
+      "answer": "A collaborative exercise for solving an ambiguous problem",
       "explanation": "The chapter describes the interview as a simulation of collaborative real-world problem solving.",
       "source_pages": [
         42
@@ -936,13 +936,13 @@
       "id": "MCQ02",
       "difficulty": "easy",
       "question": "What does the chapter say matters more than the final design?",
-      "choices": {
-        "A": "Using the most technologies",
-        "B": "The work demonstrated during the design process",
-        "C": "Finishing before the interviewer",
-        "D": "Selecting a specific cloud provider"
-      },
-      "answer": "B",
+      "choices": [
+        "Finishing before the interviewer",
+        "Using the most technologies",
+        "The work demonstrated during the design process",
+        "Selecting a specific cloud provider"
+      ],
+      "answer": "The work demonstrated during the design process",
       "source_pages": [
         42
       ]
@@ -951,13 +951,13 @@
       "id": "MCQ03",
       "difficulty": "medium",
       "question": "Which is NOT listed as a useful interview signal?",
-      "choices": {
-        "A": "Collaboration",
-        "B": "Resolving ambiguity",
-        "C": "Asking good questions",
-        "D": "Refusing feedback once a design is proposed"
-      },
-      "answer": "D",
+      "choices": [
+        "Refusing feedback once a design is proposed",
+        "Collaboration",
+        "Asking good questions",
+        "Resolving ambiguity"
+      ],
+      "answer": "Refusing feedback once a design is proposed",
       "source_pages": [
         42
       ]
@@ -966,13 +966,13 @@
       "id": "MCQ04",
       "difficulty": "medium",
       "question": "Which behavior is identified as a red flag?",
-      "choices": {
-        "A": "Discussing tradeoffs",
-        "B": "Asking clarifying questions",
-        "C": "Over-engineering and ignoring tradeoffs",
-        "D": "Seeking feedback"
-      },
-      "answer": "C",
+      "choices": [
+        "Seeking feedback",
+        "Over-engineering and ignoring tradeoffs",
+        "Asking clarifying questions",
+        "Discussing tradeoffs"
+      ],
+      "answer": "Over-engineering and ignoring tradeoffs",
       "source_pages": [
         42
       ]
@@ -981,13 +981,13 @@
       "id": "MCQ05",
       "difficulty": "easy",
       "question": "What is Step 1 of the four-step process?",
-      "choices": {
-        "A": "Design deep dive",
-        "B": "Wrap up",
-        "C": "Understand the problem and establish design scope",
-        "D": "Implement the database schema"
-      },
-      "answer": "C",
+      "choices": [
+        "Design deep dive",
+        "Wrap up",
+        "Understand the problem and establish design scope",
+        "Implement the database schema"
+      ],
+      "answer": "Understand the problem and establish design scope",
       "source_pages": [
         43
       ]
@@ -996,13 +996,13 @@
       "id": "MCQ06",
       "difficulty": "medium",
       "question": "What is the lesson of the 'Jimmy' story?",
-      "choices": {
-        "A": "Answer as quickly as possible",
-        "B": "Jump immediately into implementation",
-        "C": "Do not rush to answer before understanding the problem",
-        "D": "Avoid asking questions"
-      },
-      "answer": "C",
+      "choices": [
+        "Jump immediately into implementation",
+        "Answer as quickly as possible",
+        "Do not rush to answer before understanding the problem",
+        "Avoid asking questions"
+      ],
+      "answer": "Do not rush to answer before understanding the problem",
       "source_pages": [
         43
       ]
@@ -1011,13 +1011,13 @@
       "id": "MCQ07",
       "difficulty": "medium",
       "question": "If the interviewer asks you to make an assumption, what should you do?",
-      "choices": {
-        "A": "Hide it from the interviewer",
-        "B": "Write it down for later reference",
-        "C": "Refuse to continue",
-        "D": "Replace it with a design immediately"
-      },
-      "answer": "B",
+      "choices": [
+        "Write it down for later reference",
+        "Refuse to continue",
+        "Replace it with a design immediately",
+        "Hide it from the interviewer"
+      ],
+      "answer": "Write it down for later reference",
       "source_pages": [
         43
       ]
@@ -1026,13 +1026,13 @@
       "id": "MCQ08",
       "difficulty": "medium",
       "question": "Which question best helps establish scale?",
-      "choices": {
-        "A": "What color should the UI be?",
-        "B": "How many users does the product have?",
-        "C": "Which IDE does the team use?",
-        "D": "What font does the mobile app use?"
-      },
-      "answer": "B",
+      "choices": [
+        "What color should the UI be?",
+        "How many users does the product have?",
+        "Which IDE does the team use?",
+        "What font does the mobile app use?"
+      ],
+      "answer": "How many users does the product have?",
       "source_pages": [
         43
       ]
@@ -1041,13 +1041,13 @@
       "id": "MCQ09",
       "difficulty": "medium",
       "question": "In the news feed example, how many daily active users are specified?",
-      "choices": {
-        "A": "1 million",
-        "B": "5 million",
-        "C": "10 million",
-        "D": "100 million"
-      },
-      "answer": "C",
+      "choices": [
+        "1 million",
+        "10 million",
+        "5 million",
+        "100 million"
+      ],
+      "answer": "10 million",
       "source_pages": [
         44
       ]
@@ -1056,13 +1056,13 @@
       "id": "MCQ10",
       "difficulty": "medium",
       "question": "How is the simplified news feed sorted?",
-      "choices": {
-        "A": "Alphabetically",
-        "B": "Reverse chronological order",
-        "C": "Randomly",
-        "D": "By geographic distance"
-      },
-      "answer": "B",
+      "choices": [
+        "Randomly",
+        "Reverse chronological order",
+        "By geographic distance",
+        "Alphabetically"
+      ],
+      "answer": "Reverse chronological order",
       "source_pages": [
         44
       ]
@@ -1071,13 +1071,13 @@
       "id": "MCQ11",
       "difficulty": "medium",
       "question": "What is Step 2 primarily trying to achieve?",
-      "choices": {
-        "A": "A production-ready implementation",
-        "B": "A high-level design and interviewer buy-in",
-        "C": "A complete database migration",
-        "D": "A benchmark of every component"
-      },
-      "answer": "B",
+      "choices": [
+        "A benchmark of every component",
+        "A complete database migration",
+        "A production-ready implementation",
+        "A high-level design and interviewer buy-in"
+      ],
+      "answer": "A high-level design and interviewer buy-in",
       "source_pages": [
         44
       ]
@@ -1086,13 +1086,13 @@
       "id": "MCQ12",
       "difficulty": "medium",
       "question": "How should you interact with the interviewer during Step 2?",
-      "choices": {
-        "A": "Avoid interrupting your own design to ask questions",
-        "B": "Treat the interviewer as a teammate and ask for feedback",
-        "C": "Only speak after the complete design is finished",
-        "D": "Ask the interviewer to design the system for you"
-      },
-      "answer": "B",
+      "choices": [
+        "Only speak after the complete design is finished",
+        "Treat the interviewer as a teammate and ask for feedback",
+        "Avoid interrupting your own design to ask questions",
+        "Ask the interviewer to design the system for you"
+      ],
+      "answer": "Treat the interviewer as a teammate and ask for feedback",
       "source_pages": [
         44
       ]
@@ -1101,13 +1101,13 @@
       "id": "MCQ13",
       "difficulty": "medium",
       "question": "Which belongs in a high-level box diagram when relevant?",
-      "choices": {
-        "A": "Clients",
-        "B": "Web servers",
-        "C": "Data stores",
-        "D": "All of the above"
-      },
-      "answer": "D",
+      "choices": [
+        "Clients",
+        "Data stores",
+        "Web servers",
+        "All of the above"
+      ],
+      "answer": "All of the above",
       "source_pages": [
         44
       ]
@@ -1116,13 +1116,13 @@
       "id": "MCQ14",
       "difficulty": "hard",
       "question": "Why might you perform a back-of-the-envelope calculation during Step 2?",
-      "choices": {
-        "A": "To replace the high-level architecture",
-        "B": "To evaluate whether the blueprint fits scale constraints",
-        "C": "To avoid discussing requirements",
-        "D": "To calculate exact production cost"
-      },
-      "answer": "B",
+      "choices": [
+        "To avoid discussing requirements",
+        "To evaluate whether the blueprint fits scale constraints",
+        "To replace the high-level architecture",
+        "To calculate exact production cost"
+      ],
+      "answer": "To evaluate whether the blueprint fits scale constraints",
       "source_pages": [
         44
       ]
@@ -1131,13 +1131,13 @@
       "id": "MCQ15",
       "difficulty": "hard",
       "question": "What does the chapter say about API endpoint and database-schema detail during Step 2?",
-      "choices": {
-        "A": "Always include them",
-        "B": "Never include them",
-        "C": "The correct level depends on the problem; communicate with the interviewer",
-        "D": "Only discuss schemas for search engines"
-      },
-      "answer": "C",
+      "choices": [
+        "Only discuss schemas for search engines",
+        "Never include them",
+        "The correct level depends on the problem; communicate with the interviewer",
+        "Always include them"
+      ],
+      "answer": "The correct level depends on the problem; communicate with the interviewer",
       "source_pages": [
         44
       ]
@@ -1146,13 +1146,13 @@
       "id": "MCQ16",
       "difficulty": "medium",
       "question": "What are the two high-level news feed flows?",
-      "choices": {
-        "A": "Feed publishing and news feed building",
-        "B": "Authentication and billing",
-        "C": "Caching and sharding",
-        "D": "Upload and CDN invalidation"
-      },
-      "answer": "A",
+      "choices": [
+        "Caching and sharding",
+        "Upload and CDN invalidation",
+        "Feed publishing and news feed building",
+        "Authentication and billing"
+      ],
+      "answer": "Feed publishing and news feed building",
       "source_pages": [
         44,
         45
@@ -1162,13 +1162,13 @@
       "id": "MCQ17",
       "difficulty": "medium",
       "question": "What should be completed before the design deep dive?",
-      "choices": {
-        "A": "A production deployment",
-        "B": "Agreement on scope, high-level blueprint, feedback, and initial deep-dive direction",
-        "C": "Every implementation detail",
-        "D": "The final wrap-up"
-      },
-      "answer": "B",
+      "choices": [
+        "Every implementation detail",
+        "The final wrap-up",
+        "A production deployment",
+        "Agreement on scope, high-level blueprint, feedback, and initial deep-dive direction"
+      ],
+      "answer": "Agreement on scope, high-level blueprint, feedback, and initial deep-dive direction",
       "source_pages": [
         46
       ]
@@ -1177,13 +1177,13 @@
       "id": "MCQ18",
       "difficulty": "hard",
       "question": "Who should determine which architecture components are prioritized in the deep dive?",
-      "choices": {
-        "A": "The candidate alone",
-        "B": "The interviewer alone",
-        "C": "The candidate and interviewer collaboratively",
-        "D": "The hiring coordinator"
-      },
-      "answer": "C",
+      "choices": [
+        "The hiring coordinator",
+        "The interviewer alone",
+        "The candidate alone",
+        "The candidate and interviewer collaboratively"
+      ],
+      "answer": "The candidate and interviewer collaboratively",
       "source_pages": [
         46
       ]
@@ -1192,13 +1192,13 @@
       "id": "MCQ19",
       "difficulty": "hard",
       "question": "For a senior candidate, what might the interviewer emphasize?",
-      "choices": {
-        "A": "CSS layout",
-        "B": "Performance characteristics, bottlenecks, and resource estimations",
-        "C": "Typing speed",
-        "D": "Memorizing product names"
-      },
-      "answer": "B",
+      "choices": [
+        "CSS layout",
+        "Typing speed",
+        "Memorizing product names",
+        "Performance characteristics, bottlenecks, and resource estimations"
+      ],
+      "answer": "Performance characteristics, bottlenecks, and resource estimations",
       "source_pages": [
         46
       ]
@@ -1207,13 +1207,13 @@
       "id": "MCQ20",
       "difficulty": "medium",
       "question": "Which deep-dive area does the chapter suggest for a URL shortener?",
-      "choices": {
-        "A": "Hash-function design",
-        "B": "Video transcoding",
-        "C": "Feed ranking",
-        "D": "Image compression"
-      },
-      "answer": "A",
+      "choices": [
+        "Hash-function design",
+        "Feed ranking",
+        "Image compression",
+        "Video transcoding"
+      ],
+      "answer": "Hash-function design",
       "source_pages": [
         46
       ]
@@ -1222,13 +1222,13 @@
       "id": "MCQ21",
       "difficulty": "medium",
       "question": "Which topics are suggested for a chat-system deep dive?",
-      "choices": {
-        "A": "Reducing latency and supporting online/offline status",
-        "B": "SQL joins and CDN billing",
-        "C": "Feed ranking and video encoding",
-        "D": "Search indexing only"
-      },
-      "answer": "A",
+      "choices": [
+        "Feed ranking and video encoding",
+        "SQL joins and CDN billing",
+        "Reducing latency and supporting online/offline status",
+        "Search indexing only"
+      ],
+      "answer": "Reducing latency and supporting online/offline status",
       "source_pages": [
         46
       ]
@@ -1237,13 +1237,13 @@
       "id": "MCQ22",
       "difficulty": "hard",
       "question": "Why should you avoid spending too much time on minute detail?",
-      "choices": {
-        "A": "Details are never important",
-        "B": "They can consume interview time without demonstrating useful ability",
-        "C": "Interviewers dislike technical discussions",
-        "D": "High-level design is always sufficient"
-      },
-      "answer": "B",
+      "choices": [
+        "Interviewers dislike technical discussions",
+        "Details are never important",
+        "They can consume interview time without demonstrating useful ability",
+        "High-level design is always sufficient"
+      ],
+      "answer": "They can consume interview time without demonstrating useful ability",
       "source_pages": [
         46,
         47
@@ -1253,13 +1253,13 @@
       "id": "MCQ23",
       "difficulty": "medium",
       "question": "What is the first recommended wrap-up direction?",
-      "choices": {
-        "A": "Claim the design is complete",
-        "B": "Identify bottlenecks and discuss potential improvements",
-        "C": "Start writing code",
-        "D": "Restart requirement gathering"
-      },
-      "answer": "B",
+      "choices": [
+        "Claim the design is complete",
+        "Identify bottlenecks and discuss potential improvements",
+        "Start writing code",
+        "Restart requirement gathering"
+      ],
+      "answer": "Identify bottlenecks and discuss potential improvements",
       "source_pages": [
         49
       ]
@@ -1268,13 +1268,13 @@
       "id": "MCQ24",
       "difficulty": "medium",
       "question": "Which statement should you avoid during wrap-up?",
-      "choices": {
-        "A": "Here is a bottleneck I would improve",
-        "B": "Here is how I would monitor errors",
-        "C": "My design is perfect and nothing can be improved",
-        "D": "Here is how I would handle the next scale curve"
-      },
-      "answer": "C",
+      "choices": [
+        "Here is how I would handle the next scale curve",
+        "Here is a bottleneck I would improve",
+        "My design is perfect and nothing can be improved",
+        "Here is how I would monitor errors"
+      ],
+      "answer": "My design is perfect and nothing can be improved",
       "source_pages": [
         49
       ]
@@ -1283,13 +1283,13 @@
       "id": "MCQ25",
       "difficulty": "medium",
       "question": "Which error cases does Chapter 3 explicitly mention?",
-      "choices": {
-        "A": "Server failure and network loss",
-        "B": "Only compiler errors",
-        "C": "Only malformed JSON",
-        "D": "None"
-      },
-      "answer": "A",
+      "choices": [
+        "Only compiler errors",
+        "Only malformed JSON",
+        "None",
+        "Server failure and network loss"
+      ],
+      "answer": "Server failure and network loss",
       "source_pages": [
         49
       ]
@@ -1298,13 +1298,13 @@
       "id": "MCQ26",
       "difficulty": "medium",
       "question": "What does the chapter suggest discussing about operations?",
-      "choices": {
-        "A": "Monitoring metrics, error logs, and rollout",
-        "B": "Only feature naming",
-        "C": "Only database schemas",
-        "D": "Nothing operational"
-      },
-      "answer": "A",
+      "choices": [
+        "Nothing operational",
+        "Only feature naming",
+        "Monitoring metrics, error logs, and rollout",
+        "Only database schemas"
+      ],
+      "answer": "Monitoring metrics, error logs, and rollout",
       "source_pages": [
         49
       ]
@@ -1313,13 +1313,13 @@
       "id": "MCQ27",
       "difficulty": "hard",
       "question": "What is an example of discussing the 'next scale curve'?",
-      "choices": {
-        "A": "Changing from 1 million to 10 million supported users",
-        "B": "Changing the application font",
-        "C": "Moving a button",
-        "D": "Renaming an API endpoint"
-      },
-      "answer": "A",
+      "choices": [
+        "Changing the application font",
+        "Renaming an API endpoint",
+        "Changing from 1 million to 10 million supported users",
+        "Moving a button"
+      ],
+      "answer": "Changing from 1 million to 10 million supported users",
       "source_pages": [
         49
       ]
@@ -1328,13 +1328,13 @@
       "id": "MCQ28",
       "difficulty": "medium",
       "question": "Which action appears in the Dos list?",
-      "choices": {
-        "A": "Assume requirements silently",
-        "B": "Suggest multiple approaches if possible",
-        "C": "Avoid interviewer feedback",
-        "D": "Go immediately into low-level detail"
-      },
-      "answer": "B",
+      "choices": [
+        "Avoid interviewer feedback",
+        "Assume requirements silently",
+        "Suggest multiple approaches if possible",
+        "Go immediately into low-level detail"
+      ],
+      "answer": "Suggest multiple approaches if possible",
       "source_pages": [
         50
       ]
@@ -1343,13 +1343,13 @@
       "id": "MCQ29",
       "difficulty": "hard",
       "question": "Why might a startup and an established company require different designs?",
-      "choices": {
-        "A": "Because system design has one best answer",
-        "B": "Because appropriate architecture depends on requirements and scale",
-        "C": "Because startups cannot use databases",
-        "D": "Because established companies cannot use caches"
-      },
-      "answer": "B",
+      "choices": [
+        "Because appropriate architecture depends on requirements and scale",
+        "Because system design has one best answer",
+        "Because established companies cannot use caches",
+        "Because startups cannot use databases"
+      ],
+      "answer": "Because appropriate architecture depends on requirements and scale",
       "source_pages": [
         50
       ]
@@ -1358,13 +1358,13 @@
       "id": "MCQ30",
       "difficulty": "medium",
       "question": "If you get stuck, what does the chapter recommend?",
-      "choices": {
-        "A": "Remain silent",
-        "B": "End the interview",
-        "C": "Ask for hints",
-        "D": "Invent requirements"
-      },
-      "answer": "C",
+      "choices": [
+        "Invent requirements",
+        "End the interview",
+        "Ask for hints",
+        "Remain silent"
+      ],
+      "answer": "Ask for hints",
       "source_pages": [
         50
       ]
@@ -1373,13 +1373,13 @@
       "id": "MCQ31",
       "difficulty": "medium",
       "question": "What communication pattern does the chapter explicitly reject?",
-      "choices": {
-        "A": "Thinking out loud",
-        "B": "Asking for feedback",
-        "C": "Thinking in silence",
-        "D": "Collaborating"
-      },
-      "answer": "C",
+      "choices": [
+        "Collaborating",
+        "Asking for feedback",
+        "Thinking in silence",
+        "Thinking out loud"
+      ],
+      "answer": "Thinking in silence",
       "source_pages": [
         50
       ]
@@ -1388,13 +1388,13 @@
       "id": "MCQ32",
       "difficulty": "medium",
       "question": "How often should you seek feedback?",
-      "choices": {
-        "A": "Only at the end",
-        "B": "Early and often",
-        "C": "Never",
-        "D": "Only after coding"
-      },
-      "answer": "B",
+      "choices": [
+        "Only at the end",
+        "Only after coding",
+        "Never",
+        "Early and often"
+      ],
+      "answer": "Early and often",
       "source_pages": [
         50
       ]
@@ -1403,13 +1403,13 @@
       "id": "MCQ33",
       "difficulty": "medium",
       "question": "What is the rough Step 1 time range in a 45-minute interview?",
-      "choices": {
-        "A": "1-2 minutes",
-        "B": "3-10 minutes",
-        "C": "15-20 minutes",
-        "D": "25-30 minutes"
-      },
-      "answer": "B",
+      "choices": [
+        "1-2 minutes",
+        "25-30 minutes",
+        "15-20 minutes",
+        "3-10 minutes"
+      ],
+      "answer": "3-10 minutes",
       "source_pages": [
         50
       ]
@@ -1418,13 +1418,13 @@
       "id": "MCQ34",
       "difficulty": "medium",
       "question": "What is the rough Step 2 time range?",
-      "choices": {
-        "A": "3-5 minutes",
-        "B": "10-15 minutes",
-        "C": "20-30 minutes",
-        "D": "30-40 minutes"
-      },
-      "answer": "B",
+      "choices": [
+        "10-15 minutes",
+        "20-30 minutes",
+        "3-5 minutes",
+        "30-40 minutes"
+      ],
+      "answer": "10-15 minutes",
       "source_pages": [
         50
       ]
@@ -1433,13 +1433,13 @@
       "id": "MCQ35",
       "difficulty": "medium",
       "question": "Which step receives the widest rough time range?",
-      "choices": {
-        "A": "Step 1",
-        "B": "Step 2",
-        "C": "Step 3",
-        "D": "Step 4"
-      },
-      "answer": "C",
+      "choices": [
+        "Step 2",
+        "Step 3",
+        "Step 4",
+        "Step 1"
+      ],
+      "answer": "Step 3",
       "explanation": "Step 3 is listed at roughly 10-25 minutes.",
       "source_pages": [
         50
@@ -1449,13 +1449,13 @@
       "id": "MCQ36",
       "difficulty": "medium",
       "question": "What is the rough Step 4 time range?",
-      "choices": {
-        "A": "3-5 minutes",
-        "B": "10-15 minutes",
-        "C": "10-25 minutes",
-        "D": "20-30 minutes"
-      },
-      "answer": "A",
+      "choices": [
+        "3-5 minutes",
+        "10-15 minutes",
+        "20-30 minutes",
+        "10-25 minutes"
+      ],
+      "answer": "3-5 minutes",
       "source_pages": [
         50
       ]

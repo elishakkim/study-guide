@@ -1002,13 +1002,13 @@
       "id": "MCQ01",
       "difficulty": "easy",
       "question": "What is the correct high-level request sequence in the chapter's initial architecture?",
-      "choices": {
-        "A": "HTTP request -> DNS -> IP address -> web server",
-        "B": "DNS lookup -> IP address -> HTTP request -> web server response",
-        "C": "Database -> DNS -> load balancer -> browser",
-        "D": "CDN -> database -> DNS -> application"
-      },
-      "answer": "B",
+      "choices": [
+        "DNS lookup -> IP address -> HTTP request -> web server response",
+        "CDN -> database -> DNS -> application",
+        "Database -> DNS -> load balancer -> browser",
+        "HTTP request -> DNS -> IP address -> web server"
+      ],
+      "answer": "DNS lookup -> IP address -> HTTP request -> web server response",
       "explanation": "The user first accesses a domain name, DNS returns an IP address, the client sends an HTTP request, and the web server returns HTML or JSON.",
       "source_pages": [
         6,
@@ -1019,13 +1019,13 @@
       "id": "MCQ02",
       "difficulty": "easy",
       "question": "What is the primary benefit of separating the web server from the database server?",
-      "choices": {
-        "A": "DNS is no longer necessary",
-        "B": "HTTP becomes faster by definition",
-        "C": "The web tier and data tier can be scaled independently",
-        "D": "Database replication becomes unnecessary"
-      },
-      "answer": "C",
+      "choices": [
+        "HTTP becomes faster by definition",
+        "Database replication becomes unnecessary",
+        "DNS is no longer necessary",
+        "The web tier and data tier can be scaled independently"
+      ],
+      "answer": "The web tier and data tier can be scaled independently",
       "explanation": "Independent scaling is the major architectural reason given for separating the web and database tiers.",
       "source_pages": [
         8
@@ -1035,13 +1035,13 @@
       "id": "MCQ03",
       "difficulty": "medium",
       "question": "Which characteristic best matches a relational database as described in Chapter 1?",
-      "choices": {
-        "A": "Stores only key-value pairs",
-        "B": "Stores data in tables and rows and supports joins",
-        "C": "Cannot represent structured data",
-        "D": "Must always be distributed across many servers"
-      },
-      "answer": "B",
+      "choices": [
+        "Stores only key-value pairs",
+        "Stores data in tables and rows and supports joins",
+        "Must always be distributed across many servers",
+        "Cannot represent structured data"
+      ],
+      "answer": "Stores data in tables and rows and supports joins",
       "explanation": "The chapter describes relational databases as table-and-row systems supporting SQL joins.",
       "source_pages": [
         8
@@ -1051,13 +1051,13 @@
       "id": "MCQ04",
       "difficulty": "medium",
       "question": "Which situation is specifically identified as a possible reason to consider a NoSQL database?",
-      "choices": {
-        "A": "The application requires complex relational joins",
-        "B": "The application requires super-low latency",
-        "C": "The application has only one user",
-        "D": "The application cannot use JSON"
-      },
-      "answer": "B",
+      "choices": [
+        "The application has only one user",
+        "The application requires super-low latency",
+        "The application cannot use JSON",
+        "The application requires complex relational joins"
+      ],
+      "answer": "The application requires super-low latency",
       "explanation": "Super-low latency is one of the explicit NoSQL use cases listed in the chapter.",
       "source_pages": [
         8
@@ -1067,13 +1067,13 @@
       "id": "MCQ05",
       "difficulty": "easy",
       "question": "What does scale up mean?",
-      "choices": {
-        "A": "Adding additional servers",
-        "B": "Adding additional data centers",
-        "C": "Adding more resources to an existing server",
-        "D": "Adding additional database replicas"
-      },
-      "answer": "C",
+      "choices": [
+        "Adding additional data centers",
+        "Adding more resources to an existing server",
+        "Adding additional database replicas",
+        "Adding additional servers"
+      ],
+      "answer": "Adding more resources to an existing server",
       "explanation": "Scale up is vertical scaling: increasing CPU, RAM, disk, or other resources on an existing machine.",
       "source_pages": [
         9,
@@ -1084,13 +1084,13 @@
       "id": "MCQ06",
       "difficulty": "medium",
       "question": "Why does the chapter prefer horizontal scaling for large applications?",
-      "choices": {
-        "A": "Vertical scaling can never increase performance",
-        "B": "Vertical scaling has hardware limits and poor redundancy characteristics",
-        "C": "Horizontal scaling requires no additional infrastructure",
-        "D": "Horizontal scaling eliminates databases"
-      },
-      "answer": "B",
+      "choices": [
+        "Vertical scaling has hardware limits and poor redundancy characteristics",
+        "Vertical scaling can never increase performance",
+        "Horizontal scaling requires no additional infrastructure",
+        "Horizontal scaling eliminates databases"
+      ],
+      "answer": "Vertical scaling has hardware limits and poor redundancy characteristics",
       "explanation": "Vertical scaling eventually encounters hardware limits and does not inherently provide failover or redundancy.",
       "source_pages": [
         9
@@ -1100,13 +1100,13 @@
       "id": "MCQ07",
       "difficulty": "medium",
       "question": "After a load balancer is introduced, what should clients normally connect to?",
-      "choices": {
-        "A": "The private IP of Server 1",
-        "B": "The private IP of every web server",
-        "C": "The public IP of the load balancer",
-        "D": "The database's public IP"
-      },
-      "answer": "C",
+      "choices": [
+        "The public IP of the load balancer",
+        "The private IP of Server 1",
+        "The private IP of every web server",
+        "The database's public IP"
+      ],
+      "answer": "The public IP of the load balancer",
       "explanation": "Clients connect to the load balancer's public IP, and the load balancer communicates with web servers through private IPs.",
       "source_pages": [
         10
@@ -1116,13 +1116,13 @@
       "id": "MCQ08",
       "difficulty": "medium",
       "question": "Server 1 fails in a two-web-server load-balanced system. According to the chapter, what should happen?",
-      "choices": {
-        "A": "All traffic should stop",
-        "B": "Traffic should be redirected to Server 2",
-        "C": "All traffic should be sent directly to the database",
-        "D": "DNS should permanently remove the application"
-      },
-      "answer": "B",
+      "choices": [
+        "DNS should permanently remove the application",
+        "All traffic should stop",
+        "Traffic should be redirected to Server 2",
+        "All traffic should be sent directly to the database"
+      ],
+      "answer": "Traffic should be redirected to Server 2",
       "explanation": "The load balancer redirects traffic to the remaining healthy server, preventing the web tier from becoming unavailable.",
       "source_pages": [
         10
@@ -1132,13 +1132,13 @@
       "id": "MCQ09",
       "difficulty": "easy",
       "question": "In the replicated database model described in Chapter 1, which database normally handles writes?",
-      "choices": {
-        "A": "Any slave database",
-        "B": "The CDN",
-        "C": "The master database",
-        "D": "The cache"
-      },
-      "answer": "C",
+      "choices": [
+        "The cache",
+        "Any slave database",
+        "The CDN",
+        "The master database"
+      ],
+      "answer": "The master database",
       "explanation": "Insert, update, delete, and other data-modifying commands are sent to the master database.",
       "source_pages": [
         12,
@@ -1149,13 +1149,13 @@
       "id": "MCQ10",
       "difficulty": "medium",
       "question": "Why are multiple slave databases useful in a read-heavy system?",
-      "choices": {
-        "A": "They eliminate all write operations",
-        "B": "Read queries can be processed in parallel across replicas",
-        "C": "They replace DNS",
-        "D": "They store only static assets"
-      },
-      "answer": "B",
+      "choices": [
+        "They replace DNS",
+        "Read queries can be processed in parallel across replicas",
+        "They store only static assets",
+        "They eliminate all write operations"
+      ],
+      "answer": "Read queries can be processed in parallel across replicas",
       "explanation": "Distributing read operations among slaves allows more queries to be processed in parallel.",
       "source_pages": [
         12
@@ -1165,13 +1165,13 @@
       "id": "MCQ11",
       "difficulty": "hard",
       "question": "What complication does the chapter identify when promoting a slave after master database failure?",
-      "choices": {
-        "A": "The slave may not have the most recent data",
-        "B": "The slave has no schema",
-        "C": "The load balancer cannot communicate with databases",
-        "D": "The slave contains only cached data"
-      },
-      "answer": "A",
+      "choices": [
+        "The slave may not have the most recent data",
+        "The slave contains only cached data",
+        "The load balancer cannot communicate with databases",
+        "The slave has no schema"
+      ],
+      "answer": "The slave may not have the most recent data",
       "explanation": "A slave might not be completely up to date, requiring recovery of missing data.",
       "source_pages": [
         13
@@ -1181,13 +1181,13 @@
       "id": "MCQ12",
       "difficulty": "medium",
       "question": "Which workload is best suited for caching according to the chapter?",
-      "choices": {
-        "A": "Data modified continuously and almost never read",
-        "B": "Data read frequently and modified infrequently",
-        "C": "Data that cannot be lost and exists nowhere else",
-        "D": "Only data stored on disk"
-      },
-      "answer": "B",
+      "choices": [
+        "Data that cannot be lost and exists nowhere else",
+        "Data read frequently and modified infrequently",
+        "Only data stored on disk",
+        "Data modified continuously and almost never read"
+      ],
+      "answer": "Data read frequently and modified infrequently",
       "explanation": "Frequently read, infrequently modified information is a strong cache candidate.",
       "source_pages": [
         15
@@ -1197,13 +1197,13 @@
       "id": "MCQ13",
       "difficulty": "medium",
       "question": "A requested value is absent from cache. What happens next in the chapter's read-through flow?",
-      "choices": {
-        "A": "The request immediately fails",
-        "B": "The web server queries the database, caches the returned result, and responds",
-        "C": "The database is permanently bypassed",
-        "D": "The CDN is asked to perform the query"
-      },
-      "answer": "B",
+      "choices": [
+        "The request immediately fails",
+        "The web server queries the database, caches the returned result, and responds",
+        "The database is permanently bypassed",
+        "The CDN is asked to perform the query"
+      ],
+      "answer": "The web server queries the database, caches the returned result, and responds",
       "explanation": "A cache miss causes the application to obtain the data from the database and populate the cache.",
       "source_pages": [
         15
@@ -1213,13 +1213,13 @@
       "id": "MCQ14",
       "difficulty": "hard",
       "question": "Why is an extremely short cache expiration period potentially harmful?",
-      "choices": {
-        "A": "It prevents database replication",
-        "B": "It causes repeated database reloads",
-        "C": "It disables HTTP",
-        "D": "It prevents cache eviction"
-      },
-      "answer": "B",
+      "choices": [
+        "It prevents cache eviction",
+        "It causes repeated database reloads",
+        "It disables HTTP",
+        "It prevents database replication"
+      ],
+      "answer": "It causes repeated database reloads",
       "explanation": "Entries expire so quickly that the system repeatedly retrieves the same data from the database.",
       "source_pages": [
         15
@@ -1229,13 +1229,13 @@
       "id": "MCQ15",
       "difficulty": "hard",
       "question": "Why can an extremely long cache expiration period also be harmful?",
-      "choices": {
-        "A": "It makes data stale",
-        "B": "It removes all data immediately",
-        "C": "It prevents memory allocation",
-        "D": "It forces every request to use the database"
-      },
-      "answer": "A",
+      "choices": [
+        "It prevents memory allocation",
+        "It forces every request to use the database",
+        "It makes data stale",
+        "It removes all data immediately"
+      ],
+      "answer": "It makes data stale",
       "explanation": "Long-lived cache entries can continue serving information after the underlying data has changed.",
       "source_pages": [
         15
@@ -1245,13 +1245,13 @@
       "id": "MCQ16",
       "difficulty": "medium",
       "question": "Which cache eviction policy is identified as the most popular?",
-      "choices": {
-        "A": "FIFO",
-        "B": "LFU",
-        "C": "LRU",
-        "D": "TTL"
-      },
-      "answer": "C",
+      "choices": [
+        "TTL",
+        "LRU",
+        "FIFO",
+        "LFU"
+      ],
+      "answer": "LRU",
       "explanation": "The chapter identifies Least Recently Used as the most popular cache eviction policy.",
       "source_pages": [
         16
@@ -1261,13 +1261,13 @@
       "id": "MCQ17",
       "difficulty": "medium",
       "question": "Why would a system deploy multiple cache servers?",
-      "choices": {
-        "A": "To remove all persistent databases",
-        "B": "To avoid a cache server becoming a single point of failure",
-        "C": "To eliminate cache expiration",
-        "D": "To prevent DNS resolution"
-      },
-      "answer": "B",
+      "choices": [
+        "To avoid a cache server becoming a single point of failure",
+        "To prevent DNS resolution",
+        "To eliminate cache expiration",
+        "To remove all persistent databases"
+      ],
+      "answer": "To avoid a cache server becoming a single point of failure",
       "explanation": "A single cache server can become a SPOF, so redundancy is recommended.",
       "source_pages": [
         16
@@ -1277,13 +1277,13 @@
       "id": "MCQ18",
       "difficulty": "easy",
       "question": "What content does the chapter primarily recommend placing in a CDN?",
-      "choices": {
-        "A": "Database transactions",
-        "B": "Static assets",
-        "C": "Session state",
-        "D": "Message queue jobs"
-      },
-      "answer": "B",
+      "choices": [
+        "Static assets",
+        "Session state",
+        "Message queue jobs",
+        "Database transactions"
+      ],
+      "answer": "Static assets",
       "explanation": "Images, video, CSS, and JavaScript are the primary CDN content discussed.",
       "source_pages": [
         17
@@ -1293,13 +1293,13 @@
       "id": "MCQ19",
       "difficulty": "medium",
       "question": "A CDN receives a request for image.png but does not contain it. What should it do?",
-      "choices": {
-        "A": "Query geoDNS repeatedly",
-        "B": "Request the object from the origin",
-        "C": "Create the image itself",
-        "D": "Send the request to a slave database"
-      },
-      "answer": "B",
+      "choices": [
+        "Send the request to a slave database",
+        "Create the image itself",
+        "Request the object from the origin",
+        "Query geoDNS repeatedly"
+      ],
+      "answer": "Request the object from the origin",
       "explanation": "On a CDN miss, the CDN retrieves the asset from the origin.",
       "source_pages": [
         17
@@ -1309,13 +1309,13 @@
       "id": "MCQ20",
       "difficulty": "medium",
       "question": "What does a CDN TTL determine?",
-      "choices": {
-        "A": "Which database receives writes",
-        "B": "How many web servers are available",
-        "C": "How long an object remains cached",
-        "D": "Which sharding key should be selected"
-      },
-      "answer": "C",
+      "choices": [
+        "Which database receives writes",
+        "How many web servers are available",
+        "Which sharding key should be selected",
+        "How long an object remains cached"
+      ],
+      "answer": "How long an object remains cached",
       "explanation": "TTL determines the lifetime of an object in the CDN cache.",
       "source_pages": [
         17,
@@ -1326,13 +1326,13 @@
       "id": "MCQ21",
       "difficulty": "hard",
       "question": "Which is an appropriate CDN failure strategy according to the chapter?",
-      "choices": {
-        "A": "Make the CDN the only location containing the asset",
-        "B": "Allow clients to obtain the resource from the origin during a CDN outage",
-        "C": "Disable static resources permanently",
-        "D": "Route static resources into the database master"
-      },
-      "answer": "B",
+      "choices": [
+        "Allow clients to obtain the resource from the origin during a CDN outage",
+        "Disable static resources permanently",
+        "Route static resources into the database master",
+        "Make the CDN the only location containing the asset"
+      ],
+      "answer": "Allow clients to obtain the resource from the origin during a CDN outage",
       "explanation": "The chapter recommends considering fallback to the origin when the CDN becomes temporarily unavailable.",
       "source_pages": [
         18
@@ -1342,13 +1342,13 @@
       "id": "MCQ22",
       "difficulty": "medium",
       "question": "What is the central scaling problem with stateful web servers?",
-      "choices": {
-        "A": "Every request must use JSON",
-        "B": "Users may need to repeatedly reach the same server holding their state",
-        "C": "The database can no longer store data",
-        "D": "CDNs stop functioning"
-      },
-      "answer": "B",
+      "choices": [
+        "Users may need to repeatedly reach the same server holding their state",
+        "The database can no longer store data",
+        "Every request must use JSON",
+        "CDNs stop functioning"
+      ],
+      "answer": "Users may need to repeatedly reach the same server holding their state",
       "explanation": "Local session state ties users to particular servers and complicates scaling and failure handling.",
       "source_pages": [
         20
@@ -1358,13 +1358,13 @@
       "id": "MCQ23",
       "difficulty": "medium",
       "question": "What architectural change makes the web tier stateless?",
-      "choices": {
-        "A": "Move state into shared storage",
-        "B": "Store additional state on every web server",
-        "C": "Remove the load balancer",
-        "D": "Move all state into the CDN"
-      },
-      "answer": "A",
+      "choices": [
+        "Store additional state on every web server",
+        "Remove the load balancer",
+        "Move state into shared storage",
+        "Move all state into the CDN"
+      ],
+      "answer": "Move state into shared storage",
       "explanation": "Removing session state from individual web servers allows any server to handle any request.",
       "source_pages": [
         20,
@@ -1376,13 +1376,13 @@
       "id": "MCQ24",
       "difficulty": "hard",
       "question": "Why does statelessness work particularly well with autoscaling?",
-      "choices": {
-        "A": "Each server owns a permanent set of users",
-        "B": "New servers do not need preexisting local session state to handle requests",
-        "C": "It prevents servers from being removed",
-        "D": "It requires sticky sessions"
-      },
-      "answer": "B",
+      "choices": [
+        "It requires sticky sessions",
+        "New servers do not need preexisting local session state to handle requests",
+        "Each server owns a permanent set of users",
+        "It prevents servers from being removed"
+      ],
+      "answer": "New servers do not need preexisting local session state to handle requests",
       "explanation": "Because state lives elsewhere, adding or removing application servers does not break a user's dependency on a specific machine.",
       "source_pages": [
         21,
@@ -1393,13 +1393,13 @@
       "id": "MCQ25",
       "difficulty": "medium",
       "question": "What does geoDNS use when deciding which IP address to return?",
-      "choices": {
-        "A": "The user's geographic location",
-        "B": "The database schema",
-        "C": "The cache eviction algorithm",
-        "D": "The user's password"
-      },
-      "answer": "A",
+      "choices": [
+        "The user's geographic location",
+        "The database schema",
+        "The user's password",
+        "The cache eviction algorithm"
+      ],
+      "answer": "The user's geographic location",
       "explanation": "geoDNS can resolve a domain differently depending on where the user is located.",
       "source_pages": [
         23
@@ -1409,13 +1409,13 @@
       "id": "MCQ26",
       "difficulty": "hard",
       "question": "Which is NOT one of the three multi-data-center challenges emphasized by the chapter?",
-      "choices": {
-        "A": "Traffic redirection",
-        "B": "Data synchronization",
-        "C": "Testing and deployment",
-        "D": "Replacing HTTP with FTP"
-      },
-      "answer": "D",
+      "choices": [
+        "Replacing HTTP with FTP",
+        "Testing and deployment",
+        "Traffic redirection",
+        "Data synchronization"
+      ],
+      "answer": "Replacing HTTP with FTP",
       "explanation": "Traffic routing, synchronization, and deployment consistency are the stated challenges.",
       "source_pages": [
         24
@@ -1425,13 +1425,13 @@
       "id": "MCQ27",
       "difficulty": "medium",
       "question": "What property of a message queue allows the producer and consumer to operate independently?",
-      "choices": {
-        "A": "Synchronous blocking",
-        "B": "Asynchronous buffering",
-        "C": "Sticky sessions",
-        "D": "Database joins"
-      },
-      "answer": "B",
+      "choices": [
+        "Database joins",
+        "Sticky sessions",
+        "Synchronous blocking",
+        "Asynchronous buffering"
+      ],
+      "answer": "Asynchronous buffering",
       "explanation": "The queue buffers messages, allowing production and consumption to occur asynchronously.",
       "source_pages": [
         25
@@ -1441,13 +1441,13 @@
       "id": "MCQ28",
       "difficulty": "hard",
       "question": "A photo-processing queue is growing rapidly. What scaling response does the chapter suggest?",
-      "choices": {
-        "A": "Remove workers",
-        "B": "Add more workers",
-        "C": "Disable the queue",
-        "D": "Increase CDN TTL"
-      },
-      "answer": "B",
+      "choices": [
+        "Disable the queue",
+        "Add more workers",
+        "Increase CDN TTL",
+        "Remove workers"
+      ],
+      "answer": "Add more workers",
       "explanation": "Increasing the worker pool allows queued jobs to be processed faster.",
       "source_pages": [
         25
@@ -1457,13 +1457,13 @@
       "id": "MCQ29",
       "difficulty": "medium",
       "question": "Which of the following is a host-level metric listed in Chapter 1?",
-      "choices": {
-        "A": "Daily active users",
-        "B": "Revenue",
-        "C": "CPU utilization",
-        "D": "Retention"
-      },
-      "answer": "C",
+      "choices": [
+        "CPU utilization",
+        "Retention",
+        "Revenue",
+        "Daily active users"
+      ],
+      "answer": "CPU utilization",
       "explanation": "CPU, memory, and disk I/O are examples of host-level metrics.",
       "source_pages": [
         26
@@ -1473,13 +1473,13 @@
       "id": "MCQ30",
       "difficulty": "medium",
       "question": "What is database horizontal scaling called in the chapter?",
-      "choices": {
-        "A": "Replication",
-        "B": "Sharding",
-        "C": "Caching",
-        "D": "Serialization"
-      },
-      "answer": "B",
+      "choices": [
+        "Replication",
+        "Sharding",
+        "Caching",
+        "Serialization"
+      ],
+      "answer": "Sharding",
       "explanation": "The database-scaling section describes horizontal database scaling as sharding.",
       "source_pages": [
         28
@@ -1489,13 +1489,13 @@
       "id": "MCQ31",
       "difficulty": "medium",
       "question": "Using the chapter's example function user_id % 4, which shard stores user_id 14?",
-      "choices": {
-        "A": "Shard 0",
-        "B": "Shard 1",
-        "C": "Shard 2",
-        "D": "Shard 3"
-      },
-      "answer": "C",
+      "choices": [
+        "Shard 3",
+        "Shard 2",
+        "Shard 1",
+        "Shard 0"
+      ],
+      "answer": "Shard 2",
       "explanation": "14 % 4 = 2, so the request is routed to shard 2.",
       "source_pages": [
         28,
@@ -1506,13 +1506,13 @@
       "id": "MCQ32",
       "difficulty": "hard",
       "question": "What property is particularly important when selecting a sharding key?",
-      "choices": {
-        "A": "It should concentrate all users on one shard",
-        "B": "It should help distribute data evenly",
-        "C": "It should prevent all hashing",
-        "D": "It must contain static assets"
-      },
-      "answer": "B",
+      "choices": [
+        "It should concentrate all users on one shard",
+        "It must contain static assets",
+        "It should prevent all hashing",
+        "It should help distribute data evenly"
+      ],
+      "answer": "It should help distribute data evenly",
       "explanation": "Uneven distribution can cause shard exhaustion and hotspots, so even distribution is an important criterion.",
       "source_pages": [
         29,
@@ -1523,13 +1523,13 @@
       "id": "MCQ33",
       "difficulty": "hard",
       "question": "Which situation may require resharding?",
-      "choices": {
-        "A": "A single shard reaches capacity",
-        "B": "DNS resolves correctly",
-        "C": "A CDN has a cache hit",
-        "D": "A web server receives an HTTP request"
-      },
-      "answer": "A",
+      "choices": [
+        "DNS resolves correctly",
+        "A web server receives an HTTP request",
+        "A single shard reaches capacity",
+        "A CDN has a cache hit"
+      ],
+      "answer": "A single shard reaches capacity",
       "explanation": "Resharding may be required when a shard becomes full or uneven distribution causes some shards to become exhausted earlier than others.",
       "source_pages": [
         30
@@ -1539,13 +1539,13 @@
       "id": "MCQ34",
       "difficulty": "hard",
       "question": "A social network stores several extremely popular celebrity accounts on the same shard. What problem may occur?",
-      "choices": {
-        "A": "TTL expiration",
-        "B": "Hotspot key or celebrity problem",
-        "C": "DNS poisoning",
-        "D": "Cache invalidation"
-      },
-      "answer": "B",
+      "choices": [
+        "Hotspot key or celebrity problem",
+        "DNS poisoning",
+        "TTL expiration",
+        "Cache invalidation"
+      ],
+      "answer": "Hotspot key or celebrity problem",
       "explanation": "Large amounts of traffic to the same shard can overload that shard.",
       "source_pages": [
         30
@@ -1555,13 +1555,13 @@
       "id": "MCQ35",
       "difficulty": "hard",
       "question": "What workaround does the chapter give for difficult joins across database shards?",
-      "choices": {
-        "A": "Denormalization",
-        "B": "Sticky sessions",
-        "C": "CDN invalidation",
-        "D": "Cache overprovisioning"
-      },
-      "answer": "A",
+      "choices": [
+        "Cache overprovisioning",
+        "Denormalization",
+        "CDN invalidation",
+        "Sticky sessions"
+      ],
+      "answer": "Denormalization",
       "explanation": "Denormalization can restructure data so needed queries can often be completed from a single table rather than requiring cross-shard joins.",
       "source_pages": [
         30

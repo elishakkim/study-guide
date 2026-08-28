@@ -2099,13 +2099,13 @@
       "id": "MCQ001",
       "difficulty": "medium",
       "question": "What makes distributed systems fundamentally difficult?",
-      "choices": {
-        "A": "Partial failures",
-        "B": "B-trees",
-        "C": "Compression",
-        "D": "Schema migration"
-      },
-      "answer": "A",
+      "choices": [
+        "Schema migration",
+        "B-trees",
+        "Compression",
+        "Partial failures"
+      ],
+      "answer": "Partial failures",
       "source_pages": [
         296,
         297
@@ -2115,13 +2115,13 @@
       "id": "MCQ002",
       "difficulty": "medium",
       "question": "A partial failure means?",
-      "choices": {
-        "A": "Some parts fail while others work",
-        "B": "Entire machine always crashes",
-        "C": "All replicas agree",
-        "D": "Only network fails"
-      },
-      "answer": "A",
+      "choices": [
+        "Some parts fail while others work",
+        "Only network fails",
+        "Entire machine always crashes",
+        "All replicas agree"
+      ],
+      "answer": "Some parts fail while others work",
       "source_pages": [
         297
       ]
@@ -2130,13 +2130,13 @@
       "id": "MCQ003",
       "difficulty": "medium",
       "question": "How do supercomputers often recover?",
-      "choices": {
-        "A": "Restart job from checkpoint",
-        "B": "Keep all nodes serving",
-        "C": "Use fencing only",
-        "D": "Use LWW"
-      },
-      "answer": "A",
+      "choices": [
+        "Restart job from checkpoint",
+        "Keep all nodes serving",
+        "Use fencing only",
+        "Use LWW"
+      ],
+      "answer": "Restart job from checkpoint",
       "source_pages": [
         297
       ]
@@ -2145,13 +2145,13 @@
       "id": "MCQ004",
       "difficulty": "medium",
       "question": "What abstraction can be more reliable than its substrate?",
-      "choices": {
-        "A": "TCP over IP",
-        "B": "IP over TCP",
-        "C": "LWW over clocks",
-        "D": "Timeout over proof"
-      },
-      "answer": "A",
+      "choices": [
+        "TCP over IP",
+        "LWW over clocks",
+        "Timeout over proof",
+        "IP over TCP"
+      ],
+      "answer": "TCP over IP",
       "source_pages": [
         299
       ]
@@ -2160,13 +2160,13 @@
       "id": "MCQ005",
       "difficulty": "medium",
       "question": "If no response arrives, what do you know?",
-      "choices": {
-        "A": "Only that no response arrived yet",
-        "B": "Remote node definitely died",
-        "C": "Request definitely failed",
-        "D": "Request definitely succeeded"
-      },
-      "answer": "A",
+      "choices": [
+        "Remote node definitely died",
+        "Only that no response arrived yet",
+        "Request definitely failed",
+        "Request definitely succeeded"
+      ],
+      "answer": "Only that no response arrived yet",
       "source_pages": [
         300,
         301
@@ -2176,13 +2176,13 @@
       "id": "MCQ006",
       "difficulty": "medium",
       "question": "What does a timeout prove?",
-      "choices": {
-        "A": "Nothing definitive about whether request executed",
-        "B": "Request was lost",
-        "C": "Node crashed",
-        "D": "Response never existed"
-      },
-      "answer": "A",
+      "choices": [
+        "Response never existed",
+        "Node crashed",
+        "Request was lost",
+        "Nothing definitive about whether request executed"
+      ],
+      "answer": "Nothing definitive about whether request executed",
       "source_pages": [
         301
       ]
@@ -2191,13 +2191,13 @@
       "id": "MCQ007",
       "difficulty": "medium",
       "question": "Why can a short timeout be dangerous?",
-      "choices": {
-        "A": "False failure suspicions",
-        "B": "Slow detection only",
-        "C": "No failover",
-        "D": "No retries"
-      },
-      "answer": "A",
+      "choices": [
+        "False failure suspicions",
+        "No retries",
+        "No failover",
+        "Slow detection only"
+      ],
+      "answer": "False failure suspicions",
       "source_pages": [
         303
       ]
@@ -2206,13 +2206,13 @@
       "id": "MCQ008",
       "difficulty": "medium",
       "question": "False failure detection can cause?",
-      "choices": {
-        "A": "Duplicate work and cascading failure",
-        "B": "Clock accuracy",
-        "C": "Lower load",
-        "D": "Guaranteed safety"
-      },
-      "answer": "A",
+      "choices": [
+        "Duplicate work and cascading failure",
+        "Lower load",
+        "Guaranteed safety",
+        "Clock accuracy"
+      ],
+      "answer": "Duplicate work and cascading failure",
       "source_pages": [
         303
       ]
@@ -2221,13 +2221,13 @@
       "id": "MCQ009",
       "difficulty": "medium",
       "question": "In a bounded system with network leg d and processing r, timeout could be?",
-      "choices": {
-        "A": "2d+r",
-        "B": "d+r",
-        "C": "2r+d",
-        "D": "d*r"
-      },
-      "answer": "A",
+      "choices": [
+        "2r+d",
+        "d+r",
+        "2d+r",
+        "d*r"
+      ],
+      "answer": "2d+r",
       "source_pages": [
         304
       ]
@@ -2236,13 +2236,13 @@
       "id": "MCQ010",
       "difficulty": "medium",
       "question": "Why is that formula not generally usable?",
-      "choices": {
-        "A": "Real systems lack hard delay bounds",
-        "B": "TCP has no packets",
-        "C": "Processes never pause",
-        "D": "Networks are synchronous"
-      },
-      "answer": "A",
+      "choices": [
+        "Processes never pause",
+        "Real systems lack hard delay bounds",
+        "TCP has no packets",
+        "Networks are synchronous"
+      ],
+      "answer": "Real systems lack hard delay bounds",
       "source_pages": [
         304
       ]
@@ -2251,13 +2251,13 @@
       "id": "MCQ011",
       "difficulty": "medium",
       "question": "Major source of variable network delay?",
-      "choices": {
-        "A": "Queueing",
-        "B": "Cryptography",
-        "C": "Serialization",
-        "D": "Checksums"
-      },
-      "answer": "A",
+      "choices": [
+        "Cryptography",
+        "Checksums",
+        "Serialization",
+        "Queueing"
+      ],
+      "answer": "Queueing",
       "source_pages": [
         304,
         305
@@ -2267,13 +2267,13 @@
       "id": "MCQ012",
       "difficulty": "medium",
       "question": "Why may VoIP prefer UDP?",
-      "choices": {
-        "A": "Late packets are worthless",
-        "B": "UDP guarantees delivery",
-        "C": "UDP orders packets",
-        "D": "UDP reserves bandwidth"
-      },
-      "answer": "A",
+      "choices": [
+        "UDP orders packets",
+        "UDP guarantees delivery",
+        "Late packets are worthless",
+        "UDP reserves bandwidth"
+      ],
+      "answer": "Late packets are worthless",
       "source_pages": [
         305
       ]
@@ -2282,13 +2282,13 @@
       "id": "MCQ013",
       "difficulty": "medium",
       "question": "What does circuit switching reserve?",
-      "choices": {
-        "A": "Bandwidth",
-        "B": "Database rows",
-        "C": "CPU threads only",
-        "D": "Clock intervals"
-      },
-      "answer": "A",
+      "choices": [
+        "CPU threads only",
+        "Database rows",
+        "Clock intervals",
+        "Bandwidth"
+      ],
+      "answer": "Bandwidth",
       "source_pages": [
         306,
         307
@@ -2298,13 +2298,13 @@
       "id": "MCQ014",
       "difficulty": "medium",
       "question": "Why can circuit switching bound delay?",
-      "choices": {
-        "A": "No queueing for reserved capacity",
-        "B": "It uses TCP",
-        "C": "It has more retries",
-        "D": "It hashes packets"
-      },
-      "answer": "A",
+      "choices": [
+        "It has more retries",
+        "It uses TCP",
+        "No queueing for reserved capacity",
+        "It hashes packets"
+      ],
+      "answer": "No queueing for reserved capacity",
       "source_pages": [
         307
       ]
@@ -2313,13 +2313,13 @@
       "id": "MCQ015",
       "difficulty": "medium",
       "question": "Packet switching is optimized for?",
-      "choices": {
-        "A": "Bursty traffic and utilization",
-        "B": "Hard latency bounds",
-        "C": "Fixed bandwidth",
-        "D": "No sharing"
-      },
-      "answer": "A",
+      "choices": [
+        "Bursty traffic and utilization",
+        "No sharing",
+        "Hard latency bounds",
+        "Fixed bandwidth"
+      ],
+      "answer": "Bursty traffic and utilization",
       "source_pages": [
         307
       ]
@@ -2328,13 +2328,13 @@
       "id": "MCQ016",
       "difficulty": "medium",
       "question": "Dynamic resource sharing trades predictability for?",
-      "choices": {
-        "A": "Higher utilization",
-        "B": "Lower utilization",
-        "C": "No queueing",
-        "D": "No cost benefit"
-      },
-      "answer": "A",
+      "choices": [
+        "Higher utilization",
+        "Lower utilization",
+        "No queueing",
+        "No cost benefit"
+      ],
+      "answer": "Higher utilization",
       "source_pages": [
         308
       ]
@@ -2343,13 +2343,13 @@
       "id": "MCQ017",
       "difficulty": "medium",
       "question": "Which clock measures durations?",
-      "choices": {
-        "A": "Monotonic",
-        "B": "Time-of-day",
-        "C": "Wall clock only",
-        "D": "NTP server time only"
-      },
-      "answer": "A",
+      "choices": [
+        "NTP server time only",
+        "Wall clock only",
+        "Time-of-day",
+        "Monotonic"
+      ],
+      "answer": "Monotonic",
       "source_pages": [
         310
       ]
@@ -2358,13 +2358,13 @@
       "id": "MCQ018",
       "difficulty": "medium",
       "question": "Which clock can jump backward?",
-      "choices": {
-        "A": "Time-of-day",
-        "B": "Monotonic by design",
-        "C": "Logical clock",
-        "D": "Fencing token"
-      },
-      "answer": "A",
+      "choices": [
+        "Fencing token",
+        "Time-of-day",
+        "Monotonic by design",
+        "Logical clock"
+      ],
+      "answer": "Time-of-day",
       "source_pages": [
         310
       ]
@@ -2373,13 +2373,13 @@
       "id": "MCQ019",
       "difficulty": "medium",
       "question": "Can monotonic values be compared across machines?",
-      "choices": {
-        "A": "No",
-        "B": "Yes",
-        "C": "Only with NTP",
-        "D": "Only in Java"
-      },
-      "answer": "A",
+      "choices": [
+        "No",
+        "Only with NTP",
+        "Only in Java",
+        "Yes"
+      ],
+      "answer": "No",
       "source_pages": [
         311
       ]
@@ -2388,13 +2388,13 @@
       "id": "MCQ020",
       "difficulty": "medium",
       "question": "NTP can adjust a monotonic clock by?",
-      "choices": {
-        "A": "Slewing its rate",
-        "B": "Jumping it backward",
-        "C": "Resetting transaction IDs",
-        "D": "Changing fencing token"
-      },
-      "answer": "A",
+      "choices": [
+        "Slewing its rate",
+        "Resetting transaction IDs",
+        "Changing fencing token",
+        "Jumping it backward"
+      ],
+      "answer": "Slewing its rate",
       "source_pages": [
         311
       ]
@@ -2403,13 +2403,13 @@
       "id": "MCQ021",
       "difficulty": "medium",
       "question": "Clock drift comes from?",
-      "choices": {
-        "A": "Imperfect quartz oscillators",
-        "B": "TCP ordering",
-        "C": "Quorum overlap",
-        "D": "Predicate locks"
-      },
-      "answer": "A",
+      "choices": [
+        "TCP ordering",
+        "Imperfect quartz oscillators",
+        "Quorum overlap",
+        "Predicate locks"
+      ],
+      "answer": "Imperfect quartz oscillators",
       "source_pages": [
         311
       ]
@@ -2418,13 +2418,13 @@
       "id": "MCQ022",
       "difficulty": "medium",
       "question": "What makes NTP accuracy limited?",
-      "choices": {
-        "A": "Network delay and clock drift",
-        "B": "No servers",
-        "C": "No timestamps",
-        "D": "Only leap seconds"
-      },
-      "answer": "A",
+      "choices": [
+        "No timestamps",
+        "Only leap seconds",
+        "Network delay and clock drift",
+        "No servers"
+      ],
+      "answer": "Network delay and clock drift",
       "source_pages": [
         312
       ]
@@ -2433,13 +2433,13 @@
       "id": "MCQ023",
       "difficulty": "medium",
       "question": "What is leap smearing?",
-      "choices": {
-        "A": "Gradual leap-second adjustment",
-        "B": "Delete leap second",
-        "C": "Use monotonic clock as UTC",
-        "D": "Pause cluster"
-      },
-      "answer": "A",
+      "choices": [
+        "Delete leap second",
+        "Use monotonic clock as UTC",
+        "Pause cluster",
+        "Gradual leap-second adjustment"
+      ],
+      "answer": "Gradual leap-second adjustment",
       "source_pages": [
         312
       ]
@@ -2448,13 +2448,13 @@
       "id": "MCQ024",
       "difficulty": "medium",
       "question": "If correctness relies on clocks, you should?",
-      "choices": {
-        "A": "Monitor clock offsets",
-        "B": "Trust NTP blindly",
-        "C": "Use client clocks",
-        "D": "Ignore drift"
-      },
-      "answer": "A",
+      "choices": [
+        "Trust NTP blindly",
+        "Ignore drift",
+        "Use client clocks",
+        "Monitor clock offsets"
+      ],
+      "answer": "Monitor clock offsets",
       "source_pages": [
         313
       ]
@@ -2463,13 +2463,13 @@
       "id": "MCQ025",
       "difficulty": "medium",
       "question": "Why can LWW lose a causally later write?",
-      "choices": {
-        "A": "Clock skew can invert timestamps",
-        "B": "Hash collision",
-        "C": "Quorum size",
-        "D": "TCP retransmit"
-      },
-      "answer": "A",
+      "choices": [
+        "Hash collision",
+        "TCP retransmit",
+        "Quorum size",
+        "Clock skew can invert timestamps"
+      ],
+      "answer": "Clock skew can invert timestamps",
       "source_pages": [
         314
       ]
@@ -2478,13 +2478,13 @@
       "id": "MCQ026",
       "difficulty": "medium",
       "question": "What is safer for causal ordering?",
-      "choices": {
-        "A": "Logical clocks",
-        "B": "Wall clocks",
-        "C": "Client clocks",
-        "D": "Time-of-day only"
-      },
-      "answer": "A",
+      "choices": [
+        "Wall clocks",
+        "Client clocks",
+        "Time-of-day only",
+        "Logical clocks"
+      ],
+      "answer": "Logical clocks",
       "source_pages": [
         315
       ]
@@ -2493,13 +2493,13 @@
       "id": "MCQ027",
       "difficulty": "medium",
       "question": "How should a physical clock reading be viewed?",
-      "choices": {
-        "A": "Confidence interval",
-        "B": "Exact point",
-        "C": "Logical counter",
-        "D": "Quorum"
-      },
-      "answer": "A",
+      "choices": [
+        "Quorum",
+        "Confidence interval",
+        "Logical counter",
+        "Exact point"
+      ],
+      "answer": "Confidence interval",
       "source_pages": [
         315,
         316
@@ -2509,13 +2509,13 @@
       "id": "MCQ028",
       "difficulty": "medium",
       "question": "What does TrueTime return?",
-      "choices": {
-        "A": "Earliest/latest possible time",
-        "B": "One exact nanosecond",
-        "C": "Only monotonic counter",
-        "D": "Leader epoch"
-      },
-      "answer": "A",
+      "choices": [
+        "One exact nanosecond",
+        "Earliest/latest possible time",
+        "Only monotonic counter",
+        "Leader epoch"
+      ],
+      "answer": "Earliest/latest possible time",
       "source_pages": [
         316
       ]
@@ -2524,13 +2524,13 @@
       "id": "MCQ029",
       "difficulty": "medium",
       "question": "Why does Spanner wait before commit?",
-      "choices": {
-        "A": "Wait out clock uncertainty",
-        "B": "Wait for GC",
-        "C": "Wait for UDP",
-        "D": "Wait for DNS"
-      },
-      "answer": "A",
+      "choices": [
+        "Wait for DNS",
+        "Wait for GC",
+        "Wait for UDP",
+        "Wait out clock uncertainty"
+      ],
+      "answer": "Wait out clock uncertainty",
       "source_pages": [
         317
       ]
@@ -2539,13 +2539,13 @@
       "id": "MCQ030",
       "difficulty": "medium",
       "question": "What can invalidate a lease after a check?",
-      "choices": {
-        "A": "Process pause",
-        "B": "Monotonic clock read",
-        "C": "Checksum",
-        "D": "Range scan"
-      },
-      "answer": "A",
+      "choices": [
+        "Process pause",
+        "Range scan",
+        "Monotonic clock read",
+        "Checksum"
+      ],
+      "answer": "Process pause",
       "source_pages": [
         318
       ]
@@ -2554,13 +2554,13 @@
       "id": "MCQ031",
       "difficulty": "medium",
       "question": "Which can cause long process pauses?",
-      "choices": {
-        "A": "GC",
-        "B": "Only network loss",
-        "C": "Only NTP",
-        "D": "Only disk corruption"
-      },
-      "answer": "A",
+      "choices": [
+        "Only disk corruption",
+        "Only network loss",
+        "Only NTP",
+        "GC"
+      ],
+      "answer": "GC",
       "source_pages": [
         318,
         319
@@ -2570,13 +2570,13 @@
       "id": "MCQ032",
       "difficulty": "medium",
       "question": "What is steal time?",
-      "choices": {
-        "A": "CPU time used by another VM",
-        "B": "Lost network packet",
-        "C": "Expired lease",
-        "D": "Clock drift"
-      },
-      "answer": "A",
+      "choices": [
+        "Clock drift",
+        "CPU time used by another VM",
+        "Lost network packet",
+        "Expired lease"
+      ],
+      "answer": "CPU time used by another VM",
       "source_pages": [
         319
       ]
@@ -2585,13 +2585,13 @@
       "id": "MCQ033",
       "difficulty": "medium",
       "question": "What is thrashing?",
-      "choices": {
-        "A": "Excessive swapping with little useful work",
-        "B": "TCP congestion only",
-        "C": "Leader election",
-        "D": "GC only"
-      },
-      "answer": "A",
+      "choices": [
+        "TCP congestion only",
+        "Excessive swapping with little useful work",
+        "Leader election",
+        "GC only"
+      ],
+      "answer": "Excessive swapping with little useful work",
       "source_pages": [
         319
       ]
@@ -2600,13 +2600,13 @@
       "id": "MCQ034",
       "difficulty": "medium",
       "question": "What must a node assume about its execution?",
-      "choices": {
-        "A": "It may pause at any point",
-        "B": "It runs continuously",
-        "C": "GC is bounded",
-        "D": "CPU is dedicated"
-      },
-      "answer": "A",
+      "choices": [
+        "It runs continuously",
+        "CPU is dedicated",
+        "GC is bounded",
+        "It may pause at any point"
+      ],
+      "answer": "It may pause at any point",
       "source_pages": [
         320
       ]
@@ -2615,13 +2615,13 @@
       "id": "MCQ035",
       "difficulty": "medium",
       "question": "Hard real-time means?",
-      "choices": {
-        "A": "Specified deadlines are guaranteed under allowed conditions",
-        "B": "Very fast average latency",
-        "C": "Streaming data",
-        "D": "No clocks"
-      },
-      "answer": "A",
+      "choices": [
+        "Streaming data",
+        "No clocks",
+        "Specified deadlines are guaranteed under allowed conditions",
+        "Very fast average latency"
+      ],
+      "answer": "Specified deadlines are guaranteed under allowed conditions",
       "source_pages": [
         320,
         321
@@ -2631,13 +2631,13 @@
       "id": "MCQ036",
       "difficulty": "medium",
       "question": "Hard real-time systems tend to be?",
-      "choices": {
-        "A": "Expensive and restrictive",
-        "B": "Cheap and highly utilized",
-        "C": "Best for all web servers",
-        "D": "No testing needed"
-      },
-      "answer": "A",
+      "choices": [
+        "No testing needed",
+        "Expensive and restrictive",
+        "Best for all web servers",
+        "Cheap and highly utilized"
+      ],
+      "answer": "Expensive and restrictive",
       "source_pages": [
         321
       ]
@@ -2646,13 +2646,13 @@
       "id": "MCQ037",
       "difficulty": "medium",
       "question": "How can GC impact be reduced?",
-      "choices": {
-        "A": "Route traffic away during planned GC",
-        "B": "Disable all replicas",
-        "C": "Use LWW",
-        "D": "Use UDP"
-      },
-      "answer": "A",
+      "choices": [
+        "Disable all replicas",
+        "Route traffic away during planned GC",
+        "Use UDP",
+        "Use LWW"
+      ],
+      "answer": "Route traffic away during planned GC",
       "source_pages": [
         321
       ]
@@ -2661,13 +2661,13 @@
       "id": "MCQ038",
       "difficulty": "medium",
       "question": "How does a node learn remote state?",
-      "choices": {
-        "A": "Messages over the network",
-        "B": "Shared global memory",
-        "C": "Universal clock",
-        "D": "Direct RAM access"
-      },
-      "answer": "A",
+      "choices": [
+        "Shared global memory",
+        "Messages over the network",
+        "Direct RAM access",
+        "Universal clock"
+      ],
+      "answer": "Messages over the network",
       "source_pages": [
         322
       ]
@@ -2676,13 +2676,13 @@
       "id": "MCQ039",
       "difficulty": "medium",
       "question": "What does a quorum reduce?",
-      "choices": {
-        "A": "Dependence on one node's judgment",
-        "B": "Network latency to zero",
-        "C": "Clock drift",
-        "D": "Data size"
-      },
-      "answer": "A",
+      "choices": [
+        "Network latency to zero",
+        "Dependence on one node's judgment",
+        "Clock drift",
+        "Data size"
+      ],
+      "answer": "Dependence on one node's judgment",
       "source_pages": [
         323
       ]
@@ -2691,13 +2691,13 @@
       "id": "MCQ040",
       "difficulty": "medium",
       "question": "Common quorum form?",
-      "choices": {
-        "A": "Absolute majority",
-        "B": "Exactly one node",
-        "C": "All nodes always",
-        "D": "Random client"
-      },
-      "answer": "A",
+      "choices": [
+        "All nodes always",
+        "Exactly one node",
+        "Random client",
+        "Absolute majority"
+      ],
+      "answer": "Absolute majority",
       "source_pages": [
         323
       ]
@@ -2706,13 +2706,13 @@
       "id": "MCQ041",
       "difficulty": "medium",
       "question": "Three nodes with majority can tolerate?",
-      "choices": {
-        "A": "1 failure",
-        "B": "2 failures",
-        "C": "0 failures",
-        "D": "3 failures"
-      },
-      "answer": "A",
+      "choices": [
+        "0 failures",
+        "1 failure",
+        "2 failures",
+        "3 failures"
+      ],
+      "answer": "1 failure",
       "source_pages": [
         323
       ]
@@ -2721,13 +2721,13 @@
       "id": "MCQ042",
       "difficulty": "medium",
       "question": "Why can stale leaders be dangerous?",
-      "choices": {
-        "A": "They may continue acting after replacement",
-        "B": "They cannot send messages",
-        "C": "They always crash",
-        "D": "They lose disk"
-      },
-      "answer": "A",
+      "choices": [
+        "They cannot send messages",
+        "They may continue acting after replacement",
+        "They lose disk",
+        "They always crash"
+      ],
+      "answer": "They may continue acting after replacement",
       "source_pages": [
         324
       ]
@@ -2736,13 +2736,13 @@
       "id": "MCQ043",
       "difficulty": "medium",
       "question": "What solves stale lease-holder writes?",
-      "choices": {
-        "A": "Fencing tokens",
-        "B": "Time-of-day only",
-        "C": "LWW",
-        "D": "Shorter GC"
-      },
-      "answer": "A",
+      "choices": [
+        "Shorter GC",
+        "LWW",
+        "Fencing tokens",
+        "Time-of-day only"
+      ],
+      "answer": "Fencing tokens",
       "source_pages": [
         325
       ]
@@ -2751,13 +2751,13 @@
       "id": "MCQ044",
       "difficulty": "medium",
       "question": "What property must fencing tokens have?",
-      "choices": {
-        "A": "Monotonically increasing",
-        "B": "Random decreasing",
-        "C": "Wall-clock timestamp only",
-        "D": "Same value"
-      },
-      "answer": "A",
+      "choices": [
+        "Wall-clock timestamp only",
+        "Monotonically increasing",
+        "Random decreasing",
+        "Same value"
+      ],
+      "answer": "Monotonically increasing",
       "source_pages": [
         325
       ]
@@ -2766,13 +2766,13 @@
       "id": "MCQ045",
       "difficulty": "medium",
       "question": "Who enforces fencing?",
-      "choices": {
-        "A": "Protected resource",
-        "B": "Only client",
-        "C": "DNS",
-        "D": "NTP"
-      },
-      "answer": "A",
+      "choices": [
+        "Only client",
+        "DNS",
+        "NTP",
+        "Protected resource"
+      ],
+      "answer": "Protected resource",
       "source_pages": [
         325
       ]
@@ -2781,13 +2781,13 @@
       "id": "MCQ046",
       "difficulty": "medium",
       "question": "A stale token should be?",
-      "choices": {
-        "A": "Rejected",
-        "B": "Accepted",
-        "C": "Retried forever",
-        "D": "Converted to timestamp"
-      },
-      "answer": "A",
+      "choices": [
+        "Accepted",
+        "Rejected",
+        "Retried forever",
+        "Converted to timestamp"
+      ],
+      "answer": "Rejected",
       "source_pages": [
         325
       ]
@@ -2796,13 +2796,13 @@
       "id": "MCQ047",
       "difficulty": "medium",
       "question": "Byzantine fault means?",
-      "choices": {
-        "A": "Arbitrary/deceptive behavior",
-        "B": "Only crash",
-        "C": "Only pause",
-        "D": "Only packet loss"
-      },
-      "answer": "A",
+      "choices": [
+        "Only pause",
+        "Arbitrary/deceptive behavior",
+        "Only crash",
+        "Only packet loss"
+      ],
+      "answer": "Arbitrary/deceptive behavior",
       "source_pages": [
         326
       ]
@@ -2811,13 +2811,13 @@
       "id": "MCQ048",
       "difficulty": "medium",
       "question": "The book usually assumes nodes are?",
-      "choices": {
-        "A": "Unreliable but honest",
-        "B": "Malicious",
-        "C": "Perfect",
-        "D": "Synchronous"
-      },
-      "answer": "A",
+      "choices": [
+        "Malicious",
+        "Synchronous",
+        "Perfect",
+        "Unreliable but honest"
+      ],
+      "answer": "Unreliable but honest",
       "source_pages": [
         326
       ]
@@ -2826,13 +2826,13 @@
       "id": "MCQ049",
       "difficulty": "hard",
       "question": "Where is BFT particularly relevant?",
-      "choices": {
-        "A": "Mutually untrusting parties/aerospace",
-        "B": "Ordinary single-org CRUD only",
-        "C": "Single-thread Redis only",
-        "D": "DNS"
-      },
-      "answer": "A",
+      "choices": [
+        "Mutually untrusting parties/aerospace",
+        "Ordinary single-org CRUD only",
+        "Single-thread Redis only",
+        "DNS"
+      ],
+      "answer": "Mutually untrusting parties/aerospace",
       "source_pages": [
         327
       ]
@@ -2841,13 +2841,13 @@
       "id": "MCQ050",
       "difficulty": "hard",
       "question": "Many BFT algorithms need correct nodes of?",
-      "choices": {
-        "A": "More than two-thirds",
-        "B": "More than one-third",
-        "C": "Exactly half",
-        "D": "One node"
-      },
-      "answer": "A",
+      "choices": [
+        "More than two-thirds",
+        "Exactly half",
+        "More than one-third",
+        "One node"
+      ],
+      "answer": "More than two-thirds",
       "source_pages": [
         327
       ]
@@ -2856,13 +2856,13 @@
       "id": "MCQ051",
       "difficulty": "hard",
       "question": "Application-level checksums are?",
-      "choices": {
-        "A": "Pragmatic weak-corruption defense",
-        "B": "Full BFT",
-        "C": "Consensus",
-        "D": "A clock"
-      },
-      "answer": "A",
+      "choices": [
+        "Consensus",
+        "Pragmatic weak-corruption defense",
+        "Full BFT",
+        "A clock"
+      ],
+      "answer": "Pragmatic weak-corruption defense",
       "source_pages": [
         328
       ]
@@ -2871,13 +2871,13 @@
       "id": "MCQ052",
       "difficulty": "hard",
       "question": "What is a synchronous system model?",
-      "choices": {
-        "A": "Bounded delay, pause, clock error",
-        "B": "No clocks",
-        "C": "Unbounded everything",
-        "D": "Only crash-stop"
-      },
-      "answer": "A",
+      "choices": [
+        "Bounded delay, pause, clock error",
+        "Unbounded everything",
+        "Only crash-stop",
+        "No clocks"
+      ],
+      "answer": "Bounded delay, pause, clock error",
       "source_pages": [
         329
       ]
@@ -2886,13 +2886,13 @@
       "id": "MCQ053",
       "difficulty": "hard",
       "question": "What is partial synchrony?",
-      "choices": {
-        "A": "Usually bounded but occasionally arbitrarily bad",
-        "B": "Always bounded",
-        "C": "No timing assumptions ever",
-        "D": "No failures"
-      },
-      "answer": "A",
+      "choices": [
+        "No failures",
+        "No timing assumptions ever",
+        "Always bounded",
+        "Usually bounded but occasionally arbitrarily bad"
+      ],
+      "answer": "Usually bounded but occasionally arbitrarily bad",
       "source_pages": [
         329
       ]
@@ -2901,13 +2901,13 @@
       "id": "MCQ054",
       "difficulty": "hard",
       "question": "What is asynchronous model?",
-      "choices": {
-        "A": "No timing assumptions",
-        "B": "Fixed packet delay",
-        "C": "Fixed clock error",
-        "D": "Only one node"
-      },
-      "answer": "A",
+      "choices": [
+        "Fixed clock error",
+        "Fixed packet delay",
+        "Only one node",
+        "No timing assumptions"
+      ],
+      "answer": "No timing assumptions",
       "source_pages": [
         329
       ]
@@ -2916,13 +2916,13 @@
       "id": "MCQ055",
       "difficulty": "hard",
       "question": "Crash-stop means?",
-      "choices": {
-        "A": "Crash and never return",
-        "B": "Crash and recover",
-        "C": "Lie arbitrarily",
-        "D": "Only pause"
-      },
-      "answer": "A",
+      "choices": [
+        "Crash and recover",
+        "Crash and never return",
+        "Lie arbitrarily",
+        "Only pause"
+      ],
+      "answer": "Crash and never return",
       "source_pages": [
         329
       ]
@@ -2931,13 +2931,13 @@
       "id": "MCQ056",
       "difficulty": "hard",
       "question": "Crash-recovery means?",
-      "choices": {
-        "A": "May crash and recover; stable storage survives",
-        "B": "Never recover",
-        "C": "May lie",
-        "D": "No disk"
-      },
-      "answer": "A",
+      "choices": [
+        "May crash and recover; stable storage survives",
+        "Never recover",
+        "No disk",
+        "May lie"
+      ],
+      "answer": "May crash and recover; stable storage survives",
       "source_pages": [
         329
       ]
@@ -2946,13 +2946,13 @@
       "id": "MCQ057",
       "difficulty": "hard",
       "question": "Most useful practical model cited?",
-      "choices": {
-        "A": "Partially synchronous + crash-recovery",
-        "B": "Synchronous + Byzantine",
-        "C": "Asynchronous + no failures",
-        "D": "Single node"
-      },
-      "answer": "A",
+      "choices": [
+        "Partially synchronous + crash-recovery",
+        "Single node",
+        "Synchronous + Byzantine",
+        "Asynchronous + no failures"
+      ],
+      "answer": "Partially synchronous + crash-recovery",
       "source_pages": [
         330
       ]
@@ -2961,13 +2961,13 @@
       "id": "MCQ058",
       "difficulty": "hard",
       "question": "Algorithm correctness is defined by?",
-      "choices": {
-        "A": "Properties under a system model",
-        "B": "Average latency only",
-        "C": "Implementation language",
-        "D": "Node count only"
-      },
-      "answer": "A",
+      "choices": [
+        "Node count only",
+        "Properties under a system model",
+        "Implementation language",
+        "Average latency only"
+      ],
+      "answer": "Properties under a system model",
       "source_pages": [
         330
       ]
@@ -2976,13 +2976,13 @@
       "id": "MCQ059",
       "difficulty": "hard",
       "question": "Fencing-token uniqueness is?",
-      "choices": {
-        "A": "Safety",
-        "B": "Liveness",
-        "C": "Availability",
-        "D": "Performance"
-      },
-      "answer": "A",
+      "choices": [
+        "Safety",
+        "Availability",
+        "Liveness",
+        "Performance"
+      ],
+      "answer": "Safety",
       "source_pages": [
         330
       ]
@@ -2991,13 +2991,13 @@
       "id": "MCQ060",
       "difficulty": "hard",
       "question": "Fencing-token availability is?",
-      "choices": {
-        "A": "Liveness",
-        "B": "Safety",
-        "C": "Durability",
-        "D": "Isolation"
-      },
-      "answer": "A",
+      "choices": [
+        "Safety",
+        "Durability",
+        "Liveness",
+        "Isolation"
+      ],
+      "answer": "Liveness",
       "source_pages": [
         330
       ]
@@ -3006,13 +3006,13 @@
       "id": "MCQ061",
       "difficulty": "hard",
       "question": "A safety violation can?",
-      "choices": {
-        "A": "Be pinpointed and cannot be undone",
-        "B": "Always be fixed later",
-        "C": "Only occur eventually",
-        "D": "Never happen in theory"
-      },
-      "answer": "A",
+      "choices": [
+        "Be pinpointed and cannot be undone",
+        "Only occur eventually",
+        "Never happen in theory",
+        "Always be fixed later"
+      ],
+      "answer": "Be pinpointed and cannot be undone",
       "source_pages": [
         331
       ]
@@ -3021,13 +3021,13 @@
       "id": "MCQ062",
       "difficulty": "hard",
       "question": "Liveness often includes which word?",
-      "choices": {
-        "A": "Eventually",
-        "B": "Never",
-        "C": "Exactly",
-        "D": "Atomic"
-      },
-      "answer": "A",
+      "choices": [
+        "Exactly",
+        "Never",
+        "Atomic",
+        "Eventually"
+      ],
+      "answer": "Eventually",
       "source_pages": [
         330
       ]
@@ -3036,13 +3036,13 @@
       "id": "MCQ063",
       "difficulty": "hard",
       "question": "Can liveness depend on network recovery?",
-      "choices": {
-        "A": "Yes",
-        "B": "No",
-        "C": "Only in synchronous model",
-        "D": "Only with BFT"
-      },
-      "answer": "A",
+      "choices": [
+        "Yes",
+        "Only with BFT",
+        "Only in synchronous model",
+        "No"
+      ],
+      "answer": "Yes",
       "source_pages": [
         331
       ]
@@ -3051,13 +3051,13 @@
       "id": "MCQ064",
       "difficulty": "hard",
       "question": "What can break crash-recovery assumptions?",
-      "choices": {
-        "A": "Stable-storage corruption/amnesia",
-        "B": "Healthy disk",
-        "C": "Monotonic token",
-        "D": "Majority quorum"
-      },
-      "answer": "A",
+      "choices": [
+        "Majority quorum",
+        "Stable-storage corruption/amnesia",
+        "Monotonic token",
+        "Healthy disk"
+      ],
+      "answer": "Stable-storage corruption/amnesia",
       "source_pages": [
         331
       ]
@@ -3066,13 +3066,13 @@
       "id": "MCQ065",
       "difficulty": "hard",
       "question": "Why use system models?",
-      "choices": {
-        "A": "Make fault assumptions tractable for reasoning/proofs",
-        "B": "Eliminate real faults",
-        "C": "Guarantee implementation perfection",
-        "D": "Replace testing"
-      },
-      "answer": "A",
+      "choices": [
+        "Guarantee implementation perfection",
+        "Make fault assumptions tractable for reasoning/proofs",
+        "Eliminate real faults",
+        "Replace testing"
+      ],
+      "answer": "Make fault assumptions tractable for reasoning/proofs",
       "source_pages": [
         332
       ]
@@ -3081,13 +3081,13 @@
       "id": "MCQ066",
       "difficulty": "hard",
       "question": "What complements theoretical proof?",
-      "choices": {
-        "A": "Empirical testing",
-        "B": "Nothing",
-        "C": "Only NTP",
-        "D": "Only BFT"
-      },
-      "answer": "A",
+      "choices": [
+        "Nothing",
+        "Only NTP",
+        "Only BFT",
+        "Empirical testing"
+      ],
+      "answer": "Empirical testing",
       "source_pages": [
         332
       ]
@@ -3096,13 +3096,13 @@
       "id": "MCQ067",
       "difficulty": "hard",
       "question": "What three problems dominate the summary?",
-      "choices": {
-        "A": "Network uncertainty, clock uncertainty, process pauses",
-        "B": "Indexes, joins, schemas",
-        "C": "B-trees, LSM, WAL",
-        "D": "HTTP, RPC, REST"
-      },
-      "answer": "A",
+      "choices": [
+        "Indexes, joins, schemas",
+        "HTTP, RPC, REST",
+        "B-trees, LSM, WAL",
+        "Network uncertainty, clock uncertainty, process pauses"
+      ],
+      "answer": "Network uncertainty, clock uncertainty, process pauses",
       "source_pages": [
         332
       ]
@@ -3111,13 +3111,13 @@
       "id": "MCQ068",
       "difficulty": "hard",
       "question": "What can be harder than a cleanly failed node?",
-      "choices": {
-        "A": "A limping/degraded node",
-        "B": "A healthy node",
-        "C": "A single machine",
-        "D": "A local process"
-      },
-      "answer": "A",
+      "choices": [
+        "A limping/degraded node",
+        "A healthy node",
+        "A local process",
+        "A single machine"
+      ],
+      "answer": "A limping/degraded node",
       "source_pages": [
         333
       ]
@@ -3126,13 +3126,13 @@
       "id": "MCQ069",
       "difficulty": "hard",
       "question": "Why use quorums for major decisions?",
-      "choices": {
-        "A": "No one node has globally authoritative knowledge",
-        "B": "Quorums remove network faults",
-        "C": "Quorums synchronize clocks",
-        "D": "Quorums prevent GC"
-      },
-      "answer": "A",
+      "choices": [
+        "No one node has globally authoritative knowledge",
+        "Quorums remove network faults",
+        "Quorums prevent GC",
+        "Quorums synchronize clocks"
+      ],
+      "answer": "No one node has globally authoritative knowledge",
       "source_pages": [
         333
       ]
@@ -3141,13 +3141,13 @@
       "id": "MCQ070",
       "difficulty": "hard",
       "question": "If a single machine is sufficient, the chapter suggests?",
-      "choices": {
-        "A": "Prefer it when practical",
-        "B": "Always distribute anyway",
-        "C": "Use Byzantine consensus",
-        "D": "Use circuit switching"
-      },
-      "answer": "A",
+      "choices": [
+        "Use Byzantine consensus",
+        "Always distribute anyway",
+        "Use circuit switching",
+        "Prefer it when practical"
+      ],
+      "answer": "Prefer it when practical",
       "source_pages": [
         333
       ]

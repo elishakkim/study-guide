@@ -713,13 +713,13 @@
       "id": "MCQ001",
       "difficulty": "easy",
       "question": "What is the chapter's main recommendation for continuing system design learning?",
-      "choices": {
-        "A": "Memorize only the book's diagrams",
-        "B": "Study real-world system architectures",
-        "C": "Focus only on coding syntax",
-        "D": "Avoid company-specific material"
-      },
-      "answer": "B",
+      "choices": [
+        "Avoid company-specific material",
+        "Memorize only the book's diagrams",
+        "Study real-world system architectures",
+        "Focus only on coding syntax"
+      ],
+      "answer": "Study real-world system architectures",
       "source_pages": [
         264
       ]
@@ -728,13 +728,13 @@
       "id": "MCQ002",
       "difficulty": "medium",
       "question": "What should you pay attention to when studying real systems?",
-      "choices": {
-        "A": "Only technology names",
-        "B": "Only company size",
-        "C": "Shared principles and underlying technologies",
-        "D": "Only interview questions"
-      },
-      "answer": "C",
+      "choices": [
+        "Only technology names",
+        "Only company size",
+        "Shared principles and underlying technologies",
+        "Only interview questions"
+      ],
+      "answer": "Shared principles and underlying technologies",
       "source_pages": [
         264
       ]
@@ -743,13 +743,13 @@
       "id": "MCQ003",
       "difficulty": "medium",
       "question": "What should you understand about each technology?",
-      "choices": {
-        "A": "Its logo",
-        "B": "What problem it solves",
-        "C": "Its stock price",
-        "D": "Its programming language only"
-      },
-      "answer": "B",
+      "choices": [
+        "Its logo",
+        "Its programming language only",
+        "Its stock price",
+        "What problem it solves"
+      ],
+      "answer": "What problem it solves",
       "source_pages": [
         264
       ]
@@ -758,13 +758,13 @@
       "id": "MCQ004",
       "difficulty": "medium",
       "question": "Why are engineering blogs especially useful before interviewing with a company?",
-      "choices": {
-        "A": "They reveal interview answers",
-        "B": "They expose the company's systems and technologies",
-        "C": "They replace coding practice",
-        "D": "They guarantee an offer"
-      },
-      "answer": "B",
+      "choices": [
+        "They expose the company's systems and technologies",
+        "They guarantee an offer",
+        "They reveal interview answers",
+        "They replace coding practice"
+      ],
+      "answer": "They expose the company's systems and technologies",
       "source_pages": [
         267
       ]
@@ -773,13 +773,13 @@
       "id": "MCQ005",
       "difficulty": "medium",
       "question": "Which resource is associated with Amazon's highly available key-value store?",
-      "choices": {
-        "A": "Bigtable",
-        "B": "Dynamo",
-        "C": "TAO",
-        "D": "Haystack"
-      },
-      "answer": "B",
+      "choices": [
+        "TAO",
+        "Haystack",
+        "Bigtable",
+        "Dynamo"
+      ],
+      "answer": "Dynamo",
       "source_pages": [
         265
       ]
@@ -788,13 +788,13 @@
       "id": "MCQ006",
       "difficulty": "medium",
       "question": "Which resource is associated with Facebook's social graph?",
-      "choices": {
-        "A": "TAO",
-        "B": "Dynamo",
-        "C": "Snowflake",
-        "D": "GFS"
-      },
-      "answer": "A",
+      "choices": [
+        "Snowflake",
+        "Dynamo",
+        "TAO",
+        "GFS"
+      ],
+      "answer": "TAO",
       "source_pages": [
         265
       ]
@@ -803,13 +803,13 @@
       "id": "MCQ007",
       "difficulty": "medium",
       "question": "Which resource is about Facebook photo storage?",
-      "choices": {
-        "A": "Haystack",
-        "B": "Snowflake",
-        "C": "Bigtable",
-        "D": "Dynamo"
-      },
-      "answer": "A",
+      "choices": [
+        "Snowflake",
+        "Dynamo",
+        "Bigtable",
+        "Haystack"
+      ],
+      "answer": "Haystack",
       "source_pages": [
         265
       ]
@@ -818,13 +818,13 @@
       "id": "MCQ008",
       "difficulty": "medium",
       "question": "Which resource focuses on Facebook caching?",
-      "choices": {
-        "A": "Scaling Memcache at Facebook",
-        "B": "Timelines at Scale",
-        "C": "Google File System",
-        "D": "WhatsApp Architecture"
-      },
-      "answer": "A",
+      "choices": [
+        "Google File System",
+        "Timelines at Scale",
+        "Scaling Memcache at Facebook",
+        "WhatsApp Architecture"
+      ],
+      "answer": "Scaling Memcache at Facebook",
       "source_pages": [
         265
       ]
@@ -833,13 +833,13 @@
       "id": "MCQ009",
       "difficulty": "medium",
       "question": "Which Netflix topic is explicitly listed?",
-      "choices": {
-        "A": "Experimentation platform",
-        "B": "Cloud file synchronization only",
-        "C": "Search autocomplete only",
-        "D": "Rate limiting only"
-      },
-      "answer": "A",
+      "choices": [
+        "Cloud file synchronization only",
+        "Rate limiting only",
+        "Search autocomplete only",
+        "Experimentation platform"
+      ],
+      "answer": "Experimentation platform",
       "source_pages": [
         265
       ]
@@ -848,13 +848,13 @@
       "id": "MCQ010",
       "difficulty": "medium",
       "question": "Which Google resource is about distributed file storage?",
-      "choices": {
-        "A": "The Google File System",
-        "B": "TAO",
-        "C": "Dynamo",
-        "D": "Snowflake"
-      },
-      "answer": "A",
+      "choices": [
+        "The Google File System",
+        "Dynamo",
+        "TAO",
+        "Snowflake"
+      ],
+      "answer": "The Google File System",
       "source_pages": [
         265
       ]
@@ -863,13 +863,13 @@
       "id": "MCQ011",
       "difficulty": "medium",
       "question": "Which Twitter resource is about unique ID generation?",
-      "choices": {
-        "A": "Snowflake",
-        "B": "Bigtable",
-        "C": "Haystack",
-        "D": "Dynamo"
-      },
-      "answer": "A",
+      "choices": [
+        "Bigtable",
+        "Snowflake",
+        "Dynamo",
+        "Haystack"
+      ],
+      "answer": "Snowflake",
       "source_pages": [
         265
       ]
@@ -878,13 +878,13 @@
       "id": "MCQ012",
       "difficulty": "medium",
       "question": "Which resource is associated with Uber?",
-      "choices": {
-        "A": "Real-Time Market Platform",
-        "B": "Photo storage",
-        "C": "Search autocomplete",
-        "D": "Cloud Drive"
-      },
-      "answer": "A",
+      "choices": [
+        "Photo storage",
+        "Real-Time Market Platform",
+        "Cloud Drive",
+        "Search autocomplete"
+      ],
+      "answer": "Real-Time Market Platform",
       "source_pages": [
         265
       ]
@@ -893,13 +893,13 @@
       "id": "MCQ013",
       "difficulty": "medium",
       "question": "Which resource is associated with Dropbox?",
-      "choices": {
-        "A": "How We've Scaled Dropbox",
-        "B": "TAO",
-        "C": "Scaling Memcache",
-        "D": "Dynamo"
-      },
-      "answer": "A",
+      "choices": [
+        "How We've Scaled Dropbox",
+        "Dynamo",
+        "TAO",
+        "Scaling Memcache"
+      ],
+      "answer": "How We've Scaled Dropbox",
       "source_pages": [
         266
       ]
@@ -908,13 +908,13 @@
       "id": "MCQ014",
       "difficulty": "medium",
       "question": "Which engineering blog is included in the chapter?",
-      "choices": {
-        "A": "Slack",
-        "B": "None from SaaS companies",
-        "C": "Only Google",
-        "D": "Only Facebook"
-      },
-      "answer": "A",
+      "choices": [
+        "Slack",
+        "None from SaaS companies",
+        "Only Google",
+        "Only Facebook"
+      ],
+      "answer": "Slack",
       "source_pages": [
         267
       ]
@@ -923,13 +923,13 @@
       "id": "MCQ015",
       "difficulty": "medium",
       "question": "Which resource is explicitly listed alongside engineering blogs?",
-      "choices": {
-        "A": "System Design Primer",
-        "B": "LeetCode only",
-        "C": "Cracking the Coding Interview only",
-        "D": "No external resources"
-      },
-      "answer": "A",
+      "choices": [
+        "No external resources",
+        "Cracking the Coding Interview only",
+        "LeetCode only",
+        "System Design Primer"
+      ],
+      "answer": "System Design Primer",
       "source_pages": [
         267
       ]
@@ -938,13 +938,13 @@
       "id": "MCQ016",
       "difficulty": "hard",
       "question": "What is the chapter's broader learning philosophy?",
-      "choices": {
-        "A": "Memorize one canonical architecture",
-        "B": "Learn recurring principles and why technologies exist",
-        "C": "Avoid implementation details",
-        "D": "Focus only on algorithms"
-      },
-      "answer": "B",
+      "choices": [
+        "Memorize one canonical architecture",
+        "Avoid implementation details",
+        "Focus only on algorithms",
+        "Learn recurring principles and why technologies exist"
+      ],
+      "answer": "Learn recurring principles and why technologies exist",
       "source_pages": [
         264
       ]
@@ -953,13 +953,13 @@
       "id": "MCQ017",
       "difficulty": "hard",
       "question": "What does the chapter imply about system design mastery?",
-      "choices": {
-        "A": "It ends when the book ends",
-        "B": "It develops through sustained exposure to real systems",
-        "C": "It requires only one interview prep course",
-        "D": "It is mainly memorization"
-      },
-      "answer": "B",
+      "choices": [
+        "It is mainly memorization",
+        "It requires only one interview prep course",
+        "It ends when the book ends",
+        "It develops through sustained exposure to real systems"
+      ],
+      "answer": "It develops through sustained exposure to real systems",
       "source_pages": [
         264,
         267
@@ -969,13 +969,13 @@
       "id": "MCQ018",
       "difficulty": "medium",
       "question": "Which three engineering resources are listed on the final chapter page?",
-      "choices": {
-        "A": "Yahoo, Yelp, Zoom",
-        "B": "Meta, Tesla, Oracle",
-        "C": "IBM, SAP, Adobe",
-        "D": "TikTok, Discord, Coinbase"
-      },
-      "answer": "A",
+      "choices": [
+        "Yahoo, Yelp, Zoom",
+        "Meta, Tesla, Oracle",
+        "IBM, SAP, Adobe",
+        "TikTok, Discord, Coinbase"
+      ],
+      "answer": "Yahoo, Yelp, Zoom",
       "source_pages": [
         268
       ]

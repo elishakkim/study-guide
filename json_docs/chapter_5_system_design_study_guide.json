@@ -996,13 +996,13 @@
       "id": "MCQ01",
       "difficulty": "easy",
       "question": "What is the traditional server-selection formula discussed first?",
-      "choices": {
-        "A": "hash(key) + N",
-        "B": "hash(key) % N",
-        "C": "N % hash(key)",
-        "D": "hash(server) % key"
-      },
-      "answer": "B",
+      "choices": [
+        "hash(server) % key",
+        "hash(key) + N",
+        "N % hash(key)",
+        "hash(key) % N"
+      ],
+      "answer": "hash(key) % N",
       "source_pages": [
         72
       ]
@@ -1011,13 +1011,13 @@
       "id": "MCQ02",
       "difficulty": "medium",
       "question": "What does N mean in serverIndex = hash(key) % N?",
-      "choices": {
-        "A": "Number of keys",
-        "B": "Number of servers",
-        "C": "Number of virtual nodes",
-        "D": "Number of requests"
-      },
-      "answer": "B",
+      "choices": [
+        "Number of keys",
+        "Number of servers",
+        "Number of virtual nodes",
+        "Number of requests"
+      ],
+      "answer": "Number of servers",
       "source_pages": [
         72
       ]
@@ -1026,13 +1026,13 @@
       "id": "MCQ03",
       "difficulty": "medium",
       "question": "Why does modulo hashing work poorly when server membership changes?",
-      "choices": {
-        "A": "The key hashes disappear",
-        "B": "Changing N changes many modulo results",
-        "C": "Servers stop having IP addresses",
-        "D": "SHA-1 cannot hash keys"
-      },
-      "answer": "B",
+      "choices": [
+        "The key hashes disappear",
+        "SHA-1 cannot hash keys",
+        "Servers stop having IP addresses",
+        "Changing N changes many modulo results"
+      ],
+      "answer": "Changing N changes many modulo results",
       "source_pages": [
         73,
         74
@@ -1042,13 +1042,13 @@
       "id": "MCQ04",
       "difficulty": "medium",
       "question": "What can widespread remapping cause in a cache cluster?",
-      "choices": {
-        "A": "A storm of cache misses",
-        "B": "Fewer hashes",
-        "C": "More CPU registers",
-        "D": "No data movement"
-      },
-      "answer": "A",
+      "choices": [
+        "No data movement",
+        "Fewer hashes",
+        "More CPU registers",
+        "A storm of cache misses"
+      ],
+      "answer": "A storm of cache misses",
       "source_pages": [
         74
       ]
@@ -1057,13 +1057,13 @@
       "id": "MCQ05",
       "difficulty": "medium",
       "question": "In the original four-server example, key0 maps to which server?",
-      "choices": {
-        "A": "server0",
-        "B": "server1",
-        "C": "server2",
-        "D": "server3"
-      },
-      "answer": "B",
+      "choices": [
+        "server1",
+        "server2",
+        "server0",
+        "server3"
+      ],
+      "answer": "server1",
       "source_pages": [
         72
       ]
@@ -1072,13 +1072,13 @@
       "id": "MCQ06",
       "difficulty": "medium",
       "question": "What is the main remapping property attributed to consistent hashing?",
-      "choices": {
-        "A": "All keys are always remapped",
-        "B": "Only about k/n keys are remapped on average when resized",
-        "C": "No keys ever move",
-        "D": "Exactly one key always moves"
-      },
-      "answer": "B",
+      "choices": [
+        "Exactly one key always moves",
+        "All keys are always remapped",
+        "No keys ever move",
+        "Only about k/n keys are remapped on average when resized"
+      ],
+      "answer": "Only about k/n keys are remapped on average when resized",
       "source_pages": [
         75
       ]
@@ -1087,13 +1087,13 @@
       "id": "MCQ07",
       "difficulty": "medium",
       "question": "What hash-space maximum is shown for SHA-1?",
-      "choices": {
-        "A": "2^32 - 1",
-        "B": "2^64 - 1",
-        "C": "2^128 - 1",
-        "D": "2^160 - 1"
-      },
-      "answer": "D",
+      "choices": [
+        "2^128 - 1",
+        "2^64 - 1",
+        "2^32 - 1",
+        "2^160 - 1"
+      ],
+      "answer": "2^160 - 1",
       "source_pages": [
         75
       ]
@@ -1102,13 +1102,13 @@
       "id": "MCQ08",
       "difficulty": "easy",
       "question": "How is the ring formed?",
-      "choices": {
-        "A": "By connecting the two ends of the hash space",
-        "B": "By sorting servers alphabetically",
-        "C": "By applying modulo twice",
-        "D": "By using a database index"
-      },
-      "answer": "A",
+      "choices": [
+        "By using a database index",
+        "By connecting the two ends of the hash space",
+        "By sorting servers alphabetically",
+        "By applying modulo twice"
+      ],
+      "answer": "By connecting the two ends of the hash space",
       "source_pages": [
         75
       ]
@@ -1117,13 +1117,13 @@
       "id": "MCQ09",
       "difficulty": "medium",
       "question": "How are servers mapped to the ring?",
-      "choices": {
-        "A": "By server IP/name through the hash function",
-        "B": "By request count only",
-        "C": "By database row count",
-        "D": "By random client choice"
-      },
-      "answer": "A",
+      "choices": [
+        "By request count only",
+        "By random client choice",
+        "By database row count",
+        "By server IP/name through the hash function"
+      ],
+      "answer": "By server IP/name through the hash function",
       "source_pages": [
         75
       ]
@@ -1132,13 +1132,13 @@
       "id": "MCQ10",
       "difficulty": "medium",
       "question": "How are keys mapped to servers on the ring?",
-      "choices": {
-        "A": "Nearest server counterclockwise",
-        "B": "First server clockwise",
-        "C": "Largest server ID",
-        "D": "hash(key) % N"
-      },
-      "answer": "B",
+      "choices": [
+        "First server clockwise",
+        "Nearest server counterclockwise",
+        "Largest server ID",
+        "hash(key) % N"
+      ],
+      "answer": "First server clockwise",
       "source_pages": [
         76,
         77
@@ -1148,13 +1148,13 @@
       "id": "MCQ11",
       "difficulty": "medium",
       "question": "Does the ring-based lookup described use a modulo operation?",
-      "choices": {
-        "A": "Yes",
-        "B": "No",
-        "C": "Only for virtual nodes",
-        "D": "Only for SHA-1"
-      },
-      "answer": "B",
+      "choices": [
+        "Only for SHA-1",
+        "Only for virtual nodes",
+        "No",
+        "Yes"
+      ],
+      "answer": "No",
       "source_pages": [
         76
       ]
@@ -1163,13 +1163,13 @@
       "id": "MCQ12",
       "difficulty": "medium",
       "question": "What happens when server4 is added in Figure 5-8?",
-      "choices": {
-        "A": "All four keys move",
-        "B": "Only key0 moves",
-        "C": "Only key3 moves",
-        "D": "No key moves"
-      },
-      "answer": "B",
+      "choices": [
+        "Only key0 moves",
+        "No key moves",
+        "Only key3 moves",
+        "All four keys move"
+      ],
+      "answer": "Only key0 moves",
       "source_pages": [
         77,
         78
@@ -1179,13 +1179,13 @@
       "id": "MCQ13",
       "difficulty": "medium",
       "question": "Where does key0 move after server4 is added?",
-      "choices": {
-        "A": "server1",
-        "B": "server2",
-        "C": "server3",
-        "D": "server4"
-      },
-      "answer": "D",
+      "choices": [
+        "server2",
+        "server1",
+        "server4",
+        "server3"
+      ],
+      "answer": "server4",
       "source_pages": [
         77
       ]
@@ -1194,13 +1194,13 @@
       "id": "MCQ14",
       "difficulty": "medium",
       "question": "What happens when server1 is removed in Figure 5-9?",
-      "choices": {
-        "A": "Only key1 is remapped",
-        "B": "Every key is remapped",
-        "C": "Only key0 is remapped",
-        "D": "No key is remapped"
-      },
-      "answer": "A",
+      "choices": [
+        "Every key is remapped",
+        "Only key0 is remapped",
+        "Only key1 is remapped",
+        "No key is remapped"
+      ],
+      "answer": "Only key1 is remapped",
       "source_pages": [
         78,
         79
@@ -1210,13 +1210,13 @@
       "id": "MCQ15",
       "difficulty": "medium",
       "question": "Where does key1 move after server1 is removed?",
-      "choices": {
-        "A": "server0",
-        "B": "server2",
-        "C": "server3",
-        "D": "server4"
-      },
-      "answer": "B",
+      "choices": [
+        "server3",
+        "server2",
+        "server0",
+        "server4"
+      ],
+      "answer": "server2",
       "source_pages": [
         78
       ]
@@ -1225,13 +1225,13 @@
       "id": "MCQ16",
       "difficulty": "hard",
       "question": "What is a partition in the basic ring?",
-      "choices": {
-        "A": "The hash-space interval between adjacent servers",
-        "B": "A database replica",
-        "C": "A key's string prefix",
-        "D": "A client session"
-      },
-      "answer": "A",
+      "choices": [
+        "A key's string prefix",
+        "A client session",
+        "The hash-space interval between adjacent servers",
+        "A database replica"
+      ],
+      "answer": "The hash-space interval between adjacent servers",
       "source_pages": [
         79
       ]
@@ -1240,13 +1240,13 @@
       "id": "MCQ17",
       "difficulty": "hard",
       "question": "What is the first problem in the basic ring approach?",
-      "choices": {
-        "A": "All partitions cannot remain equal-sized as servers change",
-        "B": "Keys cannot be hashed",
-        "C": "Clockwise traversal is impossible",
-        "D": "Every server owns exactly the same interval"
-      },
-      "answer": "A",
+      "choices": [
+        "Keys cannot be hashed",
+        "Every server owns exactly the same interval",
+        "Clockwise traversal is impossible",
+        "All partitions cannot remain equal-sized as servers change"
+      ],
+      "answer": "All partitions cannot remain equal-sized as servers change",
       "source_pages": [
         79
       ]
@@ -1255,13 +1255,13 @@
       "id": "MCQ18",
       "difficulty": "hard",
       "question": "What is the second problem in the basic approach?",
-      "choices": {
-        "A": "Non-uniform key distribution",
-        "B": "The ring has no endpoints",
-        "C": "No servers can be removed",
-        "D": "Keys cannot be cached"
-      },
-      "answer": "A",
+      "choices": [
+        "The ring has no endpoints",
+        "No servers can be removed",
+        "Non-uniform key distribution",
+        "Keys cannot be cached"
+      ],
+      "answer": "Non-uniform key distribution",
       "source_pages": [
         80
       ]
@@ -1270,13 +1270,13 @@
       "id": "MCQ19",
       "difficulty": "medium",
       "question": "What technique addresses both basic-ring problems?",
-      "choices": {
-        "A": "Modulo arithmetic",
-        "B": "Virtual nodes",
-        "C": "Sticky sessions",
-        "D": "Database replication"
-      },
-      "answer": "B",
+      "choices": [
+        "Database replication",
+        "Virtual nodes",
+        "Sticky sessions",
+        "Modulo arithmetic"
+      ],
+      "answer": "Virtual nodes",
       "source_pages": [
         80
       ]
@@ -1285,13 +1285,13 @@
       "id": "MCQ20",
       "difficulty": "medium",
       "question": "What is a virtual node?",
-      "choices": {
-        "A": "A real server's representation at one of multiple positions on the ring",
-        "B": "A copied key only",
-        "C": "A client-side cache entry",
-        "D": "A separate physical data center"
-      },
-      "answer": "A",
+      "choices": [
+        "A real server's representation at one of multiple positions on the ring",
+        "A copied key only",
+        "A client-side cache entry",
+        "A separate physical data center"
+      ],
+      "answer": "A real server's representation at one of multiple positions on the ring",
       "source_pages": [
         80,
         81
@@ -1301,13 +1301,13 @@
       "id": "MCQ21",
       "difficulty": "medium",
       "question": "In the example, how many virtual nodes represent each of server0 and server1?",
-      "choices": {
-        "A": "1",
-        "B": "2",
-        "C": "3",
-        "D": "10"
-      },
-      "answer": "C",
+      "choices": [
+        "2",
+        "3",
+        "10",
+        "1"
+      ],
+      "answer": "3",
       "source_pages": [
         80,
         81
@@ -1317,13 +1317,13 @@
       "id": "MCQ22",
       "difficulty": "hard",
       "question": "What happens as the number of virtual nodes increases?",
-      "choices": {
-        "A": "Distribution becomes more balanced",
-        "B": "Distribution becomes less balanced",
-        "C": "All keys move to one server",
-        "D": "Servers no longer need hashing"
-      },
-      "answer": "A",
+      "choices": [
+        "Servers no longer need hashing",
+        "Distribution becomes less balanced",
+        "Distribution becomes more balanced",
+        "All keys move to one server"
+      ],
+      "answer": "Distribution becomes more balanced",
       "source_pages": [
         82
       ]
@@ -1332,13 +1332,13 @@
       "id": "MCQ23",
       "difficulty": "hard",
       "question": "Why does more virtual nodes improve balance according to the chapter?",
-      "choices": {
-        "A": "Standard deviation becomes smaller",
-        "B": "Hash space becomes larger",
-        "C": "Keys stop being hashed",
-        "D": "Modulo N becomes constant"
-      },
-      "answer": "A",
+      "choices": [
+        "Standard deviation becomes smaller",
+        "Keys stop being hashed",
+        "Modulo N becomes constant",
+        "Hash space becomes larger"
+      ],
+      "answer": "Standard deviation becomes smaller",
       "source_pages": [
         82
       ]
@@ -1347,13 +1347,13 @@
       "id": "MCQ24",
       "difficulty": "hard",
       "question": "What standard deviation does the cited experiment associate with about 200 virtual nodes?",
-      "choices": {
-        "A": "About 50% of the mean",
-        "B": "About 20%",
-        "C": "About 10%",
-        "D": "About 5%"
-      },
-      "answer": "D",
+      "choices": [
+        "About 50% of the mean",
+        "About 5%",
+        "About 10%",
+        "About 20%"
+      ],
+      "answer": "About 5%",
       "source_pages": [
         82
       ]
@@ -1362,13 +1362,13 @@
       "id": "MCQ25",
       "difficulty": "hard",
       "question": "What is the main cost of using more virtual nodes?",
-      "choices": {
-        "A": "More metadata/storage space",
-        "B": "No more horizontal scaling",
-        "C": "Every request becomes a cache miss",
-        "D": "The ring disappears"
-      },
-      "answer": "A",
+      "choices": [
+        "More metadata/storage space",
+        "The ring disappears",
+        "No more horizontal scaling",
+        "Every request becomes a cache miss"
+      ],
+      "answer": "More metadata/storage space",
       "source_pages": [
         82
       ]
@@ -1377,13 +1377,13 @@
       "id": "MCQ26",
       "difficulty": "hard",
       "question": "When adding s4, how do you identify the affected range?",
-      "choices": {
-        "A": "Move clockwise from s4 to s0",
-        "B": "Move anticlockwise from s4 to the previous server s3",
-        "C": "Move to every server",
-        "D": "Use hash(key) % N"
-      },
-      "answer": "B",
+      "choices": [
+        "Use hash(key) % N",
+        "Move to every server",
+        "Move clockwise from s4 to s0",
+        "Move anticlockwise from s4 to the previous server s3"
+      ],
+      "answer": "Move anticlockwise from s4 to the previous server s3",
       "source_pages": [
         82
       ]
@@ -1392,13 +1392,13 @@
       "id": "MCQ27",
       "difficulty": "hard",
       "question": "Which keys move to newly added s4?",
-      "choices": {
-        "A": "Keys between s3 and s4",
-        "B": "Keys between s4 and s0",
-        "C": "Every key on the ring",
-        "D": "Only keys owned by s2"
-      },
-      "answer": "A",
+      "choices": [
+        "Keys between s4 and s0",
+        "Keys between s3 and s4",
+        "Every key on the ring",
+        "Only keys owned by s2"
+      ],
+      "answer": "Keys between s3 and s4",
       "source_pages": [
         82,
         83
@@ -1408,13 +1408,13 @@
       "id": "MCQ28",
       "difficulty": "hard",
       "question": "When s1 is removed, which interval contains the affected keys?",
-      "choices": {
-        "A": "s0 to s1",
-        "B": "s1 to s2 only in the clockwise direction",
-        "C": "s2 to s3",
-        "D": "Entire ring"
-      },
-      "answer": "A",
+      "choices": [
+        "s0 to s1",
+        "s1 to s2 only in the clockwise direction",
+        "Entire ring",
+        "s2 to s3"
+      ],
+      "answer": "s0 to s1",
       "source_pages": [
         83
       ]
@@ -1423,13 +1423,13 @@
       "id": "MCQ29",
       "difficulty": "hard",
       "question": "Where are keys from the s0-to-s1 interval redistributed after s1 is removed?",
-      "choices": {
-        "A": "s0",
-        "B": "s2",
-        "C": "s3",
-        "D": "All servers equally"
-      },
-      "answer": "B",
+      "choices": [
+        "s2",
+        "All servers equally",
+        "s3",
+        "s0"
+      ],
+      "answer": "s2",
       "source_pages": [
         83
       ]
@@ -1438,13 +1438,13 @@
       "id": "MCQ30",
       "difficulty": "medium",
       "question": "Which benefit is explicitly listed in the wrap-up?",
-      "choices": {
-        "A": "Minimized key redistribution",
-        "B": "No need for hashing",
-        "C": "No server failures",
-        "D": "Unlimited memory"
-      },
-      "answer": "A",
+      "choices": [
+        "No server failures",
+        "Unlimited memory",
+        "No need for hashing",
+        "Minimized key redistribution"
+      ],
+      "answer": "Minimized key redistribution",
       "source_pages": [
         85
       ]
@@ -1453,13 +1453,13 @@
       "id": "MCQ31",
       "difficulty": "medium",
       "question": "How does consistent hashing help horizontal scaling?",
-      "choices": {
-        "A": "By distributing data more evenly",
-        "B": "By using one server only",
-        "C": "By removing cache",
-        "D": "By disabling server changes"
-      },
-      "answer": "A",
+      "choices": [
+        "By disabling server changes",
+        "By distributing data more evenly",
+        "By removing cache",
+        "By using one server only"
+      ],
+      "answer": "By distributing data more evenly",
       "source_pages": [
         85
       ]
@@ -1468,13 +1468,13 @@
       "id": "MCQ32",
       "difficulty": "medium",
       "question": "Which hotspot example is given?",
-      "choices": {
-        "A": "Popular celebrity data landing on the same shard",
-        "B": "DNS records expiring",
-        "C": "A single HTTP request",
-        "D": "A slow disk seek"
-      },
-      "answer": "A",
+      "choices": [
+        "Popular celebrity data landing on the same shard",
+        "DNS records expiring",
+        "A single HTTP request",
+        "A slow disk seek"
+      ],
+      "answer": "Popular celebrity data landing on the same shard",
       "source_pages": [
         85
       ]
@@ -1483,13 +1483,13 @@
       "id": "MCQ33",
       "difficulty": "medium",
       "question": "Which system is NOT listed in the chapter's real-world examples?",
-      "choices": {
-        "A": "Amazon Dynamo",
-        "B": "Apache Cassandra",
-        "C": "Akamai",
-        "D": "PostgreSQL"
-      },
-      "answer": "D",
+      "choices": [
+        "Amazon Dynamo",
+        "Akamai",
+        "PostgreSQL",
+        "Apache Cassandra"
+      ],
+      "answer": "PostgreSQL",
       "source_pages": [
         85
       ]
@@ -1498,13 +1498,13 @@
       "id": "MCQ34",
       "difficulty": "medium",
       "question": "Which load balancer is listed as a consistent-hashing use case?",
-      "choices": {
-        "A": "Maglev",
-        "B": "Nginx only",
-        "C": "HAProxy only",
-        "D": "Envoy only"
-      },
-      "answer": "A",
+      "choices": [
+        "Envoy only",
+        "Nginx only",
+        "Maglev",
+        "HAProxy only"
+      ],
+      "answer": "Maglev",
       "source_pages": [
         85
       ]

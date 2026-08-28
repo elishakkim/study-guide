@@ -2049,13 +2049,13 @@
       "id": "MCQ001",
       "difficulty": "medium",
       "question": "What is backward compatibility?",
-      "choices": {
-        "A": "New code reads old data",
-        "B": "Old code reads new data",
-        "C": "New data deletes old data",
-        "D": "Same code only"
-      },
-      "answer": "A",
+      "choices": [
+        "New data deletes old data",
+        "Same code only",
+        "New code reads old data",
+        "Old code reads new data"
+      ],
+      "answer": "New code reads old data",
       "source_pages": [
         134
       ]
@@ -2064,13 +2064,13 @@
       "id": "MCQ002",
       "difficulty": "medium",
       "question": "What is forward compatibility?",
-      "choices": {
-        "A": "Old code reads new data",
-        "B": "New code reads old data",
-        "C": "No schema changes",
-        "D": "Only old clients work"
-      },
-      "answer": "A",
+      "choices": [
+        "New code reads old data",
+        "No schema changes",
+        "Only old clients work",
+        "Old code reads new data"
+      ],
+      "answer": "Old code reads new data",
       "source_pages": [
         134
       ]
@@ -2079,13 +2079,13 @@
       "id": "MCQ003",
       "difficulty": "medium",
       "question": "Which is generally harder?",
-      "choices": {
-        "A": "Forward compatibility",
-        "B": "Backward compatibility",
-        "C": "Neither ever matters",
-        "D": "Encoding"
-      },
-      "answer": "A",
+      "choices": [
+        "Backward compatibility",
+        "Encoding",
+        "Forward compatibility",
+        "Neither ever matters"
+      ],
+      "answer": "Forward compatibility",
       "source_pages": [
         134
       ]
@@ -2094,13 +2094,13 @@
       "id": "MCQ004",
       "difficulty": "medium",
       "question": "What is encoding?",
-      "choices": {
-        "A": "In-memory data to bytes",
-        "B": "Bytes to objects",
-        "C": "Encrypting data",
-        "D": "Compressing only"
-      },
-      "answer": "A",
+      "choices": [
+        "In-memory data to bytes",
+        "Compressing only",
+        "Bytes to objects",
+        "Encrypting data"
+      ],
+      "answer": "In-memory data to bytes",
       "source_pages": [
         135
       ]
@@ -2109,13 +2109,13 @@
       "id": "MCQ005",
       "difficulty": "medium",
       "question": "What is decoding?",
-      "choices": {
-        "A": "Bytes to in-memory data",
-        "B": "Objects to bytes",
-        "C": "Hashing data",
-        "D": "Encrypting data"
-      },
-      "answer": "A",
+      "choices": [
+        "Objects to bytes",
+        "Encrypting data",
+        "Bytes to in-memory data",
+        "Hashing data"
+      ],
+      "answer": "Bytes to in-memory data",
       "source_pages": [
         135
       ]
@@ -2124,13 +2124,13 @@
       "id": "MCQ006",
       "difficulty": "medium",
       "question": "Which is a language-specific serializer?",
-      "choices": {
-        "A": "Python pickle",
-        "B": "JSON",
-        "C": "Avro",
-        "D": "Thrift IDL"
-      },
-      "answer": "A",
+      "choices": [
+        "Python pickle",
+        "Avro",
+        "JSON",
+        "Thrift IDL"
+      ],
+      "answer": "Python pickle",
       "source_pages": [
         135
       ]
@@ -2139,13 +2139,13 @@
       "id": "MCQ007",
       "difficulty": "medium",
       "question": "Why can native deserialization be dangerous?",
-      "choices": {
-        "A": "Arbitrary class instantiation/code execution",
-        "B": "It always loses data",
-        "C": "It disables networks",
-        "D": "It forces JSON"
-      },
-      "answer": "A",
+      "choices": [
+        "It forces JSON",
+        "It disables networks",
+        "Arbitrary class instantiation/code execution",
+        "It always loses data"
+      ],
+      "answer": "Arbitrary class instantiation/code execution",
       "source_pages": [
         135
       ]
@@ -2154,13 +2154,13 @@
       "id": "MCQ008",
       "difficulty": "medium",
       "question": "What is a major JSON number issue?",
-      "choices": {
-        "A": "No integer/float distinction or precision guarantee",
-        "B": "No strings",
-        "C": "No arrays",
-        "D": "No objects"
-      },
-      "answer": "A",
+      "choices": [
+        "No arrays",
+        "No objects",
+        "No strings",
+        "No integer/float distinction or precision guarantee"
+      ],
+      "answer": "No integer/float distinction or precision guarantee",
       "source_pages": [
         136
       ]
@@ -2169,13 +2169,13 @@
       "id": "MCQ009",
       "difficulty": "medium",
       "question": "What boundary is problematic in JavaScript doubles?",
-      "choices": {
-        "A": "2^53",
-        "B": "2^8",
-        "C": "2^16",
-        "D": "2^31 only"
-      },
-      "answer": "A",
+      "choices": [
+        "2^31 only",
+        "2^8",
+        "2^53",
+        "2^16"
+      ],
+      "answer": "2^53",
       "source_pages": [
         136
       ]
@@ -2184,13 +2184,13 @@
       "id": "MCQ010",
       "difficulty": "medium",
       "question": "How is binary data commonly embedded in JSON/XML?",
-      "choices": {
-        "A": "Base64",
-        "B": "WAL",
-        "C": "UTF-16 only",
-        "D": "B-tree"
-      },
-      "answer": "A",
+      "choices": [
+        "B-tree",
+        "UTF-16 only",
+        "Base64",
+        "WAL"
+      ],
+      "answer": "Base64",
       "source_pages": [
         136
       ]
@@ -2199,13 +2199,13 @@
       "id": "MCQ011",
       "difficulty": "medium",
       "question": "What size cost does Base64 add?",
-      "choices": {
-        "A": "~33%",
-        "B": "~1%",
-        "C": "~100% always",
-        "D": "0%"
-      },
-      "answer": "A",
+      "choices": [
+        "~1%",
+        "0%",
+        "~33%",
+        "~100% always"
+      ],
+      "answer": "~33%",
       "source_pages": [
         136
       ]
@@ -2214,13 +2214,13 @@
       "id": "MCQ012",
       "difficulty": "medium",
       "question": "Why do binary JSON formats still encode field names?",
-      "choices": {
-        "A": "No required schema identifies fields",
-        "B": "They use tags",
-        "C": "They use Avro schemas",
-        "D": "They cannot store strings"
-      },
-      "answer": "A",
+      "choices": [
+        "They cannot store strings",
+        "They use tags",
+        "They use Avro schemas",
+        "No required schema identifies fields"
+      ],
+      "answer": "No required schema identifies fields",
       "source_pages": [
         137
       ]
@@ -2229,13 +2229,13 @@
       "id": "MCQ013",
       "difficulty": "medium",
       "question": "What is the MessagePack example size?",
-      "choices": {
-        "A": "66 bytes",
-        "B": "32 bytes",
-        "C": "33 bytes",
-        "D": "59 bytes"
-      },
-      "answer": "A",
+      "choices": [
+        "33 bytes",
+        "59 bytes",
+        "32 bytes",
+        "66 bytes"
+      ],
+      "answer": "66 bytes",
       "source_pages": [
         138
       ]
@@ -2244,13 +2244,13 @@
       "id": "MCQ014",
       "difficulty": "medium",
       "question": "Which binary schema format was developed at Google?",
-      "choices": {
-        "A": "Protocol Buffers",
-        "B": "Thrift",
-        "C": "Avro",
-        "D": "MessagePack"
-      },
-      "answer": "A",
+      "choices": [
+        "Avro",
+        "Protocol Buffers",
+        "MessagePack",
+        "Thrift"
+      ],
+      "answer": "Protocol Buffers",
       "source_pages": [
         139
       ]
@@ -2259,13 +2259,13 @@
       "id": "MCQ015",
       "difficulty": "medium",
       "question": "Which was developed at Facebook?",
-      "choices": {
-        "A": "Thrift",
-        "B": "Avro",
-        "C": "Protocol Buffers",
-        "D": "CSV"
-      },
-      "answer": "A",
+      "choices": [
+        "Avro",
+        "Protocol Buffers",
+        "CSV",
+        "Thrift"
+      ],
+      "answer": "Thrift",
       "source_pages": [
         139
       ]
@@ -2274,13 +2274,13 @@
       "id": "MCQ016",
       "difficulty": "medium",
       "question": "What identifies Thrift/Protobuf fields?",
-      "choices": {
-        "A": "Numeric tags",
-        "B": "Field names on wire",
-        "C": "Row numbers",
-        "D": "URLs"
-      },
-      "answer": "A",
+      "choices": [
+        "Field names on wire",
+        "Numeric tags",
+        "Row numbers",
+        "URLs"
+      ],
+      "answer": "Numeric tags",
       "source_pages": [
         141
       ]
@@ -2289,13 +2289,13 @@
       "id": "MCQ017",
       "difficulty": "medium",
       "question": "What is Thrift CompactProtocol example size?",
-      "choices": {
-        "A": "34 bytes",
-        "B": "66 bytes",
-        "C": "81 bytes",
-        "D": "59 KB"
-      },
-      "answer": "A",
+      "choices": [
+        "66 bytes",
+        "59 KB",
+        "34 bytes",
+        "81 bytes"
+      ],
+      "answer": "34 bytes",
       "source_pages": [
         141
       ]
@@ -2304,13 +2304,13 @@
       "id": "MCQ018",
       "difficulty": "medium",
       "question": "What is Protocol Buffers example size?",
-      "choices": {
-        "A": "33 bytes",
-        "B": "66 bytes",
-        "C": "59 bytes",
-        "D": "81 bytes"
-      },
-      "answer": "A",
+      "choices": [
+        "33 bytes",
+        "66 bytes",
+        "81 bytes",
+        "59 bytes"
+      ],
+      "answer": "33 bytes",
       "source_pages": [
         142
       ]
@@ -2319,13 +2319,13 @@
       "id": "MCQ019",
       "difficulty": "medium",
       "question": "Can a field name be changed in tag-based encoding?",
-      "choices": {
-        "A": "Yes",
-        "B": "No",
-        "C": "Only if tag also changes",
-        "D": "Only after data rewrite"
-      },
-      "answer": "A",
+      "choices": [
+        "Only after data rewrite",
+        "Yes",
+        "No",
+        "Only if tag also changes"
+      ],
+      "answer": "Yes",
       "source_pages": [
         142
       ]
@@ -2334,13 +2334,13 @@
       "id": "MCQ020",
       "difficulty": "medium",
       "question": "Can a field tag be reused after removing a field?",
-      "choices": {
-        "A": "No",
-        "B": "Yes immediately",
-        "C": "Only if type matches",
-        "D": "Always"
-      },
-      "answer": "A",
+      "choices": [
+        "No",
+        "Only if type matches",
+        "Always",
+        "Yes immediately"
+      ],
+      "answer": "No",
       "source_pages": [
         143
       ]
@@ -2349,13 +2349,13 @@
       "id": "MCQ021",
       "difficulty": "medium",
       "question": "How must newly added tag-based fields be defined for compatibility?",
-      "choices": {
-        "A": "Optional/defaulted",
-        "B": "Required only",
-        "C": "No type",
-        "D": "Repeated only"
-      },
-      "answer": "A",
+      "choices": [
+        "Optional/defaulted",
+        "Repeated only",
+        "No type",
+        "Required only"
+      ],
+      "answer": "Optional/defaulted",
       "source_pages": [
         143
       ]
@@ -2364,13 +2364,13 @@
       "id": "MCQ022",
       "difficulty": "medium",
       "question": "What is a risk of narrowing integer types?",
-      "choices": {
-        "A": "Truncation",
-        "B": "Better precision",
-        "C": "No compatibility issue",
-        "D": "Automatic schema migration"
-      },
-      "answer": "A",
+      "choices": [
+        "No compatibility issue",
+        "Truncation",
+        "Better precision",
+        "Automatic schema migration"
+      ],
+      "answer": "Truncation",
       "source_pages": [
         143
       ]
@@ -2379,13 +2379,13 @@
       "id": "MCQ023",
       "difficulty": "medium",
       "question": "How does Protobuf encode repeated values?",
-      "choices": {
-        "A": "Same tag multiple times",
-        "B": "Separate files",
-        "C": "One JSON array name",
-        "D": "No tags"
-      },
-      "answer": "A",
+      "choices": [
+        "Separate files",
+        "One JSON array name",
+        "No tags",
+        "Same tag multiple times"
+      ],
+      "answer": "Same tag multiple times",
       "source_pages": [
         143
       ]
@@ -2394,13 +2394,13 @@
       "id": "MCQ024",
       "difficulty": "medium",
       "question": "Does Avro use field tags?",
-      "choices": {
-        "A": "No",
-        "B": "Yes always",
-        "C": "Only network Avro",
-        "D": "Only file Avro"
-      },
-      "answer": "A",
+      "choices": [
+        "Yes always",
+        "Only network Avro",
+        "Only file Avro",
+        "No"
+      ],
+      "answer": "No",
       "source_pages": [
         144
       ]
@@ -2409,13 +2409,13 @@
       "id": "MCQ025",
       "difficulty": "medium",
       "question": "What is Avro example size?",
-      "choices": {
-        "A": "32 bytes",
-        "B": "33 bytes",
-        "C": "34 bytes",
-        "D": "66 bytes"
-      },
-      "answer": "A",
+      "choices": [
+        "32 bytes",
+        "33 bytes",
+        "34 bytes",
+        "66 bytes"
+      ],
+      "answer": "32 bytes",
       "source_pages": [
         144
       ]
@@ -2424,13 +2424,13 @@
       "id": "MCQ026",
       "difficulty": "medium",
       "question": "How does Avro know data types during decoding?",
-      "choices": {
-        "A": "Schema",
-        "B": "Field tags in bytes",
-        "C": "JSON names",
-        "D": "HTTP headers"
-      },
-      "answer": "A",
+      "choices": [
+        "Schema",
+        "JSON names",
+        "HTTP headers",
+        "Field tags in bytes"
+      ],
+      "answer": "Schema",
       "source_pages": [
         145
       ]
@@ -2439,13 +2439,13 @@
       "id": "MCQ027",
       "difficulty": "medium",
       "question": "What is writer's schema?",
-      "choices": {
-        "A": "Schema used to encode",
-        "B": "Schema expected by reader",
-        "C": "API version only",
-        "D": "Database index"
-      },
-      "answer": "A",
+      "choices": [
+        "API version only",
+        "Database index",
+        "Schema expected by reader",
+        "Schema used to encode"
+      ],
+      "answer": "Schema used to encode",
       "source_pages": [
         145
       ]
@@ -2454,13 +2454,13 @@
       "id": "MCQ028",
       "difficulty": "medium",
       "question": "What is reader's schema?",
-      "choices": {
-        "A": "Schema expected during decode",
-        "B": "Schema used during write only",
-        "C": "WSDL",
-        "D": "HTTP schema"
-      },
-      "answer": "A",
+      "choices": [
+        "Schema expected during decode",
+        "Schema used during write only",
+        "WSDL",
+        "HTTP schema"
+      ],
+      "answer": "Schema expected during decode",
       "source_pages": [
         145
       ]
@@ -2469,13 +2469,13 @@
       "id": "MCQ029",
       "difficulty": "medium",
       "question": "Must Avro reader/writer schema be identical?",
-      "choices": {
-        "A": "No, compatible is enough",
-        "B": "Yes always",
-        "C": "Only over network",
-        "D": "Only in Hadoop"
-      },
-      "answer": "A",
+      "choices": [
+        "Yes always",
+        "Only over network",
+        "No, compatible is enough",
+        "Only in Hadoop"
+      ],
+      "answer": "No, compatible is enough",
       "source_pages": [
         145,
         146
@@ -2485,13 +2485,13 @@
       "id": "MCQ030",
       "difficulty": "medium",
       "question": "How are Avro fields matched?",
-      "choices": {
-        "A": "By name",
-        "B": "By fixed numeric tags",
-        "C": "By byte offset only",
-        "D": "By table position only"
-      },
-      "answer": "A",
+      "choices": [
+        "By fixed numeric tags",
+        "By name",
+        "By byte offset only",
+        "By table position only"
+      ],
+      "answer": "By name",
       "source_pages": [
         146
       ]
@@ -2500,13 +2500,13 @@
       "id": "MCQ031",
       "difficulty": "medium",
       "question": "What happens to a writer-only field in Avro?",
-      "choices": {
-        "A": "Reader ignores it",
-        "B": "Decode fails always",
-        "C": "It becomes null in writer",
-        "D": "Tag is reused"
-      },
-      "answer": "A",
+      "choices": [
+        "Decode fails always",
+        "It becomes null in writer",
+        "Tag is reused",
+        "Reader ignores it"
+      ],
+      "answer": "Reader ignores it",
       "source_pages": [
         146
       ]
@@ -2515,13 +2515,13 @@
       "id": "MCQ032",
       "difficulty": "medium",
       "question": "What fills a reader-only field?",
-      "choices": {
-        "A": "Default value",
-        "B": "Random value",
-        "C": "Tag number",
-        "D": "Nothing ever"
-      },
-      "answer": "A",
+      "choices": [
+        "Random value",
+        "Default value",
+        "Tag number",
+        "Nothing ever"
+      ],
+      "answer": "Default value",
       "source_pages": [
         146
       ]
@@ -2530,13 +2530,13 @@
       "id": "MCQ033",
       "difficulty": "medium",
       "question": "What does Avro require for compatible add/remove?",
-      "choices": {
-        "A": "Default values",
-        "B": "Numeric tags",
-        "C": "No schemas",
-        "D": "Full data rewrite"
-      },
-      "answer": "A",
+      "choices": [
+        "Numeric tags",
+        "No schemas",
+        "Full data rewrite",
+        "Default values"
+      ],
+      "answer": "Default values",
       "source_pages": [
         146
       ]
@@ -2545,13 +2545,13 @@
       "id": "MCQ034",
       "difficulty": "medium",
       "question": "How does Avro express nullable fields?",
-      "choices": {
-        "A": "Union containing null",
-        "B": "Optional keyword only",
-        "C": "Implicit null for everything",
-        "D": "Field tag 0"
-      },
-      "answer": "A",
+      "choices": [
+        "Field tag 0",
+        "Union containing null",
+        "Implicit null for everything",
+        "Optional keyword only"
+      ],
+      "answer": "Union containing null",
       "source_pages": [
         147
       ]
@@ -2560,13 +2560,13 @@
       "id": "MCQ035",
       "difficulty": "medium",
       "question": "How can Avro rename fields?",
-      "choices": {
-        "A": "Aliases",
-        "B": "Reuse tags",
-        "C": "WSDL",
-        "D": "Base64"
-      },
-      "answer": "A",
+      "choices": [
+        "Reuse tags",
+        "WSDL",
+        "Aliases",
+        "Base64"
+      ],
+      "answer": "Aliases",
       "source_pages": [
         147
       ]
@@ -2575,13 +2575,13 @@
       "id": "MCQ036",
       "difficulty": "medium",
       "question": "Where can an Avro file store writer schema?",
-      "choices": {
-        "A": "File header",
-        "B": "Every field tag",
-        "C": "HTTP cookie",
-        "D": "B-tree root"
-      },
-      "answer": "A",
+      "choices": [
+        "File header",
+        "Every field tag",
+        "HTTP cookie",
+        "B-tree root"
+      ],
+      "answer": "File header",
       "source_pages": [
         147
       ]
@@ -2590,13 +2590,13 @@
       "id": "MCQ037",
       "difficulty": "medium",
       "question": "How can a DB record identify Avro writer schema?",
-      "choices": {
-        "A": "Version/hash plus schema registry",
-        "B": "Only field names",
-        "C": "Only file header",
-        "D": "No way"
-      },
-      "answer": "A",
+      "choices": [
+        "Only field names",
+        "No way",
+        "Version/hash plus schema registry",
+        "Only file header"
+      ],
+      "answer": "Version/hash plus schema registry",
       "source_pages": [
         147,
         148
@@ -2606,13 +2606,13 @@
       "id": "MCQ038",
       "difficulty": "medium",
       "question": "Why is Avro good for dynamic schemas?",
-      "choices": {
-        "A": "No manual field tags",
-        "B": "No schema required",
-        "C": "Only JSON values",
-        "D": "No compatibility"
-      },
-      "answer": "A",
+      "choices": [
+        "No compatibility",
+        "Only JSON values",
+        "No schema required",
+        "No manual field tags"
+      ],
+      "answer": "No manual field tags",
       "source_pages": [
         148
       ]
@@ -2621,13 +2621,13 @@
       "id": "MCQ039",
       "difficulty": "medium",
       "question": "What is code generation most useful for?",
-      "choices": {
-        "A": "Statically typed languages",
-        "B": "Only JavaScript",
-        "C": "Only CSV",
-        "D": "Only message queues"
-      },
-      "answer": "A",
+      "choices": [
+        "Only message queues",
+        "Only CSV",
+        "Statically typed languages",
+        "Only JavaScript"
+      ],
+      "answer": "Statically typed languages",
       "source_pages": [
         149
       ]
@@ -2636,13 +2636,13 @@
       "id": "MCQ040",
       "difficulty": "medium",
       "question": "What is one schema merit?",
-      "choices": {
-        "A": "Compatibility checking before deployment",
-        "B": "No documentation",
-        "C": "Larger encoding",
-        "D": "No static typing"
-      },
-      "answer": "A",
+      "choices": [
+        "No documentation",
+        "No static typing",
+        "Larger encoding",
+        "Compatibility checking before deployment"
+      ],
+      "answer": "Compatibility checking before deployment",
       "source_pages": [
         150
       ]
@@ -2651,13 +2651,13 @@
       "id": "MCQ041",
       "difficulty": "medium",
       "question": "What are the chapter's three dataflow modes?",
-      "choices": {
-        "A": "Database, services, messaging",
-        "B": "B-tree, LSM, hash",
-        "C": "JSON, XML, CSV",
-        "D": "OLTP, OLAP, ETL"
-      },
-      "answer": "A",
+      "choices": [
+        "OLTP, OLAP, ETL",
+        "B-tree, LSM, hash",
+        "JSON, XML, CSV",
+        "Database, services, messaging"
+      ],
+      "answer": "Database, services, messaging",
       "source_pages": [
         151
       ]
@@ -2666,13 +2666,13 @@
       "id": "MCQ042",
       "difficulty": "medium",
       "question": "Why is backward compatibility required for database storage?",
-      "choices": {
-        "A": "Future code must read old stored bytes",
-        "B": "Old code never reads data",
-        "C": "Databases rewrite everything",
-        "D": "Only clients matter"
-      },
-      "answer": "A",
+      "choices": [
+        "Only clients matter",
+        "Future code must read old stored bytes",
+        "Databases rewrite everything",
+        "Old code never reads data"
+      ],
+      "answer": "Future code must read old stored bytes",
       "source_pages": [
         151
       ]
@@ -2681,13 +2681,13 @@
       "id": "MCQ043",
       "difficulty": "medium",
       "question": "Why is forward compatibility also needed in databases?",
-      "choices": {
-        "A": "Old app instances may read new writes during rolling upgrades",
-        "B": "Old code is always gone first",
-        "C": "Only archives matter",
-        "D": "DB forbids mixed versions"
-      },
-      "answer": "A",
+      "choices": [
+        "DB forbids mixed versions",
+        "Old app instances may read new writes during rolling upgrades",
+        "Old code is always gone first",
+        "Only archives matter"
+      ],
+      "answer": "Old app instances may read new writes during rolling upgrades",
       "source_pages": [
         151
       ]
@@ -2696,13 +2696,13 @@
       "id": "MCQ044",
       "difficulty": "medium",
       "question": "What can older code accidentally do to unknown fields?",
-      "choices": {
-        "A": "Drop them when re-encoding",
-        "B": "Always preserve them",
-        "C": "Encrypt them",
-        "D": "Index them"
-      },
-      "answer": "A",
+      "choices": [
+        "Index them",
+        "Drop them when re-encoding",
+        "Encrypt them",
+        "Always preserve them"
+      ],
+      "answer": "Drop them when re-encoding",
       "source_pages": [
         151,
         152
@@ -2712,13 +2712,13 @@
       "id": "MCQ045",
       "difficulty": "medium",
       "question": "What does 'data outlives code' mean?",
-      "choices": {
-        "A": "Old encoded records remain long after old binaries are gone",
-        "B": "Code lives forever",
-        "C": "Data is always migrated instantly",
-        "D": "Backups are deleted"
-      },
-      "answer": "A",
+      "choices": [
+        "Backups are deleted",
+        "Old encoded records remain long after old binaries are gone",
+        "Data is always migrated instantly",
+        "Code lives forever"
+      ],
+      "answer": "Old encoded records remain long after old binaries are gone",
       "source_pages": [
         152
       ]
@@ -2727,13 +2727,13 @@
       "id": "MCQ046",
       "difficulty": "medium",
       "question": "Why avoid full data migrations?",
-      "choices": {
-        "A": "They can be expensive on large datasets",
-        "B": "They are impossible",
-        "C": "They reduce schemas",
-        "D": "They break SQL always"
-      },
-      "answer": "A",
+      "choices": [
+        "They are impossible",
+        "They break SQL always",
+        "They can be expensive on large datasets",
+        "They reduce schemas"
+      ],
+      "answer": "They can be expensive on large datasets",
       "source_pages": [
         152
       ]
@@ -2742,13 +2742,13 @@
       "id": "MCQ047",
       "difficulty": "medium",
       "question": "What format is suggested for analytics-friendly archival data?",
-      "choices": {
-        "A": "Parquet",
-        "B": "Java serialization",
-        "C": "WSDL",
-        "D": "SOAP"
-      },
-      "answer": "A",
+      "choices": [
+        "Java serialization",
+        "Parquet",
+        "WSDL",
+        "SOAP"
+      ],
+      "answer": "Parquet",
       "source_pages": [
         153
       ]
@@ -2757,13 +2757,13 @@
       "id": "MCQ048",
       "difficulty": "medium",
       "question": "What is a service in this chapter?",
-      "choices": {
-        "A": "Network API exposed by server",
-        "B": "Database table",
-        "C": "Schema registry only",
-        "D": "Message tag"
-      },
-      "answer": "A",
+      "choices": [
+        "Database table",
+        "Schema registry only",
+        "Message tag",
+        "Network API exposed by server"
+      ],
+      "answer": "Network API exposed by server",
       "source_pages": [
         153
       ]
@@ -2772,13 +2772,13 @@
       "id": "MCQ049",
       "difficulty": "medium",
       "question": "What is a microservices design goal?",
-      "choices": {
-        "A": "Independent deployment/evolution",
-        "B": "All services upgraded simultaneously",
-        "C": "Shared language serialization only",
-        "D": "No APIs"
-      },
-      "answer": "A",
+      "choices": [
+        "All services upgraded simultaneously",
+        "Independent deployment/evolution",
+        "Shared language serialization only",
+        "No APIs"
+      ],
+      "answer": "Independent deployment/evolution",
       "source_pages": [
         154
       ]
@@ -2787,13 +2787,13 @@
       "id": "MCQ050",
       "difficulty": "medium",
       "question": "What is REST?",
-      "choices": {
-        "A": "HTTP-based design philosophy",
-        "B": "XML-only protocol",
-        "C": "RPC transport",
-        "D": "Schema language"
-      },
-      "answer": "A",
+      "choices": [
+        "Schema language",
+        "HTTP-based design philosophy",
+        "XML-only protocol",
+        "RPC transport"
+      ],
+      "answer": "HTTP-based design philosophy",
       "source_pages": [
         155
       ]
@@ -2802,13 +2802,13 @@
       "id": "MCQ051",
       "difficulty": "medium",
       "question": "What is SOAP?",
-      "choices": {
-        "A": "XML-based API protocol",
-        "B": "JSON-only style",
-        "C": "Actor framework",
-        "D": "Schema registry"
-      },
-      "answer": "A",
+      "choices": [
+        "Actor framework",
+        "Schema registry",
+        "XML-based API protocol",
+        "JSON-only style"
+      ],
+      "answer": "XML-based API protocol",
       "source_pages": [
         155
       ]
@@ -2817,13 +2817,13 @@
       "id": "MCQ052",
       "difficulty": "medium",
       "question": "What describes SOAP APIs?",
-      "choices": {
-        "A": "WSDL",
-        "B": "OpenAPI only",
-        "C": "Protobuf tags",
-        "D": "Avro IDL"
-      },
-      "answer": "A",
+      "choices": [
+        "Protobuf tags",
+        "Avro IDL",
+        "OpenAPI only",
+        "WSDL"
+      ],
+      "answer": "WSDL",
       "source_pages": [
         155
       ]
@@ -2832,13 +2832,13 @@
       "id": "MCQ053",
       "difficulty": "medium",
       "question": "What can describe REST APIs?",
-      "choices": {
-        "A": "OpenAPI/Swagger",
-        "B": "WAL",
-        "C": "RDF",
-        "D": "Bloom filters"
-      },
-      "answer": "A",
+      "choices": [
+        "OpenAPI/Swagger",
+        "Bloom filters",
+        "RDF",
+        "WAL"
+      ],
+      "answer": "OpenAPI/Swagger",
       "source_pages": [
         155
       ]
@@ -2847,13 +2847,13 @@
       "id": "MCQ054",
       "difficulty": "medium",
       "question": "What does RPC location transparency try to do?",
-      "choices": {
-        "A": "Make remote calls look local",
-        "B": "Make local calls networked",
-        "C": "Remove serialization",
-        "D": "Eliminate failures"
-      },
-      "answer": "A",
+      "choices": [
+        "Make local calls networked",
+        "Remove serialization",
+        "Make remote calls look local",
+        "Eliminate failures"
+      ],
+      "answer": "Make remote calls look local",
       "source_pages": [
         156
       ]
@@ -2862,13 +2862,13 @@
       "id": "MCQ055",
       "difficulty": "hard",
       "question": "Why are RPC timeouts ambiguous?",
-      "choices": {
-        "A": "You don't know whether operation executed",
-        "B": "They always mean operation failed",
-        "C": "They never happen",
-        "D": "They only affect local calls"
-      },
-      "answer": "A",
+      "choices": [
+        "They never happen",
+        "They always mean operation failed",
+        "They only affect local calls",
+        "You don't know whether operation executed"
+      ],
+      "answer": "You don't know whether operation executed",
       "source_pages": [
         156
       ]
@@ -2877,13 +2877,13 @@
       "id": "MCQ056",
       "difficulty": "hard",
       "question": "What can retries cause?",
-      "choices": {
-        "A": "Duplicate execution",
-        "B": "Guaranteed exactly-once behavior",
-        "C": "Lower latency always",
-        "D": "No side effects"
-      },
-      "answer": "A",
+      "choices": [
+        "Duplicate execution",
+        "Lower latency always",
+        "Guaranteed exactly-once behavior",
+        "No side effects"
+      ],
+      "answer": "Duplicate execution",
       "source_pages": [
         156
       ]
@@ -2892,13 +2892,13 @@
       "id": "MCQ057",
       "difficulty": "hard",
       "question": "What property helps safe retries?",
-      "choices": {
-        "A": "Idempotence",
-        "B": "Compression",
-        "C": "Field tags",
-        "D": "WSDL"
-      },
-      "answer": "A",
+      "choices": [
+        "Field tags",
+        "WSDL",
+        "Idempotence",
+        "Compression"
+      ],
+      "answer": "Idempotence",
       "source_pages": [
         156
       ]
@@ -2907,13 +2907,13 @@
       "id": "MCQ058",
       "difficulty": "hard",
       "question": "Why are RPC latencies different from local calls?",
-      "choices": {
-        "A": "Networks are slower and variable",
-        "B": "They are identical",
-        "C": "Local calls always timeout",
-        "D": "RPC is always faster"
-      },
-      "answer": "A",
+      "choices": [
+        "RPC is always faster",
+        "Networks are slower and variable",
+        "Local calls always timeout",
+        "They are identical"
+      ],
+      "answer": "Networks are slower and variable",
       "source_pages": [
         156
       ]
@@ -2922,13 +2922,13 @@
       "id": "MCQ059",
       "difficulty": "hard",
       "question": "Which RPC uses Protocol Buffers?",
-      "choices": {
-        "A": "gRPC",
-        "B": "Finagle",
-        "C": "Rest.li",
-        "D": "SOAP"
-      },
-      "answer": "A",
+      "choices": [
+        "gRPC",
+        "Finagle",
+        "SOAP",
+        "Rest.li"
+      ],
+      "answer": "gRPC",
       "source_pages": [
         157
       ]
@@ -2937,13 +2937,13 @@
       "id": "MCQ060",
       "difficulty": "hard",
       "question": "What do futures/promises represent?",
-      "choices": {
-        "A": "Asynchronous operations that may fail",
-        "B": "Schema versions",
-        "C": "Database indexes",
-        "D": "Binary strings"
-      },
-      "answer": "A",
+      "choices": [
+        "Binary strings",
+        "Database indexes",
+        "Schema versions",
+        "Asynchronous operations that may fail"
+      ],
+      "answer": "Asynchronous operations that may fail",
       "source_pages": [
         157
       ]
@@ -2952,13 +2952,13 @@
       "id": "MCQ061",
       "difficulty": "hard",
       "question": "What does gRPC additionally support?",
-      "choices": {
-        "A": "Streaming",
-        "B": "Only unary calls",
-        "C": "No network",
-        "D": "No schema"
-      },
-      "answer": "A",
+      "choices": [
+        "Only unary calls",
+        "Streaming",
+        "No schema",
+        "No network"
+      ],
+      "answer": "Streaming",
       "source_pages": [
         157
       ]
@@ -2967,13 +2967,13 @@
       "id": "MCQ062",
       "difficulty": "hard",
       "question": "What is service discovery?",
-      "choices": {
-        "A": "Finding service address/port",
-        "B": "Finding a JSON field",
-        "C": "Finding WAL entries",
-        "D": "Finding old schemas"
-      },
-      "answer": "A",
+      "choices": [
+        "Finding old schemas",
+        "Finding WAL entries",
+        "Finding a JSON field",
+        "Finding service address/port"
+      ],
+      "answer": "Finding service address/port",
       "source_pages": [
         157
       ]
@@ -2982,13 +2982,13 @@
       "id": "MCQ063",
       "difficulty": "hard",
       "question": "Why is REST strong for public APIs?",
-      "choices": {
-        "A": "Broad compatibility/tooling/debuggability",
-        "B": "Fastest binary encoding always",
-        "C": "Requires generated classes",
-        "D": "Hides network failures"
-      },
-      "answer": "A",
+      "choices": [
+        "Fastest binary encoding always",
+        "Broad compatibility/tooling/debuggability",
+        "Hides network failures",
+        "Requires generated classes"
+      ],
+      "answer": "Broad compatibility/tooling/debuggability",
       "source_pages": [
         157,
         158
@@ -2998,13 +2998,13 @@
       "id": "MCQ064",
       "difficulty": "hard",
       "question": "For RPC rolling upgrades, requests generally need?",
-      "choices": {
-        "A": "Backward compatibility",
-        "B": "Forward only",
-        "C": "No compatibility",
-        "D": "Identical versions"
-      },
-      "answer": "A",
+      "choices": [
+        "Identical versions",
+        "Backward compatibility",
+        "Forward only",
+        "No compatibility"
+      ],
+      "answer": "Backward compatibility",
       "source_pages": [
         158
       ]
@@ -3013,13 +3013,13 @@
       "id": "MCQ065",
       "difficulty": "hard",
       "question": "For RPC rolling upgrades, responses generally need?",
-      "choices": {
-        "A": "Forward compatibility",
-        "B": "Backward only",
-        "C": "No compatibility",
-        "D": "Identical versions"
-      },
-      "answer": "A",
+      "choices": [
+        "Forward compatibility",
+        "Backward only",
+        "Identical versions",
+        "No compatibility"
+      ],
+      "answer": "Forward compatibility",
       "source_pages": [
         158
       ]
@@ -3028,13 +3028,13 @@
       "id": "MCQ066",
       "difficulty": "hard",
       "question": "Why might providers keep multiple API versions?",
-      "choices": {
-        "A": "External clients cannot be forced to upgrade",
-        "B": "Schemas never evolve",
-        "C": "REST requires it always",
-        "D": "RPC cannot version"
-      },
-      "answer": "A",
+      "choices": [
+        "External clients cannot be forced to upgrade",
+        "RPC cannot version",
+        "Schemas never evolve",
+        "REST requires it always"
+      ],
+      "answer": "External clients cannot be forced to upgrade",
       "source_pages": [
         158
       ]
@@ -3043,13 +3043,13 @@
       "id": "MCQ067",
       "difficulty": "hard",
       "question": "What is a message broker?",
-      "choices": {
-        "A": "Intermediary that temporarily stores/delivers messages",
-        "B": "Local function call",
-        "C": "Schema file",
-        "D": "B-tree"
-      },
-      "answer": "A",
+      "choices": [
+        "Schema file",
+        "B-tree",
+        "Intermediary that temporarily stores/delivers messages",
+        "Local function call"
+      ],
+      "answer": "Intermediary that temporarily stores/delivers messages",
       "source_pages": [
         159
       ]
@@ -3058,13 +3058,13 @@
       "id": "MCQ068",
       "difficulty": "hard",
       "question": "What broker property helps overloaded consumers?",
-      "choices": {
-        "A": "Buffering",
-        "B": "Synchronous blocking only",
-        "C": "No persistence ever",
-        "D": "Field tags"
-      },
-      "answer": "A",
+      "choices": [
+        "No persistence ever",
+        "Field tags",
+        "Synchronous blocking only",
+        "Buffering"
+      ],
+      "answer": "Buffering",
       "source_pages": [
         159
       ]
@@ -3073,13 +3073,13 @@
       "id": "MCQ069",
       "difficulty": "hard",
       "question": "What broker property helps crashed consumers?",
-      "choices": {
-        "A": "Redelivery",
-        "B": "WSDL",
-        "C": "Base64",
-        "D": "Schema aliases"
-      },
-      "answer": "A",
+      "choices": [
+        "WSDL",
+        "Redelivery",
+        "Schema aliases",
+        "Base64"
+      ],
+      "answer": "Redelivery",
       "source_pages": [
         159
       ]
@@ -3088,13 +3088,13 @@
       "id": "MCQ070",
       "difficulty": "hard",
       "question": "What location detail can broker hide?",
-      "choices": {
-        "A": "Recipient IP/port",
-        "B": "Schema field tags",
-        "C": "JSON type",
-        "D": "Disk offset"
-      },
-      "answer": "A",
+      "choices": [
+        "Disk offset",
+        "JSON type",
+        "Schema field tags",
+        "Recipient IP/port"
+      ],
+      "answer": "Recipient IP/port",
       "source_pages": [
         159
       ]
@@ -3103,13 +3103,13 @@
       "id": "MCQ071",
       "difficulty": "hard",
       "question": "Can broker messages fan out to multiple recipients?",
-      "choices": {
-        "A": "Yes",
-        "B": "No",
-        "C": "Only RPC can",
-        "D": "Only databases can"
-      },
-      "answer": "A",
+      "choices": [
+        "Only databases can",
+        "No",
+        "Only RPC can",
+        "Yes"
+      ],
+      "answer": "Yes",
       "source_pages": [
         159
       ]
@@ -3118,13 +3118,13 @@
       "id": "MCQ072",
       "difficulty": "hard",
       "question": "Broker communication is usually?",
-      "choices": {
-        "A": "Asynchronous and one-way",
-        "B": "Synchronous local call",
-        "C": "Shared memory",
-        "D": "Always exactly-once"
-      },
-      "answer": "A",
+      "choices": [
+        "Synchronous local call",
+        "Asynchronous and one-way",
+        "Always exactly-once",
+        "Shared memory"
+      ],
+      "answer": "Asynchronous and one-way",
       "source_pages": [
         159
       ]
@@ -3133,13 +3133,13 @@
       "id": "MCQ073",
       "difficulty": "hard",
       "question": "Which broker is listed?",
-      "choices": {
-        "A": "RabbitMQ",
-        "B": "Hibernate",
-        "C": "Avro",
-        "D": "WSDL"
-      },
-      "answer": "A",
+      "choices": [
+        "WSDL",
+        "RabbitMQ",
+        "Avro",
+        "Hibernate"
+      ],
+      "answer": "RabbitMQ",
       "source_pages": [
         159
       ]
@@ -3148,13 +3148,13 @@
       "id": "MCQ074",
       "difficulty": "hard",
       "question": "What do brokers generally treat payload as?",
-      "choices": {
-        "A": "Bytes plus metadata",
-        "B": "Objects with one fixed schema",
-        "C": "SQL tables",
-        "D": "Local pointers"
-      },
-      "answer": "A",
+      "choices": [
+        "SQL tables",
+        "Local pointers",
+        "Bytes plus metadata",
+        "Objects with one fixed schema"
+      ],
+      "answer": "Bytes plus metadata",
       "source_pages": [
         160
       ]
@@ -3163,13 +3163,13 @@
       "id": "MCQ075",
       "difficulty": "hard",
       "question": "Why should message schemas be both backward/forward compatible?",
-      "choices": {
-        "A": "Publishers and consumers can evolve independently",
-        "B": "To force lockstep deploys",
-        "C": "To remove queues",
-        "D": "To avoid encoding"
-      },
-      "answer": "A",
+      "choices": [
+        "To avoid encoding",
+        "Publishers and consumers can evolve independently",
+        "To force lockstep deploys",
+        "To remove queues"
+      ],
+      "answer": "Publishers and consumers can evolve independently",
       "source_pages": [
         160
       ]
@@ -3178,13 +3178,13 @@
       "id": "MCQ076",
       "difficulty": "hard",
       "question": "What does an actor encapsulate?",
-      "choices": {
-        "A": "Local state",
-        "B": "Shared global memory",
-        "C": "One database table",
-        "D": "HTTP cache"
-      },
-      "answer": "A",
+      "choices": [
+        "Shared global memory",
+        "One database table",
+        "Local state",
+        "HTTP cache"
+      ],
+      "answer": "Local state",
       "source_pages": [
         160
       ]
@@ -3193,13 +3193,13 @@
       "id": "MCQ077",
       "difficulty": "hard",
       "question": "How many messages does an actor process at once?",
-      "choices": {
-        "A": "Typically one",
-        "B": "Unlimited concurrently",
-        "C": "Always zero",
-        "D": "Exactly two"
-      },
-      "answer": "A",
+      "choices": [
+        "Typically one",
+        "Unlimited concurrently",
+        "Exactly two",
+        "Always zero"
+      ],
+      "answer": "Typically one",
       "source_pages": [
         160
       ]
@@ -3208,13 +3208,13 @@
       "id": "MCQ078",
       "difficulty": "hard",
       "question": "Do distributed actors use the same abstraction locally and remotely?",
-      "choices": {
-        "A": "Yes",
-        "B": "No",
-        "C": "Only in Akka",
-        "D": "Only in Erlang"
-      },
-      "answer": "A",
+      "choices": [
+        "Only in Erlang",
+        "Yes",
+        "Only in Akka",
+        "No"
+      ],
+      "answer": "Yes",
       "source_pages": [
         160
       ]
@@ -3223,13 +3223,13 @@
       "id": "MCQ079",
       "difficulty": "hard",
       "question": "Why is actor location transparency more plausible than RPC's?",
-      "choices": {
-        "A": "Actor model already accepts asynchronous messaging/loss",
-        "B": "Actors use shared memory across nodes",
-        "C": "Actors never fail",
-        "D": "Actors avoid encoding"
-      },
-      "answer": "A",
+      "choices": [
+        "Actors avoid encoding",
+        "Actors use shared memory across nodes",
+        "Actor model already accepts asynchronous messaging/loss",
+        "Actors never fail"
+      ],
+      "answer": "Actor model already accepts asynchronous messaging/loss",
       "source_pages": [
         160
       ]
@@ -3238,13 +3238,13 @@
       "id": "MCQ080",
       "difficulty": "hard",
       "question": "What is Akka's default serializer in the chapter?",
-      "choices": {
-        "A": "Java serialization",
-        "B": "Avro",
-        "C": "Protobuf",
-        "D": "JSON"
-      },
-      "answer": "A",
+      "choices": [
+        "Protobuf",
+        "Java serialization",
+        "JSON",
+        "Avro"
+      ],
+      "answer": "Java serialization",
       "source_pages": [
         161
       ]
@@ -3253,13 +3253,13 @@
       "id": "MCQ081",
       "difficulty": "hard",
       "question": "What is the chapter's final deployment message?",
-      "choices": {
-        "A": "Compatibility enables rolling upgrades and evolvability",
-        "B": "Always use one encoding forever",
-        "C": "Avoid schema changes",
-        "D": "Only REST evolves"
-      },
-      "answer": "A",
+      "choices": [
+        "Compatibility enables rolling upgrades and evolvability",
+        "Avoid schema changes",
+        "Always use one encoding forever",
+        "Only REST evolves"
+      ],
+      "answer": "Compatibility enables rolling upgrades and evolvability",
       "source_pages": [
         161,
         162

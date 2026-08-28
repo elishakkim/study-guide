@@ -1731,13 +1731,13 @@
       "id": "MCQ001",
       "difficulty": "medium",
       "question": "Linearizability is a?",
-      "choices": {
-        "A": "Recency guarantee",
-        "B": "Transaction isolation only",
-        "C": "Durability model",
-        "D": "Partition scheme"
-      },
-      "answer": "A",
+      "choices": [
+        "Recency guarantee",
+        "Durability model",
+        "Transaction isolation only",
+        "Partition scheme"
+      ],
+      "answer": "Recency guarantee",
       "source_pages": [
         346
       ]
@@ -1746,13 +1746,13 @@
       "id": "MCQ002",
       "difficulty": "medium",
       "question": "After a completed write, a later linearizable read must see?",
-      "choices": {
-        "A": "That value or newer",
-        "B": "Any replica value",
-        "C": "Only older value",
-        "D": "Nothing"
-      },
-      "answer": "A",
+      "choices": [
+        "Nothing",
+        "Any replica value",
+        "Only older value",
+        "That value or newer"
+      ],
+      "answer": "That value or newer",
       "source_pages": [
         346
       ]
@@ -1761,13 +1761,13 @@
       "id": "MCQ003",
       "difficulty": "medium",
       "question": "A read concurrent with a write may see?",
-      "choices": {
-        "A": "Old or new",
-        "B": "Only old",
-        "C": "Only new",
-        "D": "Always error"
-      },
-      "answer": "A",
+      "choices": [
+        "Only new",
+        "Always error",
+        "Only old",
+        "Old or new"
+      ],
+      "answer": "Old or new",
       "source_pages": [
         348
       ]
@@ -1776,13 +1776,13 @@
       "id": "MCQ004",
       "difficulty": "medium",
       "question": "Strict serializability combines?",
-      "choices": {
-        "A": "Serializability + linearizability",
-        "B": "2PC + 2PL",
-        "C": "CAP + causal consistency",
-        "D": "MVCC + LWW"
-      },
-      "answer": "A",
+      "choices": [
+        "MVCC + LWW",
+        "CAP + causal consistency",
+        "2PC + 2PL",
+        "Serializability + linearizability"
+      ],
+      "answer": "Serializability + linearizability",
       "source_pages": [
         351
       ]
@@ -1791,13 +1791,13 @@
       "id": "MCQ005",
       "difficulty": "medium",
       "question": "Which needs a linearizable primitive?",
-      "choices": {
-        "A": "Leader election lock",
-        "B": "Eventually consistent cache",
-        "C": "Batch sort",
-        "D": "Compression"
-      },
-      "answer": "A",
+      "choices": [
+        "Eventually consistent cache",
+        "Compression",
+        "Leader election lock",
+        "Batch sort"
+      ],
+      "answer": "Leader election lock",
       "source_pages": [
         352
       ]
@@ -1806,13 +1806,13 @@
       "id": "MCQ006",
       "difficulty": "medium",
       "question": "Hard username uniqueness resembles?",
-      "choices": {
-        "A": "Compare-and-set",
-        "B": "LWW",
-        "C": "Read repair",
-        "D": "Snapshot read"
-      },
-      "answer": "A",
+      "choices": [
+        "Compare-and-set",
+        "LWW",
+        "Snapshot read",
+        "Read repair"
+      ],
+      "answer": "Compare-and-set",
       "source_pages": [
         353
       ]
@@ -1821,13 +1821,13 @@
       "id": "MCQ007",
       "difficulty": "medium",
       "question": "Multi-leader replication is generally?",
-      "choices": {
-        "A": "Not linearizable",
-        "B": "Always linearizable",
-        "C": "Strictly serializable",
-        "D": "Consensus-based"
-      },
-      "answer": "A",
+      "choices": [
+        "Always linearizable",
+        "Not linearizable",
+        "Consensus-based",
+        "Strictly serializable"
+      ],
+      "answer": "Not linearizable",
       "source_pages": [
         355
       ]
@@ -1836,13 +1836,13 @@
       "id": "MCQ008",
       "difficulty": "medium",
       "question": "Does w+r>n guarantee linearizability?",
-      "choices": {
-        "A": "No",
-        "B": "Yes",
-        "C": "Only with n=3",
-        "D": "Only with LWW"
-      },
-      "answer": "A",
+      "choices": [
+        "No",
+        "Only with LWW",
+        "Only with n=3",
+        "Yes"
+      ],
+      "answer": "No",
       "source_pages": [
         356
       ]
@@ -1851,13 +1851,13 @@
       "id": "MCQ009",
       "difficulty": "medium",
       "question": "Linearizable CAS generally requires?",
-      "choices": {
-        "A": "Consensus",
-        "B": "Only quorum reads",
-        "C": "Only read repair",
-        "D": "Only timestamps"
-      },
-      "answer": "A",
+      "choices": [
+        "Only quorum reads",
+        "Only timestamps",
+        "Only read repair",
+        "Consensus"
+      ],
+      "answer": "Consensus",
       "source_pages": [
         357
       ]
@@ -1866,13 +1866,13 @@
       "id": "MCQ010",
       "difficulty": "medium",
       "question": "During a network partition, preserving linearizability can require?",
-      "choices": {
-        "A": "Unavailability on some replicas",
-        "B": "Independent writes everywhere",
-        "C": "No coordination",
-        "D": "LWW"
-      },
-      "answer": "A",
+      "choices": [
+        "Unavailability on some replicas",
+        "Independent writes everywhere",
+        "LWW",
+        "No coordination"
+      ],
+      "answer": "Unavailability on some replicas",
       "source_pages": [
         358
       ]
@@ -1881,13 +1881,13 @@
       "id": "MCQ011",
       "difficulty": "medium",
       "question": "Best CAP phrasing here?",
-      "choices": {
-        "A": "Consistent or Available when Partitioned",
-        "B": "Pick two forever",
-        "C": "Partition tolerance is optional",
-        "D": "CAP covers all tradeoffs"
-      },
-      "answer": "A",
+      "choices": [
+        "Pick two forever",
+        "Consistent or Available when Partitioned",
+        "CAP covers all tradeoffs",
+        "Partition tolerance is optional"
+      ],
+      "answer": "Consistent or Available when Partitioned",
       "source_pages": [
         359
       ]
@@ -1896,13 +1896,13 @@
       "id": "MCQ012",
       "difficulty": "medium",
       "question": "Formal CAP's consistency model is?",
-      "choices": {
-        "A": "Linearizability",
-        "B": "Serializability",
-        "C": "Eventual consistency",
-        "D": "Read committed"
-      },
-      "answer": "A",
+      "choices": [
+        "Read committed",
+        "Serializability",
+        "Eventual consistency",
+        "Linearizability"
+      ],
+      "answer": "Linearizability",
       "source_pages": [
         359
       ]
@@ -1911,13 +1911,13 @@
       "id": "MCQ013",
       "difficulty": "medium",
       "question": "Causality is a?",
-      "choices": {
-        "A": "Partial order",
-        "B": "Total order",
-        "C": "No order",
-        "D": "Physical clock"
-      },
-      "answer": "A",
+      "choices": [
+        "No order",
+        "Partial order",
+        "Physical clock",
+        "Total order"
+      ],
+      "answer": "Partial order",
       "source_pages": [
         363
       ]
@@ -1926,13 +1926,13 @@
       "id": "MCQ014",
       "difficulty": "medium",
       "question": "Linearizability is a?",
-      "choices": {
-        "A": "Total order",
-        "B": "Partial order",
-        "C": "Vector order",
-        "D": "No order"
-      },
-      "answer": "A",
+      "choices": [
+        "Partial order",
+        "Vector order",
+        "No order",
+        "Total order"
+      ],
+      "answer": "Total order",
       "source_pages": [
         363
       ]
@@ -1941,13 +1941,13 @@
       "id": "MCQ015",
       "difficulty": "medium",
       "question": "Linearizability compared with causality is?",
-      "choices": {
-        "A": "Stronger",
-        "B": "Weaker",
-        "C": "Identical",
-        "D": "Unrelated"
-      },
-      "answer": "A",
+      "choices": [
+        "Weaker",
+        "Identical",
+        "Stronger",
+        "Unrelated"
+      ],
+      "answer": "Stronger",
       "source_pages": [
         364
       ]
@@ -1956,13 +1956,13 @@
       "id": "MCQ016",
       "difficulty": "medium",
       "question": "Lamport timestamp format?",
-      "choices": {
-        "A": "Counter + node ID",
-        "B": "Wall clock + UUID",
-        "C": "Vector only",
-        "D": "Term + quorum"
-      },
-      "answer": "A",
+      "choices": [
+        "Wall clock + UUID",
+        "Counter + node ID",
+        "Term + quorum",
+        "Vector only"
+      ],
+      "answer": "Counter + node ID",
       "source_pages": [
         367,
         368
@@ -1972,13 +1972,13 @@
       "id": "MCQ017",
       "difficulty": "medium",
       "question": "Lamport timestamps preserve?",
-      "choices": {
-        "A": "Causal order in a total ordering",
-        "B": "Physical time",
-        "C": "Concurrency distinction",
-        "D": "Wall-clock accuracy"
-      },
-      "answer": "A",
+      "choices": [
+        "Concurrency distinction",
+        "Physical time",
+        "Causal order in a total ordering",
+        "Wall-clock accuracy"
+      ],
+      "answer": "Causal order in a total ordering",
       "source_pages": [
         368
       ]
@@ -1987,13 +1987,13 @@
       "id": "MCQ018",
       "difficulty": "medium",
       "question": "Can Lamport tell concurrency?",
-      "choices": {
-        "A": "No",
-        "B": "Yes",
-        "C": "Only with NTP",
-        "D": "Only with one node"
-      },
-      "answer": "A",
+      "choices": [
+        "Yes",
+        "Only with one node",
+        "Only with NTP",
+        "No"
+      ],
+      "answer": "No",
       "source_pages": [
         368,
         369
@@ -2003,13 +2003,13 @@
       "id": "MCQ019",
       "difficulty": "medium",
       "question": "Version vectors can tell?",
-      "choices": {
-        "A": "Concurrency vs causality",
-        "B": "Physical time",
-        "C": "Linearization point",
-        "D": "CAP availability"
-      },
-      "answer": "A",
+      "choices": [
+        "CAP availability",
+        "Concurrency vs causality",
+        "Physical time",
+        "Linearization point"
+      ],
+      "answer": "Concurrency vs causality",
       "source_pages": [
         368,
         369
@@ -2019,13 +2019,13 @@
       "id": "MCQ020",
       "difficulty": "medium",
       "question": "Why is timestamp order insufficient for uniqueness?",
-      "choices": {
-        "A": "Order may not yet be final",
-        "B": "Timestamps aren't comparable",
-        "C": "No node IDs",
-        "D": "No writes"
-      },
-      "answer": "A",
+      "choices": [
+        "No node IDs",
+        "No writes",
+        "Timestamps aren't comparable",
+        "Order may not yet be final"
+      ],
+      "answer": "Order may not yet be final",
       "source_pages": [
         369
       ]
@@ -2034,13 +2034,13 @@
       "id": "MCQ021",
       "difficulty": "medium",
       "question": "TOB requires?",
-      "choices": {
-        "A": "Reliable delivery + same order",
-        "B": "Immediate delivery",
-        "C": "Fresh reads",
-        "D": "No failures"
-      },
-      "answer": "A",
+      "choices": [
+        "No failures",
+        "Reliable delivery + same order",
+        "Immediate delivery",
+        "Fresh reads"
+      ],
+      "answer": "Reliable delivery + same order",
       "source_pages": [
         370
       ]
@@ -2049,13 +2049,13 @@
       "id": "MCQ022",
       "difficulty": "medium",
       "question": "TOB is also called?",
-      "choices": {
-        "A": "Atomic broadcast",
-        "B": "MVCC",
-        "C": "Read repair",
-        "D": "2PL"
-      },
-      "answer": "A",
+      "choices": [
+        "2PL",
+        "Read repair",
+        "MVCC",
+        "Atomic broadcast"
+      ],
+      "answer": "Atomic broadcast",
       "source_pages": [
         370
       ]
@@ -2064,13 +2064,13 @@
       "id": "MCQ023",
       "difficulty": "medium",
       "question": "State machine replication means?",
-      "choices": {
-        "A": "Same operations in same order",
-        "B": "Different log per replica",
-        "C": "LWW",
-        "D": "Only one replica"
-      },
-      "answer": "A",
+      "choices": [
+        "Different log per replica",
+        "Same operations in same order",
+        "LWW",
+        "Only one replica"
+      ],
+      "answer": "Same operations in same order",
       "source_pages": [
         371
       ]
@@ -2079,13 +2079,13 @@
       "id": "MCQ024",
       "difficulty": "medium",
       "question": "TOB sequence numbers can become?",
-      "choices": {
-        "A": "Fencing tokens",
-        "B": "Wall clocks",
-        "C": "Quorum sizes",
-        "D": "Read timestamps"
-      },
-      "answer": "A",
+      "choices": [
+        "Fencing tokens",
+        "Wall clocks",
+        "Quorum sizes",
+        "Read timestamps"
+      ],
+      "answer": "Fencing tokens",
       "source_pages": [
         371
       ]
@@ -2094,13 +2094,13 @@
       "id": "MCQ025",
       "difficulty": "medium",
       "question": "TOB alone guarantees linearizable reads?",
-      "choices": {
-        "A": "No",
-        "B": "Yes",
-        "C": "Only in every follower",
-        "D": "Only without faults"
-      },
-      "answer": "A",
+      "choices": [
+        "No",
+        "Yes",
+        "Only in every follower",
+        "Only without faults"
+      ],
+      "answer": "No",
       "source_pages": [
         372,
         373
@@ -2110,13 +2110,13 @@
       "id": "MCQ026",
       "difficulty": "medium",
       "question": "Linearizable increment-and-get can implement?",
-      "choices": {
-        "A": "TOB",
-        "B": "Only eventual consistency",
-        "C": "2PL",
-        "D": "Snapshot isolation"
-      },
-      "answer": "A",
+      "choices": [
+        "TOB",
+        "Snapshot isolation",
+        "2PL",
+        "Only eventual consistency"
+      ],
+      "answer": "TOB",
       "source_pages": [
         373,
         374
@@ -2126,13 +2126,13 @@
       "id": "MCQ027",
       "difficulty": "medium",
       "question": "Consensus is equivalent to?",
-      "choices": {
-        "A": "TOB and linearizable CAS",
-        "B": "Only 2PC",
-        "C": "Only leader election",
-        "D": "Only hashing"
-      },
-      "answer": "A",
+      "choices": [
+        "Only hashing",
+        "Only leader election",
+        "TOB and linearizable CAS",
+        "Only 2PC"
+      ],
+      "answer": "TOB and linearizable CAS",
       "source_pages": [
         374
       ]
@@ -2141,13 +2141,13 @@
       "id": "MCQ028",
       "difficulty": "medium",
       "question": "FLP applies to?",
-      "choices": {
-        "A": "Fully asynchronous deterministic consensus with crashes",
-        "B": "All practical systems",
-        "C": "Synchronous networks",
-        "D": "No-failure systems"
-      },
-      "answer": "A",
+      "choices": [
+        "All practical systems",
+        "Fully asynchronous deterministic consensus with crashes",
+        "Synchronous networks",
+        "No-failure systems"
+      ],
+      "answer": "Fully asynchronous deterministic consensus with crashes",
       "source_pages": [
         375
       ]
@@ -2156,13 +2156,13 @@
       "id": "MCQ029",
       "difficulty": "medium",
       "question": "Why is practical consensus possible?",
-      "choices": {
-        "A": "Timeouts/failure suspicion or randomness",
-        "B": "FLP is invalid",
-        "C": "Networks never delay",
-        "D": "Nodes never crash"
-      },
-      "answer": "A",
+      "choices": [
+        "Timeouts/failure suspicion or randomness",
+        "FLP is invalid",
+        "Nodes never crash",
+        "Networks never delay"
+      ],
+      "answer": "Timeouts/failure suspicion or randomness",
       "source_pages": [
         375
       ]
@@ -2171,13 +2171,13 @@
       "id": "MCQ030",
       "difficulty": "medium",
       "question": "2PC phase 1?",
-      "choices": {
-        "A": "Prepare",
-        "B": "Commit",
-        "C": "Abort only",
-        "D": "Leader election"
-      },
-      "answer": "A",
+      "choices": [
+        "Leader election",
+        "Commit",
+        "Prepare",
+        "Abort only"
+      ],
+      "answer": "Prepare",
       "source_pages": [
         378
       ]
@@ -2186,13 +2186,13 @@
       "id": "MCQ031",
       "difficulty": "medium",
       "question": "2PC phase 2?",
-      "choices": {
-        "A": "Commit/abort",
-        "B": "Prepare",
-        "C": "Snapshot",
-        "D": "Read repair"
-      },
-      "answer": "A",
+      "choices": [
+        "Prepare",
+        "Read repair",
+        "Commit/abort",
+        "Snapshot"
+      ],
+      "answer": "Commit/abort",
       "source_pages": [
         378
       ]
@@ -2201,13 +2201,13 @@
       "id": "MCQ032",
       "difficulty": "medium",
       "question": "2PC and 2PL are?",
-      "choices": {
-        "A": "Different",
-        "B": "Same",
-        "C": "Both commit protocols",
-        "D": "Both leader elections"
-      },
-      "answer": "A",
+      "choices": [
+        "Both leader elections",
+        "Different",
+        "Both commit protocols",
+        "Same"
+      ],
+      "answer": "Different",
       "source_pages": [
         378
       ]
@@ -2216,13 +2216,13 @@
       "id": "MCQ033",
       "difficulty": "medium",
       "question": "Participant yes means?",
-      "choices": {
-        "A": "Promise it can commit later",
-        "B": "It may still abort freely",
-        "C": "Global commit already done",
-        "D": "Release locks"
-      },
-      "answer": "A",
+      "choices": [
+        "Global commit already done",
+        "It may still abort freely",
+        "Promise it can commit later",
+        "Release locks"
+      ],
+      "answer": "Promise it can commit later",
       "source_pages": [
         379
       ]
@@ -2231,13 +2231,13 @@
       "id": "MCQ034",
       "difficulty": "medium",
       "question": "Coordinator commit point?",
-      "choices": {
-        "A": "Durable final decision log entry",
-        "B": "Prepare send",
-        "C": "First vote",
-        "D": "Client ack"
-      },
-      "answer": "A",
+      "choices": [
+        "Prepare send",
+        "Client ack",
+        "Durable final decision log entry",
+        "First vote"
+      ],
+      "answer": "Durable final decision log entry",
       "source_pages": [
         379
       ]
@@ -2246,13 +2246,13 @@
       "id": "MCQ035",
       "difficulty": "medium",
       "question": "In-doubt participant can timeout and abort?",
-      "choices": {
-        "A": "No",
-        "B": "Yes always",
-        "C": "Only majority",
-        "D": "Only if lock released"
-      },
-      "answer": "A",
+      "choices": [
+        "Only majority",
+        "Only if lock released",
+        "No",
+        "Yes always"
+      ],
+      "answer": "No",
       "source_pages": [
         380
       ]
@@ -2261,13 +2261,13 @@
       "id": "MCQ036",
       "difficulty": "medium",
       "question": "Why is 2PC blocking?",
-      "choices": {
-        "A": "Coordinator failure can halt prepared participants",
-        "B": "No disk logging",
-        "C": "No locks",
-        "D": "No network"
-      },
-      "answer": "A",
+      "choices": [
+        "No disk logging",
+        "No locks",
+        "Coordinator failure can halt prepared participants",
+        "No network"
+      ],
+      "answer": "Coordinator failure can halt prepared participants",
       "source_pages": [
         381
       ]
@@ -2276,13 +2276,13 @@
       "id": "MCQ037",
       "difficulty": "medium",
       "question": "3PC relies on?",
-      "choices": {
-        "A": "Bounded timing/perfect failure detection",
-        "B": "No clocks",
-        "C": "One participant",
-        "D": "LWW"
-      },
-      "answer": "A",
+      "choices": [
+        "Bounded timing/perfect failure detection",
+        "LWW",
+        "No clocks",
+        "One participant"
+      ],
+      "answer": "Bounded timing/perfect failure detection",
       "source_pages": [
         381
       ]
@@ -2291,13 +2291,13 @@
       "id": "MCQ038",
       "difficulty": "medium",
       "question": "Exactly-once processing can use?",
-      "choices": {
-        "A": "Atomic broker ack + DB effects",
-        "B": "LWW",
-        "C": "Random retry",
-        "D": "Read repair"
-      },
-      "answer": "A",
+      "choices": [
+        "Read repair",
+        "Atomic broker ack + DB effects",
+        "LWW",
+        "Random retry"
+      ],
+      "answer": "Atomic broker ack + DB effects",
       "source_pages": [
         382,
         383
@@ -2307,13 +2307,13 @@
       "id": "MCQ039",
       "difficulty": "medium",
       "question": "XA is?",
-      "choices": {
-        "A": "Standard heterogeneous 2PC interface",
-        "B": "Consensus algorithm",
-        "C": "Lock protocol",
-        "D": "Replication model"
-      },
-      "answer": "A",
+      "choices": [
+        "Lock protocol",
+        "Replication model",
+        "Consensus algorithm",
+        "Standard heterogeneous 2PC interface"
+      ],
+      "answer": "Standard heterogeneous 2PC interface",
       "source_pages": [
         383
       ]
@@ -2322,13 +2322,13 @@
       "id": "MCQ040",
       "difficulty": "medium",
       "question": "In-doubt transactions hold?",
-      "choices": {
-        "A": "Locks",
-        "B": "No resources",
-        "C": "Only caches",
-        "D": "Only messages"
-      },
-      "answer": "A",
+      "choices": [
+        "Only caches",
+        "No resources",
+        "Only messages",
+        "Locks"
+      ],
+      "answer": "Locks",
       "source_pages": [
         384
       ]
@@ -2337,13 +2337,13 @@
       "id": "MCQ041",
       "difficulty": "medium",
       "question": "Heuristic decision may break?",
-      "choices": {
-        "A": "Atomicity",
-        "B": "Durability only",
-        "C": "Partitioning",
-        "D": "Compression"
-      },
-      "answer": "A",
+      "choices": [
+        "Compression",
+        "Atomicity",
+        "Durability only",
+        "Partitioning"
+      ],
+      "answer": "Atomicity",
       "source_pages": [
         385
       ]
@@ -2352,13 +2352,13 @@
       "id": "MCQ042",
       "difficulty": "medium",
       "question": "2PC tends to amplify failures because?",
-      "choices": {
-        "A": "Every participant is required",
-        "B": "Only majority required",
-        "C": "No coordinator",
-        "D": "No locks"
-      },
-      "answer": "A",
+      "choices": [
+        "No coordinator",
+        "Every participant is required",
+        "No locks",
+        "Only majority required"
+      ],
+      "answer": "Every participant is required",
       "source_pages": [
         386
       ]
@@ -2367,13 +2367,13 @@
       "id": "MCQ043",
       "difficulty": "medium",
       "question": "Consensus agreement means?",
-      "choices": {
-        "A": "No two nodes decide differently",
-        "B": "No node decides twice",
-        "C": "Value proposed",
-        "D": "Eventually decide"
-      },
-      "answer": "A",
+      "choices": [
+        "Value proposed",
+        "Eventually decide",
+        "No node decides twice",
+        "No two nodes decide differently"
+      ],
+      "answer": "No two nodes decide differently",
       "source_pages": [
         387
       ]
@@ -2382,13 +2382,13 @@
       "id": "MCQ044",
       "difficulty": "medium",
       "question": "Consensus integrity means?",
-      "choices": {
-        "A": "No node decides twice",
-        "B": "No two differ",
-        "C": "Value proposed",
-        "D": "Eventually decide"
-      },
-      "answer": "A",
+      "choices": [
+        "Value proposed",
+        "Eventually decide",
+        "No two differ",
+        "No node decides twice"
+      ],
+      "answer": "No node decides twice",
       "source_pages": [
         387
       ]
@@ -2397,13 +2397,13 @@
       "id": "MCQ045",
       "difficulty": "medium",
       "question": "Consensus validity means?",
-      "choices": {
-        "A": "Decision was proposed",
-        "B": "No two differ",
-        "C": "No node decides twice",
-        "D": "Eventually decide"
-      },
-      "answer": "A",
+      "choices": [
+        "Eventually decide",
+        "Decision was proposed",
+        "No node decides twice",
+        "No two differ"
+      ],
+      "answer": "Decision was proposed",
       "source_pages": [
         387
       ]
@@ -2412,13 +2412,13 @@
       "id": "MCQ046",
       "difficulty": "medium",
       "question": "Consensus termination means?",
-      "choices": {
-        "A": "Every non-crashed node eventually decides",
-        "B": "No two differ",
-        "C": "No duplicates",
-        "D": "Only proposed values"
-      },
-      "answer": "A",
+      "choices": [
+        "Every non-crashed node eventually decides",
+        "Only proposed values",
+        "No duplicates",
+        "No two differ"
+      ],
+      "answer": "Every non-crashed node eventually decides",
       "source_pages": [
         387
       ]
@@ -2427,13 +2427,13 @@
       "id": "MCQ047",
       "difficulty": "medium",
       "question": "Which is liveness?",
-      "choices": {
-        "A": "Termination",
-        "B": "Agreement",
-        "C": "Integrity",
-        "D": "Validity"
-      },
-      "answer": "A",
+      "choices": [
+        "Agreement",
+        "Validity",
+        "Termination",
+        "Integrity"
+      ],
+      "answer": "Termination",
       "source_pages": [
         387
       ]
@@ -2442,13 +2442,13 @@
       "id": "MCQ048",
       "difficulty": "medium",
       "question": "Consensus progress normally requires?",
-      "choices": {
-        "A": "Majority",
-        "B": "All nodes",
-        "C": "One node",
-        "D": "Two-thirds always"
-      },
-      "answer": "A",
+      "choices": [
+        "One node",
+        "Two-thirds always",
+        "Majority",
+        "All nodes"
+      ],
+      "answer": "Majority",
       "source_pages": [
         388
       ]
@@ -2457,13 +2457,13 @@
       "id": "MCQ049",
       "difficulty": "hard",
       "question": "Which is a consensus algorithm?",
-      "choices": {
-        "A": "Raft",
-        "B": "MapReduce",
-        "C": "B-tree",
-        "D": "MVCC"
-      },
-      "answer": "A",
+      "choices": [
+        "Raft",
+        "MVCC",
+        "MapReduce",
+        "B-tree"
+      ],
+      "answer": "Raft",
       "source_pages": [
         388
       ]
@@ -2472,13 +2472,13 @@
       "id": "MCQ050",
       "difficulty": "hard",
       "question": "Practical consensus often implements?",
-      "choices": {
-        "A": "Total order broadcast",
-        "B": "One decision only",
-        "C": "Only read repair",
-        "D": "Only snapshot isolation"
-      },
-      "answer": "A",
+      "choices": [
+        "Only snapshot isolation",
+        "One decision only",
+        "Only read repair",
+        "Total order broadcast"
+      ],
+      "answer": "Total order broadcast",
       "source_pages": [
         388,
         389
@@ -2488,13 +2488,13 @@
       "id": "MCQ051",
       "difficulty": "hard",
       "question": "Automatic leader election requires?",
-      "choices": {
-        "A": "Consensus",
-        "B": "Only DNS",
-        "C": "Only wall clocks",
-        "D": "Only LWW"
-      },
-      "answer": "A",
+      "choices": [
+        "Consensus",
+        "Only LWW",
+        "Only wall clocks",
+        "Only DNS"
+      ],
+      "answer": "Consensus",
       "source_pages": [
         389,
         390
@@ -2504,13 +2504,13 @@
       "id": "MCQ052",
       "difficulty": "hard",
       "question": "Raft epoch name?",
-      "choices": {
-        "A": "Term",
-        "B": "Ballot",
-        "C": "View",
-        "D": "zxid"
-      },
-      "answer": "A",
+      "choices": [
+        "View",
+        "Ballot",
+        "zxid",
+        "Term"
+      ],
+      "answer": "Term",
       "source_pages": [
         390
       ]
@@ -2519,13 +2519,13 @@
       "id": "MCQ053",
       "difficulty": "hard",
       "question": "Paxos epoch name?",
-      "choices": {
-        "A": "Ballot",
-        "B": "Term",
-        "C": "View",
-        "D": "Session"
-      },
-      "answer": "A",
+      "choices": [
+        "View",
+        "Session",
+        "Term",
+        "Ballot"
+      ],
+      "answer": "Ballot",
       "source_pages": [
         390
       ]
@@ -2534,13 +2534,13 @@
       "id": "MCQ054",
       "difficulty": "hard",
       "question": "Why must quorums overlap?",
-      "choices": {
-        "A": "Carry latest leadership/decision knowledge",
-        "B": "Reduce storage",
-        "C": "Avoid messages",
-        "D": "Synchronize clocks"
-      },
-      "answer": "A",
+      "choices": [
+        "Carry latest leadership/decision knowledge",
+        "Avoid messages",
+        "Synchronize clocks",
+        "Reduce storage"
+      ],
+      "answer": "Carry latest leadership/decision knowledge",
       "source_pages": [
         390
       ]
@@ -2549,13 +2549,13 @@
       "id": "MCQ055",
       "difficulty": "hard",
       "question": "2PC requires yes from?",
-      "choices": {
-        "A": "Every participant",
-        "B": "Majority",
-        "C": "One node",
-        "D": "Two-thirds"
-      },
-      "answer": "A",
+      "choices": [
+        "Two-thirds",
+        "Majority",
+        "One node",
+        "Every participant"
+      ],
+      "answer": "Every participant",
       "source_pages": [
         390
       ]
@@ -2564,13 +2564,13 @@
       "id": "MCQ056",
       "difficulty": "hard",
       "question": "Consensus usually requires?",
-      "choices": {
-        "A": "Majority",
-        "B": "Every participant",
-        "C": "One node",
-        "D": "No votes"
-      },
-      "answer": "A",
+      "choices": [
+        "No votes",
+        "Every participant",
+        "Majority",
+        "One node"
+      ],
+      "answer": "Majority",
       "source_pages": [
         390
       ]
@@ -2579,13 +2579,13 @@
       "id": "MCQ057",
       "difficulty": "hard",
       "question": "3-node consensus tolerates?",
-      "choices": {
-        "A": "1 failure",
-        "B": "2",
-        "C": "0",
-        "D": "3"
-      },
-      "answer": "A",
+      "choices": [
+        "2",
+        "3",
+        "1 failure",
+        "0"
+      ],
+      "answer": "1 failure",
       "source_pages": [
         391
       ]
@@ -2594,13 +2594,13 @@
       "id": "MCQ058",
       "difficulty": "hard",
       "question": "5-node consensus tolerates?",
-      "choices": {
-        "A": "2 failures",
-        "B": "3",
-        "C": "1 only",
-        "D": "5"
-      },
-      "answer": "A",
+      "choices": [
+        "5",
+        "1 only",
+        "2 failures",
+        "3"
+      ],
+      "answer": "2 failures",
       "source_pages": [
         391
       ]
@@ -2609,13 +2609,13 @@
       "id": "MCQ059",
       "difficulty": "hard",
       "question": "Network split progress occurs on?",
-      "choices": {
-        "A": "Majority side",
-        "B": "Minority side",
-        "C": "Both always",
-        "D": "Neither always"
-      },
-      "answer": "A",
+      "choices": [
+        "Both always",
+        "Majority side",
+        "Minority side",
+        "Neither always"
+      ],
+      "answer": "Majority side",
       "source_pages": [
         391
       ]
@@ -2624,13 +2624,13 @@
       "id": "MCQ060",
       "difficulty": "hard",
       "question": "ZooKeeper is intended for?",
-      "choices": {
-        "A": "Small coordination state",
-        "B": "All app data",
-        "C": "Blob storage",
-        "D": "Analytics warehouse"
-      },
-      "answer": "A",
+      "choices": [
+        "Blob storage",
+        "Analytics warehouse",
+        "All app data",
+        "Small coordination state"
+      ],
+      "answer": "Small coordination state",
       "source_pages": [
         392
       ]
@@ -2639,13 +2639,13 @@
       "id": "MCQ061",
       "difficulty": "hard",
       "question": "ZooKeeper fencing uses?",
-      "choices": {
-        "A": "zxid/cversion",
-        "B": "Wall clock only",
-        "C": "Random UUID only",
-        "D": "DNS TTL"
-      },
-      "answer": "A",
+      "choices": [
+        "DNS TTL",
+        "Random UUID only",
+        "zxid/cversion",
+        "Wall clock only"
+      ],
+      "answer": "zxid/cversion",
       "source_pages": [
         392
       ]
@@ -2654,13 +2654,13 @@
       "id": "MCQ062",
       "difficulty": "hard",
       "question": "Ephemeral nodes are removed when?",
-      "choices": {
-        "A": "Session expires",
-        "B": "Any read",
-        "C": "Any write",
-        "D": "Leader changes"
-      },
-      "answer": "A",
+      "choices": [
+        "Session expires",
+        "Any write",
+        "Any read",
+        "Leader changes"
+      ],
+      "answer": "Session expires",
       "source_pages": [
         393
       ]
@@ -2669,13 +2669,13 @@
       "id": "MCQ063",
       "difficulty": "hard",
       "question": "ZooKeeper watches reduce?",
-      "choices": {
-        "A": "Polling",
-        "B": "Ordering",
-        "C": "Consensus",
-        "D": "Durability"
-      },
-      "answer": "A",
+      "choices": [
+        "Durability",
+        "Ordering",
+        "Polling",
+        "Consensus"
+      ],
+      "answer": "Polling",
       "source_pages": [
         393
       ]
@@ -2684,13 +2684,13 @@
       "id": "MCQ064",
       "difficulty": "hard",
       "question": "Does service discovery always require consensus?",
-      "choices": {
-        "A": "No",
-        "B": "Yes",
-        "C": "Only DNS",
-        "D": "Only ZooKeeper"
-      },
-      "answer": "A",
+      "choices": [
+        "Only ZooKeeper",
+        "Only DNS",
+        "Yes",
+        "No"
+      ],
+      "answer": "No",
       "source_pages": [
         394
       ]
@@ -2699,13 +2699,13 @@
       "id": "MCQ065",
       "difficulty": "hard",
       "question": "Membership service provides?",
-      "choices": {
-        "A": "Agreed cluster membership",
-        "B": "Perfect failure detector",
-        "C": "Clock synchronization",
-        "D": "Partitioning"
-      },
-      "answer": "A",
+      "choices": [
+        "Perfect failure detector",
+        "Partitioning",
+        "Agreed cluster membership",
+        "Clock synchronization"
+      ],
+      "answer": "Agreed cluster membership",
       "source_pages": [
         395
       ]
@@ -2714,13 +2714,13 @@
       "id": "MCQ066",
       "difficulty": "hard",
       "question": "Which is reducible to consensus?",
-      "choices": {
-        "A": "Uniqueness constraint",
-        "B": "Image resize",
-        "C": "Compression",
-        "D": "Sorting"
-      },
-      "answer": "A",
+      "choices": [
+        "Image resize",
+        "Uniqueness constraint",
+        "Sorting",
+        "Compression"
+      ],
+      "answer": "Uniqueness constraint",
       "source_pages": [
         395,
         396
@@ -2730,13 +2730,13 @@
       "id": "MCQ067",
       "difficulty": "hard",
       "question": "Does one leader remove need for consensus forever?",
-      "choices": {
-        "A": "No",
-        "B": "Yes",
-        "C": "Only with async replication",
-        "D": "Only with snapshots"
-      },
-      "answer": "A",
+      "choices": [
+        "Yes",
+        "Only with snapshots",
+        "Only with async replication",
+        "No"
+      ],
+      "answer": "No",
       "source_pages": [
         396,
         397

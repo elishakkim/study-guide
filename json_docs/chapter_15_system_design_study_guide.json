@@ -1694,13 +1694,13 @@
       "id": "MCQ001",
       "difficulty": "medium",
       "question": "What is the maximum supported file size?",
-      "choices": {
-        "A": "1 GB",
-        "B": "5 GB",
-        "C": "10 GB",
-        "D": "100 GB"
-      },
-      "answer": "C",
+      "choices": [
+        "10 GB",
+        "5 GB",
+        "100 GB",
+        "1 GB"
+      ],
+      "answer": "10 GB",
       "source_pages": [
         246
       ]
@@ -1709,13 +1709,13 @@
       "id": "MCQ002",
       "difficulty": "medium",
       "question": "What DAU is assumed?",
-      "choices": {
-        "A": "1M",
-        "B": "10M",
-        "C": "50M",
-        "D": "100M"
-      },
-      "answer": "B",
+      "choices": [
+        "1M",
+        "10M",
+        "50M",
+        "100M"
+      ],
+      "answer": "10M",
       "source_pages": [
         246
       ]
@@ -1724,13 +1724,13 @@
       "id": "MCQ003",
       "difficulty": "medium",
       "question": "Which feature is out of scope?",
-      "choices": {
-        "A": "File revisions",
-        "B": "File sharing",
-        "C": "Real-time Docs collaboration",
-        "D": "File download"
-      },
-      "answer": "C",
+      "choices": [
+        "File sharing",
+        "File download",
+        "File revisions",
+        "Real-time Docs collaboration"
+      ],
+      "answer": "Real-time Docs collaboration",
       "source_pages": [
         246
       ]
@@ -1739,13 +1739,13 @@
       "id": "MCQ004",
       "difficulty": "medium",
       "question": "What is the read/write ratio?",
-      "choices": {
-        "A": "10:1",
-        "B": "1:10",
-        "C": "1:1",
-        "D": "100:1"
-      },
-      "answer": "C",
+      "choices": [
+        "1:10",
+        "1:1",
+        "10:1",
+        "100:1"
+      ],
+      "answer": "1:1",
       "source_pages": [
         246
       ]
@@ -1754,13 +1754,13 @@
       "id": "MCQ005",
       "difficulty": "medium",
       "question": "How much total storage is allocated in the estimate?",
-      "choices": {
-        "A": "50 PB",
-        "B": "500 PB",
-        "C": "5 EB",
-        "D": "500 TB"
-      },
-      "answer": "B",
+      "choices": [
+        "50 PB",
+        "5 EB",
+        "500 PB",
+        "500 TB"
+      ],
+      "answer": "500 PB",
       "source_pages": [
         247
       ]
@@ -1769,13 +1769,13 @@
       "id": "MCQ006",
       "difficulty": "medium",
       "question": "What is upload QPS?",
-      "choices": {
-        "A": "~24",
-        "B": "~240",
-        "C": "~2,400",
-        "D": "~24,000"
-      },
-      "answer": "B",
+      "choices": [
+        "~240",
+        "~2,400",
+        "~24,000",
+        "~24"
+      ],
+      "answer": "~240",
       "source_pages": [
         247
       ]
@@ -1784,13 +1784,13 @@
       "id": "MCQ007",
       "difficulty": "medium",
       "question": "What is peak upload QPS?",
-      "choices": {
-        "A": "240",
-        "B": "480",
-        "C": "960",
-        "D": "4,800"
-      },
-      "answer": "B",
+      "choices": [
+        "240",
+        "480",
+        "4,800",
+        "960"
+      ],
+      "answer": "480",
       "source_pages": [
         247
       ]
@@ -1799,13 +1799,13 @@
       "id": "MCQ008",
       "difficulty": "medium",
       "question": "When should resumable upload be used?",
-      "choices": {
-        "A": "Small stable upload only",
-        "B": "Large/interruption-prone upload",
-        "C": "Metadata requests",
-        "D": "Revision reads"
-      },
-      "answer": "B",
+      "choices": [
+        "Small stable upload only",
+        "Revision reads",
+        "Large/interruption-prone upload",
+        "Metadata requests"
+      ],
+      "answer": "Large/interruption-prone upload",
       "source_pages": [
         248
       ]
@@ -1814,13 +1814,13 @@
       "id": "MCQ009",
       "difficulty": "medium",
       "question": "What is the first resumable-upload step?",
-      "choices": {
-        "A": "Delete old file",
-        "B": "Request resumable URL",
-        "C": "Fetch revisions",
-        "D": "Encrypt metadata"
-      },
-      "answer": "B",
+      "choices": [
+        "Encrypt metadata",
+        "Fetch revisions",
+        "Delete old file",
+        "Request resumable URL"
+      ],
+      "answer": "Request resumable URL",
       "source_pages": [
         249
       ]
@@ -1829,13 +1829,13 @@
       "id": "MCQ010",
       "difficulty": "medium",
       "question": "What transport protocol is required?",
-      "choices": {
-        "A": "HTTP only",
-        "B": "FTP",
-        "C": "HTTPS",
-        "D": "SMTP"
-      },
-      "answer": "C",
+      "choices": [
+        "HTTP only",
+        "FTP",
+        "HTTPS",
+        "SMTP"
+      ],
+      "answer": "HTTPS",
       "source_pages": [
         249
       ]
@@ -1844,13 +1844,13 @@
       "id": "MCQ011",
       "difficulty": "medium",
       "question": "What first scaling solution is proposed when local storage fills?",
-      "choices": {
-        "A": "Shard storage",
-        "B": "Add comments",
-        "C": "Use one bigger folder",
-        "D": "Disable upload"
-      },
-      "answer": "A",
+      "choices": [
+        "Disable upload",
+        "Shard storage",
+        "Add comments",
+        "Use one bigger folder"
+      ],
+      "answer": "Shard storage",
       "source_pages": [
         249
       ]
@@ -1859,13 +1859,13 @@
       "id": "MCQ012",
       "difficulty": "medium",
       "question": "What object store is selected?",
-      "choices": {
-        "A": "S3",
-        "B": "HBase",
-        "C": "Cassandra",
-        "D": "Redis"
-      },
-      "answer": "A",
+      "choices": [
+        "Redis",
+        "Cassandra",
+        "S3",
+        "HBase"
+      ],
+      "answer": "S3",
       "source_pages": [
         250
       ]
@@ -1874,13 +1874,13 @@
       "id": "MCQ013",
       "difficulty": "medium",
       "question": "Why replicate across regions?",
-      "choices": {
-        "A": "Reduce file names",
-        "B": "Improve durability/availability",
-        "C": "Avoid metadata",
-        "D": "Remove hashes"
-      },
-      "answer": "B",
+      "choices": [
+        "Remove hashes",
+        "Reduce file names",
+        "Avoid metadata",
+        "Improve durability/availability"
+      ],
+      "answer": "Improve durability/availability",
       "source_pages": [
         250
       ]
@@ -1889,13 +1889,13 @@
       "id": "MCQ014",
       "difficulty": "medium",
       "question": "What does the load balancer do?",
-      "choices": {
-        "A": "Store files",
-        "B": "Distribute/reroute traffic",
-        "C": "Encrypt blocks",
-        "D": "Create versions"
-      },
-      "answer": "B",
+      "choices": [
+        "Encrypt blocks",
+        "Distribute/reroute traffic",
+        "Store files",
+        "Create versions"
+      ],
+      "answer": "Distribute/reroute traffic",
       "source_pages": [
         250,
         251
@@ -1905,13 +1905,13 @@
       "id": "MCQ015",
       "difficulty": "medium",
       "question": "How is Metadata DB scaled?",
-      "choices": {
-        "A": "Replication and sharding",
-        "B": "Client caching only",
-        "C": "One node only",
-        "D": "CDN"
-      },
-      "answer": "A",
+      "choices": [
+        "Client caching only",
+        "CDN",
+        "One node only",
+        "Replication and sharding"
+      ],
+      "answer": "Replication and sharding",
       "source_pages": [
         251
       ]
@@ -1920,13 +1920,13 @@
       "id": "MCQ016",
       "difficulty": "medium",
       "question": "What happens in a sync conflict?",
-      "choices": {
-        "A": "Later version always wins",
-        "B": "First processed version wins",
-        "C": "Both silently merge",
-        "D": "Both deleted"
-      },
-      "answer": "B",
+      "choices": [
+        "First processed version wins",
+        "Both silently merge",
+        "Both deleted",
+        "Later version always wins"
+      ],
+      "answer": "First processed version wins",
       "source_pages": [
         251
       ]
@@ -1935,13 +1935,13 @@
       "id": "MCQ017",
       "difficulty": "medium",
       "question": "What is shown to the conflicted user?",
-      "choices": {
-        "A": "Only server copy",
-        "B": "Only local copy",
-        "C": "Local and server copies",
-        "D": "No copies"
-      },
-      "answer": "C",
+      "choices": [
+        "Only server copy",
+        "Local and server copies",
+        "No copies",
+        "Only local copy"
+      ],
+      "answer": "Local and server copies",
       "source_pages": [
         252
       ]
@@ -1950,13 +1950,13 @@
       "id": "MCQ018",
       "difficulty": "medium",
       "question": "What component splits files into blocks?",
-      "choices": {
-        "A": "Block servers",
-        "B": "Notification service",
-        "C": "Load balancer",
-        "D": "Metadata cache"
-      },
-      "answer": "A",
+      "choices": [
+        "Metadata cache",
+        "Block servers",
+        "Notification service",
+        "Load balancer"
+      ],
+      "answer": "Block servers",
       "source_pages": [
         253
       ]
@@ -1965,13 +1965,13 @@
       "id": "MCQ019",
       "difficulty": "medium",
       "question": "What maximum block size is cited from Dropbox?",
-      "choices": {
-        "A": "1 MB",
-        "B": "4 MB",
-        "C": "16 MB",
-        "D": "64 MB"
-      },
-      "answer": "B",
+      "choices": [
+        "1 MB",
+        "4 MB",
+        "64 MB",
+        "16 MB"
+      ],
+      "answer": "4 MB",
       "source_pages": [
         253
       ]
@@ -1980,13 +1980,13 @@
       "id": "MCQ020",
       "difficulty": "hard",
       "question": "Where are actual file contents stored?",
-      "choices": {
-        "A": "Metadata DB",
-        "B": "Cloud storage",
-        "C": "Notification service",
-        "D": "Offline queue"
-      },
-      "answer": "B",
+      "choices": [
+        "Notification service",
+        "Metadata DB",
+        "Offline queue",
+        "Cloud storage"
+      ],
+      "answer": "Cloud storage",
       "source_pages": [
         253
       ]
@@ -1995,13 +1995,13 @@
       "id": "MCQ021",
       "difficulty": "hard",
       "question": "What is cold storage for?",
-      "choices": {
-        "A": "Hot metadata",
-        "B": "Inactive data",
-        "C": "Only user profiles",
-        "D": "API sessions"
-      },
-      "answer": "B",
+      "choices": [
+        "Hot metadata",
+        "API sessions",
+        "Inactive data",
+        "Only user profiles"
+      ],
+      "answer": "Inactive data",
       "source_pages": [
         253
       ]
@@ -2010,13 +2010,13 @@
       "id": "MCQ022",
       "difficulty": "hard",
       "question": "What is delta sync?",
-      "choices": {
-        "A": "Upload entire file",
-        "B": "Upload only modified blocks",
-        "C": "Delete duplicate users",
-        "D": "Compress only metadata"
-      },
-      "answer": "B",
+      "choices": [
+        "Upload only modified blocks",
+        "Delete duplicate users",
+        "Compress only metadata",
+        "Upload entire file"
+      ],
+      "answer": "Upload only modified blocks",
       "source_pages": [
         255
       ]
@@ -2025,13 +2025,13 @@
       "id": "MCQ023",
       "difficulty": "hard",
       "question": "Which compression algorithms are named for text?",
-      "choices": {
-        "A": "gzip and bzip2",
-        "B": "H.264 and HEVC",
-        "C": "AES and RSA",
-        "D": "LZ4 only"
-      },
-      "answer": "A",
+      "choices": [
+        "gzip and bzip2",
+        "LZ4 only",
+        "AES and RSA",
+        "H.264 and HEVC"
+      ],
+      "answer": "gzip and bzip2",
       "source_pages": [
         255
       ]
@@ -2040,13 +2040,13 @@
       "id": "MCQ024",
       "difficulty": "hard",
       "question": "What processing order is used by Block Servers?",
-      "choices": {
-        "A": "Encrypt, delete, notify",
-        "B": "Split, compress, encrypt, upload",
-        "C": "Upload, split, decrypt, notify",
-        "D": "Cache, shard, notify, delete"
-      },
-      "answer": "B",
+      "choices": [
+        "Upload, split, decrypt, notify",
+        "Cache, shard, notify, delete",
+        "Encrypt, delete, notify",
+        "Split, compress, encrypt, upload"
+      ],
+      "answer": "Split, compress, encrypt, upload",
       "source_pages": [
         255
       ]
@@ -2055,13 +2055,13 @@
       "id": "MCQ025",
       "difficulty": "hard",
       "question": "What consistency model is required?",
-      "choices": {
-        "A": "Eventual only",
-        "B": "Strong",
-        "C": "Best effort",
-        "D": "None"
-      },
-      "answer": "B",
+      "choices": [
+        "Strong",
+        "Best effort",
+        "Eventual only",
+        "None"
+      ],
+      "answer": "Strong",
       "source_pages": [
         256
       ]
@@ -2070,13 +2070,13 @@
       "id": "MCQ026",
       "difficulty": "hard",
       "question": "What must happen on DB write to maintain cache consistency?",
-      "choices": {
-        "A": "Leave cache untouched",
-        "B": "Invalidate cache",
-        "C": "Delete DB",
-        "D": "Use CDN"
-      },
-      "answer": "B",
+      "choices": [
+        "Leave cache untouched",
+        "Invalidate cache",
+        "Use CDN",
+        "Delete DB"
+      ],
+      "answer": "Invalidate cache",
       "source_pages": [
         256
       ]
@@ -2085,13 +2085,13 @@
       "id": "MCQ027",
       "difficulty": "hard",
       "question": "Why is a relational DB selected?",
-      "choices": {
-        "A": "Native ACID support",
-        "B": "No schemas",
-        "C": "No transactions",
-        "D": "Only because it is cheaper"
-      },
-      "answer": "A",
+      "choices": [
+        "No transactions",
+        "Only because it is cheaper",
+        "Native ACID support",
+        "No schemas"
+      ],
+      "answer": "Native ACID support",
       "source_pages": [
         256
       ]
@@ -2100,13 +2100,13 @@
       "id": "MCQ028",
       "difficulty": "hard",
       "question": "What does File_version store?",
-      "choices": {
-        "A": "Latest file only",
-        "B": "Revision history",
-        "C": "Device tokens",
-        "D": "User profile"
-      },
-      "answer": "B",
+      "choices": [
+        "Revision history",
+        "Latest file only",
+        "User profile",
+        "Device tokens"
+      ],
+      "answer": "Revision history",
       "source_pages": [
         257
       ]
@@ -2115,13 +2115,13 @@
       "id": "MCQ029",
       "difficulty": "hard",
       "question": "Why are existing File_version rows read-only?",
-      "choices": {
-        "A": "Save bandwidth",
-        "B": "Preserve revision-history integrity",
-        "C": "Avoid encryption",
-        "D": "Enable long polling"
-      },
-      "answer": "B",
+      "choices": [
+        "Preserve revision-history integrity",
+        "Avoid encryption",
+        "Enable long polling",
+        "Save bandwidth"
+      ],
+      "answer": "Preserve revision-history integrity",
       "source_pages": [
         257
       ]
@@ -2130,13 +2130,13 @@
       "id": "MCQ030",
       "difficulty": "hard",
       "question": "Which upload status is written first?",
-      "choices": {
-        "A": "uploaded",
-        "B": "pending",
-        "C": "deleted",
-        "D": "failed"
-      },
-      "answer": "B",
+      "choices": [
+        "failed",
+        "deleted",
+        "uploaded",
+        "pending"
+      ],
+      "answer": "pending",
       "source_pages": [
         258
       ]
@@ -2145,13 +2145,13 @@
       "id": "MCQ031",
       "difficulty": "hard",
       "question": "What triggers the completion callback?",
-      "choices": {
-        "A": "Metadata cache",
-        "B": "Cloud storage",
-        "C": "Client 2",
-        "D": "Load balancer"
-      },
-      "answer": "B",
+      "choices": [
+        "Load balancer",
+        "Client 2",
+        "Metadata cache",
+        "Cloud storage"
+      ],
+      "answer": "Cloud storage",
       "source_pages": [
         258
       ]
@@ -2160,13 +2160,13 @@
       "id": "MCQ032",
       "difficulty": "hard",
       "question": "What final status is written after upload completes?",
-      "choices": {
-        "A": "pending",
-        "B": "uploaded",
-        "C": "archived",
-        "D": "offline"
-      },
-      "answer": "B",
+      "choices": [
+        "offline",
+        "uploaded",
+        "pending",
+        "archived"
+      ],
+      "answer": "uploaded",
       "source_pages": [
         258
       ]
@@ -2175,13 +2175,13 @@
       "id": "MCQ033",
       "difficulty": "hard",
       "question": "What does an online client use to learn about changes?",
-      "choices": {
-        "A": "Notification Service",
-        "B": "Cold storage",
-        "C": "Shard map",
-        "D": "Block hash only"
-      },
-      "answer": "A",
+      "choices": [
+        "Block hash only",
+        "Notification Service",
+        "Shard map",
+        "Cold storage"
+      ],
+      "answer": "Notification Service",
       "source_pages": [
         258,
         259
@@ -2191,13 +2191,13 @@
       "id": "MCQ034",
       "difficulty": "hard",
       "question": "What does the client fetch first after notification?",
-      "choices": {
-        "A": "Metadata",
-        "B": "All blocks",
-        "C": "User profile",
-        "D": "Revision limit"
-      },
-      "answer": "A",
+      "choices": [
+        "All blocks",
+        "Metadata",
+        "Revision limit",
+        "User profile"
+      ],
+      "answer": "Metadata",
       "source_pages": [
         259
       ]
@@ -2206,13 +2206,13 @@
       "id": "MCQ035",
       "difficulty": "hard",
       "question": "What notification mechanisms are considered?",
-      "choices": {
-        "A": "Polling and UDP",
-        "B": "Long polling and WebSocket",
-        "C": "SMTP and FTP",
-        "D": "gRPC only"
-      },
-      "answer": "B",
+      "choices": [
+        "Long polling and WebSocket",
+        "Polling and UDP",
+        "gRPC only",
+        "SMTP and FTP"
+      ],
+      "answer": "Long polling and WebSocket",
       "source_pages": [
         259
       ]
@@ -2221,13 +2221,13 @@
       "id": "MCQ036",
       "difficulty": "hard",
       "question": "Which is chosen?",
-      "choices": {
-        "A": "WebSocket",
-        "B": "Long polling",
-        "C": "Short polling",
-        "D": "Email"
-      },
-      "answer": "B",
+      "choices": [
+        "Long polling",
+        "WebSocket",
+        "Email",
+        "Short polling"
+      ],
+      "answer": "Long polling",
       "source_pages": [
         259,
         260
@@ -2237,13 +2237,13 @@
       "id": "MCQ037",
       "difficulty": "hard",
       "question": "Why is long polling chosen?",
-      "choices": {
-        "A": "Notifications are one-way/infrequent",
-        "B": "Need constant bidirectional chat",
-        "C": "It stores files",
-        "D": "It encrypts blocks"
-      },
-      "answer": "A",
+      "choices": [
+        "It encrypts blocks",
+        "Need constant bidirectional chat",
+        "It stores files",
+        "Notifications are one-way/infrequent"
+      ],
+      "answer": "Notifications are one-way/infrequent",
       "source_pages": [
         259,
         260
@@ -2253,13 +2253,13 @@
       "id": "MCQ038",
       "difficulty": "hard",
       "question": "What identifies duplicate blocks?",
-      "choices": {
-        "A": "Same hash value",
-        "B": "Same filename only",
-        "C": "Same user only",
-        "D": "Same timestamp"
-      },
-      "answer": "A",
+      "choices": [
+        "Same hash value",
+        "Same user only",
+        "Same timestamp",
+        "Same filename only"
+      ],
+      "answer": "Same hash value",
       "source_pages": [
         260
       ]
@@ -2268,13 +2268,13 @@
       "id": "MCQ039",
       "difficulty": "hard",
       "question": "What happens when revision limit is reached?",
-      "choices": {
-        "A": "Never remove versions",
-        "B": "Replace oldest with newest",
-        "C": "Delete newest",
-        "D": "Delete file"
-      },
-      "answer": "B",
+      "choices": [
+        "Delete file",
+        "Replace oldest with newest",
+        "Delete newest",
+        "Never remove versions"
+      ],
+      "answer": "Replace oldest with newest",
       "source_pages": [
         260
       ]
@@ -2283,13 +2283,13 @@
       "id": "MCQ040",
       "difficulty": "hard",
       "question": "Where can old inactive data move?",
-      "choices": {
-        "A": "S3 Glacier",
-        "B": "Notification server",
-        "C": "Metadata cache",
-        "D": "API server"
-      },
-      "answer": "A",
+      "choices": [
+        "Metadata cache",
+        "Notification server",
+        "API server",
+        "S3 Glacier"
+      ],
+      "answer": "S3 Glacier",
       "source_pages": [
         260
       ]
@@ -2298,13 +2298,13 @@
       "id": "MCQ041",
       "difficulty": "hard",
       "question": "How do load balancers detect failures?",
-      "choices": {
-        "A": "Heartbeats",
-        "B": "File hashes",
-        "C": "WebSockets",
-        "D": "Revision IDs"
-      },
-      "answer": "A",
+      "choices": [
+        "Revision IDs",
+        "File hashes",
+        "Heartbeats",
+        "WebSockets"
+      ],
+      "answer": "Heartbeats",
       "source_pages": [
         260
       ]
@@ -2313,13 +2313,13 @@
       "id": "MCQ042",
       "difficulty": "hard",
       "question": "What happens on Block Server failure?",
-      "choices": {
-        "A": "Drop job",
-        "B": "Other servers pick up pending jobs",
-        "C": "Delete file",
-        "D": "Stop system"
-      },
-      "answer": "B",
+      "choices": [
+        "Other servers pick up pending jobs",
+        "Stop system",
+        "Drop job",
+        "Delete file"
+      ],
+      "answer": "Other servers pick up pending jobs",
       "source_pages": [
         260
       ]
@@ -2328,13 +2328,13 @@
       "id": "MCQ043",
       "difficulty": "hard",
       "question": "What happens on API Server failure?",
-      "choices": {
-        "A": "Traffic redirects to another API server",
-        "B": "File is lost",
-        "C": "DB promotes cache",
-        "D": "Clients cannot recover"
-      },
-      "answer": "A",
+      "choices": [
+        "Clients cannot recover",
+        "DB promotes cache",
+        "Traffic redirects to another API server",
+        "File is lost"
+      ],
+      "answer": "Traffic redirects to another API server",
       "source_pages": [
         260
       ]
@@ -2343,13 +2343,13 @@
       "id": "MCQ044",
       "difficulty": "hard",
       "question": "What happens on Metadata DB master failure?",
-      "choices": {
-        "A": "Promote slave",
-        "B": "Use CDN as DB",
-        "C": "Delete slave",
-        "D": "Ignore"
-      },
-      "answer": "A",
+      "choices": [
+        "Ignore",
+        "Use CDN as DB",
+        "Promote slave",
+        "Delete slave"
+      ],
+      "answer": "Promote slave",
       "source_pages": [
         260,
         261
@@ -2359,13 +2359,13 @@
       "id": "MCQ045",
       "difficulty": "hard",
       "question": "Why can Notification Service recovery be slow?",
-      "choices": {
-        "A": "Many long-poll clients must reconnect",
-        "B": "Blocks need recompression",
-        "C": "DB must reshard",
-        "D": "Files must be re-encrypted"
-      },
-      "answer": "A",
+      "choices": [
+        "Files must be re-encrypted",
+        "DB must reshard",
+        "Blocks need recompression",
+        "Many long-poll clients must reconnect"
+      ],
+      "answer": "Many long-poll clients must reconnect",
       "source_pages": [
         261
       ]
@@ -2374,13 +2374,13 @@
       "id": "MCQ046",
       "difficulty": "hard",
       "question": "What is direct-to-cloud upload's main advantage?",
-      "choices": {
-        "A": "One transfer to cloud storage",
-        "B": "No security logic",
-        "C": "No client code",
-        "D": "No metadata"
-      },
-      "answer": "A",
+      "choices": [
+        "No metadata",
+        "No client code",
+        "No security logic",
+        "One transfer to cloud storage"
+      ],
+      "answer": "One transfer to cloud storage",
       "source_pages": [
         262
       ]
@@ -2389,13 +2389,13 @@
       "id": "MCQ047",
       "difficulty": "hard",
       "question": "What is a drawback of direct-to-cloud upload?",
-      "choices": {
-        "A": "Duplicate processing logic across platforms",
-        "B": "Fewer uploads",
-        "C": "No encryption needed",
-        "D": "No network use"
-      },
-      "answer": "A",
+      "choices": [
+        "Fewer uploads",
+        "No network use",
+        "No encryption needed",
+        "Duplicate processing logic across platforms"
+      ],
+      "answer": "Duplicate processing logic across platforms",
       "source_pages": [
         262
       ]
@@ -2404,13 +2404,13 @@
       "id": "MCQ048",
       "difficulty": "hard",
       "question": "What optional service is suggested?",
-      "choices": {
-        "A": "Presence service",
-        "B": "Search service",
-        "C": "Billing service",
-        "D": "Transcoding service"
-      },
-      "answer": "A",
+      "choices": [
+        "Presence service",
+        "Search service",
+        "Billing service",
+        "Transcoding service"
+      ],
+      "answer": "Presence service",
       "source_pages": [
         262
       ]

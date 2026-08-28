@@ -1719,13 +1719,13 @@
       "id": "MCQ001",
       "difficulty": "medium",
       "question": "What is the main reason for partitioning?",
-      "choices": {
-        "A": "Scalability",
-        "B": "Encryption",
-        "C": "Schema evolution",
-        "D": "Compression"
-      },
-      "answer": "A",
+      "choices": [
+        "Compression",
+        "Schema evolution",
+        "Scalability",
+        "Encryption"
+      ],
+      "answer": "Scalability",
       "source_pages": [
         221,
         222
@@ -1735,13 +1735,13 @@
       "id": "MCQ002",
       "difficulty": "medium",
       "question": "What is another name for database partitioning?",
-      "choices": {
-        "A": "Sharding",
-        "B": "Failover",
-        "C": "Replication lag",
-        "D": "Quorum"
-      },
-      "answer": "A",
+      "choices": [
+        "Failover",
+        "Replication lag",
+        "Sharding",
+        "Quorum"
+      ],
+      "answer": "Sharding",
       "source_pages": [
         221
       ]
@@ -1750,13 +1750,13 @@
       "id": "MCQ003",
       "difficulty": "medium",
       "question": "Database partitioning is the same as a network partition.",
-      "choices": {
-        "A": "False",
-        "B": "True",
-        "C": "Only in Cassandra",
-        "D": "Only in MongoDB"
-      },
-      "answer": "A",
+      "choices": [
+        "False",
+        "Only in Cassandra",
+        "True",
+        "Only in MongoDB"
+      ],
+      "answer": "False",
       "source_pages": [
         221
       ]
@@ -1765,13 +1765,13 @@
       "id": "MCQ004",
       "difficulty": "medium",
       "question": "What is skew?",
-      "choices": {
-        "A": "Uneven data/query load across partitions",
-        "B": "Replica lag",
-        "C": "Failed routing tier",
-        "D": "Hash collision"
-      },
-      "answer": "A",
+      "choices": [
+        "Uneven data/query load across partitions",
+        "Failed routing tier",
+        "Hash collision",
+        "Replica lag"
+      ],
+      "answer": "Uneven data/query load across partitions",
       "source_pages": [
         223
       ]
@@ -1780,13 +1780,13 @@
       "id": "MCQ005",
       "difficulty": "medium",
       "question": "What is a hot spot?",
-      "choices": {
-        "A": "Disproportionately busy partition",
-        "B": "Missing follower",
-        "C": "Small partition only",
-        "D": "Global index"
-      },
-      "answer": "A",
+      "choices": [
+        "Disproportionately busy partition",
+        "Small partition only",
+        "Missing follower",
+        "Global index"
+      ],
+      "answer": "Disproportionately busy partition",
       "source_pages": [
         223
       ]
@@ -1795,13 +1795,13 @@
       "id": "MCQ006",
       "difficulty": "medium",
       "question": "Why not randomly assign records directly to nodes?",
-      "choices": {
-        "A": "Reads would not know where to route",
-        "B": "Writes become impossible",
-        "C": "No load balance",
-        "D": "No replication"
-      },
-      "answer": "A",
+      "choices": [
+        "Writes become impossible",
+        "Reads would not know where to route",
+        "No load balance",
+        "No replication"
+      ],
+      "answer": "Reads would not know where to route",
       "source_pages": [
         223
       ]
@@ -1810,13 +1810,13 @@
       "id": "MCQ007",
       "difficulty": "medium",
       "question": "What does key-range partitioning preserve?",
-      "choices": {
-        "A": "Key ordering",
-        "B": "Uniform hashing",
-        "C": "Global index locality",
-        "D": "Node count"
-      },
-      "answer": "A",
+      "choices": [
+        "Uniform hashing",
+        "Node count",
+        "Key ordering",
+        "Global index locality"
+      ],
+      "answer": "Key ordering",
       "source_pages": [
         224
       ]
@@ -1825,13 +1825,13 @@
       "id": "MCQ008",
       "difficulty": "medium",
       "question": "Main key-range advantage?",
-      "choices": {
-        "A": "Efficient range scans",
-        "B": "Perfect hot-spot prevention",
-        "C": "No metadata",
-        "D": "No rebalancing"
-      },
-      "answer": "A",
+      "choices": [
+        "No metadata",
+        "Efficient range scans",
+        "No rebalancing",
+        "Perfect hot-spot prevention"
+      ],
+      "answer": "Efficient range scans",
       "source_pages": [
         224
       ]
@@ -1840,13 +1840,13 @@
       "id": "MCQ009",
       "difficulty": "medium",
       "question": "Main timestamp-range problem?",
-      "choices": {
-        "A": "Current writes concentrate in one partition",
-        "B": "Range scans disappear",
-        "C": "Hashes collide",
-        "D": "All nodes receive writes"
-      },
-      "answer": "A",
+      "choices": [
+        "All nodes receive writes",
+        "Hashes collide",
+        "Range scans disappear",
+        "Current writes concentrate in one partition"
+      ],
+      "answer": "Current writes concentrate in one partition",
       "source_pages": [
         225
       ]
@@ -1855,13 +1855,13 @@
       "id": "MCQ010",
       "difficulty": "medium",
       "question": "How can sensor timestamps be spread?",
-      "choices": {
-        "A": "Prefix with sensor name/ID",
-        "B": "Use timestamp alone",
-        "C": "Use mod N",
-        "D": "Disable sorting"
-      },
-      "answer": "A",
+      "choices": [
+        "Prefix with sensor name/ID",
+        "Disable sorting",
+        "Use mod N",
+        "Use timestamp alone"
+      ],
+      "answer": "Prefix with sensor name/ID",
       "source_pages": [
         225
       ]
@@ -1870,13 +1870,13 @@
       "id": "MCQ011",
       "difficulty": "medium",
       "question": "What does hash partitioning primarily improve?",
-      "choices": {
-        "A": "Load distribution",
-        "B": "Range scans",
-        "C": "Global ordering",
-        "D": "Transactional atomicity"
-      },
-      "answer": "A",
+      "choices": [
+        "Load distribution",
+        "Transactional atomicity",
+        "Global ordering",
+        "Range scans"
+      ],
+      "answer": "Load distribution",
       "source_pages": [
         225,
         226
@@ -1886,13 +1886,13 @@
       "id": "MCQ012",
       "difficulty": "medium",
       "question": "Does the hash need to be cryptographically secure?",
-      "choices": {
-        "A": "No",
-        "B": "Yes always",
-        "C": "Only for reads",
-        "D": "Only for indexes"
-      },
-      "answer": "A",
+      "choices": [
+        "No",
+        "Yes always",
+        "Only for indexes",
+        "Only for reads"
+      ],
+      "answer": "No",
       "source_pages": [
         225
       ]
@@ -1901,13 +1901,13 @@
       "id": "MCQ013",
       "difficulty": "medium",
       "question": "Why can language hash functions be unsafe?",
-      "choices": {
-        "A": "Same key may hash differently across processes",
-        "B": "They are always too slow",
-        "C": "They are cryptographic",
-        "D": "They cannot hash strings"
-      },
-      "answer": "A",
+      "choices": [
+        "They are cryptographic",
+        "They are always too slow",
+        "Same key may hash differently across processes",
+        "They cannot hash strings"
+      ],
+      "answer": "Same key may hash differently across processes",
       "source_pages": [
         225
       ]
@@ -1916,13 +1916,13 @@
       "id": "MCQ014",
       "difficulty": "medium",
       "question": "What is the main hash-partitioning cost?",
-      "choices": {
-        "A": "Loss of efficient key-range queries",
-        "B": "No point queries",
-        "C": "No replication",
-        "D": "No secondary indexes"
-      },
-      "answer": "A",
+      "choices": [
+        "Loss of efficient key-range queries",
+        "No replication",
+        "No point queries",
+        "No secondary indexes"
+      ],
+      "answer": "Loss of efficient key-range queries",
       "source_pages": [
         226
       ]
@@ -1931,13 +1931,13 @@
       "id": "MCQ015",
       "difficulty": "medium",
       "question": "What does 'consistent' in consistent hashing refer to here?",
-      "choices": {
-        "A": "A rebalancing approach",
-        "B": "ACID C",
-        "C": "Replica consistency",
-        "D": "Linearizability"
-      },
-      "answer": "A",
+      "choices": [
+        "Linearizability",
+        "ACID C",
+        "Replica consistency",
+        "A rebalancing approach"
+      ],
+      "answer": "A rebalancing approach",
       "source_pages": [
         226
       ]
@@ -1946,13 +1946,13 @@
       "id": "MCQ016",
       "difficulty": "medium",
       "question": "What does the chapter suggest calling it for databases?",
-      "choices": {
-        "A": "Hash partitioning",
-        "B": "ACID hashing",
-        "C": "Replica hashing",
-        "D": "Range hashing"
-      },
-      "answer": "A",
+      "choices": [
+        "Hash partitioning",
+        "Replica hashing",
+        "ACID hashing",
+        "Range hashing"
+      ],
+      "answer": "Hash partitioning",
       "source_pages": [
         226
       ]
@@ -1961,13 +1961,13 @@
       "id": "MCQ017",
       "difficulty": "medium",
       "question": "Cassandra's compound key hashes which part?",
-      "choices": {
-        "A": "First component",
-        "B": "All components separately",
-        "C": "Last component only",
-        "D": "No component"
-      },
-      "answer": "A",
+      "choices": [
+        "All components separately",
+        "No component",
+        "First component",
+        "Last component only"
+      ],
+      "answer": "First component",
       "source_pages": [
         226,
         227
@@ -1977,13 +1977,13 @@
       "id": "MCQ018",
       "difficulty": "medium",
       "question": "What are remaining Cassandra key components used for?",
-      "choices": {
-        "A": "Sorted concatenated index inside partition",
-        "B": "Global hash ring only",
-        "C": "Replication count",
-        "D": "Node discovery"
-      },
-      "answer": "A",
+      "choices": [
+        "Global hash ring only",
+        "Replication count",
+        "Node discovery",
+        "Sorted concatenated index inside partition"
+      ],
+      "answer": "Sorted concatenated index inside partition",
       "source_pages": [
         226,
         227
@@ -1993,13 +1993,13 @@
       "id": "MCQ019",
       "difficulty": "medium",
       "question": "Can hashing fix one extremely hot key?",
-      "choices": {
-        "A": "No",
-        "B": "Yes always",
-        "C": "Only with MD5",
-        "D": "Only with replicas"
-      },
-      "answer": "A",
+      "choices": [
+        "Only with replicas",
+        "No",
+        "Only with MD5",
+        "Yes always"
+      ],
+      "answer": "No",
       "source_pages": [
         227
       ]
@@ -2008,13 +2008,13 @@
       "id": "MCQ020",
       "difficulty": "medium",
       "question": "What is hot-key salting?",
-      "choices": {
-        "A": "Add random prefix/suffix to split one key",
-        "B": "Encrypt key",
-        "C": "Remove key",
-        "D": "Use same suffix everywhere"
-      },
-      "answer": "A",
+      "choices": [
+        "Add random prefix/suffix to split one key",
+        "Encrypt key",
+        "Use same suffix everywhere",
+        "Remove key"
+      ],
+      "answer": "Add random prefix/suffix to split one key",
       "source_pages": [
         227
       ]
@@ -2023,13 +2023,13 @@
       "id": "MCQ021",
       "difficulty": "medium",
       "question": "Two decimal random digits can create how many physical variants?",
-      "choices": {
-        "A": "100",
-        "B": "10",
-        "C": "1,000",
-        "D": "2"
-      },
-      "answer": "A",
+      "choices": [
+        "100",
+        "2",
+        "1,000",
+        "10"
+      ],
+      "answer": "100",
       "source_pages": [
         227
       ]
@@ -2038,13 +2038,13 @@
       "id": "MCQ022",
       "difficulty": "medium",
       "question": "What is salting's main read cost?",
-      "choices": {
-        "A": "Query/merge all variants",
-        "B": "No range scans only",
-        "C": "No writes",
-        "D": "No indexing"
-      },
-      "answer": "A",
+      "choices": [
+        "Query/merge all variants",
+        "No range scans only",
+        "No writes",
+        "No indexing"
+      ],
+      "answer": "Query/merge all variants",
       "source_pages": [
         227
       ]
@@ -2053,13 +2053,13 @@
       "id": "MCQ023",
       "difficulty": "medium",
       "question": "Why do secondary indexes complicate partitioning?",
-      "choices": {
-        "A": "One indexed value can match records in many primary partitions",
-        "B": "They remove primary keys",
-        "C": "They cannot be replicated",
-        "D": "They require one node"
-      },
-      "answer": "A",
+      "choices": [
+        "They remove primary keys",
+        "They require one node",
+        "They cannot be replicated",
+        "One indexed value can match records in many primary partitions"
+      ],
+      "answer": "One indexed value can match records in many primary partitions",
       "source_pages": [
         228
       ]
@@ -2068,13 +2068,13 @@
       "id": "MCQ024",
       "difficulty": "medium",
       "question": "What is a document-partitioned index?",
-      "choices": {
-        "A": "Local index per primary partition",
-        "B": "One global index node",
-        "C": "Hash ring",
-        "D": "Routing table"
-      },
-      "answer": "A",
+      "choices": [
+        "Local index per primary partition",
+        "One global index node",
+        "Routing table",
+        "Hash ring"
+      ],
+      "answer": "Local index per primary partition",
       "source_pages": [
         228,
         229
@@ -2084,13 +2084,13 @@
       "id": "MCQ025",
       "difficulty": "medium",
       "question": "What is its write advantage?",
-      "choices": {
-        "A": "Only owning partition changes",
-        "B": "No writes needed",
-        "C": "All partitions updated",
-        "D": "No index maintenance"
-      },
-      "answer": "A",
+      "choices": [
+        "All partitions updated",
+        "No index maintenance",
+        "No writes needed",
+        "Only owning partition changes"
+      ],
+      "answer": "Only owning partition changes",
       "source_pages": [
         229
       ]
@@ -2099,13 +2099,13 @@
       "id": "MCQ026",
       "difficulty": "medium",
       "question": "What is scatter/gather?",
-      "choices": {
-        "A": "Query many partitions and merge results",
-        "B": "Move partitions between nodes",
-        "C": "Replicate log",
-        "D": "Split hot key"
-      },
-      "answer": "A",
+      "choices": [
+        "Replicate log",
+        "Split hot key",
+        "Move partitions between nodes",
+        "Query many partitions and merge results"
+      ],
+      "answer": "Query many partitions and merge results",
       "source_pages": [
         229
       ]
@@ -2114,13 +2114,13 @@
       "id": "MCQ027",
       "difficulty": "medium",
       "question": "Scatter/gather can amplify?",
-      "choices": {
-        "A": "Tail latency",
-        "B": "Hash entropy",
-        "C": "Replication factor",
-        "D": "Compression"
-      },
-      "answer": "A",
+      "choices": [
+        "Replication factor",
+        "Hash entropy",
+        "Tail latency",
+        "Compression"
+      ],
+      "answer": "Tail latency",
       "source_pages": [
         229
       ]
@@ -2129,13 +2129,13 @@
       "id": "MCQ028",
       "difficulty": "medium",
       "question": "What is a term-partitioned index?",
-      "choices": {
-        "A": "Global index partitioned by indexed term/value",
-        "B": "Local primary index",
-        "C": "Node map",
-        "D": "Replication stream"
-      },
-      "answer": "A",
+      "choices": [
+        "Replication stream",
+        "Local primary index",
+        "Global index partitioned by indexed term/value",
+        "Node map"
+      ],
+      "answer": "Global index partitioned by indexed term/value",
       "source_pages": [
         230
       ]
@@ -2144,13 +2144,13 @@
       "id": "MCQ029",
       "difficulty": "medium",
       "question": "Why partition global index by term itself?",
-      "choices": {
-        "A": "Support range scans",
-        "B": "Remove ordering",
-        "C": "Hash everything",
-        "D": "Avoid writes"
-      },
-      "answer": "A",
+      "choices": [
+        "Remove ordering",
+        "Support range scans",
+        "Avoid writes",
+        "Hash everything"
+      ],
+      "answer": "Support range scans",
       "source_pages": [
         230
       ]
@@ -2159,13 +2159,13 @@
       "id": "MCQ030",
       "difficulty": "medium",
       "question": "Why partition global index by term hash?",
-      "choices": {
-        "A": "More even load",
-        "B": "Preserve ordering",
-        "C": "Avoid all writes",
-        "D": "Eliminate metadata"
-      },
-      "answer": "A",
+      "choices": [
+        "More even load",
+        "Avoid all writes",
+        "Eliminate metadata",
+        "Preserve ordering"
+      ],
+      "answer": "More even load",
       "source_pages": [
         230
       ]
@@ -2174,13 +2174,13 @@
       "id": "MCQ031",
       "difficulty": "medium",
       "question": "Global-index read advantage?",
-      "choices": {
-        "A": "Target relevant index partition",
-        "B": "Always query all partitions",
-        "C": "No routing required",
-        "D": "No index"
-      },
-      "answer": "A",
+      "choices": [
+        "No routing required",
+        "Always query all partitions",
+        "No index",
+        "Target relevant index partition"
+      ],
+      "answer": "Target relevant index partition",
       "source_pages": [
         230
       ]
@@ -2189,13 +2189,13 @@
       "id": "MCQ032",
       "difficulty": "medium",
       "question": "Global-index write disadvantage?",
-      "choices": {
-        "A": "May update multiple index partitions",
-        "B": "No document writes",
-        "C": "No consistency concerns",
-        "D": "Cannot scale reads"
-      },
-      "answer": "A",
+      "choices": [
+        "Cannot scale reads",
+        "No consistency concerns",
+        "May update multiple index partitions",
+        "No document writes"
+      ],
+      "answer": "May update multiple index partitions",
       "source_pages": [
         230,
         231
@@ -2205,13 +2205,13 @@
       "id": "MCQ033",
       "difficulty": "medium",
       "question": "Why are global index updates often async?",
-      "choices": {
-        "A": "Sync would require distributed transactions",
-        "B": "Indexes cannot be synced",
-        "C": "Reads are too slow",
-        "D": "Keys are unordered"
-      },
-      "answer": "A",
+      "choices": [
+        "Sync would require distributed transactions",
+        "Indexes cannot be synced",
+        "Reads are too slow",
+        "Keys are unordered"
+      ],
+      "answer": "Sync would require distributed transactions",
       "source_pages": [
         231
       ]
@@ -2220,13 +2220,13 @@
       "id": "MCQ034",
       "difficulty": "medium",
       "question": "What is rebalancing?",
-      "choices": {
-        "A": "Moving load/data responsibilities among nodes",
-        "B": "Adding replicas only",
-        "C": "Compacting indexes",
-        "D": "Changing schemas"
-      },
-      "answer": "A",
+      "choices": [
+        "Changing schemas",
+        "Compacting indexes",
+        "Adding replicas only",
+        "Moving load/data responsibilities among nodes"
+      ],
+      "answer": "Moving load/data responsibilities among nodes",
       "source_pages": [
         231
       ]
@@ -2235,13 +2235,13 @@
       "id": "MCQ035",
       "difficulty": "medium",
       "question": "Which is a rebalancing requirement?",
-      "choices": {
-        "A": "Continue reads/writes during migration",
-        "B": "Stop cluster",
-        "C": "Move all data",
-        "D": "Change every key"
-      },
-      "answer": "A",
+      "choices": [
+        "Stop cluster",
+        "Continue reads/writes during migration",
+        "Change every key",
+        "Move all data"
+      ],
+      "answer": "Continue reads/writes during migration",
       "source_pages": [
         231
       ]
@@ -2250,13 +2250,13 @@
       "id": "MCQ036",
       "difficulty": "medium",
       "question": "Why is hash(key) mod N bad?",
-      "choices": {
-        "A": "Most keys move when N changes",
-        "B": "It never maps keys",
-        "C": "It creates no partitions",
-        "D": "It only supports range queries"
-      },
-      "answer": "A",
+      "choices": [
+        "It creates no partitions",
+        "It only supports range queries",
+        "It never maps keys",
+        "Most keys move when N changes"
+      ],
+      "answer": "Most keys move when N changes",
       "source_pages": [
         232
       ]
@@ -2265,13 +2265,13 @@
       "id": "MCQ037",
       "difficulty": "medium",
       "question": "What stays fixed in fixed-partition rebalancing?",
-      "choices": {
-        "A": "Key-to-partition mapping",
-        "B": "Partition-to-node mapping",
-        "C": "Node count",
-        "D": "Data size"
-      },
-      "answer": "A",
+      "choices": [
+        "Partition-to-node mapping",
+        "Node count",
+        "Key-to-partition mapping",
+        "Data size"
+      ],
+      "answer": "Key-to-partition mapping",
       "source_pages": [
         232
       ]
@@ -2280,13 +2280,13 @@
       "id": "MCQ038",
       "difficulty": "medium",
       "question": "10 nodes and 1,000 partitions implies about?",
-      "choices": {
-        "A": "100 partitions/node",
-        "B": "10",
-        "C": "1",
-        "D": "1,000 nodes"
-      },
-      "answer": "A",
+      "choices": [
+        "10",
+        "100 partitions/node",
+        "1",
+        "1,000 nodes"
+      ],
+      "answer": "100 partitions/node",
       "source_pages": [
         232
       ]
@@ -2295,13 +2295,13 @@
       "id": "MCQ039",
       "difficulty": "medium",
       "question": "What moves when a new node joins a fixed-partition cluster?",
-      "choices": {
-        "A": "Whole partitions",
-        "B": "Individual random rows only",
-        "C": "Hash function",
-        "D": "All data"
-      },
-      "answer": "A",
+      "choices": [
+        "Individual random rows only",
+        "Whole partitions",
+        "Hash function",
+        "All data"
+      ],
+      "answer": "Whole partitions",
       "source_pages": [
         232
       ]
@@ -2310,13 +2310,13 @@
       "id": "MCQ040",
       "difficulty": "medium",
       "question": "Too few fixed partitions causes?",
-      "choices": {
-        "A": "Large expensive partitions and limited future node count",
-        "B": "No overhead",
-        "C": "Infinite scaling",
-        "D": "No rebalance"
-      },
-      "answer": "A",
+      "choices": [
+        "Infinite scaling",
+        "Large expensive partitions and limited future node count",
+        "No overhead",
+        "No rebalance"
+      ],
+      "answer": "Large expensive partitions and limited future node count",
       "source_pages": [
         233
       ]
@@ -2325,13 +2325,13 @@
       "id": "MCQ041",
       "difficulty": "medium",
       "question": "Too many fixed partitions causes?",
-      "choices": {
-        "A": "Management overhead",
-        "B": "No routing",
-        "C": "No data",
-        "D": "No replication"
-      },
-      "answer": "A",
+      "choices": [
+        "No replication",
+        "No data",
+        "No routing",
+        "Management overhead"
+      ],
+      "answer": "Management overhead",
       "source_pages": [
         233
       ]
@@ -2340,13 +2340,13 @@
       "id": "MCQ042",
       "difficulty": "medium",
       "question": "What is dynamic partitioning?",
-      "choices": {
-        "A": "Split/merge partitions according to size",
-        "B": "Keep count forever fixed",
-        "C": "Use mod N",
-        "D": "One partition per database"
-      },
-      "answer": "A",
+      "choices": [
+        "Use mod N",
+        "Split/merge partitions according to size",
+        "One partition per database",
+        "Keep count forever fixed"
+      ],
+      "answer": "Split/merge partitions according to size",
       "source_pages": [
         234
       ]
@@ -2355,13 +2355,13 @@
       "id": "MCQ043",
       "difficulty": "medium",
       "question": "What HBase split threshold is cited?",
-      "choices": {
-        "A": "10 GB",
-        "B": "1 GB",
-        "C": "100 GB",
-        "D": "1 TB"
-      },
-      "answer": "A",
+      "choices": [
+        "10 GB",
+        "100 GB",
+        "1 TB",
+        "1 GB"
+      ],
+      "answer": "10 GB",
       "source_pages": [
         234
       ]
@@ -2370,13 +2370,13 @@
       "id": "MCQ044",
       "difficulty": "medium",
       "question": "What is the dynamic startup problem?",
-      "choices": {
-        "A": "Empty DB begins with one partition",
-        "B": "Too many partitions initially",
-        "C": "No partitions",
-        "D": "No writes"
-      },
-      "answer": "A",
+      "choices": [
+        "No partitions",
+        "Empty DB begins with one partition",
+        "Too many partitions initially",
+        "No writes"
+      ],
+      "answer": "Empty DB begins with one partition",
       "source_pages": [
         234
       ]
@@ -2385,13 +2385,13 @@
       "id": "MCQ045",
       "difficulty": "medium",
       "question": "What is pre-splitting?",
-      "choices": {
-        "A": "Create initial partitions in advance",
-        "B": "Delete partitions",
-        "C": "Hash keys twice",
-        "D": "Replicate every shard"
-      },
-      "answer": "A",
+      "choices": [
+        "Replicate every shard",
+        "Hash keys twice",
+        "Delete partitions",
+        "Create initial partitions in advance"
+      ],
+      "answer": "Create initial partitions in advance",
       "source_pages": [
         234
       ]
@@ -2400,13 +2400,13 @@
       "id": "MCQ046",
       "difficulty": "medium",
       "question": "Partitions proportional to nodes means?",
-      "choices": {
-        "A": "Fixed number of partitions per node",
-        "B": "One partition total",
-        "C": "Fixed global partition count",
-        "D": "Partitions proportional only to dataset"
-      },
-      "answer": "A",
+      "choices": [
+        "Fixed number of partitions per node",
+        "Fixed global partition count",
+        "Partitions proportional only to dataset",
+        "One partition total"
+      ],
+      "answer": "Fixed number of partitions per node",
       "source_pages": [
         235
       ]
@@ -2415,13 +2415,13 @@
       "id": "MCQ047",
       "difficulty": "medium",
       "question": "Which system is cited using this?",
-      "choices": {
-        "A": "Cassandra",
-        "B": "HBase only",
-        "C": "PostgreSQL only",
-        "D": "SQLite"
-      },
-      "answer": "A",
+      "choices": [
+        "SQLite",
+        "PostgreSQL only",
+        "Cassandra",
+        "HBase only"
+      ],
+      "answer": "Cassandra",
       "source_pages": [
         235
       ]
@@ -2430,13 +2430,13 @@
       "id": "MCQ048",
       "difficulty": "medium",
       "question": "How does a joining node get data in this model?",
-      "choices": {
-        "A": "Split selected existing partitions and take halves",
-        "B": "Rehash all keys",
-        "C": "Copy entire cluster",
-        "D": "Become routing tier"
-      },
-      "answer": "A",
+      "choices": [
+        "Rehash all keys",
+        "Copy entire cluster",
+        "Become routing tier",
+        "Split selected existing partitions and take halves"
+      ],
+      "answer": "Split selected existing partitions and take halves",
       "source_pages": [
         235
       ]
@@ -2445,13 +2445,13 @@
       "id": "MCQ049",
       "difficulty": "medium",
       "question": "Why can many random partition choices work?",
-      "choices": {
-        "A": "Imbalance averages out",
-        "B": "Every split is perfect",
-        "C": "No data moves",
-        "D": "Node count never changes"
-      },
-      "answer": "A",
+      "choices": [
+        "No data moves",
+        "Node count never changes",
+        "Every split is perfect",
+        "Imbalance averages out"
+      ],
+      "answer": "Imbalance averages out",
       "source_pages": [
         235
       ]
@@ -2460,13 +2460,13 @@
       "id": "MCQ050",
       "difficulty": "medium",
       "question": "What Cassandra partition-per-node default is cited?",
-      "choices": {
-        "A": "256",
-        "B": "16",
-        "C": "64",
-        "D": "1024"
-      },
-      "answer": "A",
+      "choices": [
+        "64",
+        "256",
+        "16",
+        "1024"
+      ],
+      "answer": "256",
       "source_pages": [
         235
       ]
@@ -2475,13 +2475,13 @@
       "id": "MCQ051",
       "difficulty": "hard",
       "question": "What is a middle ground between auto and manual rebalancing?",
-      "choices": {
-        "A": "System proposes, admin approves",
-        "B": "No rebalance",
-        "C": "Client decides each request",
-        "D": "Use DNS"
-      },
-      "answer": "A",
+      "choices": [
+        "System proposes, admin approves",
+        "No rebalance",
+        "Client decides each request",
+        "Use DNS"
+      ],
+      "answer": "System proposes, admin approves",
       "source_pages": [
         235
       ]
@@ -2490,13 +2490,13 @@
       "id": "MCQ052",
       "difficulty": "hard",
       "question": "Why can automatic rebalancing be dangerous?",
-      "choices": {
-        "A": "Data movement can overload nodes/network",
-        "B": "It prevents scaling",
-        "C": "It removes partitions",
-        "D": "It disables routing"
-      },
-      "answer": "A",
+      "choices": [
+        "It prevents scaling",
+        "Data movement can overload nodes/network",
+        "It removes partitions",
+        "It disables routing"
+      ],
+      "answer": "Data movement can overload nodes/network",
       "source_pages": [
         235,
         236
@@ -2506,13 +2506,13 @@
       "id": "MCQ053",
       "difficulty": "hard",
       "question": "How can cascading failure begin?",
-      "choices": {
-        "A": "Slow node declared dead triggers more load-moving work",
-        "B": "Range scan succeeds",
-        "C": "Index is local",
-        "D": "DNS resolves"
-      },
-      "answer": "A",
+      "choices": [
+        "DNS resolves",
+        "Range scan succeeds",
+        "Slow node declared dead triggers more load-moving work",
+        "Index is local"
+      ],
+      "answer": "Slow node declared dead triggers more load-moving work",
       "source_pages": [
         236
       ]
@@ -2521,13 +2521,13 @@
       "id": "MCQ054",
       "difficulty": "hard",
       "question": "Routing approach 1?",
-      "choices": {
-        "A": "Contact any node; it forwards if necessary",
-        "B": "Client knows exact owner",
-        "C": "Always use ZooKeeper directly for query",
-        "D": "No routing"
-      },
-      "answer": "A",
+      "choices": [
+        "No routing",
+        "Client knows exact owner",
+        "Contact any node; it forwards if necessary",
+        "Always use ZooKeeper directly for query"
+      ],
+      "answer": "Contact any node; it forwards if necessary",
       "source_pages": [
         236
       ]
@@ -2536,13 +2536,13 @@
       "id": "MCQ055",
       "difficulty": "hard",
       "question": "Routing approach 2?",
-      "choices": {
-        "A": "Use partition-aware routing tier",
-        "B": "Random node only",
-        "C": "Client direct only",
-        "D": "Use one leader for all shards"
-      },
-      "answer": "A",
+      "choices": [
+        "Use partition-aware routing tier",
+        "Use one leader for all shards",
+        "Random node only",
+        "Client direct only"
+      ],
+      "answer": "Use partition-aware routing tier",
       "source_pages": [
         236
       ]
@@ -2551,13 +2551,13 @@
       "id": "MCQ056",
       "difficulty": "hard",
       "question": "Routing approach 3?",
-      "choices": {
-        "A": "Partition-aware client connects directly",
-        "B": "Every node broadcasts query",
-        "C": "No metadata",
-        "D": "Only DNS"
-      },
-      "answer": "A",
+      "choices": [
+        "No metadata",
+        "Every node broadcasts query",
+        "Partition-aware client connects directly",
+        "Only DNS"
+      ],
+      "answer": "Partition-aware client connects directly",
       "source_pages": [
         236
       ]
@@ -2566,13 +2566,13 @@
       "id": "MCQ057",
       "difficulty": "hard",
       "question": "What general problem is request routing related to?",
-      "choices": {
-        "A": "Service discovery",
-        "B": "Serialization",
-        "C": "Replication lag",
-        "D": "Transaction isolation"
-      },
-      "answer": "A",
+      "choices": [
+        "Serialization",
+        "Replication lag",
+        "Service discovery",
+        "Transaction isolation"
+      ],
+      "answer": "Service discovery",
       "source_pages": [
         236
       ]
@@ -2581,13 +2581,13 @@
       "id": "MCQ058",
       "difficulty": "hard",
       "question": "Why is routing metadata coordination hard?",
-      "choices": {
-        "A": "Participants must agree on current ownership",
-        "B": "Keys never move",
-        "C": "Nodes have no addresses",
-        "D": "Partitions cannot fail"
-      },
-      "answer": "A",
+      "choices": [
+        "Participants must agree on current ownership",
+        "Partitions cannot fail",
+        "Keys never move",
+        "Nodes have no addresses"
+      ],
+      "answer": "Participants must agree on current ownership",
       "source_pages": [
         237
       ]
@@ -2596,13 +2596,13 @@
       "id": "MCQ059",
       "difficulty": "hard",
       "question": "What does ZooKeeper store in the example?",
-      "choices": {
-        "A": "Authoritative partition-to-node mapping",
-        "B": "All user rows",
-        "C": "Only passwords",
-        "D": "Only SQL"
-      },
-      "answer": "A",
+      "choices": [
+        "Only SQL",
+        "All user rows",
+        "Only passwords",
+        "Authoritative partition-to-node mapping"
+      ],
+      "answer": "Authoritative partition-to-node mapping",
       "source_pages": [
         237
       ]
@@ -2611,13 +2611,13 @@
       "id": "MCQ060",
       "difficulty": "hard",
       "question": "What can routers do with ZooKeeper?",
-      "choices": {
-        "A": "Subscribe to assignment changes",
-        "B": "Store full database",
-        "C": "Run range scans",
-        "D": "Hash every value"
-      },
-      "answer": "A",
+      "choices": [
+        "Store full database",
+        "Run range scans",
+        "Subscribe to assignment changes",
+        "Hash every value"
+      ],
+      "answer": "Subscribe to assignment changes",
       "source_pages": [
         237
       ]
@@ -2626,13 +2626,13 @@
       "id": "MCQ061",
       "difficulty": "hard",
       "question": "What does MongoDB use for routing?",
-      "choices": {
-        "A": "Config servers and mongos",
-        "B": "ZooKeeper only",
-        "C": "moxi",
-        "D": "No routing tier"
-      },
-      "answer": "A",
+      "choices": [
+        "No routing tier",
+        "moxi",
+        "ZooKeeper only",
+        "Config servers and mongos"
+      ],
+      "answer": "Config servers and mongos",
       "source_pages": [
         238
       ]
@@ -2641,13 +2641,13 @@
       "id": "MCQ062",
       "difficulty": "hard",
       "question": "What do Cassandra and Riak use to disseminate cluster state?",
-      "choices": {
-        "A": "Gossip",
-        "B": "WSDL",
-        "C": "WAL shipping",
-        "D": "Base64"
-      },
-      "answer": "A",
+      "choices": [
+        "Gossip",
+        "Base64",
+        "WSDL",
+        "WAL shipping"
+      ],
+      "answer": "Gossip",
       "source_pages": [
         238
       ]
@@ -2656,13 +2656,13 @@
       "id": "MCQ063",
       "difficulty": "hard",
       "question": "What is a benefit of gossip routing?",
-      "choices": {
-        "A": "Avoid external coordination-service dependency",
-        "B": "No node complexity",
-        "C": "Strong transactions",
-        "D": "No metadata"
-      },
-      "answer": "A",
+      "choices": [
+        "Avoid external coordination-service dependency",
+        "Strong transactions",
+        "No metadata",
+        "No node complexity"
+      ],
+      "answer": "Avoid external coordination-service dependency",
       "source_pages": [
         238
       ]
@@ -2671,13 +2671,13 @@
       "id": "MCQ064",
       "difficulty": "hard",
       "question": "What is Couchbase's cited routing tier?",
-      "choices": {
-        "A": "moxi",
-        "B": "mongos",
-        "C": "Helix",
-        "D": "Kafka"
-      },
-      "answer": "A",
+      "choices": [
+        "mongos",
+        "Helix",
+        "Kafka",
+        "moxi"
+      ],
+      "answer": "moxi",
       "source_pages": [
         238
       ]
@@ -2686,13 +2686,13 @@
       "id": "MCQ065",
       "difficulty": "hard",
       "question": "What can DNS help locate?",
-      "choices": {
-        "A": "Relatively stable router/node addresses",
-        "B": "Every record directly",
-        "C": "Partition boundaries only",
-        "D": "Secondary terms"
-      },
-      "answer": "A",
+      "choices": [
+        "Every record directly",
+        "Secondary terms",
+        "Relatively stable router/node addresses",
+        "Partition boundaries only"
+      ],
+      "answer": "Relatively stable router/node addresses",
       "source_pages": [
         238
       ]
@@ -2701,13 +2701,13 @@
       "id": "MCQ066",
       "difficulty": "hard",
       "question": "What does MPP mean?",
-      "choices": {
-        "A": "Massively parallel processing",
-        "B": "Multi-partition primary",
-        "C": "Manual partition placement",
-        "D": "Message processing protocol"
-      },
-      "answer": "A",
+      "choices": [
+        "Massively parallel processing",
+        "Manual partition placement",
+        "Multi-partition primary",
+        "Message processing protocol"
+      ],
+      "answer": "Massively parallel processing",
       "source_pages": [
         238
       ]
@@ -2716,13 +2716,13 @@
       "id": "MCQ067",
       "difficulty": "hard",
       "question": "What does an MPP optimizer do?",
-      "choices": {
-        "A": "Break complex query into parallel stages",
-        "B": "Route all work to one node",
-        "C": "Disable joins",
-        "D": "Only point lookup"
-      },
-      "answer": "A",
+      "choices": [
+        "Route all work to one node",
+        "Break complex query into parallel stages",
+        "Disable joins",
+        "Only point lookup"
+      ],
+      "answer": "Break complex query into parallel stages",
       "source_pages": [
         238
       ]
@@ -2731,13 +2731,13 @@
       "id": "MCQ068",
       "difficulty": "hard",
       "question": "Which workload benefits strongly from MPP?",
-      "choices": {
-        "A": "Large analytical scans",
-        "B": "Single cached key only",
-        "C": "One local write",
-        "D": "Schema migration only"
-      },
-      "answer": "A",
+      "choices": [
+        "One local write",
+        "Single cached key only",
+        "Large analytical scans",
+        "Schema migration only"
+      ],
+      "answer": "Large analytical scans",
       "source_pages": [
         238
       ]
@@ -2746,13 +2746,13 @@
       "id": "MCQ069",
       "difficulty": "hard",
       "question": "Key-range partitioning is best characterized as?",
-      "choices": {
-        "A": "Ordered and range-friendly, but hotspot-prone",
-        "B": "Uniform but unordered",
-        "C": "Global-index-only",
-        "D": "Always random"
-      },
-      "answer": "A",
+      "choices": [
+        "Always random",
+        "Global-index-only",
+        "Ordered and range-friendly, but hotspot-prone",
+        "Uniform but unordered"
+      ],
+      "answer": "Ordered and range-friendly, but hotspot-prone",
       "source_pages": [
         239
       ]
@@ -2761,13 +2761,13 @@
       "id": "MCQ070",
       "difficulty": "hard",
       "question": "Hash partitioning is best characterized as?",
-      "choices": {
-        "A": "More even but destroys ordering",
-        "B": "Preserves range locality",
-        "C": "No hot keys ever",
-        "D": "No routing metadata"
-      },
-      "answer": "A",
+      "choices": [
+        "More even but destroys ordering",
+        "No routing metadata",
+        "No hot keys ever",
+        "Preserves range locality"
+      ],
+      "answer": "More even but destroys ordering",
       "source_pages": [
         239
       ]
@@ -2776,13 +2776,13 @@
       "id": "MCQ071",
       "difficulty": "hard",
       "question": "Local secondary index tradeoff?",
-      "choices": {
-        "A": "Local writes, scatter/gather reads",
-        "B": "Global writes, targeted reads",
-        "C": "No writes",
-        "D": "No reads"
-      },
-      "answer": "A",
+      "choices": [
+        "No reads",
+        "Local writes, scatter/gather reads",
+        "Global writes, targeted reads",
+        "No writes"
+      ],
+      "answer": "Local writes, scatter/gather reads",
       "source_pages": [
         239
       ]
@@ -2791,13 +2791,13 @@
       "id": "MCQ072",
       "difficulty": "hard",
       "question": "Global secondary index tradeoff?",
-      "choices": {
-        "A": "Multi-partition writes, targeted reads",
-        "B": "One-partition writes, scatter reads",
-        "C": "No consistency delay",
-        "D": "No partitioning"
-      },
-      "answer": "A",
+      "choices": [
+        "Multi-partition writes, targeted reads",
+        "No consistency delay",
+        "No partitioning",
+        "One-partition writes, scatter reads"
+      ],
+      "answer": "Multi-partition writes, targeted reads",
       "source_pages": [
         239
       ]
@@ -2806,13 +2806,13 @@
       "id": "MCQ073",
       "difficulty": "hard",
       "question": "Why are cross-partition writes hard?",
-      "choices": {
-        "A": "One partition may succeed while another fails",
-        "B": "Every partition is one machine",
-        "C": "Hashes are unstable",
-        "D": "Range scans are impossible"
-      },
-      "answer": "A",
+      "choices": [
+        "Range scans are impossible",
+        "One partition may succeed while another fails",
+        "Hashes are unstable",
+        "Every partition is one machine"
+      ],
+      "answer": "One partition may succeed while another fails",
       "source_pages": [
         239,
         240
