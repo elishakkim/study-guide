@@ -5,12 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <title>Study Guide — System Design Flashcards</title>
-  <link rel="stylesheet" href="styles.css?v=5" />
+  <link rel="stylesheet" href="styles.css?v=6" />
 </head>
 <body>
   <div id="app">
+    <!-- Boot loader (shown while auto-loading bundled content) -->
+    <section id="boot" class="boot">
+      <div class="boot-spinner" aria-hidden="true"></div>
+      <p>Loading study guides…</p>
+    </section>
+
     <!-- Landing / open-folder screen -->
-    <section id="landing" class="landing">
+    <section id="landing" class="landing" hidden>
       <div class="landing-card">
         <button id="back-to-study-btn" class="landing-back" hidden>← Back to studying</button>
         <h1>System Design Study Guide</h1>
@@ -71,6 +77,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=5"></script>
+  <script src="app.js?v=6"></script>
 </body>
 </html>

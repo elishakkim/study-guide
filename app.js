@@ -224,11 +224,14 @@ function clearError() {
   if (node) { node.hidden = true; node.textContent = ""; }
 }
 /* ---------------- Routing (study is the main page; open is a separate page) ---------------- */
+function hideBoot() { $("#boot").hidden = true; }
 function showStudyUI() {
+  hideBoot();
   $("#landing").hidden = true;
   $("#study").hidden = false;
 }
 function showOpenPage() {
+  hideBoot();
   $("#study").hidden = true;
   $("#landing").hidden = false;
   $("#back-to-study-btn").hidden = state.chapters.length === 0;
@@ -893,8 +896,9 @@ async function autoLoadBundled() {
       } catch (_) { /* skip missing file */ }
     }
     if (files.length) await loadFiles(files);
+    else showOpenPage();
   } catch (_) {
-    /* Not served over http (e.g. file://) — stay on the landing screen. */
+    showOpenPage();
   }
 }
 
@@ -947,7 +951,10 @@ function init() {
     });
   });
 
-  applyRoute();
+  // Decide the initial view without flashing the open page while auto-loading.
+  if (location.hash === "#open" || location.protocol === "file:") {
+    showOpenPage();
+  }
   autoLoadBundled();
 }
 
