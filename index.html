@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <title>Study Guide — System Design Flashcards</title>
-  <link rel="stylesheet" href="styles.css?v=9" />
+  <link rel="stylesheet" href="styles.css?v=10" />
 </head>
 <body>
   <div id="app">
@@ -79,8 +79,22 @@
         <div id="sections" class="sections"></div>
       </main>
     </div>
+
+    <!-- PDF viewer modal -->
+    <div id="pdf-modal" class="pdf-modal" hidden>
+      <div class="pdf-dialog">
+        <header class="pdf-head">
+          <span id="pdf-title" class="pdf-title"></span>
+          <div class="pdf-actions">
+            <a id="pdf-open-tab" href="#" target="_blank" rel="noopener" class="pdf-btn">Open in new tab ↗</a>
+            <button id="pdf-close" class="pdf-btn" title="Close (Esc)">✕ Close</button>
+          </div>
+        </header>
+        <iframe id="pdf-frame" class="pdf-frame" title="Book page"></iframe>
+      </div>
+    </div>
   </div>
 
-  <script src="app.js?v=9"></script>
+  <script src="app.js?v=10"></script>
 </body>
 </html>

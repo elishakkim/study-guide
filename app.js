@@ -11,6 +11,7 @@ const state = {
   activeChapterId: null,
   activeSeries: null,  // currently selected book
   mode: "all",         // all | study | reference
+  books: [],           // [{ name, path }] PDFs discovered in books/
 };
 
 /* ---------------- Persistence (localStorage) ---------------- */
@@ -31,6 +32,9 @@ function saveProgress() { writeJSON(PROGRESS_KEY, progress); }
 function currentChapterKey() {
   const ch = state.chapters.find((c) => c.id === state.activeChapterId);
   return ch ? ch.filename : "";
+}
+function currentChapter() {
+  return state.chapters.find((c) => c.id === state.activeChapterId) || null;
 }
 function chapterProgress(chapterKey) {
   if (!progress[chapterKey]) progress[chapterKey] = { known: {}, quiz: {} };
@@ -419,7 +423,20 @@ function renderGeneric(value, keyHint) {
 
 function renderPages(pages) {
   const wrap = el("span", { class: "pages" });
-  for (const p of pages) wrap.append(el("span", { class: "page-badge", text: "p. " + p }));
+  const ch = currentChapter();
+  const book = ch ? bookForChapter(ch) : null;
+  for (const p of pages) {
+    if (book) {
+      const badge = el("button", {
+        class: "page-badge page-link",
+        title: `Open ${book.name} at page ${p}`,
+        onClick: () => openBook(book, p),
+      }, ["p. " + p]);
+      wrap.append(badge);
+    } else {
+      wrap.append(el("span", { class: "page-badge", text: "p. " + p }));
+    }
+  }
   return wrap;
 }
 
@@ -961,6 +978,49 @@ async function discoverBundledFiles() {
   return res.json();
 }
 
+/* ---------------- Book PDFs (open the referenced page) ---------------- */
+async function discoverBooks() {
+  try {
+    const res = await fetch("books/", { cache: "no-store" });
+    if (!res.ok) return;
+    const html = await res.text();
+    const found = [];
+    for (const m of html.matchAll(/href="([^"]+\.pdf)"/gi)) {
+      const name = decodeURIComponent(m[1].split("/").pop());
+      found.push({ name: name.replace(/\.pdf$/i, ""), path: "books/" + encodeURIComponent(name) });
+    }
+    state.books = found;
+    // Re-render so page badges become clickable now that books are known.
+    if (state.activeChapterId && found.length) renderChapter(state.activeChapterId);
+  } catch (_) { /* books/ not available (e.g. deployed without them) */ }
+}
+
+function words(s) {
+  return String(s).toLowerCase().match(/[a-z0-9]+/g)?.filter((w) => w.length > 2) || [];
+}
+function bookForChapter(ch) {
+  if (!state.books.length) return null;
+  const target = new Set(words(ch.series));
+  let best = null, bestScore = 0;
+  for (const b of state.books) {
+    const score = words(b.name).filter((w) => target.has(w)).length;
+    if (score > bestScore) { best = b; bestScore = score; }
+  }
+  return bestScore >= 1 ? best : null;
+}
+
+function openBook(book, pageNum) {
+  const src = `${book.path}#page=${pageNum}`;
+  $("#pdf-title").textContent = `${book.name} — page ${pageNum}`;
+  $("#pdf-frame").setAttribute("src", src);
+  $("#pdf-open-tab").setAttribute("href", src);
+  $("#pdf-modal").hidden = false;
+}
+function closeBook() {
+  $("#pdf-modal").hidden = true;
+  $("#pdf-frame").removeAttribute("src");
+}
+
 /* ---------------- Wire up UI ---------------- */
 function init() {
   $("#open-folder-btn").addEventListener("click", () => {
@@ -982,6 +1042,9 @@ function init() {
   $("#chapter-search").addEventListener("input", renderChapterList);
   $("#book-select").addEventListener("change", (e) => selectBook(e.target.value));
 
+  $("#pdf-close").addEventListener("click", closeBook);
+  $("#pdf-modal").addEventListener("click", (e) => { if (e.target.id === "pdf-modal") closeBook(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeBook(); });
   $$("#mode-tabs .mode-tab").forEach((tab) => {
     tab.addEventListener("click", () => {
       $$("#mode-tabs .mode-tab").forEach((t) => t.classList.remove("active"));
@@ -997,6 +1060,7 @@ function init() {
   }
   setSidebarCollapsed(!!(readJSON(UI_KEY) || {}).sidebarCollapsed);
   autoLoadBundled();
+  discoverBooks();
 }
 
 init();
