@@ -57,7 +57,21 @@ button { font-family: inherit; cursor: pointer; }
   width: 100%;
   box-shadow: var(--shadow-lg);
   text-align: center;
+  position: relative;
 }
+.landing-back {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.landing-back:hover { background: #e7ecf6; color: var(--text); }
 .landing-card h1 { margin: 0 0 10px; font-size: 28px; letter-spacing: -0.02em; }
 .landing-sub { color: var(--text-muted); margin: 0 0 28px; font-size: 16px; }
 .landing-actions {

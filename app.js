@@ -182,6 +182,7 @@ async function loadFiles(fileList) {
   state.activeSeries = startCh.series;
   state.activeChapterId = startCh.id;
   showStudyUI();
+  goToStudy();
   renderBookSelect();
   renderChapterList();
   renderChapter(startCh.id);
@@ -222,13 +223,25 @@ function clearError() {
   const node = $("#landing-error");
   if (node) { node.hidden = true; node.textContent = ""; }
 }
+/* ---------------- Routing (study is the main page; open is a separate page) ---------------- */
 function showStudyUI() {
   $("#landing").hidden = true;
   $("#study").hidden = false;
 }
-function showLanding() {
+function showOpenPage() {
   $("#study").hidden = true;
   $("#landing").hidden = false;
+  $("#back-to-study-btn").hidden = state.chapters.length === 0;
+}
+function applyRoute() {
+  const wantsOpen = location.hash === "#open";
+  if (wantsOpen || state.chapters.length === 0) showOpenPage();
+  else showStudyUI();
+}
+function goToOpenPage() { location.hash = "open"; }
+function goToStudy() {
+  if (location.hash === "#open") location.hash = "";
+  else applyRoute();
 }
 
 /* ---------------- Sidebar ---------------- */
@@ -916,7 +929,9 @@ function init() {
   }
   $("#folder-input").addEventListener("change", (e) => loadFiles(e.target.files));
   $("#files-input").addEventListener("change", (e) => loadFiles(e.target.files));
-  $("#reopen-btn").addEventListener("click", showLanding);
+  $("#reopen-btn").addEventListener("click", goToOpenPage);
+  $("#back-to-study-btn").addEventListener("click", goToStudy);
+  window.addEventListener("hashchange", applyRoute);
   $("#reset-btn").addEventListener("click", () => {
     if (confirm("Clear all saved progress (known cards and quiz answers)?")) resetProgress();
   });
@@ -932,6 +947,7 @@ function init() {
     });
   });
 
+  applyRoute();
   autoLoadBundled();
 }
 
