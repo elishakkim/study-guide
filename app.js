@@ -980,19 +980,32 @@ async function discoverBundledFiles() {
 
 /* ---------------- Book PDFs (open the referenced page) ---------------- */
 async function discoverBooks() {
+  let names = [];
   try {
     const res = await fetch("books/", { cache: "no-store" });
-    if (!res.ok) return;
-    const html = await res.text();
-    const found = [];
-    for (const m of html.matchAll(/href="([^"]+\.pdf)"/gi)) {
-      const name = decodeURIComponent(m[1].split("/").pop());
-      found.push({ name: name.replace(/\.pdf$/i, ""), path: "books/" + encodeURIComponent(name) });
+    if (res.ok) {
+      const html = await res.text();
+      for (const m of html.matchAll(/href="([^"]+\.pdf)"/gi)) {
+        names.push(decodeURIComponent(m[1].split("/").pop()));
+      }
     }
-    state.books = found;
-    // Re-render so page badges become clickable now that books are known.
-    if (state.activeChapterId && found.length) renderChapter(state.activeChapterId);
-  } catch (_) { /* books/ not available (e.g. deployed without them) */ }
+  } catch (_) { /* listing unavailable (e.g. GitHub Pages) */ }
+
+  if (!names.length) {
+    // Fall back to a manifest for hosts without directory listings.
+    try {
+      const res = await fetch("books/manifest.json", { cache: "no-store" });
+      if (res.ok) names = await res.json();
+    } catch (_) { /* no books available */ }
+  }
+
+  if (!names.length) return;
+  state.books = names.map((name) => ({
+    name: name.replace(/\.pdf$/i, ""),
+    path: "books/" + encodeURIComponent(name),
+  }));
+  // Re-render so page badges become clickable now that books are known.
+  if (state.activeChapterId) renderChapter(state.activeChapterId);
 }
 
 function words(s) {
