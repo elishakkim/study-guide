@@ -16,6 +16,7 @@ const state = {
 /* ---------------- Persistence (localStorage) ---------------- */
 const PROGRESS_KEY = "sdsg_progress_v1";
 const LOCATION_KEY = "sdsg_location_v1";
+const UI_KEY = "sdsg_ui_v1";
 
 function readJSON(key) {
   try { return JSON.parse(localStorage.getItem(key)) || null; } catch (_) { return null; }
@@ -43,8 +44,7 @@ function itemKey(it, sectionKey, idx) {
 }
 function saveLocation() {
   writeJSON(LOCATION_KEY, { book: state.activeSeries, chapter: currentChapterKey() });
-}
-function resetProgress() {
+}function resetProgress() {
   progress = {};
   saveProgress();
   try { localStorage.removeItem(LOCATION_KEY); } catch (_) { /* ignore */ }
@@ -245,6 +245,19 @@ function goToOpenPage() { location.hash = "open"; }
 function goToStudy() {
   if (location.hash === "#open") location.hash = "";
   else applyRoute();
+}
+
+function setSidebarCollapsed(collapsed) {
+  $("#study").classList.toggle("sidebar-collapsed", collapsed);
+  const btn = $("#sidebar-toggle");
+  btn.setAttribute("aria-expanded", String(!collapsed));
+  btn.title = collapsed ? "Show sidebar" : "Hide sidebar";
+  const ui = readJSON(UI_KEY) || {};
+  ui.sidebarCollapsed = collapsed;
+  writeJSON(UI_KEY, ui);
+}
+function toggleSidebar() {
+  setSidebarCollapsed(!$("#study").classList.contains("sidebar-collapsed"));
 }
 
 /* ---------------- Sidebar ---------------- */
@@ -935,6 +948,7 @@ function init() {
   $("#files-input").addEventListener("change", (e) => loadFiles(e.target.files));
   $("#reopen-btn").addEventListener("click", goToOpenPage);
   $("#back-to-study-btn").addEventListener("click", goToStudy);
+  $("#sidebar-toggle").addEventListener("click", toggleSidebar);
   window.addEventListener("hashchange", applyRoute);
   $("#reset-btn").addEventListener("click", () => {
     if (confirm("Clear all saved progress (known cards and quiz answers)?")) resetProgress();
@@ -955,6 +969,7 @@ function init() {
   if (location.hash === "#open" || location.protocol === "file:") {
     showOpenPage();
   }
+  setSidebarCollapsed(!!(readJSON(UI_KEY) || {}).sidebarCollapsed);
   autoLoadBundled();
 }
 
