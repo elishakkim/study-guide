@@ -321,14 +321,18 @@ function renderChapter(id) {
 
   $("#chapter-title").textContent =
     (ch.number != null ? `Chapter ${ch.number}: ` : "") + ch.title;
-  const metaBits = [];
-  if (ch.source) metaBits.push(ch.source);
+
   const cd = ch.data.chapter || {};
-  if (cd.pdf_pages && cd.pdf_pages.start != null) {
-    metaBits.push(`pp. ${cd.pdf_pages.start}–${cd.pdf_pages.end}`);
-  }
-  metaBits.push(ch.filename);
-  $("#chapter-meta").textContent = metaBits.join("  ·  ");
+  const eyebrow = [];
+  if (ch.series) eyebrow.push(ch.series);
+  if (ch.number != null) eyebrow.push(`Chapter ${ch.number}`);
+  const pp = cd.pdf_pages || {};
+  const ppEnd = pp.end != null ? pp.end : pp.summary_end;
+  if (pp.start != null && ppEnd != null) eyebrow.push(`pp. ${pp.start}–${ppEnd}`);
+  else if (pp.start != null) eyebrow.push(`p. ${pp.start}`);
+  $("#chapter-eyebrow").textContent = eyebrow.join("  ·  ");
+  $("#chapter-meta").hidden = true;
+  $("#chapter-title-block").title = ch.filename;
 
   const container = $("#sections");
   const nav = $("#section-nav");
