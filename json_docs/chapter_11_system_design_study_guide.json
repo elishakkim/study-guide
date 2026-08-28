@@ -1275,13 +1275,13 @@
       "id": "MCQ01",
       "difficulty": "easy",
       "question": "Which feed ordering is assumed?",
-      "choices": {
-        "A": "Reverse chronological",
-        "B": "Alphabetical",
-        "C": "Random",
-        "D": "Topic score only"
-      },
-      "answer": "A",
+      "choices": [
+        "Random",
+        "Alphabetical",
+        "Reverse chronological",
+        "Topic score only"
+      ],
+      "answer": "Reverse chronological",
       "source_pages": [
         167
       ]
@@ -1290,13 +1290,13 @@
       "id": "MCQ02",
       "difficulty": "medium",
       "question": "What maximum friend count is assumed?",
-      "choices": {
-        "A": "500",
-        "B": "1,000",
-        "C": "5,000",
-        "D": "50,000"
-      },
-      "answer": "C",
+      "choices": [
+        "500",
+        "5,000",
+        "1,000",
+        "50,000"
+      ],
+      "answer": "5,000",
       "source_pages": [
         167
       ]
@@ -1305,13 +1305,13 @@
       "id": "MCQ03",
       "difficulty": "medium",
       "question": "What traffic volume is assumed?",
-      "choices": {
-        "A": "1M DAU",
-        "B": "10M DAU",
-        "C": "100M DAU",
-        "D": "1B DAU"
-      },
-      "answer": "B",
+      "choices": [
+        "1M DAU",
+        "100M DAU",
+        "1B DAU",
+        "10M DAU"
+      ],
+      "answer": "10M DAU",
       "source_pages": [
         167
       ]
@@ -1320,13 +1320,13 @@
       "id": "MCQ04",
       "difficulty": "medium",
       "question": "Which media types may appear in feed posts?",
-      "choices": {
-        "A": "Text only",
-        "B": "Images only",
-        "C": "Images and videos",
-        "D": "Audio only"
-      },
-      "answer": "C",
+      "choices": [
+        "Audio only",
+        "Images only",
+        "Text only",
+        "Images and videos"
+      ],
+      "answer": "Images and videos",
       "source_pages": [
         167
       ]
@@ -1335,13 +1335,13 @@
       "id": "MCQ05",
       "difficulty": "medium",
       "question": "What are the two primary flows?",
-      "choices": {
-        "A": "Publishing and retrieval",
-        "B": "Login and logout",
-        "C": "Search and autocomplete",
-        "D": "Upload and transcoding"
-      },
-      "answer": "A",
+      "choices": [
+        "Publishing and retrieval",
+        "Upload and transcoding",
+        "Login and logout",
+        "Search and autocomplete"
+      ],
+      "answer": "Publishing and retrieval",
       "source_pages": [
         168
       ]
@@ -1350,13 +1350,13 @@
       "id": "MCQ06",
       "difficulty": "easy",
       "question": "Which method publishes a feed post?",
-      "choices": {
-        "A": "GET",
-        "B": "POST",
-        "C": "DELETE",
-        "D": "PATCH only"
-      },
-      "answer": "B",
+      "choices": [
+        "DELETE",
+        "GET",
+        "POST",
+        "PATCH only"
+      ],
+      "answer": "POST",
       "source_pages": [
         168
       ]
@@ -1365,13 +1365,13 @@
       "id": "MCQ07",
       "difficulty": "easy",
       "question": "Which method retrieves a feed?",
-      "choices": {
-        "A": "GET",
-        "B": "POST",
-        "C": "PUT",
-        "D": "DELETE"
-      },
-      "answer": "A",
+      "choices": [
+        "GET",
+        "PUT",
+        "POST",
+        "DELETE"
+      ],
+      "answer": "GET",
       "source_pages": [
         168
       ]
@@ -1380,13 +1380,13 @@
       "id": "MCQ08",
       "difficulty": "medium",
       "question": "What is the endpoint for both main operations?",
-      "choices": {
-        "A": "/v1/me/feed",
-        "B": "/v1/news/post",
-        "C": "/v2/timeline",
-        "D": "/feed/all"
-      },
-      "answer": "A",
+      "choices": [
+        "/v1/news/post",
+        "/v1/me/feed",
+        "/feed/all",
+        "/v2/timeline"
+      ],
+      "answer": "/v1/me/feed",
       "source_pages": [
         168
       ]
@@ -1395,13 +1395,13 @@
       "id": "MCQ09",
       "difficulty": "medium",
       "question": "What authenticates feed API calls?",
-      "choices": {
-        "A": "auth_token",
-        "B": "PageRank",
-        "C": "post_id only",
-        "D": "CDN key"
-      },
-      "answer": "A",
+      "choices": [
+        "CDN key",
+        "PageRank",
+        "auth_token",
+        "post_id only"
+      ],
+      "answer": "auth_token",
       "source_pages": [
         168
       ]
@@ -1410,13 +1410,13 @@
       "id": "MCQ10",
       "difficulty": "medium",
       "question": "Which service persists the post?",
-      "choices": {
-        "A": "Post service",
-        "B": "Notification service",
-        "C": "Graph DB",
-        "D": "CDN"
-      },
-      "answer": "A",
+      "choices": [
+        "Graph DB",
+        "Post service",
+        "Notification service",
+        "CDN"
+      ],
+      "answer": "Post service",
       "source_pages": [
         169
       ]
@@ -1425,13 +1425,13 @@
       "id": "MCQ11",
       "difficulty": "medium",
       "question": "Which service distributes a post into friends' feeds?",
-      "choices": {
-        "A": "Fanout service",
-        "B": "DNS",
-        "C": "CDN",
-        "D": "Counter cache"
-      },
-      "answer": "A",
+      "choices": [
+        "DNS",
+        "CDN",
+        "Counter cache",
+        "Fanout service"
+      ],
+      "answer": "Fanout service",
       "source_pages": [
         169
       ]
@@ -1440,13 +1440,13 @@
       "id": "MCQ12",
       "difficulty": "medium",
       "question": "Which service alerts friends about new content?",
-      "choices": {
-        "A": "Notification service",
-        "B": "Post service only",
-        "C": "Graph DB",
-        "D": "User cache"
-      },
-      "answer": "A",
+      "choices": [
+        "Graph DB",
+        "Notification service",
+        "Post service only",
+        "User cache"
+      ],
+      "answer": "Notification service",
       "source_pages": [
         169
       ]
@@ -1455,13 +1455,13 @@
       "id": "MCQ13",
       "difficulty": "medium",
       "question": "What does the high-level News Feed Cache hold?",
-      "choices": {
-        "A": "Feed IDs",
-        "B": "All media files",
-        "C": "Passwords",
-        "D": "Graph edges only"
-      },
-      "answer": "A",
+      "choices": [
+        "Passwords",
+        "All media files",
+        "Graph edges only",
+        "Feed IDs"
+      ],
+      "answer": "Feed IDs",
       "source_pages": [
         170
       ]
@@ -1470,13 +1470,13 @@
       "id": "MCQ14",
       "difficulty": "hard",
       "question": "What two controls do web servers enforce in the deep dive?",
-      "choices": {
-        "A": "Authentication and rate limiting",
-        "B": "Sharding and replication",
-        "C": "Fanout and hydration",
-        "D": "CDN and DNS"
-      },
-      "answer": "A",
+      "choices": [
+        "Authentication and rate limiting",
+        "Sharding and replication",
+        "CDN and DNS",
+        "Fanout and hydration"
+      ],
+      "answer": "Authentication and rate limiting",
       "source_pages": [
         171,
         172
@@ -1486,13 +1486,13 @@
       "id": "MCQ15",
       "difficulty": "hard",
       "question": "Why rate-limit posting?",
-      "choices": {
-        "A": "Prevent spam and abuse",
-        "B": "Reduce image resolution",
-        "C": "Change feed order",
-        "D": "Replace auth"
-      },
-      "answer": "A",
+      "choices": [
+        "Change feed order",
+        "Prevent spam and abuse",
+        "Replace auth",
+        "Reduce image resolution"
+      ],
+      "answer": "Prevent spam and abuse",
       "source_pages": [
         172
       ]
@@ -1501,13 +1501,13 @@
       "id": "MCQ16",
       "difficulty": "medium",
       "question": "What is fanout?",
-      "choices": {
-        "A": "Delivering a post to all friends",
-        "B": "Compressing media",
-        "C": "Sorting counters",
-        "D": "Authenticating users"
-      },
-      "answer": "A",
+      "choices": [
+        "Authenticating users",
+        "Delivering a post to all friends",
+        "Sorting counters",
+        "Compressing media"
+      ],
+      "answer": "Delivering a post to all friends",
       "source_pages": [
         172
       ]
@@ -1516,13 +1516,13 @@
       "id": "MCQ17",
       "difficulty": "medium",
       "question": "What is another name for fanout on write?",
-      "choices": {
-        "A": "Push model",
-        "B": "Pull model",
-        "C": "Graph model",
-        "D": "Hydration model"
-      },
-      "answer": "A",
+      "choices": [
+        "Hydration model",
+        "Graph model",
+        "Push model",
+        "Pull model"
+      ],
+      "answer": "Push model",
       "source_pages": [
         172
       ]
@@ -1531,13 +1531,13 @@
       "id": "MCQ18",
       "difficulty": "medium",
       "question": "What is another name for fanout on read?",
-      "choices": {
-        "A": "Push model",
-        "B": "Pull model",
-        "C": "Write-through",
-        "D": "Hot cache"
-      },
-      "answer": "B",
+      "choices": [
+        "Push model",
+        "Write-through",
+        "Hot cache",
+        "Pull model"
+      ],
+      "answer": "Pull model",
       "source_pages": [
         172
       ]
@@ -1546,13 +1546,13 @@
       "id": "MCQ19",
       "difficulty": "hard",
       "question": "What is the main read-time benefit of fanout on write?",
-      "choices": {
-        "A": "Feed is already precomputed",
-        "B": "No cache is needed",
-        "C": "No write cost exists",
-        "D": "No friends list is needed"
-      },
-      "answer": "A",
+      "choices": [
+        "No friends list is needed",
+        "No cache is needed",
+        "No write cost exists",
+        "Feed is already precomputed"
+      ],
+      "answer": "Feed is already precomputed",
       "source_pages": [
         172
       ]
@@ -1561,13 +1561,13 @@
       "id": "MCQ20",
       "difficulty": "hard",
       "question": "What creates the hotkey problem in push fanout?",
-      "choices": {
-        "A": "Users with many friends/followers",
-        "B": "Users with zero friends",
-        "C": "Small posts",
-        "D": "CDN media"
-      },
-      "answer": "A",
+      "choices": [
+        "Small posts",
+        "Users with many friends/followers",
+        "Users with zero friends",
+        "CDN media"
+      ],
+      "answer": "Users with many friends/followers",
       "source_pages": [
         172
       ]
@@ -1576,13 +1576,13 @@
       "id": "MCQ21",
       "difficulty": "hard",
       "question": "Why is push wasteful for inactive users?",
-      "choices": {
-        "A": "Their feeds are precomputed even though they rarely read them",
-        "B": "They have no user ID",
-        "C": "They cannot be cached",
-        "D": "They only use web"
-      },
-      "answer": "A",
+      "choices": [
+        "Their feeds are precomputed even though they rarely read them",
+        "They have no user ID",
+        "They only use web",
+        "They cannot be cached"
+      ],
+      "answer": "Their feeds are precomputed even though they rarely read them",
       "source_pages": [
         172
       ]
@@ -1591,13 +1591,13 @@
       "id": "MCQ22",
       "difficulty": "hard",
       "question": "Why is pull better for inactive users?",
-      "choices": {
-        "A": "Work happens only when they read",
-        "B": "It precomputes more data",
-        "C": "It pushes to all followers",
-        "D": "It removes post storage"
-      },
-      "answer": "A",
+      "choices": [
+        "It precomputes more data",
+        "It removes post storage",
+        "It pushes to all followers",
+        "Work happens only when they read"
+      ],
+      "answer": "Work happens only when they read",
       "source_pages": [
         172
       ]
@@ -1606,13 +1606,13 @@
       "id": "MCQ23",
       "difficulty": "hard",
       "question": "What is pull fanout's main disadvantage?",
-      "choices": {
-        "A": "Slower retrieval",
-        "B": "More write amplification",
-        "C": "No post ordering",
-        "D": "No graph data"
-      },
-      "answer": "A",
+      "choices": [
+        "No graph data",
+        "Slower retrieval",
+        "No post ordering",
+        "More write amplification"
+      ],
+      "answer": "Slower retrieval",
       "source_pages": [
         172
       ]
@@ -1621,13 +1621,13 @@
       "id": "MCQ24",
       "difficulty": "hard",
       "question": "Which strategy is selected?",
-      "choices": {
-        "A": "Hybrid push/pull",
-        "B": "Push only",
-        "C": "Pull only",
-        "D": "No fanout"
-      },
-      "answer": "A",
+      "choices": [
+        "Push only",
+        "No fanout",
+        "Hybrid push/pull",
+        "Pull only"
+      ],
+      "answer": "Hybrid push/pull",
       "source_pages": [
         172
       ]
@@ -1636,13 +1636,13 @@
       "id": "MCQ25",
       "difficulty": "hard",
       "question": "Who generally gets fanout-on-read in the hybrid model?",
-      "choices": {
-        "A": "Celebrities/high-fanout users",
-        "B": "Every inactive user only",
-        "C": "All users",
-        "D": "Users with one friend"
-      },
-      "answer": "A",
+      "choices": [
+        "Celebrities/high-fanout users",
+        "All users",
+        "Every inactive user only",
+        "Users with one friend"
+      ],
+      "answer": "Celebrities/high-fanout users",
       "source_pages": [
         172
       ]
@@ -1651,13 +1651,13 @@
       "id": "MCQ26",
       "difficulty": "hard",
       "question": "Why is consistent hashing mentioned?",
-      "choices": {
-        "A": "Mitigate hotkey pressure by distributing requests/data",
-        "B": "Store media",
-        "C": "Sort posts alphabetically",
-        "D": "Authenticate users"
-      },
-      "answer": "A",
+      "choices": [
+        "Authenticate users",
+        "Store media",
+        "Sort posts alphabetically",
+        "Mitigate hotkey pressure by distributing requests/data"
+      ],
+      "answer": "Mitigate hotkey pressure by distributing requests/data",
       "source_pages": [
         172
       ]
@@ -1666,13 +1666,13 @@
       "id": "MCQ27",
       "difficulty": "medium",
       "question": "Where are friend IDs fetched from?",
-      "choices": {
-        "A": "Graph database",
-        "B": "CDN",
-        "C": "Counter cache",
-        "D": "Notification service"
-      },
-      "answer": "A",
+      "choices": [
+        "Counter cache",
+        "Notification service",
+        "CDN",
+        "Graph database"
+      ],
+      "answer": "Graph database",
       "source_pages": [
         173
       ]
@@ -1681,13 +1681,13 @@
       "id": "MCQ28",
       "difficulty": "hard",
       "question": "What happens after friend IDs are retrieved?",
-      "choices": {
-        "A": "Fetch friend info and apply user-setting filters",
-        "B": "Immediately send media to CDN",
-        "C": "Delete posts",
-        "D": "Return JSON"
-      },
-      "answer": "A",
+      "choices": [
+        "Return JSON",
+        "Immediately send media to CDN",
+        "Delete posts",
+        "Fetch friend info and apply user-setting filters"
+      ],
+      "answer": "Fetch friend info and apply user-setting filters",
       "source_pages": [
         173
       ]
@@ -1696,13 +1696,13 @@
       "id": "MCQ29",
       "difficulty": "hard",
       "question": "Which setting may remove a friend's post from the feed?",
-      "choices": {
-        "A": "Mute",
-        "B": "Password length",
-        "C": "Device type",
-        "D": "DNS TTL"
-      },
-      "answer": "A",
+      "choices": [
+        "DNS TTL",
+        "Mute",
+        "Password length",
+        "Device type"
+      ],
+      "answer": "Mute",
       "source_pages": [
         173
       ]
@@ -1711,13 +1711,13 @@
       "id": "MCQ30",
       "difficulty": "medium",
       "question": "What is placed into the fanout message queue?",
-      "choices": {
-        "A": "Friends list and new post ID",
-        "B": "Full video files",
-        "C": "Auth passwords",
-        "D": "Only user counters"
-      },
-      "answer": "A",
+      "choices": [
+        "Auth passwords",
+        "Friends list and new post ID",
+        "Full video files",
+        "Only user counters"
+      ],
+      "answer": "Friends list and new post ID",
       "source_pages": [
         173
       ]
@@ -1726,13 +1726,13 @@
       "id": "MCQ31",
       "difficulty": "medium",
       "question": "Who consumes fanout queue messages?",
-      "choices": {
-        "A": "Fanout workers",
-        "B": "CDN",
-        "C": "Load balancer",
-        "D": "Graph DB"
-      },
-      "answer": "A",
+      "choices": [
+        "CDN",
+        "Fanout workers",
+        "Load balancer",
+        "Graph DB"
+      ],
+      "answer": "Fanout workers",
       "source_pages": [
         173
       ]
@@ -1741,13 +1741,13 @@
       "id": "MCQ32",
       "difficulty": "medium",
       "question": "How is feed cache represented conceptually?",
-      "choices": {
-        "A": "<post_id,user_id> mapping",
-        "B": "<password,email> mapping",
-        "C": "<video,CDN> mapping",
-        "D": "<counter,shard> mapping"
-      },
-      "answer": "A",
+      "choices": [
+        "<counter,shard> mapping",
+        "<password,email> mapping",
+        "<video,CDN> mapping",
+        "<post_id,user_id> mapping"
+      ],
+      "answer": "<post_id,user_id> mapping",
       "source_pages": [
         173
       ]
@@ -1756,13 +1756,13 @@
       "id": "MCQ33",
       "difficulty": "hard",
       "question": "Why does the feed cache store only IDs?",
-      "choices": {
-        "A": "To limit memory usage",
-        "B": "Because posts have no content",
-        "C": "Because graph DB cannot store users",
-        "D": "Because JSON cannot contain objects"
-      },
-      "answer": "A",
+      "choices": [
+        "Because posts have no content",
+        "Because JSON cannot contain objects",
+        "Because graph DB cannot store users",
+        "To limit memory usage"
+      ],
+      "answer": "To limit memory usage",
       "source_pages": [
         173
       ]
@@ -1771,13 +1771,13 @@
       "id": "MCQ34",
       "difficulty": "hard",
       "question": "Why is feed-cache depth bounded?",
-      "choices": {
-        "A": "Users rarely scroll through thousands of posts",
-        "B": "HTTP allows only 100 posts",
-        "C": "CDN requires it",
-        "D": "Graph DB has no space"
-      },
-      "answer": "A",
+      "choices": [
+        "Graph DB has no space",
+        "CDN requires it",
+        "HTTP allows only 100 posts",
+        "Users rarely scroll through thousands of posts"
+      ],
+      "answer": "Users rarely scroll through thousands of posts",
       "source_pages": [
         173
       ]
@@ -1786,13 +1786,13 @@
       "id": "MCQ35",
       "difficulty": "medium",
       "question": "Where are media files served from?",
-      "choices": {
-        "A": "CDN",
-        "B": "Graph DB",
-        "C": "News Feed Cache",
-        "D": "Load balancer"
-      },
-      "answer": "A",
+      "choices": [
+        "CDN",
+        "Graph DB",
+        "News Feed Cache",
+        "Load balancer"
+      ],
+      "answer": "CDN",
       "source_pages": [
         174
       ]
@@ -1801,13 +1801,13 @@
       "id": "MCQ36",
       "difficulty": "hard",
       "question": "What does News Feed Service fetch first in the detailed read path?",
-      "choices": {
-        "A": "Post IDs from news feed cache",
-        "B": "All posts from DB",
-        "C": "All media from CDN",
-        "D": "All graph edges"
-      },
-      "answer": "A",
+      "choices": [
+        "All graph edges",
+        "All posts from DB",
+        "All media from CDN",
+        "Post IDs from news feed cache"
+      ],
+      "answer": "Post IDs from news feed cache",
       "source_pages": [
         175
       ]
@@ -1816,13 +1816,13 @@
       "id": "MCQ37",
       "difficulty": "hard",
       "question": "What is required to construct a fully hydrated feed?",
-      "choices": {
-        "A": "User and post objects in addition to feed IDs",
-        "B": "Only post IDs",
-        "C": "Only counters",
-        "D": "Only notification state"
-      },
-      "answer": "A",
+      "choices": [
+        "Only counters",
+        "Only post IDs",
+        "Only notification state",
+        "User and post objects in addition to feed IDs"
+      ],
+      "answer": "User and post objects in addition to feed IDs",
       "source_pages": [
         175
       ]
@@ -1831,13 +1831,13 @@
       "id": "MCQ38",
       "difficulty": "medium",
       "question": "Where are user objects fetched from?",
-      "choices": {
-        "A": "User cache",
-        "B": "CDN",
-        "C": "News Feed Cache only",
-        "D": "Notification service"
-      },
-      "answer": "A",
+      "choices": [
+        "Notification service",
+        "User cache",
+        "News Feed Cache only",
+        "CDN"
+      ],
+      "answer": "User cache",
       "source_pages": [
         175
       ]
@@ -1846,13 +1846,13 @@
       "id": "MCQ39",
       "difficulty": "medium",
       "question": "Where are post objects fetched from?",
-      "choices": {
-        "A": "Post cache",
-        "B": "Graph DB only",
-        "C": "Counter cache",
-        "D": "Load balancer"
-      },
-      "answer": "A",
+      "choices": [
+        "Counter cache",
+        "Graph DB only",
+        "Post cache",
+        "Load balancer"
+      ],
+      "answer": "Post cache",
       "source_pages": [
         175
       ]
@@ -1861,13 +1861,13 @@
       "id": "MCQ40",
       "difficulty": "medium",
       "question": "In what format is the completed feed returned?",
-      "choices": {
-        "A": "JSON",
-        "B": "CSV",
-        "C": "XML only",
-        "D": "Binary video only"
-      },
-      "answer": "A",
+      "choices": [
+        "XML only",
+        "JSON",
+        "CSV",
+        "Binary video only"
+      ],
+      "answer": "JSON",
       "source_pages": [
         175
       ]
@@ -1876,13 +1876,13 @@
       "id": "MCQ41",
       "difficulty": "medium",
       "question": "How many cache layers are listed?",
-      "choices": {
-        "A": "3",
-        "B": "4",
-        "C": "5",
-        "D": "6"
-      },
-      "answer": "C",
+      "choices": [
+        "5",
+        "3",
+        "6",
+        "4"
+      ],
+      "answer": "5",
       "source_pages": [
         175
       ]
@@ -1891,13 +1891,13 @@
       "id": "MCQ42",
       "difficulty": "medium",
       "question": "Which cache layer stores popular post data in hot cache?",
-      "choices": {
-        "A": "Content",
-        "B": "Action",
-        "C": "Counters",
-        "D": "Social Graph"
-      },
-      "answer": "A",
+      "choices": [
+        "Social Graph",
+        "Action",
+        "Content",
+        "Counters"
+      ],
+      "answer": "Content",
       "source_pages": [
         175
       ]
@@ -1906,13 +1906,13 @@
       "id": "MCQ43",
       "difficulty": "medium",
       "question": "Which cache layer stores follower/following relationship data?",
-      "choices": {
-        "A": "Social Graph",
-        "B": "News Feed",
-        "C": "Content",
-        "D": "Counters"
-      },
-      "answer": "A",
+      "choices": [
+        "News Feed",
+        "Social Graph",
+        "Content",
+        "Counters"
+      ],
+      "answer": "Social Graph",
       "source_pages": [
         175
       ]
@@ -1921,13 +1921,13 @@
       "id": "MCQ44",
       "difficulty": "medium",
       "question": "Which cache layer stores liked/replied state?",
-      "choices": {
-        "A": "Action",
-        "B": "Content",
-        "C": "Counters",
-        "D": "News Feed"
-      },
-      "answer": "A",
+      "choices": [
+        "Counters",
+        "Content",
+        "News Feed",
+        "Action"
+      ],
+      "answer": "Action",
       "source_pages": [
         175
       ]
@@ -1936,13 +1936,13 @@
       "id": "MCQ45",
       "difficulty": "medium",
       "question": "Which cache layer stores like/reply/follower counts?",
-      "choices": {
-        "A": "Counters",
-        "B": "Action",
-        "C": "Content",
-        "D": "News Feed"
-      },
-      "answer": "A",
+      "choices": [
+        "Counters",
+        "News Feed",
+        "Content",
+        "Action"
+      ],
+      "answer": "Counters",
       "source_pages": [
         175
       ]
@@ -1951,13 +1951,13 @@
       "id": "MCQ46",
       "difficulty": "medium",
       "question": "What should the web tier be for scalability?",
-      "choices": {
-        "A": "Stateless",
-        "B": "Stateful per user",
-        "C": "Single-server only",
-        "D": "Disk-bound"
-      },
-      "answer": "A",
+      "choices": [
+        "Stateless",
+        "Disk-bound",
+        "Stateful per user",
+        "Single-server only"
+      ],
+      "answer": "Stateless",
       "source_pages": [
         176
       ]
@@ -1966,13 +1966,13 @@
       "id": "MCQ47",
       "difficulty": "medium",
       "question": "What geographic resilience topic is listed?",
-      "choices": {
-        "A": "Multiple data centers",
-        "B": "One region only",
-        "C": "No replication",
-        "D": "No failover"
-      },
-      "answer": "A",
+      "choices": [
+        "One region only",
+        "No failover",
+        "No replication",
+        "Multiple data centers"
+      ],
+      "answer": "Multiple data centers",
       "source_pages": [
         176
       ]
@@ -1981,13 +1981,13 @@
       "id": "MCQ48",
       "difficulty": "medium",
       "question": "What is message queue's wrap-up role?",
-      "choices": {
-        "A": "Decouple components",
-        "B": "Store videos",
-        "C": "Authenticate users",
-        "D": "Replace cache"
-      },
-      "answer": "A",
+      "choices": [
+        "Store videos",
+        "Authenticate users",
+        "Replace cache",
+        "Decouple components"
+      ],
+      "answer": "Decouple components",
       "source_pages": [
         176
       ]
@@ -1996,13 +1996,13 @@
       "id": "MCQ49",
       "difficulty": "medium",
       "question": "Which metric is explicitly suggested?",
-      "choices": {
-        "A": "Peak-hour QPS",
-        "B": "CPU model",
-        "C": "Screen resolution",
-        "D": "Friend name length"
-      },
-      "answer": "A",
+      "choices": [
+        "CPU model",
+        "Screen resolution",
+        "Friend name length",
+        "Peak-hour QPS"
+      ],
+      "answer": "Peak-hour QPS",
       "source_pages": [
         176
       ]
@@ -2011,13 +2011,13 @@
       "id": "MCQ50",
       "difficulty": "medium",
       "question": "Which user-experience metric is explicitly suggested?",
-      "choices": {
-        "A": "Feed refresh latency",
-        "B": "Email bounce rate",
-        "C": "DNS record count",
-        "D": "Video frame rate"
-      },
-      "answer": "A",
+      "choices": [
+        "Email bounce rate",
+        "Video frame rate",
+        "DNS record count",
+        "Feed refresh latency"
+      ],
+      "answer": "Feed refresh latency",
       "source_pages": [
         176
       ]
