@@ -1,0 +1,3931 @@
+{
+  "chapter": {
+    "number": 9,
+    "title": "Design a Web Crawler",
+    "source": "System Design Interview: An Insider's Guide by Alex Xu",
+    "pdf_pages": {
+      "chapter_start": 132,
+      "chapter_end": 149,
+      "references_page": 150
+    },
+    "primary_goal": "Design a scalable, robust, polite, and extensible web crawler for search-engine indexing that can crawl roughly 1 billion HTML pages per month, store up to five years of content, handle duplicate content, prioritize important URLs, maintain freshness, and survive failures."
+  },
+  "chapter_summary": {
+    "overview": "Chapter 9 designs a large-scale web crawler, also called a robot or spider. A crawler starts from seed URLs, downloads pages, extracts links, filters and deduplicates them, and repeatedly adds unseen URLs back into a URL Frontier. The interview scope is search-engine indexing of HTML pages, including newly added or edited pages, with duplicate content ignored and crawled pages stored for five years. The chapter emphasizes four crawler qualities: scalability, robustness, politeness, and extensibility. Its high-level design contains seed URLs, a URL Frontier, HTML Downloader, DNS Resolver, Content Parser, duplicate-content detection, content storage, URL extraction/filtering, URL deduplication, and URL storage. The deep dive explains why BFS is generally favored over DFS, why naïve FIFO BFS still fails on politeness and priority, how the URL Frontier uses front queues for prioritization and back queues for politeness, how freshness is maintained, how the Frontier combines disk and memory buffers, how robots.txt and downloader optimizations work, how robustness and extensibility are improved, and how duplicate content, spider traps, and data noise are detected or avoided.",
+    "crawler_synonyms": [
+      "robot",
+      "spider"
+    ],
+    "major_use_cases": [
+      "Search engine indexing",
+      "Web archiving",
+      "Web mining",
+      "Web monitoring"
+    ],
+    "source_pages": [
+      132,
+      133,
+      134,
+      135,
+      136,
+      137,
+      138,
+      139,
+      140,
+      141,
+      142,
+      143,
+      144,
+      145,
+      146,
+      147,
+      148,
+      149
+    ]
+  },
+  "learning_objectives": [
+    {
+      "id": "LO1",
+      "objective": "Define a web crawler and describe its common use cases.",
+      "source_pages": [
+        132,
+        133
+      ]
+    },
+    {
+      "id": "LO2",
+      "objective": "Explain the basic three-step crawl algorithm.",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "LO3",
+      "objective": "State the chapter's crawl requirements and design scope.",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "LO4",
+      "objective": "Explain the four characteristics of a good crawler: scalability, robustness, politeness, and extensibility.",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "LO5",
+      "objective": "Reproduce the chapter's QPS, peak QPS, monthly storage, and five-year storage estimates.",
+      "source_pages": [
+        134,
+        135
+      ]
+    },
+    {
+      "id": "LO6",
+      "objective": "Explain the role of seed URLs and the open-ended strategies for choosing them.",
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "LO7",
+      "objective": "Explain the role of the URL Frontier.",
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "LO8",
+      "objective": "Explain the roles of HTML Downloader, DNS Resolver, Content Parser, Content Seen?, Content Storage, URL Extractor, URL Filter, URL Seen?, and URL Storage.",
+      "source_pages": [
+        137,
+        138
+      ]
+    },
+    {
+      "id": "LO9",
+      "objective": "Reconstruct the complete 11-step crawler workflow.",
+      "source_pages": [
+        139
+      ]
+    },
+    {
+      "id": "LO10",
+      "objective": "Compare DFS and BFS for web crawling and explain why BFS is preferred.",
+      "source_pages": [
+        140
+      ]
+    },
+    {
+      "id": "LO11",
+      "objective": "Explain the two shortcomings of naïve FIFO BFS.",
+      "source_pages": [
+        140,
+        141
+      ]
+    },
+    {
+      "id": "LO12",
+      "objective": "Explain how the URL Frontier enforces politeness with per-host back queues and worker threads.",
+      "source_pages": [
+        141,
+        142
+      ]
+    },
+    {
+      "id": "LO13",
+      "objective": "Explain how the URL Frontier implements URL priority with a prioritizer and front queues.",
+      "source_pages": [
+        142,
+        143
+      ]
+    },
+    {
+      "id": "LO14",
+      "objective": "Explain how front queues and back queues jointly implement prioritization and politeness.",
+      "source_pages": [
+        143
+      ]
+    },
+    {
+      "id": "LO15",
+      "objective": "Explain crawl freshness and strategies for deciding what to recrawl.",
+      "source_pages": [
+        144,
+        145
+      ]
+    },
+    {
+      "id": "LO16",
+      "objective": "Explain the hybrid disk-plus-memory design for URL Frontier storage.",
+      "source_pages": [
+        145
+      ]
+    },
+    {
+      "id": "LO17",
+      "objective": "Explain robots.txt and why its results are cached.",
+      "source_pages": [
+        145
+      ]
+    },
+    {
+      "id": "LO18",
+      "objective": "Explain the four HTML Downloader performance optimizations.",
+      "source_pages": [
+        145,
+        146
+      ]
+    },
+    {
+      "id": "LO19",
+      "objective": "Explain the robustness techniques: consistent hashing, saved crawl state, exception handling, and data validation.",
+      "source_pages": [
+        146,
+        147
+      ]
+    },
+    {
+      "id": "LO20",
+      "objective": "Explain crawler extensibility through plug-in modules.",
+      "source_pages": [
+        147
+      ]
+    },
+    {
+      "id": "LO21",
+      "objective": "Explain how duplicate content, spider traps, and data noise are handled.",
+      "source_pages": [
+        147,
+        148
+      ]
+    },
+    {
+      "id": "LO22",
+      "objective": "Discuss server-side rendering, anti-spam filtering, replication/sharding, horizontal scaling, availability/consistency/reliability, and analytics as follow-up topics.",
+      "source_pages": [
+        149
+      ]
+    }
+  ],
+  "crawler_use_cases": [
+    {
+      "use_case": "Search engine indexing",
+      "description": "Collect web pages and build a local search index.",
+      "example": "Googlebot for Google search.",
+      "source_pages": [
+        132
+      ]
+    },
+    {
+      "use_case": "Web archiving",
+      "description": "Collect web information for long-term preservation.",
+      "examples": [
+        "US Library of Congress",
+        "EU web archive"
+      ],
+      "source_pages": [
+        132
+      ]
+    },
+    {
+      "use_case": "Web mining",
+      "description": "Discover useful knowledge from Internet content.",
+      "example": "Financial firms download shareholder meetings and annual reports to learn company initiatives.",
+      "source_pages": [
+        132,
+        133
+      ]
+    },
+    {
+      "use_case": "Web monitoring",
+      "description": "Monitor copyright and trademark infringements.",
+      "example": "Digimarc uses crawlers to discover and report pirated works.",
+      "source_pages": [
+        133
+      ]
+    }
+  ],
+  "basic_crawl_algorithm": {
+    "steps": [
+      "Given a set of URLs, download all web pages addressed by those URLs.",
+      "Extract URLs from the downloaded web pages.",
+      "Add new URLs to the list of URLs to be downloaded and repeat."
+    ],
+    "warning": "A massively scalable crawler is much more complex than this simple loop.",
+    "source_pages": [
+      134
+    ]
+  },
+  "requirements_and_scope": {
+    "purpose": "Search engine indexing",
+    "pages_per_month": "1 billion",
+    "content_types": "HTML only",
+    "freshness": "Newly added and edited web pages must be considered.",
+    "content_retention": "Store crawled HTML pages for up to 5 years.",
+    "duplicate_policy": "Ignore pages with duplicate content.",
+    "source_pages": [
+      134
+    ]
+  },
+  "good_crawler_characteristics": [
+    {
+      "characteristic": "Scalability",
+      "meaning": "The web contains billions of pages, so crawling must be extremely efficient and use parallelization.",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "characteristic": "Robustness",
+      "meaning": "The crawler must survive malformed HTML, unresponsive servers, crashes, malicious links, and other web traps.",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "characteristic": "Politeness",
+      "meaning": "The crawler should not make too many requests to the same website in a short period.",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "characteristic": "Extensibility",
+      "meaning": "New content types should be supportable with minimal changes rather than a total redesign.",
+      "source_pages": [
+        134
+      ]
+    }
+  ],
+  "back_of_envelope_estimation": {
+    "pages_per_month": 1000000000,
+    "average_qps": {
+      "formula": "1,000,000,000 / 30 / 24 / 3600",
+      "chapter_result": "~400 pages/second"
+    },
+    "peak_qps": {
+      "formula": "2 * average QPS",
+      "chapter_result": "800 pages/second"
+    },
+    "average_page_size": "500 KB",
+    "monthly_storage": {
+      "formula": "1 billion pages * 500 KB",
+      "chapter_result": "500 TB/month"
+    },
+    "retention": "5 years",
+    "five_year_storage": {
+      "formula": "500 TB * 12 months * 5 years",
+      "chapter_result": "30 PB"
+    },
+    "source_pages": [
+      134,
+      135
+    ]
+  },
+  "high_level_components": [
+    {
+      "component": "Seed URLs",
+      "purpose": "Starting points for the crawl.",
+      "selection_notes": [
+        "A university domain can be a seed when crawling one university site.",
+        "For the whole web, divide URL space into smaller groups.",
+        "Possible grouping strategies include locality/country and topic such as shopping, sports, healthcare.",
+        "Seed selection is open-ended; the candidate should think aloud."
+      ],
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "component": "URL Frontier",
+      "purpose": "Stores URLs that are waiting to be downloaded.",
+      "high_level_model": "Can be thought of as a FIFO queue, though the deep dive makes it more sophisticated.",
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "component": "HTML Downloader",
+      "purpose": "Downloads web pages from URLs supplied by the URL Frontier.",
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "component": "DNS Resolver",
+      "purpose": "Translates URL hostnames to IP addresses so pages can be downloaded.",
+      "chapter_example": "www.wikipedia.org -> 198.35.26.96 as of 3/5/2019.",
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "component": "Content Parser",
+      "purpose": "Parses and validates downloaded pages and catches malformed content.",
+      "design_choice": "Separate from crawler/download server because parsing there would slow crawling.",
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "component": "Content Seen?",
+      "purpose": "Detects duplicate content so identical content is not processed/stored repeatedly.",
+      "chapter_duplicate_stat": "Online research cited by the chapter says 29% of web pages have duplicate content.",
+      "technique": "Compare page hash values rather than full character-by-character comparison.",
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "component": "Content Storage",
+      "purpose": "Stores HTML content.",
+      "storage_policy": [
+        "Most content on disk because the data set is too large for memory.",
+        "Popular content in memory to reduce latency."
+      ],
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "component": "URL Extractor",
+      "purpose": "Extracts links from HTML pages.",
+      "normalization": "Converts relative paths to absolute URLs by adding the appropriate prefix/domain.",
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "component": "URL Filter",
+      "purpose": "Excludes certain content types, file extensions, error links, and blacklisted-site URLs.",
+      "source_pages": [
+        138
+      ]
+    },
+    {
+      "component": "URL Seen?",
+      "purpose": "Tracks URLs already visited or already present in the Frontier.",
+      "benefits": [
+        "Avoid duplicate URL insertion.",
+        "Reduce server load.",
+        "Prevent potential infinite loops."
+      ],
+      "implementation_options": [
+        "Bloom filter",
+        "Hash table"
+      ],
+      "source_pages": [
+        138
+      ]
+    },
+    {
+      "component": "URL Storage",
+      "purpose": "Stores already visited URLs.",
+      "source_pages": [
+        138
+      ]
+    }
+  ],
+  "crawler_workflow": [
+    {
+      "step": 1,
+      "action": "Add seed URLs to the URL Frontier.",
+      "source_pages": [
+        139
+      ]
+    },
+    {
+      "step": 2,
+      "action": "HTML Downloader fetches a list of URLs from the URL Frontier.",
+      "source_pages": [
+        139
+      ]
+    },
+    {
+      "step": 3,
+      "action": "HTML Downloader gets IP addresses from the DNS Resolver and starts downloading.",
+      "source_pages": [
+        139
+      ]
+    },
+    {
+      "step": 4,
+      "action": "Content Parser parses HTML and checks whether pages are malformed.",
+      "source_pages": [
+        139
+      ]
+    },
+    {
+      "step": 5,
+      "action": "Parsed and validated content is passed to Content Seen?.",
+      "source_pages": [
+        139
+      ]
+    },
+    {
+      "step": 6,
+      "action": "Content Seen? checks whether the HTML content already exists. Duplicate content is discarded; new content proceeds.",
+      "source_pages": [
+        139
+      ]
+    },
+    {
+      "step": 7,
+      "action": "Link Extractor extracts links from the HTML page.",
+      "source_pages": [
+        139
+      ]
+    },
+    {
+      "step": 8,
+      "action": "Extracted links are passed to the URL Filter.",
+      "source_pages": [
+        139
+      ]
+    },
+    {
+      "step": 9,
+      "action": "Filtered links are passed to URL Seen?.",
+      "source_pages": [
+        139
+      ]
+    },
+    {
+      "step": 10,
+      "action": "URL Seen? checks whether each URL has already been processed/stored; already-seen URLs require no action.",
+      "source_pages": [
+        139
+      ]
+    },
+    {
+      "step": 11,
+      "action": "Unseen URLs are added to the URL Frontier.",
+      "source_pages": [
+        139
+      ]
+    }
+  ],
+  "dfs_vs_bfs": {
+    "web_model": "The web can be modeled as a directed graph where pages are nodes and hyperlinks are edges.",
+    "dfs": {
+      "assessment": "Usually not a good choice.",
+      "reason": "DFS depth can become extremely deep."
+    },
+    "bfs": {
+      "assessment": "Commonly used by web crawlers.",
+      "implementation": "FIFO queue."
+    },
+    "naive_bfs_problems": [
+      {
+        "problem": "Politeness violation",
+        "explanation": "Many links from one page often point back to the same host, so parallel workers can flood that host with requests."
+      },
+      {
+        "problem": "No URL priority",
+        "explanation": "Standard BFS treats all pages equally even though quality, importance, PageRank, traffic, and update frequency differ."
+      }
+    ],
+    "source_pages": [
+      140,
+      141
+    ]
+  },
+  "url_frontier_deep_dive": {
+    "purpose": "Stores URLs to be downloaded while enforcing politeness, prioritization, and freshness.",
+    "politeness": {
+      "general_rule": "Avoid sending too many requests to the same host in a short time.",
+      "chapter_warning": "Excessive crawling can overwhelm the target and may be treated as a DoS attack.",
+      "strategy": "Download one page at a time from the same host and optionally delay between tasks.",
+      "components": [
+        {
+          "component": "Queue router",
+          "purpose": "Ensures each back queue contains URLs from only one host."
+        },
+        {
+          "component": "Mapping table",
+          "purpose": "Maps each host to a queue."
+        },
+        {
+          "component": "Back FIFO queues b1...bn",
+          "purpose": "Each queue contains URLs from the same host."
+        },
+        {
+          "component": "Queue selector",
+          "purpose": "Maps worker threads to queues and selects the queue a worker should consume."
+        },
+        {
+          "component": "Worker threads 1...N",
+          "purpose": "Download pages one by one from the same host, with optional delay between downloads."
+        }
+      ],
+      "source_pages": [
+        141,
+        142
+      ]
+    },
+    "priority": {
+      "reason": "Not all pages are equally important.",
+      "ranking_inputs": [
+        "PageRank",
+        "Website traffic",
+        "Update frequency"
+      ],
+      "components": [
+        {
+          "component": "Prioritizer",
+          "purpose": "Computes URL priority."
+        },
+        {
+          "component": "Front queues f1...fn",
+          "purpose": "Each queue represents a priority level."
+        },
+        {
+          "component": "Queue selector",
+          "purpose": "Randomly chooses a queue with bias toward higher-priority queues."
+        }
+      ],
+      "source_pages": [
+        142,
+        143
+      ]
+    },
+    "combined_design": {
+      "front_queues": "Manage prioritization.",
+      "back_queues": "Manage politeness.",
+      "source_pages": [
+        143
+      ]
+    },
+    "freshness": {
+      "problem": "Pages are constantly added, deleted, and edited; recrawling everything is expensive.",
+      "strategies": [
+        "Recrawl based on page update history.",
+        "Prioritize important URLs and recrawl them first and more frequently."
+      ],
+      "source_pages": [
+        144,
+        145
+      ]
+    },
+    "storage": {
+      "scale": "The Frontier can contain hundreds of millions of URLs.",
+      "all_memory_problem": "Not durable or scalable.",
+      "all_disk_problem": "Disk is slow and can become a crawl bottleneck.",
+      "hybrid_solution": [
+        "Store most URLs on disk.",
+        "Maintain memory buffers for enqueue/dequeue operations.",
+        "Periodically flush buffer data to disk."
+      ],
+      "source_pages": [
+        145
+      ]
+    }
+  },
+  "robots_txt": {
+    "formal_name": "Robots Exclusion Protocol",
+    "purpose": "Allows websites to tell crawlers which pages they are allowed to download.",
+    "crawler_behavior": "Check robots.txt before crawling a site and follow its rules.",
+    "optimization": "Cache robots.txt results and refresh them periodically to avoid repeated downloads.",
+    "chapter_example_lines": [
+      "User-agent: Googlebot",
+      "Disallow: /creatorhub/*",
+      "Disallow: /rss/people/*/reviews",
+      "Disallow: /gp/pdp/rss/*/reviews",
+      "Disallow: /gp/cdp/member-reviews/",
+      "Disallow: /gp/aw/cr/"
+    ],
+    "source_pages": [
+      145
+    ]
+  },
+  "html_downloader_performance_optimizations": [
+    {
+      "optimization": "Distributed crawl",
+      "details": [
+        "Distribute crawl jobs across multiple servers.",
+        "Each server runs multiple threads.",
+        "Partition URL space into smaller pieces.",
+        "Each downloader handles a subset of URLs."
+      ],
+      "source_pages": [
+        145
+      ]
+    },
+    {
+      "optimization": "Cache DNS Resolver",
+      "details": [
+        "DNS can be a crawler bottleneck.",
+        "The chapter cites DNS response times from 10 ms to 200 ms.",
+        "Synchronous DNS interfaces may block crawler threads.",
+        "Maintain a DNS cache of domain-to-IP mappings.",
+        "Update the DNS cache periodically with cron jobs."
+      ],
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "optimization": "Locality",
+      "details": [
+        "Distribute crawler servers geographically.",
+        "Place crawler infrastructure closer to target hosts to reduce download time.",
+        "Locality applies to crawl servers, cache, queue, storage, and other components."
+      ],
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "optimization": "Short timeout",
+      "details": [
+        "Set a maximum wait time for slow or unresponsive servers.",
+        "If a host does not respond within the configured time, stop waiting and crawl other pages."
+      ],
+      "source_pages": [
+        146
+      ]
+    }
+  ],
+  "robustness": [
+    {
+      "technique": "Consistent hashing",
+      "purpose": "Distribute load among downloader servers and support adding/removing downloaders.",
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "technique": "Save crawl states and data",
+      "purpose": "Persist state so interrupted crawling can resume by loading saved state and data.",
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "technique": "Exception handling",
+      "purpose": "Handle inevitable large-scale errors gracefully without crashing the whole system.",
+      "source_pages": [
+        146,
+        147
+      ]
+    },
+    {
+      "technique": "Data validation",
+      "purpose": "Prevent system errors caused by invalid data.",
+      "source_pages": [
+        147
+      ]
+    }
+  ],
+  "extensibility": {
+    "principle": "Support new content types by plugging in new modules rather than redesigning the whole system.",
+    "examples": [
+      "PNG Downloader module to download PNG files.",
+      "Web Monitor module to monitor copyright and trademark infringement."
+    ],
+    "source_pages": [
+      147
+    ]
+  },
+  "problematic_content": [
+    {
+      "type": "Redundant content",
+      "problem": "Nearly 30% of web pages are duplicates according to the chapter's cited discussion.",
+      "solution": "Use hashes or checksums to detect duplication.",
+      "source_pages": [
+        147
+      ]
+    },
+    {
+      "type": "Spider traps",
+      "definition": "A web page/site structure that causes a crawler to enter an infinite loop.",
+      "example": "www.spidertrapexample.com/foo/bar/foo/bar/foo/bar/…",
+      "mitigations": [
+        "Set a maximum URL length.",
+        "Identify suspicious sites with unusually large numbers of discovered pages.",
+        "Manually verify suspected spider-trap sites.",
+        "Exclude those sites or apply customized URL filters."
+      ],
+      "chapter_caveat": "There is no one-size-fits-all automatic solution.",
+      "source_pages": [
+        147,
+        148
+      ]
+    },
+    {
+      "type": "Data noise",
+      "examples": [
+        "Advertisements",
+        "Code snippets",
+        "Spam URLs"
+      ],
+      "policy": "Exclude low-value content when possible.",
+      "source_pages": [
+        148
+      ]
+    }
+  ],
+  "wrap_up_topics": [
+    {
+      "topic": "Server-side rendering",
+      "problem": "JavaScript/AJAX may generate links dynamically, so direct download-and-parse can miss them.",
+      "solution": "Perform server-side/dynamic rendering before parsing.",
+      "source_pages": [
+        149
+      ]
+    },
+    {
+      "topic": "Filter unwanted pages",
+      "reason": "Storage and crawl resources are finite.",
+      "solution": "Use an anti-spam component to filter low-quality and spam pages.",
+      "source_pages": [
+        149
+      ]
+    },
+    {
+      "topic": "Database replication and sharding",
+      "purpose": "Improve data-layer availability, scalability, and reliability.",
+      "source_pages": [
+        149
+      ]
+    },
+    {
+      "topic": "Horizontal scaling",
+      "details": "Large crawls may require hundreds or thousands of downloader servers; keep them stateless.",
+      "source_pages": [
+        149
+      ]
+    },
+    {
+      "topic": "Availability, consistency, reliability",
+      "details": "Core concerns for large-scale systems.",
+      "source_pages": [
+        149
+      ]
+    },
+    {
+      "topic": "Analytics",
+      "details": "Collecting and analyzing crawler data helps fine-tune the system.",
+      "source_pages": [
+        149
+      ]
+    }
+  ],
+  "key_concepts": [
+    {
+      "term": "Web Crawler",
+      "definition": "A robot/spider that discovers new or updated web content by downloading pages and following links.",
+      "source_pages": [
+        132
+      ]
+    },
+    {
+      "term": "Seed URL",
+      "definition": "A starting URL from which the crawler begins traversal.",
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "term": "URL Frontier",
+      "definition": "The component that stores URLs waiting to be downloaded and, in the deep dive, manages priority, politeness, and freshness.",
+      "source_pages": [
+        136,
+        141
+      ]
+    },
+    {
+      "term": "Content Seen?",
+      "definition": "Duplicate-content detection using page hashes to avoid repeated processing/storage.",
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "term": "URL Seen?",
+      "definition": "Tracks URLs already visited or already queued to prevent duplicates and loops.",
+      "source_pages": [
+        138
+      ]
+    },
+    {
+      "term": "Politeness",
+      "definition": "Avoiding excessive requests to the same host in a short time.",
+      "source_pages": [
+        134,
+        141
+      ]
+    },
+    {
+      "term": "Prioritizer",
+      "definition": "Computes relative crawl priority based on usefulness metrics such as PageRank, traffic, and update frequency.",
+      "source_pages": [
+        142,
+        143
+      ]
+    },
+    {
+      "term": "Front Queue",
+      "definition": "A priority queue tier in the URL Frontier used to manage prioritization.",
+      "source_pages": [
+        143
+      ]
+    },
+    {
+      "term": "Back Queue",
+      "definition": "A per-host queue tier in the URL Frontier used to enforce politeness.",
+      "source_pages": [
+        141,
+        143
+      ]
+    },
+    {
+      "term": "Freshness",
+      "definition": "Keeping the crawled data set current by periodically revisiting changed or important pages.",
+      "source_pages": [
+        144,
+        145
+      ]
+    },
+    {
+      "term": "Robots.txt",
+      "definition": "Robots Exclusion Protocol file that specifies which pages a crawler may download.",
+      "source_pages": [
+        145
+      ]
+    },
+    {
+      "term": "Spider Trap",
+      "definition": "A web structure that can cause a crawler to loop indefinitely.",
+      "source_pages": [
+        147,
+        148
+      ]
+    },
+    {
+      "term": "Server-side Rendering",
+      "definition": "Rendering dynamic content before parsing so dynamically generated links can be discovered.",
+      "source_pages": [
+        149
+      ]
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "FC01",
+      "front": "What is another name for a web crawler?",
+      "back": "A robot or spider.",
+      "source_pages": [
+        132
+      ]
+    },
+    {
+      "id": "FC02",
+      "front": "What is the most common use case of a web crawler?",
+      "back": "Search engine indexing.",
+      "source_pages": [
+        132
+      ]
+    },
+    {
+      "id": "FC03",
+      "front": "What crawler is named as the crawler behind Google Search?",
+      "back": "Googlebot.",
+      "source_pages": [
+        132
+      ]
+    },
+    {
+      "id": "FC04",
+      "front": "What is web archiving?",
+      "back": "Collecting web information so it can be preserved for future use.",
+      "source_pages": [
+        132
+      ]
+    },
+    {
+      "id": "FC05",
+      "front": "What is web mining?",
+      "back": "Using crawled web data to discover useful knowledge from the Internet.",
+      "source_pages": [
+        132,
+        133
+      ]
+    },
+    {
+      "id": "FC06",
+      "front": "What is web monitoring used for in the chapter?",
+      "back": "Monitoring copyright and trademark infringement.",
+      "source_pages": [
+        133
+      ]
+    },
+    {
+      "id": "FC07",
+      "front": "What are the three steps in the basic crawler algorithm?",
+      "back": "Download pages from a URL set, extract URLs, add new URLs back to the download list and repeat.",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "FC08",
+      "front": "What is the crawler's main purpose in the interview scope?",
+      "back": "Search engine indexing.",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "FC09",
+      "front": "How many pages per month must the crawler collect?",
+      "back": "1 billion pages.",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "FC10",
+      "front": "What content type is in scope?",
+      "back": "HTML only.",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "FC11",
+      "front": "Are newly added and edited pages in scope?",
+      "back": "Yes.",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "FC12",
+      "front": "How long are crawled HTML pages stored?",
+      "back": "Up to 5 years.",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "FC13",
+      "front": "What happens to duplicate-content pages?",
+      "back": "They are ignored.",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "FC14",
+      "front": "What are the four characteristics of a good crawler?",
+      "back": "Scalability, robustness, politeness, and extensibility.",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "FC15",
+      "front": "What does scalability mean here?",
+      "back": "Use efficient parallelization to crawl a web containing billions of pages.",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "FC16",
+      "front": "What does robustness mean here?",
+      "back": "Handle malformed HTML, unresponsive servers, crashes, malicious links, and other traps.",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "FC17",
+      "front": "What does politeness mean?",
+      "back": "Do not send too many requests to the same website in a short time.",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "FC18",
+      "front": "What does extensibility mean?",
+      "back": "Support new content types with minimal system changes.",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "FC19",
+      "front": "What is the estimated average crawl QPS?",
+      "back": "About 400 pages/second.",
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "id": "FC20",
+      "front": "What is the estimated peak crawl QPS?",
+      "back": "800 pages/second.",
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "id": "FC21",
+      "front": "What average page size is assumed?",
+      "back": "500 KB.",
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "id": "FC22",
+      "front": "What monthly storage is estimated?",
+      "back": "500 TB.",
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "id": "FC23",
+      "front": "What five-year storage is estimated?",
+      "back": "30 PB.",
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "id": "FC24",
+      "front": "What are seed URLs?",
+      "back": "Starting points for the crawl process.",
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "FC25",
+      "front": "What seed-selection strategies are suggested for the entire web?",
+      "back": "Divide URL space by locality/country or by topic such as shopping, sports, healthcare.",
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "FC26",
+      "front": "What is the URL Frontier?",
+      "back": "The component that stores URLs waiting to be downloaded.",
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "FC27",
+      "front": "What does the HTML Downloader do?",
+      "back": "Downloads pages from URLs provided by the URL Frontier.",
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "id": "FC28",
+      "front": "Why is the DNS Resolver needed?",
+      "back": "It translates a hostname into an IP address for downloading.",
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "id": "FC29",
+      "front": "Why is the Content Parser a separate component?",
+      "back": "Parsing in the crawl/download server would slow the crawling process.",
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "id": "FC30",
+      "front": "Why does the design include Content Seen?",
+      "back": "To detect duplicate page content, reduce redundancy, and shorten processing time.",
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "id": "FC31",
+      "front": "What duplicate-content percentage does the chapter cite?",
+      "back": "29% of web pages.",
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "id": "FC32",
+      "front": "Why compare content hashes instead of pages character by character?",
+      "back": "Hash comparison is much more efficient at billion-page scale.",
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "id": "FC33",
+      "front": "Where is most HTML content stored?",
+      "back": "On disk.",
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "id": "FC34",
+      "front": "Why is popular content kept in memory?",
+      "back": "To reduce latency.",
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "id": "FC35",
+      "front": "What does URL Extractor do?",
+      "back": "Parses HTML and extracts links.",
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "id": "FC36",
+      "front": "What normalization does URL Extractor perform?",
+      "back": "Converts relative paths to absolute URLs using the site's prefix/domain.",
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "id": "FC37",
+      "front": "What does URL Filter remove?",
+      "back": "Certain content types, file extensions, error links, and blacklisted URLs.",
+      "source_pages": [
+        138
+      ]
+    },
+    {
+      "id": "FC38",
+      "front": "What does URL Seen? track?",
+      "back": "URLs already visited or already in the Frontier.",
+      "source_pages": [
+        138
+      ]
+    },
+    {
+      "id": "FC39",
+      "front": "Why is URL Seen? important?",
+      "back": "It prevents duplicate queueing, reduces load, and helps avoid infinite loops.",
+      "source_pages": [
+        138
+      ]
+    },
+    {
+      "id": "FC40",
+      "front": "What implementations are suggested for URL Seen?",
+      "back": "Bloom filter or hash table.",
+      "source_pages": [
+        138
+      ]
+    },
+    {
+      "id": "FC41",
+      "front": "What does URL Storage store?",
+      "back": "Already visited URLs.",
+      "source_pages": [
+        138
+      ]
+    },
+    {
+      "id": "FC42",
+      "front": "What happens to duplicate content in crawler step 6?",
+      "back": "It is discarded.",
+      "source_pages": [
+        139
+      ]
+    },
+    {
+      "id": "FC43",
+      "front": "What happens to unseen URLs in crawler step 11?",
+      "back": "They are added to the URL Frontier.",
+      "source_pages": [
+        139
+      ]
+    },
+    {
+      "id": "FC44",
+      "front": "How can the web be modeled for crawler traversal?",
+      "back": "As a directed graph with pages as nodes and hyperlinks as edges.",
+      "source_pages": [
+        140
+      ]
+    },
+    {
+      "id": "FC45",
+      "front": "Why is DFS usually a poor crawler choice?",
+      "back": "Its traversal depth can become extremely deep.",
+      "source_pages": [
+        140
+      ]
+    },
+    {
+      "id": "FC46",
+      "front": "Which traversal is commonly used?",
+      "back": "BFS.",
+      "source_pages": [
+        140
+      ]
+    },
+    {
+      "id": "FC47",
+      "front": "How is BFS commonly implemented?",
+      "back": "With a FIFO queue.",
+      "source_pages": [
+        140
+      ]
+    },
+    {
+      "id": "FC48",
+      "front": "What are the two problems with naïve BFS?",
+      "back": "It can be impolite to a single host and it ignores URL priority.",
+      "source_pages": [
+        140,
+        141
+      ]
+    },
+    {
+      "id": "FC49",
+      "front": "Why can BFS become impolite?",
+      "back": "Many links from one page may point to the same host, causing parallel workers to flood that host.",
+      "source_pages": [
+        140
+      ]
+    },
+    {
+      "id": "FC50",
+      "front": "What metrics can drive URL priority?",
+      "back": "PageRank, website traffic, and update frequency.",
+      "source_pages": [
+        141,
+        142
+      ]
+    },
+    {
+      "id": "FC51",
+      "front": "What three concerns does the URL Frontier help manage?",
+      "back": "Politeness, prioritization, and freshness.",
+      "source_pages": [
+        141
+      ]
+    },
+    {
+      "id": "FC52",
+      "front": "What is the general politeness strategy?",
+      "back": "Download one page at a time from the same host and optionally delay between requests.",
+      "source_pages": [
+        141
+      ]
+    },
+    {
+      "id": "FC53",
+      "front": "What does the queue router do?",
+      "back": "Routes URLs so each back queue contains URLs from one host.",
+      "source_pages": [
+        142
+      ]
+    },
+    {
+      "id": "FC54",
+      "front": "What does the mapping table do?",
+      "back": "Maps each host to a queue.",
+      "source_pages": [
+        142
+      ]
+    },
+    {
+      "id": "FC55",
+      "front": "What do back FIFO queues contain?",
+      "back": "URLs from the same host.",
+      "source_pages": [
+        142
+      ]
+    },
+    {
+      "id": "FC56",
+      "front": "What does the queue selector do in politeness management?",
+      "back": "Maps each worker to a FIFO queue and selects which queue the worker consumes.",
+      "source_pages": [
+        142
+      ]
+    },
+    {
+      "id": "FC57",
+      "front": "How do worker threads behave?",
+      "back": "Download pages one by one from the same host, with optional delay.",
+      "source_pages": [
+        142
+      ]
+    },
+    {
+      "id": "FC58",
+      "front": "What does the Prioritizer do?",
+      "back": "Computes URL priorities.",
+      "source_pages": [
+        142,
+        143
+      ]
+    },
+    {
+      "id": "FC59",
+      "front": "What are front queues for?",
+      "back": "Managing URL prioritization.",
+      "source_pages": [
+        143
+      ]
+    },
+    {
+      "id": "FC60",
+      "front": "What are back queues for?",
+      "back": "Managing politeness.",
+      "source_pages": [
+        143
+      ]
+    },
+    {
+      "id": "FC61",
+      "front": "How does the priority queue selector choose a queue?",
+      "back": "Randomly, with a bias toward higher-priority queues.",
+      "source_pages": [
+        143
+      ]
+    },
+    {
+      "id": "FC62",
+      "front": "What is crawl freshness?",
+      "back": "Periodically recrawling pages so the data set reflects additions, deletions, and edits.",
+      "source_pages": [
+        144
+      ]
+    },
+    {
+      "id": "FC63",
+      "front": "What freshness optimizations are suggested?",
+      "back": "Use update history and recrawl important pages more frequently.",
+      "source_pages": [
+        145
+      ]
+    },
+    {
+      "id": "FC64",
+      "front": "Why not keep the entire URL Frontier in memory?",
+      "back": "It is neither durable nor scalable at hundreds of millions of URLs.",
+      "source_pages": [
+        145
+      ]
+    },
+    {
+      "id": "FC65",
+      "front": "Why not keep the entire Frontier only on disk?",
+      "back": "Disk is slow and can become the crawl bottleneck.",
+      "source_pages": [
+        145
+      ]
+    },
+    {
+      "id": "FC66",
+      "front": "What storage design is chosen for the Frontier?",
+      "back": "Mostly disk plus in-memory enqueue/dequeue buffers periodically flushed to disk.",
+      "source_pages": [
+        145
+      ]
+    },
+    {
+      "id": "FC67",
+      "front": "What is robots.txt formally called?",
+      "back": "Robots Exclusion Protocol.",
+      "source_pages": [
+        145
+      ]
+    },
+    {
+      "id": "FC68",
+      "front": "When should robots.txt be checked?",
+      "back": "Before attempting to crawl a website.",
+      "source_pages": [
+        145
+      ]
+    },
+    {
+      "id": "FC69",
+      "front": "Why cache robots.txt?",
+      "back": "To avoid downloading it repeatedly; the cache is refreshed periodically.",
+      "source_pages": [
+        145
+      ]
+    },
+    {
+      "id": "FC70",
+      "front": "What are the four HTML Downloader performance optimizations?",
+      "back": "Distributed crawl, DNS cache, locality, and short timeout.",
+      "source_pages": [
+        145,
+        146
+      ]
+    },
+    {
+      "id": "FC71",
+      "front": "What DNS latency range does the chapter cite?",
+      "back": "10 ms to 200 ms.",
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "id": "FC72",
+      "front": "Why cache DNS?",
+      "back": "DNS calls may be synchronous and block crawler threads.",
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "id": "FC73",
+      "front": "What is locality optimization?",
+      "back": "Place crawler servers and related infrastructure geographically closer to target hosts.",
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "id": "FC74",
+      "front": "Why use a short timeout?",
+      "back": "To avoid waiting too long on slow or unresponsive hosts.",
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "id": "FC75",
+      "front": "How does consistent hashing improve robustness?",
+      "back": "It distributes load among downloader servers and allows downloaders to be added or removed.",
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "id": "FC76",
+      "front": "Why save crawl state and data?",
+      "back": "So disrupted crawling can restart from persisted state.",
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "id": "FC77",
+      "front": "What are the other two robustness techniques?",
+      "back": "Exception handling and data validation.",
+      "source_pages": [
+        146,
+        147
+      ]
+    },
+    {
+      "id": "FC78",
+      "front": "How is extensibility achieved?",
+      "back": "By plugging in new modules.",
+      "source_pages": [
+        147
+      ]
+    },
+    {
+      "id": "FC79",
+      "front": "What extension modules are given as examples?",
+      "back": "PNG Downloader and Web Monitor.",
+      "source_pages": [
+        147
+      ]
+    },
+    {
+      "id": "FC80",
+      "front": "How are duplicate pages detected in the problematic-content section?",
+      "back": "With hashes or checksums.",
+      "source_pages": [
+        147
+      ]
+    },
+    {
+      "id": "FC81",
+      "front": "What is a spider trap?",
+      "back": "A page/site structure that can cause the crawler to loop infinitely.",
+      "source_pages": [
+        147
+      ]
+    },
+    {
+      "id": "FC82",
+      "front": "What simple spider-trap mitigation is suggested?",
+      "back": "Set a maximum URL length.",
+      "source_pages": [
+        147
+      ]
+    },
+    {
+      "id": "FC83",
+      "front": "Why are spider traps difficult?",
+      "back": "There is no one-size-fits-all automatic solution.",
+      "source_pages": [
+        147,
+        148
+      ]
+    },
+    {
+      "id": "FC84",
+      "front": "What can be done with a confirmed spider-trap site?",
+      "back": "Exclude it or apply customized URL filters.",
+      "source_pages": [
+        148
+      ]
+    },
+    {
+      "id": "FC85",
+      "front": "What is data noise?",
+      "back": "Low-value crawler content such as ads, code snippets, and spam URLs.",
+      "source_pages": [
+        148
+      ]
+    },
+    {
+      "id": "FC86",
+      "front": "Why may server-side rendering be needed?",
+      "back": "JavaScript/AJAX can generate links dynamically that direct download-and-parse would miss.",
+      "source_pages": [
+        149
+      ]
+    },
+    {
+      "id": "FC87",
+      "front": "What does an anti-spam component do?",
+      "back": "Filters low-quality and spam pages when crawl/storage resources are finite.",
+      "source_pages": [
+        149
+      ]
+    },
+    {
+      "id": "FC88",
+      "front": "What data-layer scaling methods are mentioned?",
+      "back": "Replication and sharding.",
+      "source_pages": [
+        149
+      ]
+    },
+    {
+      "id": "FC89",
+      "front": "What architectural property helps horizontal crawler scaling?",
+      "back": "Keep servers stateless.",
+      "source_pages": [
+        149
+      ]
+    },
+    {
+      "id": "FC90",
+      "front": "Why is analytics important?",
+      "back": "Collected data helps fine-tune the crawler.",
+      "source_pages": [
+        149
+      ]
+    }
+  ],
+  "multiple_choice_questions": [
+    {
+      "id": "MCQ01",
+      "difficulty": "easy",
+      "question": "What is another common name for a web crawler?",
+      "choices": {
+        "A": "Robot or spider",
+        "B": "Compiler",
+        "C": "Proxy",
+        "D": "Scheduler"
+      },
+      "answer": "A",
+      "source_pages": [
+        132
+      ]
+    },
+    {
+      "id": "MCQ02",
+      "difficulty": "easy",
+      "question": "What is the chapter's primary crawler use case?",
+      "choices": {
+        "A": "Search engine indexing",
+        "B": "Video transcoding",
+        "C": "Payment processing",
+        "D": "Chat delivery"
+      },
+      "answer": "A",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "MCQ03",
+      "difficulty": "medium",
+      "question": "How many pages per month are in scope?",
+      "choices": {
+        "A": "1 million",
+        "B": "100 million",
+        "C": "1 billion",
+        "D": "10 billion"
+      },
+      "answer": "C",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "MCQ04",
+      "difficulty": "medium",
+      "question": "Which content type is in scope?",
+      "choices": {
+        "A": "HTML only",
+        "B": "Images only",
+        "C": "PDF only",
+        "D": "All media"
+      },
+      "answer": "A",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "MCQ05",
+      "difficulty": "medium",
+      "question": "How long is crawled HTML retained?",
+      "choices": {
+        "A": "30 days",
+        "B": "1 year",
+        "C": "5 years",
+        "D": "Forever"
+      },
+      "answer": "C",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "MCQ06",
+      "difficulty": "medium",
+      "question": "What should happen to duplicate-content pages?",
+      "choices": {
+        "A": "Store all copies",
+        "B": "Ignore them",
+        "C": "Only compress them",
+        "D": "Send them to DNS"
+      },
+      "answer": "B",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "MCQ07",
+      "difficulty": "easy",
+      "question": "Which is NOT one of the four good-crawler characteristics?",
+      "choices": {
+        "A": "Scalability",
+        "B": "Robustness",
+        "C": "Politeness",
+        "D": "Strict SQL normalization"
+      },
+      "answer": "D",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "MCQ08",
+      "difficulty": "medium",
+      "question": "What average QPS does the chapter estimate?",
+      "choices": {
+        "A": "40",
+        "B": "400",
+        "C": "800",
+        "D": "4000"
+      },
+      "answer": "B",
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "id": "MCQ09",
+      "difficulty": "medium",
+      "question": "What peak QPS is assumed?",
+      "choices": {
+        "A": "400",
+        "B": "600",
+        "C": "800",
+        "D": "1600"
+      },
+      "answer": "C",
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "id": "MCQ10",
+      "difficulty": "medium",
+      "question": "What five-year storage is estimated?",
+      "choices": {
+        "A": "30 TB",
+        "B": "500 TB",
+        "C": "3 PB",
+        "D": "30 PB"
+      },
+      "answer": "D",
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "id": "MCQ11",
+      "difficulty": "medium",
+      "question": "What are seed URLs?",
+      "choices": {
+        "A": "Starting points for crawling",
+        "B": "Blocked URLs",
+        "C": "Already deleted URLs",
+        "D": "Only image URLs"
+      },
+      "answer": "A",
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "MCQ12",
+      "difficulty": "medium",
+      "question": "What does the URL Frontier store?",
+      "choices": {
+        "A": "URLs waiting to be downloaded",
+        "B": "Only DNS mappings",
+        "C": "Only page bodies",
+        "D": "Only robot rules"
+      },
+      "answer": "A",
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "MCQ13",
+      "difficulty": "medium",
+      "question": "What does the DNS Resolver provide?",
+      "choices": {
+        "A": "Hostname-to-IP translation",
+        "B": "Page priority",
+        "C": "Page hash",
+        "D": "Content parsing"
+      },
+      "answer": "A",
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "id": "MCQ14",
+      "difficulty": "hard",
+      "question": "Why is Content Parser separate from the crawl server?",
+      "choices": {
+        "A": "Parsing there would slow crawling",
+        "B": "Parsing requires a database",
+        "C": "DNS cannot parse",
+        "D": "It prevents all duplicates"
+      },
+      "answer": "A",
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "id": "MCQ15",
+      "difficulty": "medium",
+      "question": "What does Content Seen? detect?",
+      "choices": {
+        "A": "Duplicate page content",
+        "B": "Duplicate machine IDs",
+        "C": "Slow DNS",
+        "D": "Robots rules"
+      },
+      "answer": "A",
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "id": "MCQ16",
+      "difficulty": "hard",
+      "question": "Why compare page hashes instead of characters?",
+      "choices": {
+        "A": "It is more efficient at huge scale",
+        "B": "Characters cannot be compared",
+        "C": "Hashes preserve HTML formatting",
+        "D": "It removes DNS"
+      },
+      "answer": "A",
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "id": "MCQ17",
+      "difficulty": "medium",
+      "question": "Where is most crawled content stored?",
+      "choices": {
+        "A": "Disk",
+        "B": "CPU cache only",
+        "C": "Browser local storage",
+        "D": "DNS"
+      },
+      "answer": "A",
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "id": "MCQ18",
+      "difficulty": "medium",
+      "question": "What does URL Filter exclude?",
+      "choices": {
+        "A": "Certain content types, file extensions, error links, blacklisted URLs",
+        "B": "Only valid pages",
+        "C": "Only HTTPS",
+        "D": "Only popular pages"
+      },
+      "answer": "A",
+      "source_pages": [
+        138
+      ]
+    },
+    {
+      "id": "MCQ19",
+      "difficulty": "medium",
+      "question": "Which can implement URL Seen?",
+      "choices": {
+        "A": "Bloom filter or hash table",
+        "B": "Merkle tree only",
+        "C": "Vector clock only",
+        "D": "Ticket server"
+      },
+      "answer": "A",
+      "source_pages": [
+        138
+      ]
+    },
+    {
+      "id": "MCQ20",
+      "difficulty": "hard",
+      "question": "Why is URL Seen? needed?",
+      "choices": {
+        "A": "Avoid duplicate queueing and loops",
+        "B": "Generate HTML",
+        "C": "Resolve DNS",
+        "D": "Enforce robots.txt only"
+      },
+      "answer": "A",
+      "source_pages": [
+        138
+      ]
+    },
+    {
+      "id": "MCQ21",
+      "difficulty": "medium",
+      "question": "What happens to duplicate content at step 6?",
+      "choices": {
+        "A": "Discard it",
+        "B": "Prioritize it",
+        "C": "Put it back in Frontier",
+        "D": "Send it to DNS"
+      },
+      "answer": "A",
+      "source_pages": [
+        139
+      ]
+    },
+    {
+      "id": "MCQ22",
+      "difficulty": "medium",
+      "question": "What happens to an unseen URL at step 11?",
+      "choices": {
+        "A": "Add it to URL Frontier",
+        "B": "Discard it",
+        "C": "Add it to Content Storage only",
+        "D": "Block it"
+      },
+      "answer": "A",
+      "source_pages": [
+        139
+      ]
+    },
+    {
+      "id": "MCQ23",
+      "difficulty": "hard",
+      "question": "Why is DFS usually not preferred?",
+      "choices": {
+        "A": "Its depth may become extremely deep",
+        "B": "It cannot traverse graphs",
+        "C": "It is always impolite",
+        "D": "It requires DNS"
+      },
+      "answer": "A",
+      "source_pages": [
+        140
+      ]
+    },
+    {
+      "id": "MCQ24",
+      "difficulty": "medium",
+      "question": "Which traversal is commonly used?",
+      "choices": {
+        "A": "BFS",
+        "B": "DFS only",
+        "C": "Binary search",
+        "D": "Dijkstra only"
+      },
+      "answer": "A",
+      "source_pages": [
+        140
+      ]
+    },
+    {
+      "id": "MCQ25",
+      "difficulty": "medium",
+      "question": "How is standard BFS implemented?",
+      "choices": {
+        "A": "FIFO queue",
+        "B": "LIFO stack",
+        "C": "Heap only",
+        "D": "Hash ring"
+      },
+      "answer": "A",
+      "source_pages": [
+        140
+      ]
+    },
+    {
+      "id": "MCQ26",
+      "difficulty": "hard",
+      "question": "What is one problem with naïve BFS?",
+      "choices": {
+        "A": "It can flood one host",
+        "B": "It never discovers links",
+        "C": "It cannot use queues",
+        "D": "It requires a database transaction"
+      },
+      "answer": "A",
+      "source_pages": [
+        140
+      ]
+    },
+    {
+      "id": "MCQ27",
+      "difficulty": "hard",
+      "question": "What is the second naïve-BFS problem?",
+      "choices": {
+        "A": "No URL prioritization",
+        "B": "No URLs are downloaded",
+        "C": "No duplicates exist",
+        "D": "No HTML is parsed"
+      },
+      "answer": "A",
+      "source_pages": [
+        141
+      ]
+    },
+    {
+      "id": "MCQ28",
+      "difficulty": "medium",
+      "question": "What does the URL Frontier manage?",
+      "choices": {
+        "A": "Politeness, priority, freshness",
+        "B": "Only storage",
+        "C": "Only parsing",
+        "D": "Only DNS"
+      },
+      "answer": "A",
+      "source_pages": [
+        141
+      ]
+    },
+    {
+      "id": "MCQ29",
+      "difficulty": "hard",
+      "question": "What is the core politeness rule?",
+      "choices": {
+        "A": "One page at a time from the same host with possible delay",
+        "B": "Unlimited parallel requests per host",
+        "C": "Never crawl twice",
+        "D": "Only crawl one host globally"
+      },
+      "answer": "A",
+      "source_pages": [
+        141
+      ]
+    },
+    {
+      "id": "MCQ30",
+      "difficulty": "medium",
+      "question": "What does the queue router guarantee?",
+      "choices": {
+        "A": "Each back queue contains URLs from one host",
+        "B": "Each queue has one URL total",
+        "C": "Each queue contains all hosts",
+        "D": "Each queue stores HTML"
+      },
+      "answer": "A",
+      "source_pages": [
+        142
+      ]
+    },
+    {
+      "id": "MCQ31",
+      "difficulty": "medium",
+      "question": "What does the mapping table map?",
+      "choices": {
+        "A": "Host to queue",
+        "B": "Key to value",
+        "C": "Page to DNS resolver",
+        "D": "Worker to content hash"
+      },
+      "answer": "A",
+      "source_pages": [
+        142
+      ]
+    },
+    {
+      "id": "MCQ32",
+      "difficulty": "medium",
+      "question": "What does the Prioritizer compute?",
+      "choices": {
+        "A": "URL priority",
+        "B": "DNS latency",
+        "C": "HTML validity only",
+        "D": "Robots rules"
+      },
+      "answer": "A",
+      "source_pages": [
+        142,
+        143
+      ]
+    },
+    {
+      "id": "MCQ33",
+      "difficulty": "hard",
+      "question": "How are high-priority queues selected?",
+      "choices": {
+        "A": "With higher probability",
+        "B": "Never",
+        "C": "Exactly once per day",
+        "D": "Only after low-priority queues"
+      },
+      "answer": "A",
+      "source_pages": [
+        143
+      ]
+    },
+    {
+      "id": "MCQ34",
+      "difficulty": "medium",
+      "question": "What do front queues manage?",
+      "choices": {
+        "A": "Prioritization",
+        "B": "Politeness",
+        "C": "DNS",
+        "D": "Storage"
+      },
+      "answer": "A",
+      "source_pages": [
+        143
+      ]
+    },
+    {
+      "id": "MCQ35",
+      "difficulty": "medium",
+      "question": "What do back queues manage?",
+      "choices": {
+        "A": "Politeness",
+        "B": "Prioritization",
+        "C": "Content parsing",
+        "D": "Hashing"
+      },
+      "answer": "A",
+      "source_pages": [
+        143
+      ]
+    },
+    {
+      "id": "MCQ36",
+      "difficulty": "hard",
+      "question": "Which freshness strategy is listed?",
+      "choices": {
+        "A": "Recrawl based on update history",
+        "B": "Never recrawl",
+        "C": "Only recrawl alphabetically",
+        "D": "Recrawl all pages every minute"
+      },
+      "answer": "A",
+      "source_pages": [
+        145
+      ]
+    },
+    {
+      "id": "MCQ37",
+      "difficulty": "hard",
+      "question": "Why not store the entire Frontier in memory?",
+      "choices": {
+        "A": "Not durable or scalable",
+        "B": "Memory is slower than disk",
+        "C": "Queues cannot exist in memory",
+        "D": "Robots.txt forbids it"
+      },
+      "answer": "A",
+      "source_pages": [
+        145
+      ]
+    },
+    {
+      "id": "MCQ38",
+      "difficulty": "hard",
+      "question": "What Frontier storage strategy is used?",
+      "choices": {
+        "A": "Mostly disk plus memory buffers",
+        "B": "Memory only",
+        "C": "Disk only",
+        "D": "DNS only"
+      },
+      "answer": "A",
+      "source_pages": [
+        145
+      ]
+    },
+    {
+      "id": "MCQ39",
+      "difficulty": "medium",
+      "question": "What is robots.txt?",
+      "choices": {
+        "A": "Robots Exclusion Protocol",
+        "B": "A crawl database",
+        "C": "A hash table",
+        "D": "A priority score"
+      },
+      "answer": "A",
+      "source_pages": [
+        145
+      ]
+    },
+    {
+      "id": "MCQ40",
+      "difficulty": "hard",
+      "question": "Why cache robots.txt?",
+      "choices": {
+        "A": "Avoid repeat downloads",
+        "B": "Increase spider traps",
+        "C": "Replace DNS",
+        "D": "Generate PageRank"
+      },
+      "answer": "A",
+      "source_pages": [
+        145
+      ]
+    },
+    {
+      "id": "MCQ41",
+      "difficulty": "medium",
+      "question": "Which is NOT one of the downloader optimizations?",
+      "choices": {
+        "A": "Distributed crawl",
+        "B": "DNS cache",
+        "C": "Locality",
+        "D": "Global lock for every request"
+      },
+      "answer": "D",
+      "source_pages": [
+        145,
+        146
+      ]
+    },
+    {
+      "id": "MCQ42",
+      "difficulty": "medium",
+      "question": "What DNS response range does the chapter cite?",
+      "choices": {
+        "A": "1-2 ms",
+        "B": "10-200 ms",
+        "C": "1-2 s always",
+        "D": "10-20 seconds"
+      },
+      "answer": "B",
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "id": "MCQ43",
+      "difficulty": "hard",
+      "question": "Why does DNS hurt crawler throughput?",
+      "choices": {
+        "A": "Synchronous calls can block crawler threads",
+        "B": "DNS stores HTML",
+        "C": "DNS causes duplicates",
+        "D": "DNS disables caching"
+      },
+      "answer": "A",
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "id": "MCQ44",
+      "difficulty": "medium",
+      "question": "What is locality optimization?",
+      "choices": {
+        "A": "Place crawler infrastructure closer to target hosts",
+        "B": "Use only one data center",
+        "C": "Remove queues",
+        "D": "Store everything in memory"
+      },
+      "answer": "A",
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "id": "MCQ45",
+      "difficulty": "medium",
+      "question": "What is the purpose of a short timeout?",
+      "choices": {
+        "A": "Stop waiting on slow/unresponsive hosts",
+        "B": "Increase retry loops",
+        "C": "Force duplicates",
+        "D": "Block all hosts"
+      },
+      "answer": "A",
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "id": "MCQ46",
+      "difficulty": "hard",
+      "question": "How does consistent hashing help the crawler?",
+      "choices": {
+        "A": "Distribute downloader load and support server add/remove",
+        "B": "Parse HTML",
+        "C": "Block robots.txt",
+        "D": "Replace URL Seen?"
+      },
+      "answer": "A",
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "id": "MCQ47",
+      "difficulty": "medium",
+      "question": "Why persist crawl state?",
+      "choices": {
+        "A": "Resume after failures",
+        "B": "Avoid all URLs",
+        "C": "Eliminate parsing",
+        "D": "Avoid DNS forever"
+      },
+      "answer": "A",
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "id": "MCQ48",
+      "difficulty": "medium",
+      "question": "How does the chapter make the crawler extensible?",
+      "choices": {
+        "A": "Plug-in modules",
+        "B": "Hard-code one content type forever",
+        "C": "Use one worker",
+        "D": "Remove interfaces"
+      },
+      "answer": "A",
+      "source_pages": [
+        147
+      ]
+    },
+    {
+      "id": "MCQ49",
+      "difficulty": "medium",
+      "question": "What is a spider trap?",
+      "choices": {
+        "A": "A structure that can cause infinite crawling loops",
+        "B": "A DNS cache",
+        "C": "A priority queue",
+        "D": "A storage engine"
+      },
+      "answer": "A",
+      "source_pages": [
+        147
+      ]
+    },
+    {
+      "id": "MCQ50",
+      "difficulty": "hard",
+      "question": "What is one spider-trap mitigation?",
+      "choices": {
+        "A": "Maximum URL length",
+        "B": "Unlimited URL length",
+        "C": "Disable URL Seen?",
+        "D": "Remove timeouts"
+      },
+      "answer": "A",
+      "source_pages": [
+        147
+      ]
+    },
+    {
+      "id": "MCQ51",
+      "difficulty": "medium",
+      "question": "What does server-side rendering solve?",
+      "choices": {
+        "A": "Dynamically generated links from JavaScript/AJAX",
+        "B": "DNS latency",
+        "C": "Duplicate URLs only",
+        "D": "Storage capacity"
+      },
+      "answer": "A",
+      "source_pages": [
+        149
+      ]
+    },
+    {
+      "id": "MCQ52",
+      "difficulty": "medium",
+      "question": "What scaling property should crawler servers have?",
+      "choices": {
+        "A": "Statelessness",
+        "B": "Local-only state",
+        "C": "Single-thread only",
+        "D": "No load distribution"
+      },
+      "answer": "A",
+      "source_pages": [
+        149
+      ]
+    }
+  ],
+  "mix_and_match": [
+    {
+      "id": "MM01",
+      "title": "Component to Responsibility",
+      "left": {
+        "A": "URL Frontier",
+        "B": "DNS Resolver",
+        "C": "Content Parser",
+        "D": "Content Seen?",
+        "E": "URL Extractor",
+        "F": "URL Seen?"
+      },
+      "right": {
+        "1": "Track visited/already queued URLs",
+        "2": "Translate hostnames to IPs",
+        "3": "Store URLs waiting to download",
+        "4": "Extract links from HTML",
+        "5": "Validate/parse downloaded pages",
+        "6": "Detect duplicate page content"
+      },
+      "answer_key": {
+        "A": "3",
+        "B": "2",
+        "C": "5",
+        "D": "6",
+        "E": "4",
+        "F": "1"
+      },
+      "source_pages": [
+        136,
+        137,
+        138
+      ]
+    },
+    {
+      "id": "MM02",
+      "title": "Crawler Quality to Meaning",
+      "left": {
+        "A": "Scalability",
+        "B": "Robustness",
+        "C": "Politeness",
+        "D": "Extensibility"
+      },
+      "right": {
+        "1": "Support new content types with minimal change",
+        "2": "Survive malformed pages, crashes, malicious links",
+        "3": "Parallelize efficiently at web scale",
+        "4": "Avoid overwhelming one website"
+      },
+      "answer_key": {
+        "A": "3",
+        "B": "2",
+        "C": "4",
+        "D": "1"
+      },
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "MM03",
+      "title": "URL Frontier Module to Purpose",
+      "left": {
+        "A": "Front queues",
+        "B": "Back queues",
+        "C": "Prioritizer",
+        "D": "Queue router",
+        "E": "Mapping table"
+      },
+      "right": {
+        "1": "Maps host to queue",
+        "2": "Manage politeness",
+        "3": "Compute URL priority",
+        "4": "Manage prioritization",
+        "5": "Route same-host URLs into the same queue"
+      },
+      "answer_key": {
+        "A": "4",
+        "B": "2",
+        "C": "3",
+        "D": "5",
+        "E": "1"
+      },
+      "source_pages": [
+        141,
+        142,
+        143
+      ]
+    },
+    {
+      "id": "MM04",
+      "title": "Downloader Optimization to Benefit",
+      "left": {
+        "A": "Distributed crawl",
+        "B": "DNS cache",
+        "C": "Locality",
+        "D": "Short timeout"
+      },
+      "right": {
+        "1": "Avoid long waits for unresponsive hosts",
+        "2": "Reduce repeated synchronous DNS cost",
+        "3": "Partition work across many servers/threads",
+        "4": "Reduce network distance to target hosts"
+      },
+      "answer_key": {
+        "A": "3",
+        "B": "2",
+        "C": "4",
+        "D": "1"
+      },
+      "source_pages": [
+        145,
+        146
+      ]
+    },
+    {
+      "id": "MM05",
+      "title": "Problematic Content to Handling",
+      "left": {
+        "A": "Duplicate content",
+        "B": "Spider trap",
+        "C": "Data noise",
+        "D": "Dynamic links"
+      },
+      "right": {
+        "1": "Server-side/dynamic rendering",
+        "2": "Hashes/checksums",
+        "3": "Exclude ads/code snippets/spam where possible",
+        "4": "Max URL length, manual verification, custom filters"
+      },
+      "answer_key": {
+        "A": "2",
+        "B": "4",
+        "C": "3",
+        "D": "1"
+      },
+      "source_pages": [
+        147,
+        148,
+        149
+      ]
+    }
+  ],
+  "true_false": [
+    {
+      "id": "TF01",
+      "statement": "A web crawler is also called a robot or spider.",
+      "answer": true,
+      "source_pages": [
+        132
+      ]
+    },
+    {
+      "id": "TF02",
+      "statement": "The interview scope includes all media types.",
+      "answer": false,
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "TF03",
+      "statement": "The crawler must account for newly added and edited pages.",
+      "answer": true,
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "TF04",
+      "statement": "Duplicate-content pages should be stored repeatedly.",
+      "answer": false,
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "TF05",
+      "statement": "Politeness means avoiding too many requests to one site in a short period.",
+      "answer": true,
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "TF06",
+      "statement": "The average estimated crawl rate is about 400 pages/sec.",
+      "answer": true,
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "id": "TF07",
+      "statement": "The peak QPS is assumed to be half the average QPS.",
+      "answer": false,
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "id": "TF08",
+      "statement": "Five-year content storage is estimated at 30 PB.",
+      "answer": true,
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "id": "TF09",
+      "statement": "Seed URL selection has one perfect universal answer.",
+      "answer": false,
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "TF10",
+      "statement": "The URL Frontier stores URLs waiting to be downloaded.",
+      "answer": true,
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "TF11",
+      "statement": "The Content Parser is separated partly to avoid slowing crawl servers.",
+      "answer": true,
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "id": "TF12",
+      "statement": "Content Seen? can compare page hashes to detect duplicates.",
+      "answer": true,
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "id": "TF13",
+      "statement": "Most content is kept in memory.",
+      "answer": false,
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "id": "TF14",
+      "statement": "URL Seen? can be implemented with a Bloom filter or hash table.",
+      "answer": true,
+      "source_pages": [
+        138
+      ]
+    },
+    {
+      "id": "TF15",
+      "statement": "URL Seen? helps prevent potential infinite loops.",
+      "answer": true,
+      "source_pages": [
+        138
+      ]
+    },
+    {
+      "id": "TF16",
+      "statement": "DFS is generally preferred because its depth is bounded.",
+      "answer": false,
+      "source_pages": [
+        140
+      ]
+    },
+    {
+      "id": "TF17",
+      "statement": "BFS is commonly implemented using FIFO.",
+      "answer": true,
+      "source_pages": [
+        140
+      ]
+    },
+    {
+      "id": "TF18",
+      "statement": "Naïve BFS automatically enforces host politeness.",
+      "answer": false,
+      "source_pages": [
+        140
+      ]
+    },
+    {
+      "id": "TF19",
+      "statement": "Standard BFS automatically prioritizes high-value pages.",
+      "answer": false,
+      "source_pages": [
+        141
+      ]
+    },
+    {
+      "id": "TF20",
+      "statement": "URL priority can use PageRank, traffic, and update frequency.",
+      "answer": true,
+      "source_pages": [
+        141,
+        142
+      ]
+    },
+    {
+      "id": "TF21",
+      "statement": "Back queues manage politeness.",
+      "answer": true,
+      "source_pages": [
+        143
+      ]
+    },
+    {
+      "id": "TF22",
+      "statement": "Front queues manage prioritization.",
+      "answer": true,
+      "source_pages": [
+        143
+      ]
+    },
+    {
+      "id": "TF23",
+      "statement": "Recrawling every page equally is the only freshness strategy.",
+      "answer": false,
+      "source_pages": [
+        144,
+        145
+      ]
+    },
+    {
+      "id": "TF24",
+      "statement": "The URL Frontier uses a hybrid disk-plus-memory approach.",
+      "answer": true,
+      "source_pages": [
+        145
+      ]
+    },
+    {
+      "id": "TF25",
+      "statement": "A crawler should check robots.txt before crawling a site.",
+      "answer": true,
+      "source_pages": [
+        145
+      ]
+    },
+    {
+      "id": "TF26",
+      "statement": "robots.txt should never be cached.",
+      "answer": false,
+      "source_pages": [
+        145
+      ]
+    },
+    {
+      "id": "TF27",
+      "statement": "The chapter cites DNS latency between 10 ms and 200 ms.",
+      "answer": true,
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "id": "TF28",
+      "statement": "Locality can apply to servers, cache, queue, and storage.",
+      "answer": true,
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "id": "TF29",
+      "statement": "Consistent hashing can help add/remove downloader servers.",
+      "answer": true,
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "id": "TF30",
+      "statement": "Saved crawl state supports recovery after interruption.",
+      "answer": true,
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "id": "TF31",
+      "statement": "Crawler extensibility is achieved through plug-in modules.",
+      "answer": true,
+      "source_pages": [
+        147
+      ]
+    },
+    {
+      "id": "TF32",
+      "statement": "A spider trap can cause an infinite loop.",
+      "answer": true,
+      "source_pages": [
+        147
+      ]
+    },
+    {
+      "id": "TF33",
+      "statement": "There is a one-size-fits-all automatic spider-trap solution.",
+      "answer": false,
+      "source_pages": [
+        147,
+        148
+      ]
+    },
+    {
+      "id": "TF34",
+      "statement": "Ads, code snippets, and spam URLs are examples of data noise.",
+      "answer": true,
+      "source_pages": [
+        148
+      ]
+    },
+    {
+      "id": "TF35",
+      "statement": "Server-side rendering can reveal dynamically generated links.",
+      "answer": true,
+      "source_pages": [
+        149
+      ]
+    },
+    {
+      "id": "TF36",
+      "statement": "Large-scale crawler servers should be stateless for horizontal scaling.",
+      "answer": true,
+      "source_pages": [
+        149
+      ]
+    }
+  ],
+  "fill_in_the_blank": [
+    {
+      "id": "FIB01",
+      "prompt": "A web crawler is also called a robot or ______.",
+      "answer": "spider",
+      "source_pages": [
+        132
+      ]
+    },
+    {
+      "id": "FIB02",
+      "prompt": "The crawler must collect ______ billion pages per month.",
+      "answer": "1",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "FIB03",
+      "prompt": "The average QPS is approximately ______ pages/sec.",
+      "answer": "400",
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "id": "FIB04",
+      "prompt": "Peak QPS is approximately ______ pages/sec.",
+      "answer": "800",
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "id": "FIB05",
+      "prompt": "Average page size is assumed to be ______ KB.",
+      "answer": "500",
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "id": "FIB06",
+      "prompt": "Five-year storage is estimated at ______ PB.",
+      "answer": "30",
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "id": "FIB07",
+      "prompt": "URLs waiting to download are stored in the URL ______.",
+      "answer": "Frontier",
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "FIB08",
+      "prompt": "Hostname-to-IP translation is done by the DNS ______.",
+      "answer": "Resolver",
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "id": "FIB09",
+      "prompt": "Duplicate page content is detected by Content ______?.",
+      "answer": "Seen",
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "id": "FIB10",
+      "prompt": "Already visited/queued URLs are tracked by URL ______?.",
+      "answer": "Seen",
+      "source_pages": [
+        138
+      ]
+    },
+    {
+      "id": "FIB11",
+      "prompt": "BFS is usually implemented with a ______ queue.",
+      "answer": "FIFO",
+      "source_pages": [
+        140
+      ]
+    },
+    {
+      "id": "FIB12",
+      "prompt": "Front queues manage URL ______.",
+      "answer": "prioritization",
+      "source_pages": [
+        143
+      ]
+    },
+    {
+      "id": "FIB13",
+      "prompt": "Back queues manage crawler ______.",
+      "answer": "politeness",
+      "source_pages": [
+        143
+      ]
+    },
+    {
+      "id": "FIB14",
+      "prompt": "The standard website crawler-control file is ______.txt.",
+      "answer": "robots",
+      "source_pages": [
+        145
+      ]
+    },
+    {
+      "id": "FIB15",
+      "prompt": "The chapter says DNS calls may take roughly 10 to ______ ms.",
+      "answer": "200",
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "id": "FIB16",
+      "prompt": "Load among downloaders can be distributed with consistent ______.",
+      "answer": "hashing",
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "id": "FIB17",
+      "prompt": "A crawl loop caused by pathological site structure is a spider ______.",
+      "answer": "trap",
+      "source_pages": [
+        147
+      ]
+    },
+    {
+      "id": "FIB18",
+      "prompt": "Dynamic JavaScript/AJAX links can require server-side ______ before parsing.",
+      "answer": "rendering",
+      "source_pages": [
+        149
+      ]
+    }
+  ],
+  "ordering_exercises": [
+    {
+      "id": "ORD01",
+      "title": "Basic Crawl Loop",
+      "items_scrambled": [
+        "Extract URLs",
+        "Download pages",
+        "Add new URLs and repeat"
+      ],
+      "correct_order": [
+        "Download pages",
+        "Extract URLs",
+        "Add new URLs and repeat"
+      ],
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "ORD02",
+      "title": "High-Level Crawl Pipeline",
+      "items_scrambled": [
+        "URL Seen?",
+        "Content Parser",
+        "URL Frontier",
+        "URL Filter",
+        "HTML Downloader",
+        "Content Seen?",
+        "Link Extractor"
+      ],
+      "correct_order": [
+        "URL Frontier",
+        "HTML Downloader",
+        "Content Parser",
+        "Content Seen?",
+        "Link Extractor",
+        "URL Filter",
+        "URL Seen?",
+        "Back to URL Frontier if unseen"
+      ],
+      "source_pages": [
+        139
+      ]
+    },
+    {
+      "id": "ORD03",
+      "title": "Politeness Queue Flow",
+      "items_scrambled": [
+        "Worker thread",
+        "Queue selector",
+        "Queue router",
+        "Back FIFO queue",
+        "Mapping table"
+      ],
+      "correct_order": [
+        "Queue router",
+        "Mapping table / route host to queue",
+        "Back FIFO queue",
+        "Queue selector",
+        "Worker thread"
+      ],
+      "source_pages": [
+        141,
+        142
+      ]
+    },
+    {
+      "id": "ORD04",
+      "title": "Redirecting New Crawl URL",
+      "items_scrambled": [
+        "Filter URL",
+        "Check URL Seen?",
+        "Extract links",
+        "Add unseen URL to Frontier"
+      ],
+      "correct_order": [
+        "Extract links",
+        "Filter URL",
+        "Check URL Seen?",
+        "Add unseen URL to Frontier"
+      ],
+      "source_pages": [
+        139
+      ]
+    }
+  ],
+  "scenario_questions": [
+    {
+      "id": "SC01",
+      "difficulty": "medium",
+      "scenario": "Your crawler starts hammering one website with thousands of requests per second.",
+      "question": "Which crawler property is being violated and what URL Frontier mechanism addresses it?",
+      "expected_answer": "Politeness is being violated. Use per-host back queues mapped to worker threads, downloading one page at a time per host with delay if needed.",
+      "source_pages": [
+        141,
+        142
+      ]
+    },
+    {
+      "id": "SC02",
+      "difficulty": "hard",
+      "scenario": "A crawler follows internal links from one Wikipedia page and all workers begin crawling wikipedia.com in parallel.",
+      "question": "What weakness of naïve BFS does this illustrate?",
+      "expected_answer": "Naïve FIFO BFS can concentrate work on one host and flood it with requests.",
+      "source_pages": [
+        140
+      ]
+    },
+    {
+      "id": "SC03",
+      "difficulty": "hard",
+      "scenario": "You need to crawl an official product homepage before low-value discussion posts.",
+      "question": "What Frontier subsystem handles this?",
+      "expected_answer": "The Prioritizer/front-queue subsystem; priority can use PageRank, traffic, update frequency, or similar usefulness measures.",
+      "source_pages": [
+        142,
+        143
+      ]
+    },
+    {
+      "id": "SC04",
+      "difficulty": "medium",
+      "scenario": "The same article is available under multiple different URLs.",
+      "question": "Which component should prevent duplicate content processing?",
+      "expected_answer": "Content Seen?, using page hashes to detect identical content.",
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "id": "SC05",
+      "difficulty": "medium",
+      "scenario": "The same URL is discovered repeatedly from many pages.",
+      "question": "Which component prevents repeatedly adding it to the Frontier?",
+      "expected_answer": "URL Seen?, implemented with a Bloom filter or hash table.",
+      "source_pages": [
+        138
+      ]
+    },
+    {
+      "id": "SC06",
+      "difficulty": "hard",
+      "scenario": "The URL Frontier contains hundreds of millions of URLs.",
+      "question": "Why not store everything in memory or everything on disk, and what is the selected design?",
+      "expected_answer": "Memory-only is not durable/scalable; disk-only is too slow and becomes a bottleneck. Store most URLs on disk and use memory buffers for enqueue/dequeue.",
+      "source_pages": [
+        145
+      ]
+    },
+    {
+      "id": "SC07",
+      "difficulty": "medium",
+      "scenario": "A target site disallows a directory for your crawler.",
+      "question": "Where should that rule come from and how should it be used?",
+      "expected_answer": "From robots.txt/Robots Exclusion Protocol. Check it before crawling and obey the rules; cache the result periodically.",
+      "source_pages": [
+        145
+      ]
+    },
+    {
+      "id": "SC08",
+      "difficulty": "hard",
+      "scenario": "Crawler threads frequently block for DNS lookups.",
+      "question": "What optimization does the chapter suggest?",
+      "expected_answer": "Maintain a DNS cache of domain-to-IP mappings and update it periodically.",
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "id": "SC09",
+      "difficulty": "medium",
+      "scenario": "Some target hosts never respond.",
+      "question": "What downloader optimization prevents one crawl task from waiting indefinitely?",
+      "expected_answer": "Short timeout / maximum wait time.",
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "id": "SC10",
+      "difficulty": "hard",
+      "scenario": "A downloader server fails midway through a large crawl.",
+      "question": "Which robustness practices support recovery?",
+      "expected_answer": "Persist crawl state/data so work can resume, and use robust exception handling/data validation; consistent hashing also supports rebalancing among downloaders.",
+      "source_pages": [
+        146,
+        147
+      ]
+    },
+    {
+      "id": "SC11",
+      "difficulty": "medium",
+      "scenario": "You later need to crawl PNG files without redesigning the crawler.",
+      "question": "Which design property and mechanism support this?",
+      "expected_answer": "Extensibility through a pluggable PNG Downloader module.",
+      "source_pages": [
+        147
+      ]
+    },
+    {
+      "id": "SC12",
+      "difficulty": "hard",
+      "scenario": "A site exposes endlessly nested /foo/bar/foo/bar/... paths.",
+      "question": "What problem is this and what mitigations are suggested?",
+      "expected_answer": "A spider trap. Use a maximum URL length, detect suspiciously large page counts, manually verify, exclude the site, or apply custom filters.",
+      "source_pages": [
+        147,
+        148
+      ]
+    },
+    {
+      "id": "SC13",
+      "difficulty": "medium",
+      "scenario": "A site creates links only after JavaScript executes.",
+      "question": "What follow-up technique is needed?",
+      "expected_answer": "Server-side/dynamic rendering before parsing.",
+      "source_pages": [
+        149
+      ]
+    },
+    {
+      "id": "SC14",
+      "difficulty": "medium",
+      "scenario": "You need to scale from hundreds to thousands of downloader servers.",
+      "question": "What two design ideas from the wrap-up are especially relevant?",
+      "expected_answer": "Horizontal scaling with stateless servers, plus database replication/sharding for the data layer.",
+      "source_pages": [
+        149
+      ]
+    }
+  ],
+  "short_answer_questions": [
+    {
+      "id": "SA01",
+      "question": "Why is a production web crawler much more complex than the basic three-step loop?",
+      "model_answer": "At large scale it must parallelize across billions of pages while handling duplicate content, malformed pages, slow or malicious sites, prioritization, politeness, freshness, failure recovery, storage limits, and extensibility.",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "SA02",
+      "question": "Explain the purpose of seed URLs.",
+      "model_answer": "Seed URLs are crawl starting points. For a narrow site, the domain itself may be enough; for the entire web, the chapter suggests partitioning URL space by locality or topic and choosing representative seeds.",
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "SA03",
+      "question": "Differentiate Content Seen? from URL Seen?.",
+      "model_answer": "Content Seen? detects duplicate page bodies, even when different URLs contain the same content, usually by comparing hashes. URL Seen? tracks URL identity so already visited or queued URLs are not repeatedly re-added.",
+      "source_pages": [
+        137,
+        138
+      ]
+    },
+    {
+      "id": "SA04",
+      "question": "Why is BFS preferred over DFS, yet still insufficient by itself?",
+      "model_answer": "DFS can go arbitrarily deep, so BFS is more common. But simple FIFO BFS can flood one host and ignores the fact that some URLs deserve higher crawl priority.",
+      "source_pages": [
+        140,
+        141
+      ]
+    },
+    {
+      "id": "SA05",
+      "question": "How does the URL Frontier enforce politeness?",
+      "model_answer": "It maps each host to a dedicated back queue. Worker threads consume URLs one by one from those queues, and a delay can be inserted between requests to the same host.",
+      "source_pages": [
+        141,
+        142
+      ]
+    },
+    {
+      "id": "SA06",
+      "question": "How does the URL Frontier implement prioritization?",
+      "model_answer": "A Prioritizer scores URLs using usefulness indicators such as PageRank, website traffic, and update frequency. URLs enter priority-specific front queues, and a selector chooses higher-priority queues with greater probability.",
+      "source_pages": [
+        142,
+        143
+      ]
+    },
+    {
+      "id": "SA07",
+      "question": "How does the crawler keep content fresh without recrawling everything equally?",
+      "model_answer": "It can use page update history and prioritize important pages for earlier and more frequent recrawling.",
+      "source_pages": [
+        144,
+        145
+      ]
+    },
+    {
+      "id": "SA08",
+      "question": "Why does the Frontier use both disk and memory?",
+      "model_answer": "Hundreds of millions of URLs are too large and non-durable for memory-only storage, while disk-only access is too slow. The design stores most URLs on disk and uses in-memory enqueue/dequeue buffers.",
+      "source_pages": [
+        145
+      ]
+    },
+    {
+      "id": "SA09",
+      "question": "Explain the HTML Downloader performance optimizations.",
+      "model_answer": "Distribute crawl work across servers/threads, cache DNS to avoid blocking lookups, place infrastructure closer to target hosts, and enforce short maximum wait times on slow or unresponsive hosts.",
+      "source_pages": [
+        145,
+        146
+      ]
+    },
+    {
+      "id": "SA10",
+      "question": "How does the chapter improve crawler robustness?",
+      "model_answer": "Use consistent hashing to distribute downloader load and support membership changes, save crawl state/data for restart, handle exceptions gracefully, and validate data.",
+      "source_pages": [
+        146,
+        147
+      ]
+    },
+    {
+      "id": "SA11",
+      "question": "How does the crawler detect and avoid problematic content?",
+      "model_answer": "Use hashes/checksums for redundant content, maximum URL length/manual review/custom filters for spider traps, and exclude low-value noise such as ads, code snippets, and spam where possible.",
+      "source_pages": [
+        147,
+        148
+      ]
+    },
+    {
+      "id": "SA12",
+      "question": "What important issues remain after the core design?",
+      "model_answer": "Dynamic/server-side rendering, anti-spam filtering, database replication and sharding, stateless horizontal scaling, availability/consistency/reliability, and analytics.",
+      "source_pages": [
+        149
+      ]
+    }
+  ],
+  "active_recall_prompts": [
+    {
+      "id": "AR01",
+      "prompt": "Name the four crawler use cases introduced at the start of the chapter.",
+      "target_points": [
+        "Search engine indexing",
+        "Web archiving",
+        "Web mining",
+        "Web monitoring"
+      ],
+      "source_pages": [
+        132,
+        133
+      ]
+    },
+    {
+      "id": "AR02",
+      "prompt": "Recite the four qualities of a good web crawler.",
+      "target_points": [
+        "Scalability",
+        "Robustness",
+        "Politeness",
+        "Extensibility"
+      ],
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "AR03",
+      "prompt": "Reconstruct the back-of-the-envelope estimates.",
+      "target_points": [
+        "1B pages/month",
+        "~400 QPS",
+        "800 peak QPS",
+        "500KB/page",
+        "500TB/month",
+        "30PB/5 years"
+      ],
+      "source_pages": [
+        134,
+        135
+      ]
+    },
+    {
+      "id": "AR04",
+      "prompt": "Name every high-level component in the crawler.",
+      "target_points": [
+        "Seed URLs",
+        "URL Frontier",
+        "HTML Downloader",
+        "DNS Resolver",
+        "Content Parser",
+        "Content Seen?",
+        "Content Storage",
+        "URL Extractor",
+        "URL Filter",
+        "URL Seen?",
+        "URL Storage"
+      ],
+      "source_pages": [
+        136,
+        137,
+        138
+      ]
+    },
+    {
+      "id": "AR05",
+      "prompt": "Reconstruct the 11-step crawl workflow.",
+      "target_points": [
+        "Seeds to Frontier",
+        "Frontier to Downloader",
+        "DNS lookup",
+        "Parse",
+        "Content Seen?",
+        "Discard duplicate or continue",
+        "Extract links",
+        "Filter",
+        "URL Seen?",
+        "Ignore seen",
+        "Add unseen to Frontier"
+      ],
+      "source_pages": [
+        139
+      ]
+    },
+    {
+      "id": "AR06",
+      "prompt": "Explain why naïve BFS needs a more sophisticated URL Frontier.",
+      "target_points": [
+        "Host flooding/politeness",
+        "No priority",
+        "Need priority + politeness + freshness"
+      ],
+      "source_pages": [
+        140,
+        141
+      ]
+    },
+    {
+      "id": "AR07",
+      "prompt": "Reconstruct the politeness subsystem.",
+      "target_points": [
+        "Queue router",
+        "Host-to-queue mapping",
+        "Back queues",
+        "Queue selector",
+        "Worker thread",
+        "Delay"
+      ],
+      "source_pages": [
+        141,
+        142
+      ]
+    },
+    {
+      "id": "AR08",
+      "prompt": "Reconstruct the prioritization subsystem.",
+      "target_points": [
+        "Prioritizer",
+        "PageRank/traffic/update frequency",
+        "Front priority queues",
+        "Biased queue selector"
+      ],
+      "source_pages": [
+        142,
+        143
+      ]
+    },
+    {
+      "id": "AR09",
+      "prompt": "Name the four HTML Downloader performance optimizations.",
+      "target_points": [
+        "Distributed crawl",
+        "DNS cache",
+        "Locality",
+        "Short timeout"
+      ],
+      "source_pages": [
+        145,
+        146
+      ]
+    },
+    {
+      "id": "AR10",
+      "prompt": "Name the four robustness techniques.",
+      "target_points": [
+        "Consistent hashing",
+        "Save crawl state/data",
+        "Exception handling",
+        "Data validation"
+      ],
+      "source_pages": [
+        146,
+        147
+      ]
+    },
+    {
+      "id": "AR11",
+      "prompt": "Name the three problematic-content categories and their handling.",
+      "target_points": [
+        "Redundant content -> hashes/checksums",
+        "Spider traps -> limits/manual/custom filters",
+        "Data noise -> exclude"
+      ],
+      "source_pages": [
+        147,
+        148
+      ]
+    },
+    {
+      "id": "AR12",
+      "prompt": "Name all wrap-up topics.",
+      "target_points": [
+        "Server-side rendering",
+        "Anti-spam filtering",
+        "Replication/sharding",
+        "Horizontal scaling/stateless servers",
+        "Availability/consistency/reliability",
+        "Analytics"
+      ],
+      "source_pages": [
+        149
+      ]
+    }
+  ],
+  "diagram_reconstruction_drills": [
+    {
+      "id": "DR01",
+      "name": "Figure 9-1 Crawl Graph",
+      "task": "Draw a few seed pages and outgoing links to new pages to illustrate recursive discovery.",
+      "source_pages": [
+        132
+      ]
+    },
+    {
+      "id": "DR02",
+      "name": "Figure 9-2 High-Level Architecture",
+      "task": "Draw Seed URLs -> URL Frontier -> HTML Downloader -> Content Parser -> Content Seen? -> Link Extractor -> URL Filter -> URL Seen? -> back to Frontier, plus DNS Resolver, Content Storage, and URL Storage.",
+      "source_pages": [
+        136,
+        137,
+        138
+      ]
+    },
+    {
+      "id": "DR03",
+      "name": "Figure 9-3 Link Extraction",
+      "task": "Show relative Wikipedia hrefs converted into absolute https://en.wikipedia.org/... URLs.",
+      "source_pages": [
+        137,
+        138
+      ]
+    },
+    {
+      "id": "DR04",
+      "name": "Figure 9-4 Numbered Workflow",
+      "task": "Reconstruct the architecture and label the 11 workflow steps.",
+      "source_pages": [
+        139
+      ]
+    },
+    {
+      "id": "DR05",
+      "name": "Figure 9-5 Naïve BFS Problem",
+      "task": "Draw one host whose pages mostly link to more pages on the same host, illustrating request concentration.",
+      "source_pages": [
+        140
+      ]
+    },
+    {
+      "id": "DR06",
+      "name": "Figure 9-6 Politeness Queues",
+      "task": "Draw queue router -> host mapping table -> back queues b1...bn -> queue selector -> worker threads.",
+      "source_pages": [
+        141,
+        142
+      ]
+    },
+    {
+      "id": "DR07",
+      "name": "Figure 9-7 Priority Queues",
+      "task": "Draw Prioritizer -> front queues f1...fn -> biased queue selector.",
+      "source_pages": [
+        142,
+        143
+      ]
+    },
+    {
+      "id": "DR08",
+      "name": "Figure 9-8 Full URL Frontier",
+      "task": "Draw front queues for priority feeding into back queues for politeness.",
+      "source_pages": [
+        143
+      ]
+    },
+    {
+      "id": "DR09",
+      "name": "Figure 9-9 Distributed Crawl",
+      "task": "Draw URL-space partitioning across multiple crawler/downloader servers.",
+      "source_pages": [
+        145
+      ]
+    },
+    {
+      "id": "DR10",
+      "name": "Figure 9-10 Extensibility",
+      "task": "Draw the crawler with plug-in modules such as PNG Downloader and Web Monitor.",
+      "source_pages": [
+        147
+      ]
+    }
+  ],
+  "interview_style_questions": [
+    {
+      "id": "INT01",
+      "question": "What would you clarify before designing a web crawler?",
+      "strong_answer_outline": [
+        "Primary purpose",
+        "Pages/month",
+        "Content types",
+        "New/edited pages",
+        "Retention period",
+        "Duplicate handling",
+        "Scalability/robustness/politeness/extensibility"
+      ],
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "INT02",
+      "question": "What back-of-the-envelope numbers should you calculate?",
+      "strong_answer_outline": [
+        "Average QPS",
+        "Peak QPS",
+        "Average page size",
+        "Monthly storage",
+        "Retention storage"
+      ],
+      "source_pages": [
+        134,
+        135
+      ]
+    },
+    {
+      "id": "INT03",
+      "question": "Walk through the high-level architecture.",
+      "strong_answer_outline": [
+        "Seed URLs",
+        "URL Frontier",
+        "Downloader + DNS",
+        "Parser",
+        "Content dedupe/storage",
+        "Link extraction/filtering",
+        "URL dedupe/storage",
+        "Loop unseen URLs back"
+      ],
+      "source_pages": [
+        136,
+        137,
+        138,
+        139
+      ]
+    },
+    {
+      "id": "INT04",
+      "question": "Why is naïve BFS insufficient?",
+      "strong_answer_outline": [
+        "Can flood one host",
+        "No priority",
+        "Need politeness controls",
+        "Need importance-based scheduling"
+      ],
+      "source_pages": [
+        140,
+        141
+      ]
+    },
+    {
+      "id": "INT05",
+      "question": "How would you design the URL Frontier?",
+      "strong_answer_outline": [
+        "Front queues for priority",
+        "Prioritizer",
+        "Biased priority selector",
+        "Back queues per host for politeness",
+        "Host-to-queue mapping",
+        "Worker queue selector",
+        "Delays",
+        "Freshness strategy",
+        "Disk + memory buffers"
+      ],
+      "source_pages": [
+        141,
+        142,
+        143,
+        144,
+        145
+      ]
+    },
+    {
+      "id": "INT06",
+      "question": "How would you optimize the HTML Downloader?",
+      "strong_answer_outline": [
+        "Distributed crawl",
+        "DNS cache",
+        "Geographic locality",
+        "Short timeout",
+        "robots.txt cache"
+      ],
+      "source_pages": [
+        145,
+        146
+      ]
+    },
+    {
+      "id": "INT07",
+      "question": "How would you make the crawler resilient?",
+      "strong_answer_outline": [
+        "Consistent hashing",
+        "Persist crawl state/data",
+        "Exception handling",
+        "Data validation"
+      ],
+      "source_pages": [
+        146,
+        147
+      ]
+    },
+    {
+      "id": "INT08",
+      "question": "How do you protect the crawler from pathological or low-value content?",
+      "strong_answer_outline": [
+        "Duplicate hashes/checksums",
+        "Spider-trap URL length limits/manual filters",
+        "Data-noise filtering",
+        "Anti-spam component"
+      ],
+      "source_pages": [
+        147,
+        148,
+        149
+      ]
+    }
+  ],
+  "common_confusions": [
+    {
+      "confusion": "A scalable crawler is just a FIFO queue plus HTTP downloads.",
+      "correction": "The chapter explicitly shows that naïve BFS/FIFO does not solve host politeness, URL priority, freshness, duplicate handling, failures, or massive storage.",
+      "source_pages": [
+        140,
+        141
+      ]
+    },
+    {
+      "confusion": "Content Seen? and URL Seen? are the same.",
+      "correction": "Content Seen? deduplicates page bodies; URL Seen? deduplicates URL identities and prevents requeueing/loops.",
+      "source_pages": [
+        137,
+        138
+      ]
+    },
+    {
+      "confusion": "Politeness simply means low global QPS.",
+      "correction": "The chapter focuses on controlling request rate per host, using per-host queues and worker mapping.",
+      "source_pages": [
+        141,
+        142
+      ]
+    },
+    {
+      "confusion": "BFS automatically gives the most important pages first.",
+      "correction": "Standard BFS does not consider priority. The chapter adds a Prioritizer and priority-specific front queues.",
+      "source_pages": [
+        141,
+        142,
+        143
+      ]
+    },
+    {
+      "confusion": "The URL Frontier should live entirely in RAM for speed.",
+      "correction": "At hundreds of millions of URLs, all-memory storage is not durable/scalable. The chapter uses mostly disk plus memory buffers.",
+      "source_pages": [
+        145
+      ]
+    },
+    {
+      "confusion": "robots.txt is an optional optimization only.",
+      "correction": "The chapter says the crawler should check the site's robots.txt before crawling and follow its rules; caching is the optimization.",
+      "source_pages": [
+        145
+      ]
+    },
+    {
+      "confusion": "A crawler can fully automate spider-trap avoidance.",
+      "correction": "The chapter says no one-size-fits-all solution exists; manual verification and customized filters may be required.",
+      "source_pages": [
+        147,
+        148
+      ]
+    },
+    {
+      "confusion": "Direct HTML download always reveals every link.",
+      "correction": "Dynamic JavaScript/AJAX sites may require server-side rendering before parsing to expose generated links.",
+      "source_pages": [
+        149
+      ]
+    }
+  ],
+  "practice_problems": [
+    {
+      "id": "PRACTICE01",
+      "type": "qps",
+      "prompt": "If the crawler target doubled to 2 billion pages/month, estimate average QPS using the chapter's method.",
+      "solution": "2,000,000,000 / 30 / 24 / 3600 ≈ 772 pages/sec, roughly 800 pages/sec.",
+      "note": "New practice calculation based on the chapter's estimation approach.",
+      "based_on_source_pages": [
+        134,
+        135
+      ]
+    },
+    {
+      "id": "PRACTICE02",
+      "type": "storage",
+      "prompt": "If average page size were 1 MB for 1 billion pages/month, what monthly storage would the same simple estimate produce?",
+      "solution": "Approximately 1 PB/month.",
+      "note": "New practice calculation derived from the chapter's storage-estimation method.",
+      "based_on_source_pages": [
+        135
+      ]
+    },
+    {
+      "id": "PRACTICE03",
+      "type": "component_choice",
+      "prompt": "Two different URLs contain identical HTML. Which deduplication component should catch this?",
+      "solution": "Content Seen?.",
+      "based_on_source_pages": [
+        137
+      ]
+    },
+    {
+      "id": "PRACTICE04",
+      "type": "component_choice",
+      "prompt": "One URL is discovered from 500 different pages. Which component prevents 500 duplicate enqueue operations?",
+      "solution": "URL Seen?.",
+      "based_on_source_pages": [
+        138
+      ]
+    },
+    {
+      "id": "PRACTICE05",
+      "type": "frontier",
+      "prompt": "Why might a high-priority front queue still feed into a per-host back queue instead of directly to a downloader?",
+      "solution": "Priority decides what should be crawled sooner, while the back-queue layer still must enforce politeness for the destination host.",
+      "based_on_source_pages": [
+        143
+      ]
+    },
+    {
+      "id": "PRACTICE06",
+      "type": "robustness",
+      "prompt": "A downloader node is removed from the cluster. Which technique from the robustness section helps redistribute its load?",
+      "solution": "Consistent hashing.",
+      "based_on_source_pages": [
+        146
+      ]
+    }
+  ],
+  "mastery_check": {
+    "beginner": [
+      "Can define a web crawler and its four common use cases.",
+      "Can state the crawler requirements and four quality attributes.",
+      "Can reproduce the 400 QPS / 800 peak / 30 PB estimates.",
+      "Can name all high-level architecture components."
+    ],
+    "intermediate": [
+      "Can reconstruct the 11-step crawler workflow.",
+      "Can distinguish Content Seen? from URL Seen?.",
+      "Can explain why BFS is preferred over DFS.",
+      "Can explain why naïve BFS still fails on politeness and priority.",
+      "Can explain front queues versus back queues.",
+      "Can explain robots.txt and downloader optimizations."
+    ],
+    "advanced": [
+      "Can design the URL Frontier including prioritization, politeness, freshness, and hybrid storage.",
+      "Can explain per-host worker scheduling and priority-biased queue selection.",
+      "Can reason about crawler robustness and recovery.",
+      "Can explain spider traps and their imperfect mitigations.",
+      "Can discuss dynamic rendering, anti-spam filtering, sharding/replication, stateless horizontal scaling, and analytics.",
+      "Can reconstruct the major chapter diagrams from memory."
+    ]
+  },
+  "chapter_nine_final_review": {
+    "must_memorize": [
+      "Crawler = robot/spider that discovers pages by following links.",
+      "Use cases: search indexing, archiving, mining, monitoring.",
+      "Scope: 1B HTML pages/month, new/edited pages, 5-year retention, ignore duplicate content.",
+      "Good crawler: scalable, robust, polite, extensible.",
+      "Estimates: ~400 QPS average, 800 peak, 500 TB/month, 30 PB/5 years.",
+      "Seed URLs start the crawl.",
+      "URL Frontier stores URLs waiting to download.",
+      "Core pipeline: Frontier -> Downloader/DNS -> Parser -> Content Seen? -> Link Extractor -> URL Filter -> URL Seen? -> Frontier.",
+      "Content Seen? deduplicates page bodies using hashes.",
+      "URL Seen? deduplicates URLs and helps prevent loops.",
+      "BFS is preferred to DFS, but naïve FIFO can flood one host and ignores priority.",
+      "URL Frontier manages politeness, priority, and freshness.",
+      "Front queues = priority; back queues = politeness.",
+      "Per-host queues + worker mapping + delay enforce politeness.",
+      "Priority can use PageRank, traffic, update frequency.",
+      "Freshness can use update history and more frequent recrawl of important pages.",
+      "Frontier storage = mostly disk + memory buffers.",
+      "Check and cache robots.txt.",
+      "Downloader optimization = distributed crawl + DNS cache + locality + short timeout.",
+      "Robustness = consistent hashing + saved state/data + exception handling + data validation.",
+      "Extensibility = plug-in modules.",
+      "Problematic content = duplicates, spider traps, data noise.",
+      "Dynamic links may require server-side rendering.",
+      "Scale data layer with replication/sharding and download tier with stateless horizontal scaling."
+    ],
+    "memory_chain": "SEEDS -> FRONTIER -> DOWNLOADER + DNS -> PARSER -> CONTENT DEDUPE -> LINK EXTRACT -> FILTER -> URL DEDUPE -> FRONTIER AGAIN -> BFS -> POLITENESS + PRIORITY + FRESHNESS -> ROBOTS + PERFORMANCE -> ROBUSTNESS -> EXTENSIBILITY -> TRAPS/NOISE -> DYNAMIC RENDERING + SCALE",
+    "one_sentence_takeaway": "A production web crawler is a distributed graph-traversal system whose hardest problems are not downloading HTML, but scheduling billions of URLs with priority, politeness, freshness, deduplication, resilience, and scalable storage."
+  }
+}

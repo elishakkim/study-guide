@@ -1,0 +1,5448 @@
+{
+  "chapter": {
+    "number": 3,
+    "title": "Storage and Retrieval",
+    "book": "Designing Data-Intensive Applications",
+    "author": "Martin Kleppmann",
+    "pdf_pages": {
+      "chapter_start": 91,
+      "chapter_summary_end": 126
+    },
+    "book_pages": {
+      "chapter_start": 69,
+      "chapter_summary_end": 104
+    },
+    "primary_goal": "Understand how database storage engines lay out, index, update, compress, and retrieve data, and how OLTP and OLAP workloads lead to very different storage architectures."
+  },
+  "chapter_summary": {
+    "overview": "Chapter 3 moves below the logical data models of Chapter 2 and examines how storage engines physically store and retrieve data. It begins with an append-only key-value log and derives the need for indexes, highlighting the fundamental tradeoff that indexes improve reads but add write overhead. Hash indexes such as Bitcask map keys to byte offsets and work well when keys fit in memory, while compaction, segment merging, tombstones, checksums, and recovery snapshots make append-only storage practical. SSTables add sorted keys, enabling sparse indexes, efficient range scans, compression, and merge-based compaction. A memtable plus SSTables forms the core of an LSM-tree, with an append-only recovery log protecting recent writes. Bloom filters and size-tiered or leveled compaction improve practical performance. B-trees take a different approach: fixed-size pages are updated in place, a root-to-leaf search provides logarithmic lookup, page splits keep the tree balanced, and a write-ahead log protects against crashes. The chapter compares B-trees and LSM-trees in terms of write amplification, sequential versus random I/O, read latency, compaction, fragmentation, and transactional semantics. It then surveys secondary, clustered, covering, multi-column, multidimensional, full-text, fuzzy, and in-memory indexes. The second half distinguishes OLTP from OLAP, motivates data warehouses and ETL, introduces star and snowflake schemas, and explains why column-oriented storage is effective for analytics. Column stores read only needed columns, compress repetitive values well, support bitmap and run-length encoding, improve CPU efficiency through vectorized processing, and can exploit sort order. Writes to column stores are often buffered and merged using LSM-like techniques. Finally, materialized views and data cubes precompute aggregates to accelerate common analytic queries at the cost of storage, write overhead, and reduced flexibility.",
+    "major_sections": [
+      "Data Structures That Power Your Database",
+      "Hash Indexes",
+      "SSTables and LSM-Trees",
+      "B-Trees",
+      "Comparing B-Trees and LSM-Trees",
+      "Other Indexing Structures",
+      "In-Memory Databases",
+      "Transaction Processing or Analytics?",
+      "Data Warehousing",
+      "Star and Snowflake Schemas",
+      "Column-Oriented Storage",
+      "Column Compression",
+      "Vectorized Processing",
+      "Sort Order in Column Storage",
+      "Writing to Column-Oriented Storage",
+      "Materialized Views and Data Cubes"
+    ],
+    "source_pages": [
+      91,
+      92,
+      93,
+      94,
+      95,
+      96,
+      97,
+      98,
+      99,
+      100,
+      101,
+      102,
+      103,
+      104,
+      105,
+      106,
+      107,
+      108,
+      109,
+      110,
+      111,
+      112,
+      113,
+      114,
+      115,
+      116,
+      117,
+      118,
+      119,
+      120,
+      121,
+      122,
+      123,
+      124,
+      125,
+      126
+    ]
+  },
+  "learning_objectives": [
+    {
+      "id": "LO01",
+      "objective": "Explain why application developers benefit from understanding storage-engine internals.",
+      "source_pages": [
+        91
+      ]
+    },
+    {
+      "id": "LO02",
+      "objective": "Explain the append-only log example and why writes are fast but reads are O(n).",
+      "source_pages": [
+        92,
+        93
+      ]
+    },
+    {
+      "id": "LO03",
+      "objective": "Define an index and explain the read/write tradeoff created by indexes.",
+      "source_pages": [
+        93
+      ]
+    },
+    {
+      "id": "LO04",
+      "objective": "Explain a hash index mapping keys to byte offsets and the Bitcask design.",
+      "source_pages": [
+        94,
+        95
+      ]
+    },
+    {
+      "id": "LO05",
+      "objective": "Explain log segmentation, compaction, and segment merging.",
+      "source_pages": [
+        95,
+        96
+      ]
+    },
+    {
+      "id": "LO06",
+      "objective": "Explain tombstones, crash recovery, checksums, and single-writer concurrency in append-only logs.",
+      "source_pages": [
+        96,
+        97
+      ]
+    },
+    {
+      "id": "LO07",
+      "objective": "State the advantages and limitations of hash indexes.",
+      "source_pages": [
+        97
+      ]
+    },
+    {
+      "id": "LO08",
+      "objective": "Define SSTables and explain why sorted segments improve merging, indexing, compression, and range queries.",
+      "source_pages": [
+        98,
+        99
+      ]
+    },
+    {
+      "id": "LO09",
+      "objective": "Explain memtables and the write/read/flush/compaction flow of SSTable storage.",
+      "source_pages": [
+        100
+      ]
+    },
+    {
+      "id": "LO10",
+      "objective": "Explain why a separate append-only log is used to recover the memtable after crashes.",
+      "source_pages": [
+        100
+      ]
+    },
+    {
+      "id": "LO11",
+      "objective": "Define LSM-trees and identify systems using LSM-style storage.",
+      "source_pages": [
+        100,
+        101
+      ]
+    },
+    {
+      "id": "LO12",
+      "objective": "Explain Bloom filters and size-tiered versus leveled compaction.",
+      "source_pages": [
+        101
+      ]
+    },
+    {
+      "id": "LO13",
+      "objective": "Explain B-tree pages, root traversal, branching factor, and page splitting.",
+      "source_pages": [
+        102,
+        103
+      ]
+    },
+    {
+      "id": "LO14",
+      "objective": "Explain B-tree crash recovery using a write-ahead log.",
+      "source_pages": [
+        104
+      ]
+    },
+    {
+      "id": "LO15",
+      "objective": "Explain B-tree concurrency control and optimizations such as copy-on-write and sibling pointers.",
+      "source_pages": [
+        104,
+        105
+      ]
+    },
+    {
+      "id": "LO16",
+      "objective": "Compare B-tree and LSM-tree read/write characteristics.",
+      "source_pages": [
+        105,
+        106,
+        107
+      ]
+    },
+    {
+      "id": "LO17",
+      "objective": "Define write amplification and explain why it matters, especially on SSDs.",
+      "source_pages": [
+        106
+      ]
+    },
+    {
+      "id": "LO18",
+      "objective": "Explain how compaction can interfere with reads/writes and what happens if it falls behind.",
+      "source_pages": [
+        106,
+        107
+      ]
+    },
+    {
+      "id": "LO19",
+      "objective": "Explain primary and secondary indexes and how nonunique secondary keys are represented.",
+      "source_pages": [
+        107,
+        108
+      ]
+    },
+    {
+      "id": "LO20",
+      "objective": "Compare heap files, clustered indexes, and covering indexes.",
+      "source_pages": [
+        108,
+        109
+      ]
+    },
+    {
+      "id": "LO21",
+      "objective": "Explain concatenated and multidimensional indexes.",
+      "source_pages": [
+        109,
+        110
+      ]
+    },
+    {
+      "id": "LO22",
+      "objective": "Explain full-text/fuzzy indexing and Lucene's edit-distance approach.",
+      "source_pages": [
+        110
+      ]
+    },
+    {
+      "id": "LO23",
+      "objective": "Explain how in-memory databases achieve durability and why they can outperform disk-oriented designs.",
+      "source_pages": [
+        110,
+        111,
+        112
+      ]
+    },
+    {
+      "id": "LO24",
+      "objective": "Distinguish OLTP and OLAP access patterns.",
+      "source_pages": [
+        112,
+        113
+      ]
+    },
+    {
+      "id": "LO25",
+      "objective": "Explain why organizations separate analytical workloads into a data warehouse.",
+      "source_pages": [
+        113,
+        114,
+        115
+      ]
+    },
+    {
+      "id": "LO26",
+      "objective": "Explain ETL.",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "LO27",
+      "objective": "Define fact tables, dimension tables, star schemas, and snowflake schemas.",
+      "source_pages": [
+        115,
+        116,
+        117
+      ]
+    },
+    {
+      "id": "LO28",
+      "objective": "Explain why wide fact tables motivate column-oriented storage.",
+      "source_pages": [
+        117,
+        118,
+        119
+      ]
+    },
+    {
+      "id": "LO29",
+      "objective": "Explain bitmap encoding, run-length encoding, and bitwise filtering.",
+      "source_pages": [
+        119,
+        120,
+        121
+      ]
+    },
+    {
+      "id": "LO30",
+      "objective": "Explain vectorized processing and CPU-cache efficiency in analytical databases.",
+      "source_pages": [
+        121
+      ]
+    },
+    {
+      "id": "LO31",
+      "objective": "Explain sort order in column stores and why multiple sort orders may help.",
+      "source_pages": [
+        121,
+        122
+      ]
+    },
+    {
+      "id": "LO32",
+      "objective": "Explain how column stores handle writes using an in-memory sorted store and bulk merges.",
+      "source_pages": [
+        123
+      ]
+    },
+    {
+      "id": "LO33",
+      "objective": "Differentiate virtual views, materialized views, and data cubes.",
+      "source_pages": [
+        123,
+        124,
+        125
+      ]
+    },
+    {
+      "id": "LO34",
+      "objective": "Explain the chapter's top-level distinction between OLTP seek-bound workloads and OLAP bandwidth-bound workloads.",
+      "source_pages": [
+        125,
+        126
+      ]
+    }
+  ],
+  "storage_engine_foundations": {
+    "database_fundamentals": [
+      "Store data when given data.",
+      "Retrieve that data later when requested."
+    ],
+    "why_internals_matter": "Developers need enough understanding to choose a storage engine appropriate to the workload and tune it intelligently.",
+    "two_families_introduced": [
+      "Log-structured storage engines",
+      "Page-oriented storage engines such as B-trees"
+    ],
+    "source_pages": [
+      91,
+      92
+    ]
+  },
+  "simple_append_only_database": {
+    "write": "db_set appends key,value to the end of a file.",
+    "read": "db_get scans the file and returns the last occurrence of a key.",
+    "write_strength": "Appending is very efficient.",
+    "read_problem": "Lookup scans the entire file and is O(n).",
+    "log_definition": "An append-only sequence of records; not necessarily human-readable.",
+    "source_pages": [
+      92,
+      93
+    ]
+  },
+  "indexes": {
+    "definition": "Additional metadata derived from primary data that acts as a signpost for locating records.",
+    "multiple_indexes": "Different query patterns may require different indexes.",
+    "write_tradeoff": "Every index must be updated on writes, so indexes improve reads but slow writes.",
+    "design_rule": "Choose indexes based on actual query patterns rather than indexing everything.",
+    "source_pages": [
+      93
+    ]
+  },
+  "hash_indexes": {
+    "structure": "In-memory hash map: key -> byte offset in append-only data file.",
+    "lookup": "Hash lookup -> seek to byte offset -> read value.",
+    "example_engine": "Bitcask",
+    "bitcask_constraints": {
+      "keys": "All keys must fit in RAM.",
+      "values": "Values can exceed RAM because they remain on disk."
+    },
+    "good_workload": "Many writes per key, but not too many distinct keys.",
+    "segmenting": "Close a segment at a size threshold and continue writes in a new segment.",
+    "compaction": "Discard obsolete duplicate values and retain only the newest value for each key.",
+    "segment_merge": "Merge several immutable compacted segments into a new segment in the background.",
+    "read_across_segments": "Check newest segment's hash map first, then older segment maps.",
+    "implementation_details": {
+      "file_format": "Binary length-prefixed records are preferable to CSV.",
+      "delete": "Append a tombstone.",
+      "crash_recovery": "Rebuild hash maps by scanning segments, or load saved hash-map snapshots.",
+      "partial_write_detection": "Use checksums.",
+      "concurrency": "Often one writer thread; immutable segments allow concurrent readers."
+    },
+    "append_only_advantages": [
+      "Sequential writes are fast.",
+      "Crash recovery and concurrency are simpler than in-place overwrite.",
+      "Merging prevents fragmentation."
+    ],
+    "limitations": [
+      "Hash table must fit in memory.",
+      "On-disk hash maps perform poorly.",
+      "Range queries are inefficient."
+    ],
+    "source_pages": [
+      94,
+      95,
+      96,
+      97
+    ]
+  },
+  "sstables_and_lsm_trees": {
+    "sstable": "Sorted String Table: each segment contains key-value pairs sorted by key, with one value per key within a merged segment.",
+    "advantages": [
+      "Efficient merge similar to mergesort.",
+      "Sparse in-memory indexes are enough.",
+      "Efficient range scans.",
+      "Blocks can be compressed, reducing disk and I/O usage."
+    ],
+    "merge_rule": "If the same key appears in several input segments, keep the value from the most recent segment.",
+    "sparse_index": "Store offsets for only some keys. Sorting lets the engine jump near the desired key and scan a short range.",
+    "memtable": "In-memory balanced tree, such as a red-black or AVL tree, maintaining writes in sorted-key order.",
+    "write_flow": [
+      "Append incoming write to the recovery log.",
+      "Insert/update key in memtable.",
+      "When memtable exceeds threshold, flush it as a sorted SSTable.",
+      "Continue writes in a new memtable.",
+      "Compact/merge SSTables in the background."
+    ],
+    "read_flow": [
+      "Check memtable.",
+      "Check newest SSTable.",
+      "Continue through older SSTables if needed."
+    ],
+    "recovery_log": "Unsorted append-only log used only to reconstruct the memtable after a crash; discarded after flush.",
+    "lsm_tree": "Log-Structured Merge-Tree: storage design based on a cascade of sorted files merged and compacted in the background.",
+    "named_systems": [
+      "LevelDB",
+      "RocksDB",
+      "Cassandra",
+      "HBase"
+    ],
+    "related_search_engine": "Lucene uses SSTable-like sorted files for term -> postings-list mappings.",
+    "bloom_filter": "Memory-efficient approximate-set structure that can tell when a key is definitely absent, avoiding unnecessary disk reads.",
+    "compaction_strategies": {
+      "size_tiered": "Merge newer/smaller SSTables into older/larger SSTables.",
+      "leveled": "Split key ranges into smaller SSTables across levels; compaction is more incremental and can use less disk."
+    },
+    "strengths": [
+      "High write throughput",
+      "Range queries",
+      "Works with data much larger than memory"
+    ],
+    "source_pages": [
+      98,
+      99,
+      100,
+      101
+    ]
+  },
+  "b_trees": {
+    "history": "Introduced in 1970 and remains the standard index structure in many databases.",
+    "organization": "Fixed-size pages, traditionally 4 KB, read and written one page at a time.",
+    "structure": [
+      "Root page",
+      "Interior pages defining key-range boundaries and child references",
+      "Leaf pages containing values or references to values"
+    ],
+    "branching_factor": "Number of child-page references in a page; often several hundred.",
+    "lookup": "Start at root and follow range-appropriate child references until reaching a leaf.",
+    "update": "Find leaf page, modify it, and rewrite the page in place.",
+    "insert": "Add key to appropriate page; if full, split into two pages and update parent.",
+    "balance": "B-trees remain balanced with depth O(log n).",
+    "chapter_example_capacity": "A four-level B-tree with 4 KB pages and branching factor 500 can store up to 256 TB.",
+    "source_pages": [
+      102,
+      103
+    ]
+  },
+  "b_tree_reliability_and_optimizations": {
+    "write_ahead_log": "Append every modification to a WAL/redo log before modifying tree pages so crash recovery can restore consistency.",
+    "why_wal_needed": "Operations such as page splits modify multiple pages; a crash midway can leave an inconsistent tree.",
+    "concurrency": "Latches/lightweight locks protect B-tree structures during concurrent access.",
+    "optimizations": [
+      "Copy-on-write pages instead of overwriting.",
+      "Abbreviated separator keys to increase branching factor.",
+      "Lay out nearby leaf ranges near each other on disk.",
+      "Sibling pointers between leaves for ordered scans.",
+      "Fractal-tree variants borrowing log-structured ideas."
+    ],
+    "source_pages": [
+      104,
+      105
+    ]
+  },
+  "b_tree_vs_lsm": {
+    "rule_of_thumb": {
+      "lsm": "Typically faster for writes.",
+      "b_tree": "Often thought faster/more predictable for reads."
+    },
+    "benchmark_warning": "Results depend heavily on workload and configuration; benchmark the actual workload.",
+    "write_amplification": "One logical database write causes multiple physical disk writes over time.",
+    "b_tree_write_amplification": [
+      "Write WAL.",
+      "Write modified page.",
+      "Potential extra writes from splits or double-write protection."
+    ],
+    "lsm_write_amplification": "Repeated compaction and merging rewrites SSTable data.",
+    "why_lsm_can_write_faster": [
+      "Often lower write amplification depending on configuration/workload.",
+      "Sequential SSTable writes instead of random page overwrites.",
+      "Lower fragmentation and better compression."
+    ],
+    "lsm_downsides": [
+      "Reads may need to inspect several structures/segments.",
+      "Compaction can cause tail-latency spikes.",
+      "Initial writes and compaction share finite disk bandwidth.",
+      "If compaction falls behind, segment count grows, disk may fill, and reads slow."
+    ],
+    "b_tree_transaction_advantage": "Each key appears in exactly one place, making it convenient to attach range locks for strong transactional semantics.",
+    "source_pages": [
+      105,
+      106,
+      107
+    ]
+  },
+  "other_indexing_structures": {
+    "secondary_indexes": {
+      "difference": "Keys are not necessarily unique.",
+      "representations": [
+        "Key -> list of matching row IDs",
+        "Append row ID to the key to make index entries unique"
+      ],
+      "engines": "Can use either B-trees or log-structured indexes."
+    },
+    "heap_file": "Unordered row storage separate from indexes. Secondary indexes point to row locations, avoiding full-row duplication.",
+    "clustered_index": "Stores the indexed row directly in the index; InnoDB's primary key is clustered.",
+    "covering_index": "Stores selected extra columns inside the index so some queries can be answered from the index alone.",
+    "tradeoff": "Clustered/covering indexes improve reads but consume more storage and add write/consistency overhead.",
+    "source_pages": [
+      107,
+      108,
+      109
+    ]
+  },
+  "multi_column_and_specialized_indexes": {
+    "concatenated_index": "Combines several fields into one ordered key, e.g. (lastname, firstname). Useful for leading-prefix queries.",
+    "leading_prefix_limitation": "An index on (lastname, firstname) supports lastname and lastname+firstname, but not firstname alone.",
+    "multidimensional_indexes": "Needed when several independent dimensions must be constrained simultaneously, such as latitude/longitude.",
+    "approaches": [
+      "Map dimensions to one value using a space-filling curve and use a normal B-tree.",
+      "Use specialized spatial structures such as R-trees."
+    ],
+    "other_examples": [
+      "RGB color dimensions",
+      "Date + temperature"
+    ],
+    "full_text_and_fuzzy": "Require techniques beyond exact/range indexes; full-text engines can use linguistic analysis and edit distance.",
+    "lucene": "Uses SSTable-like term files plus an in-memory finite-state automaton/trie-like index; Levenshtein automata support edit-distance search.",
+    "source_pages": [
+      109,
+      110
+    ]
+  },
+  "in_memory_databases": {
+    "why_disk_is_hard": "Disk storage requires careful layout; disks are durable and historically cheaper per GB than RAM.",
+    "durability_approaches": [
+      "Battery-backed RAM",
+      "Append-only disk log",
+      "Periodic snapshots",
+      "Replication to other machines"
+    ],
+    "restart": "Reload state from disk or another replica.",
+    "why_still_in_memory": "Reads are served from memory; disk may only be used as an append-only durability log.",
+    "named_examples": [
+      "VoltDB",
+      "MemSQL",
+      "Oracle TimesTen",
+      "RAMCloud",
+      "Redis",
+      "Couchbase"
+    ],
+    "counterintuitive_speed_reason": "The performance advantage is not simply avoiding disk reads; OS caches may already prevent disk reads. In-memory systems avoid encoding in-memory structures into disk-oriented layouts.",
+    "model_advantage": "Can implement structures such as priority queues and sets more naturally.",
+    "anti_caching": "Evict least-recently-used records to disk and bring them back when needed, similar to virtual memory but at record granularity.",
+    "source_pages": [
+      110,
+      111,
+      112
+    ]
+  },
+  "oltp_vs_olap": {
+    "oltp": {
+      "main_read_pattern": "Small number of records per query, fetched by key.",
+      "main_write_pattern": "Random-access, low-latency writes from user input.",
+      "users": "End users/customers through applications.",
+      "data_represents": "Current state.",
+      "dataset_size": "Gigabytes to terabytes."
+    },
+    "olap": {
+      "main_read_pattern": "Aggregate over many records.",
+      "main_write_pattern": "Bulk import/ETL or event streams.",
+      "users": "Internal analysts.",
+      "data_represents": "History of events.",
+      "dataset_size": "Terabytes to petabytes."
+    },
+    "transaction_note": "In this context transaction processing means low-latency reads/writes; it does not necessarily imply ACID.",
+    "bottleneck_summary": {
+      "oltp": "Disk seek time often matters.",
+      "olap": "Disk bandwidth often matters."
+    },
+    "source_pages": [
+      112,
+      113,
+      125
+    ]
+  },
+  "data_warehousing": {
+    "reason": "Ad hoc analytic scans can be expensive enough to harm latency and availability of business-critical OLTP systems.",
+    "warehouse": "Separate database containing a mostly read-only analytical copy of data from many OLTP systems.",
+    "etl": {
+      "extract": "Read data from OLTP systems or update streams.",
+      "transform": "Clean and reshape data into an analysis-friendly schema.",
+      "load": "Write transformed data into the warehouse."
+    },
+    "benefit": "Warehouse can use a storage engine optimized specifically for analytics.",
+    "sql_interface_note": "OLTP DBs and warehouses may both expose SQL even though their internals differ dramatically.",
+    "source_pages": [
+      113,
+      114,
+      115
+    ]
+  },
+  "star_and_snowflake_schemas": {
+    "star_schema": "Fact table at the center surrounded by dimension tables, visually forming a star.",
+    "fact_table": "Very large event table; each row represents an event such as a purchase, page view, or click.",
+    "fact_attributes": "Measurements such as quantity, sale price, cost, etc.",
+    "dimension_tables": "Describe who, what, where, when, how, and why of each event.",
+    "examples": [
+      "Date",
+      "Product",
+      "Store",
+      "Promotion",
+      "Customer"
+    ],
+    "snowflake_schema": "More normalized variation where dimensions are decomposed into subdimensions.",
+    "why_star_often_preferred": "Simpler for analysts to work with.",
+    "source_pages": [
+      115,
+      116,
+      117
+    ]
+  },
+  "column_oriented_storage": {
+    "problem": "Analytic fact tables may have trillions of rows and hundreds of columns, while a query often reads only a few columns.",
+    "row_oriented": "Stores all values for one row together.",
+    "column_oriented": "Stores all values of each column together, preserving row order across column files.",
+    "benefit": "Queries read/parse only needed columns, reducing disk I/O.",
+    "nonrelational_example": "Parquet supports a document model using columnar storage.",
+    "source_pages": [
+      117,
+      118,
+      119
+    ]
+  },
+  "column_compression": {
+    "why_effective": "Values within a column are often repetitive.",
+    "bitmap_encoding": "For n distinct values, maintain n bitmaps; bit k indicates whether row k contains that value.",
+    "run_length_encoding": "Compress long runs of zeros/ones in sparse/repetitive bitmaps.",
+    "query_examples": {
+      "IN": "Bitwise OR matching-value bitmaps.",
+      "AND": "Bitwise AND bitmaps from multiple predicates."
+    },
+    "source_pages": [
+      119,
+      120,
+      121
+    ]
+  },
+  "vectorized_processing": {
+    "problem_beyond_disk": [
+      "Memory-to-CPU-cache bandwidth",
+      "Branch misprediction",
+      "CPU pipeline stalls"
+    ],
+    "idea": "Operate on chunks of compressed column data in tight loops that fit in CPU cache and exploit SIMD instructions.",
+    "benefits": [
+      "More values fit in L1 cache.",
+      "Fewer function calls/branches per row.",
+      "Bitwise operations can work directly on compressed chunks."
+    ],
+    "source_pages": [
+      121
+    ]
+  },
+  "sort_order_in_column_storage": {
+    "rule": "Columns cannot be sorted independently; all columns must preserve corresponding row positions.",
+    "primary_sort_key": "Choose based on common filters, e.g. date_key for date-range queries.",
+    "secondary_sort_key": "Break ties in the first key, e.g. product_sk within date.",
+    "compression_benefit": "Sorting creates longer runs of repeated values, improving run-length compression.",
+    "multiple_sort_orders": "Replicated copies can be stored in different sort orders so queries use the copy best matching their access pattern.",
+    "analogy": "Multiple sort orders resemble multiple secondary indexes, but replicas contain full values rather than pointers.",
+    "source_pages": [
+      121,
+      122
+    ]
+  },
+  "writing_to_column_stores": {
+    "problem": "Compressed sorted columns are difficult to update in place.",
+    "solution": [
+      "Buffer writes in an in-memory sorted structure.",
+      "Periodically merge accumulated writes with on-disk column files.",
+      "Write new files in bulk."
+    ],
+    "named_example": "Vertica",
+    "query_behavior": "Queries combine on-disk column data with recent in-memory writes; optimizer hides this distinction.",
+    "source_pages": [
+      123
+    ]
+  },
+  "materialized_views_and_cubes": {
+    "virtual_view": "Stored query definition; query expands and executes underlying logic at read time.",
+    "materialized_view": "Actual persisted copy of query results.",
+    "materialized_view_tradeoff": "Speeds reads but underlying changes require updating the copied results, increasing write cost.",
+    "data_cube": "Materialized grid/hypercube of aggregates grouped by multiple dimensions.",
+    "benefit": "Common aggregate queries can be answered from precomputed totals.",
+    "limitation": "Cannot answer dimensions/conditions that were not represented in the cube.",
+    "best_practice": "Keep raw data and use cubes/aggregates as targeted performance accelerators.",
+    "source_pages": [
+      123,
+      124,
+      125
+    ]
+  },
+  "flashcards": [
+    {
+      "id": "FC001",
+      "front": "What are the two fundamental jobs of a database?",
+      "back": "Store data and retrieve it later.",
+      "source_pages": [
+        91
+      ]
+    },
+    {
+      "id": "FC002",
+      "front": "Why should application developers care about storage-engine internals?",
+      "back": "To choose and tune an engine appropriate to their workload.",
+      "source_pages": [
+        91
+      ]
+    },
+    {
+      "id": "FC003",
+      "front": "What two storage-engine families are introduced?",
+      "back": "Log-structured storage engines and page-oriented engines such as B-trees.",
+      "source_pages": [
+        91,
+        92
+      ]
+    },
+    {
+      "id": "FC004",
+      "front": "What does db_set do in the simple example?",
+      "back": "Appends a key-value pair to a file.",
+      "source_pages": [
+        92
+      ]
+    },
+    {
+      "id": "FC005",
+      "front": "What does db_get do?",
+      "back": "Scans for the key and returns its most recent value.",
+      "source_pages": [
+        92
+      ]
+    },
+    {
+      "id": "FC006",
+      "front": "Why is the simple write fast?",
+      "back": "Appending to a file is efficient.",
+      "source_pages": [
+        93
+      ]
+    },
+    {
+      "id": "FC007",
+      "front": "What is a log in this book?",
+      "back": "An append-only sequence of records.",
+      "source_pages": [
+        93
+      ]
+    },
+    {
+      "id": "FC008",
+      "front": "What is the lookup complexity of the simple db_get?",
+      "back": "O(n).",
+      "source_pages": [
+        93
+      ]
+    },
+    {
+      "id": "FC009",
+      "front": "What is an index?",
+      "back": "Additional metadata derived from primary data that helps locate records.",
+      "source_pages": [
+        93
+      ]
+    },
+    {
+      "id": "FC010",
+      "front": "What is the fundamental index tradeoff?",
+      "back": "Faster reads but slower writes because the index must also be maintained.",
+      "source_pages": [
+        93
+      ]
+    },
+    {
+      "id": "FC011",
+      "front": "Why don't databases index everything by default?",
+      "back": "Indexes add storage and write overhead; they should match query patterns.",
+      "source_pages": [
+        93
+      ]
+    },
+    {
+      "id": "FC012",
+      "front": "What does a simple hash index map?",
+      "back": "Key -> byte offset in the data file.",
+      "source_pages": [
+        94
+      ]
+    },
+    {
+      "id": "FC013",
+      "front": "What engine is cited as using this idea?",
+      "back": "Bitcask.",
+      "source_pages": [
+        94
+      ]
+    },
+    {
+      "id": "FC014",
+      "front": "What must fit in RAM for Bitcask?",
+      "back": "All keys/hash-map entries.",
+      "source_pages": [
+        94,
+        95
+      ]
+    },
+    {
+      "id": "FC015",
+      "front": "Can Bitcask values exceed RAM?",
+      "back": "Yes, because values stay on disk.",
+      "source_pages": [
+        94,
+        95
+      ]
+    },
+    {
+      "id": "FC016",
+      "front": "What workload suits Bitcask?",
+      "back": "Many writes per key with relatively few distinct keys.",
+      "source_pages": [
+        95
+      ]
+    },
+    {
+      "id": "FC017",
+      "front": "Why split a log into segments?",
+      "back": "To bound file size and enable compaction/merging.",
+      "source_pages": [
+        95
+      ]
+    },
+    {
+      "id": "FC018",
+      "front": "What is compaction?",
+      "back": "Discard duplicate old values and keep only the most recent value per key.",
+      "source_pages": [
+        95
+      ]
+    },
+    {
+      "id": "FC019",
+      "front": "Can compaction/merge happen in the background?",
+      "back": "Yes, while old segments still serve reads/writes.",
+      "source_pages": [
+        95
+      ]
+    },
+    {
+      "id": "FC020",
+      "front": "How are reads performed across multiple hash-indexed segments?",
+      "back": "Check newest segment first, then progressively older ones.",
+      "source_pages": [
+        96
+      ]
+    },
+    {
+      "id": "FC021",
+      "front": "What record marks deletion in an append-only log?",
+      "back": "A tombstone.",
+      "source_pages": [
+        96
+      ]
+    },
+    {
+      "id": "FC022",
+      "front": "How can hash maps be recovered after restart?",
+      "back": "Scan segments or load stored hash-map snapshots.",
+      "source_pages": [
+        96,
+        97
+      ]
+    },
+    {
+      "id": "FC023",
+      "front": "How are partially written log records detected?",
+      "back": "Checksums.",
+      "source_pages": [
+        97
+      ]
+    },
+    {
+      "id": "FC024",
+      "front": "What writer concurrency pattern is common for sequential append logs?",
+      "back": "One writer thread.",
+      "source_pages": [
+        97
+      ]
+    },
+    {
+      "id": "FC025",
+      "front": "Why can many readers access immutable segments safely?",
+      "back": "Segments are append-only and then immutable.",
+      "source_pages": [
+        97
+      ]
+    },
+    {
+      "id": "FC026",
+      "front": "Why are append-only writes attractive?",
+      "back": "They are sequential, simplify crash recovery/concurrency, and avoid fragmentation via merging.",
+      "source_pages": [
+        97
+      ]
+    },
+    {
+      "id": "FC027",
+      "front": "What is a key limitation of hash indexes?",
+      "back": "The hash table must fit in memory.",
+      "source_pages": [
+        97
+      ]
+    },
+    {
+      "id": "FC028",
+      "front": "Why are range queries poor with hash indexes?",
+      "back": "Keys are not maintained in sorted order.",
+      "source_pages": [
+        97
+      ]
+    },
+    {
+      "id": "FC029",
+      "front": "What does SSTable stand for?",
+      "back": "Sorted String Table.",
+      "source_pages": [
+        98
+      ]
+    },
+    {
+      "id": "FC030",
+      "front": "What ordering does an SSTable require?",
+      "back": "Key-value pairs are sorted by key.",
+      "source_pages": [
+        98
+      ]
+    },
+    {
+      "id": "FC031",
+      "front": "How many times should a key appear in a merged SSTable segment?",
+      "back": "Once.",
+      "source_pages": [
+        98
+      ]
+    },
+    {
+      "id": "FC032",
+      "front": "Why is SSTable merging efficient?",
+      "back": "Sorted inputs can be merged like mergesort.",
+      "source_pages": [
+        98
+      ]
+    },
+    {
+      "id": "FC033",
+      "front": "If a key appears in several segments, which value survives?",
+      "back": "The value from the most recent segment.",
+      "source_pages": [
+        99
+      ]
+    },
+    {
+      "id": "FC034",
+      "front": "Why can an SSTable use a sparse in-memory index?",
+      "back": "Sorting lets the engine seek near the key and scan a short region.",
+      "source_pages": [
+        99
+      ]
+    },
+    {
+      "id": "FC035",
+      "front": "What does SSTable block compression save?",
+      "back": "Disk space and I/O bandwidth.",
+      "source_pages": [
+        99
+      ]
+    },
+    {
+      "id": "FC036",
+      "front": "What is a memtable?",
+      "back": "An in-memory sorted tree holding recent writes.",
+      "source_pages": [
+        100
+      ]
+    },
+    {
+      "id": "FC037",
+      "front": "Name common memtable structures.",
+      "back": "Red-black tree or AVL tree.",
+      "source_pages": [
+        100
+      ]
+    },
+    {
+      "id": "FC038",
+      "front": "When is a memtable flushed?",
+      "back": "When it grows past a size threshold.",
+      "source_pages": [
+        100
+      ]
+    },
+    {
+      "id": "FC039",
+      "front": "What is a memtable flushed as?",
+      "back": "An SSTable.",
+      "source_pages": [
+        100
+      ]
+    },
+    {
+      "id": "FC040",
+      "front": "What is the LSM read order?",
+      "back": "Memtable, newest SSTable, then older SSTables.",
+      "source_pages": [
+        100
+      ]
+    },
+    {
+      "id": "FC041",
+      "front": "Why keep a separate append-only log in an LSM engine?",
+      "back": "To recover recent memtable writes after a crash.",
+      "source_pages": [
+        100
+      ]
+    },
+    {
+      "id": "FC042",
+      "front": "When can the recovery log be discarded?",
+      "back": "After the corresponding memtable is flushed to SSTable.",
+      "source_pages": [
+        100
+      ]
+    },
+    {
+      "id": "FC043",
+      "front": "What does LSM stand for?",
+      "back": "Log-Structured Merge-Tree.",
+      "source_pages": [
+        100,
+        101
+      ]
+    },
+    {
+      "id": "FC044",
+      "front": "Name LSM-style systems from the chapter.",
+      "back": "LevelDB, RocksDB, Cassandra, HBase.",
+      "source_pages": [
+        100,
+        101
+      ]
+    },
+    {
+      "id": "FC045",
+      "front": "How does Lucene use an SSTable-like idea?",
+      "back": "Term -> postings-list mappings are stored in sorted segment files.",
+      "source_pages": [
+        101
+      ]
+    },
+    {
+      "id": "FC046",
+      "front": "What problem do Bloom filters optimize?",
+      "back": "Negative lookups for keys that do not exist.",
+      "source_pages": [
+        101
+      ]
+    },
+    {
+      "id": "FC047",
+      "front": "What can a Bloom filter tell you reliably?",
+      "back": "That a key is definitely not present.",
+      "source_pages": [
+        101
+      ]
+    },
+    {
+      "id": "FC048",
+      "front": "What is size-tiered compaction?",
+      "back": "Merge newer/smaller SSTables into older/larger SSTables.",
+      "source_pages": [
+        101
+      ]
+    },
+    {
+      "id": "FC049",
+      "front": "What is leveled compaction?",
+      "back": "Organize smaller SSTables into levels/key ranges for incremental compaction.",
+      "source_pages": [
+        101
+      ]
+    },
+    {
+      "id": "FC050",
+      "front": "Why are LSM trees good for range queries?",
+      "back": "Data is stored sorted by key.",
+      "source_pages": [
+        101
+      ]
+    },
+    {
+      "id": "FC051",
+      "front": "Why are LSM trees good for writes?",
+      "back": "Disk writes are largely sequential.",
+      "source_pages": [
+        101
+      ]
+    },
+    {
+      "id": "FC052",
+      "front": "What is the most widely used index structure?",
+      "back": "The B-tree.",
+      "source_pages": [
+        101,
+        102
+      ]
+    },
+    {
+      "id": "FC053",
+      "front": "How are B-trees physically organized?",
+      "back": "Fixed-size pages, traditionally around 4 KB.",
+      "source_pages": [
+        102
+      ]
+    },
+    {
+      "id": "FC054",
+      "front": "What page starts a B-tree lookup?",
+      "back": "The root page.",
+      "source_pages": [
+        102
+      ]
+    },
+    {
+      "id": "FC055",
+      "front": "What does an interior B-tree page contain?",
+      "back": "Key-range boundaries and references to child pages.",
+      "source_pages": [
+        102
+      ]
+    },
+    {
+      "id": "FC056",
+      "front": "What is a B-tree branching factor?",
+      "back": "Number of child-page references in a page.",
+      "source_pages": [
+        103
+      ]
+    },
+    {
+      "id": "FC057",
+      "front": "Typical B-tree branching factor?",
+      "back": "Often several hundred.",
+      "source_pages": [
+        103
+      ]
+    },
+    {
+      "id": "FC058",
+      "front": "How is an existing B-tree key updated?",
+      "back": "Find the leaf page, modify it, rewrite the page.",
+      "source_pages": [
+        103
+      ]
+    },
+    {
+      "id": "FC059",
+      "front": "What happens when a B-tree page is full during insert?",
+      "back": "Split it into two pages and update the parent.",
+      "source_pages": [
+        103
+      ]
+    },
+    {
+      "id": "FC060",
+      "front": "What is B-tree depth complexity?",
+      "back": "O(log n).",
+      "source_pages": [
+        103
+      ]
+    },
+    {
+      "id": "FC061",
+      "front": "What capacity example is given for a 4-level B-tree?",
+      "back": "Up to 256 TB with 4 KB pages and branching factor 500.",
+      "source_pages": [
+        103
+      ]
+    },
+    {
+      "id": "FC062",
+      "front": "What is a B-tree WAL?",
+      "back": "Write-ahead/redo log written before page updates.",
+      "source_pages": [
+        104
+      ]
+    },
+    {
+      "id": "FC063",
+      "front": "Why is the WAL necessary?",
+      "back": "A crash during a multi-page update could otherwise corrupt the tree.",
+      "source_pages": [
+        104
+      ]
+    },
+    {
+      "id": "FC064",
+      "front": "What protects B-tree structures during concurrent access?",
+      "back": "Latches/lightweight locks.",
+      "source_pages": [
+        104
+      ]
+    },
+    {
+      "id": "FC065",
+      "front": "What is copy-on-write in B-trees?",
+      "back": "Write modified pages elsewhere and update parent references rather than overwriting.",
+      "source_pages": [
+        104,
+        105
+      ]
+    },
+    {
+      "id": "FC066",
+      "front": "Why abbreviate separator keys?",
+      "back": "Fit more keys per page and increase branching factor.",
+      "source_pages": [
+        105
+      ]
+    },
+    {
+      "id": "FC067",
+      "front": "Why add sibling pointers to leaf pages?",
+      "back": "Efficient ordered scans without returning to parents.",
+      "source_pages": [
+        105
+      ]
+    },
+    {
+      "id": "FC068",
+      "front": "Rule of thumb: which is faster for writes, LSM or B-tree?",
+      "back": "LSM-tree.",
+      "source_pages": [
+        105
+      ]
+    },
+    {
+      "id": "FC069",
+      "front": "Rule of thumb: which is often faster/more predictable for reads?",
+      "back": "B-tree.",
+      "source_pages": [
+        105
+      ]
+    },
+    {
+      "id": "FC070",
+      "front": "Why must this rule of thumb be treated cautiously?",
+      "back": "Benchmarks depend on workload and configuration.",
+      "source_pages": [
+        105
+      ]
+    },
+    {
+      "id": "FC071",
+      "front": "What is write amplification?",
+      "back": "One logical write causes multiple physical writes over time.",
+      "source_pages": [
+        106
+      ]
+    },
+    {
+      "id": "FC072",
+      "front": "Why is write amplification important on SSDs?",
+      "back": "Flash blocks have limited overwrite endurance and disk bandwidth is finite.",
+      "source_pages": [
+        106
+      ]
+    },
+    {
+      "id": "FC073",
+      "front": "Why can LSMs have higher write throughput?",
+      "back": "Sequential SSTable writes and often lower write amplification/fragmentation.",
+      "source_pages": [
+        106
+      ]
+    },
+    {
+      "id": "FC074",
+      "front": "Why can LSM storage be smaller?",
+      "back": "Better compression and less page fragmentation.",
+      "source_pages": [
+        106
+      ]
+    },
+    {
+      "id": "FC075",
+      "front": "What can compaction do to tail latency?",
+      "back": "Cause high-percentile latency spikes.",
+      "source_pages": [
+        106,
+        107
+      ]
+    },
+    {
+      "id": "FC076",
+      "front": "What if compaction can't keep up?",
+      "back": "Segments accumulate, disk may fill, and reads slow down.",
+      "source_pages": [
+        107
+      ]
+    },
+    {
+      "id": "FC077",
+      "front": "Why must LSM compaction be monitored?",
+      "back": "Some engines don't automatically throttle incoming writes when compaction falls behind.",
+      "source_pages": [
+        107
+      ]
+    },
+    {
+      "id": "FC078",
+      "front": "What B-tree property helps transaction locking?",
+      "back": "Each key exists in one place in the index.",
+      "source_pages": [
+        107
+      ]
+    },
+    {
+      "id": "FC079",
+      "front": "What is a primary-key index used for?",
+      "back": "Uniquely locating a row/document/vertex.",
+      "source_pages": [
+        107
+      ]
+    },
+    {
+      "id": "FC080",
+      "front": "What is a secondary index?",
+      "back": "Index on non-primary attributes; keys need not be unique.",
+      "source_pages": [
+        107,
+        108
+      ]
+    },
+    {
+      "id": "FC081",
+      "front": "How can a secondary index represent duplicate keys?",
+      "back": "Map key to a list of row IDs or append row ID to make entries unique.",
+      "source_pages": [
+        108
+      ]
+    },
+    {
+      "id": "FC082",
+      "front": "What is a heap file?",
+      "back": "Unordered row storage referenced by indexes.",
+      "source_pages": [
+        108
+      ]
+    },
+    {
+      "id": "FC083",
+      "front": "Why use a heap file with multiple indexes?",
+      "back": "Keep actual row data in one place and let indexes point to it.",
+      "source_pages": [
+        108
+      ]
+    },
+    {
+      "id": "FC084",
+      "front": "What is a clustered index?",
+      "back": "An index that stores the actual row with the indexed key.",
+      "source_pages": [
+        108
+      ]
+    },
+    {
+      "id": "FC085",
+      "front": "What is InnoDB's clustered index?",
+      "back": "The table's primary key.",
+      "source_pages": [
+        108
+      ]
+    },
+    {
+      "id": "FC086",
+      "front": "What is a covering index?",
+      "back": "An index containing selected extra columns so a query can be answered from the index alone.",
+      "source_pages": [
+        108
+      ]
+    },
+    {
+      "id": "FC087",
+      "front": "Tradeoff of clustered/covering indexes?",
+      "back": "Faster reads but more storage, write overhead, and consistency work.",
+      "source_pages": [
+        109
+      ]
+    },
+    {
+      "id": "FC088",
+      "front": "What is a concatenated index?",
+      "back": "A multi-column index built by concatenating fields in a fixed order.",
+      "source_pages": [
+        109
+      ]
+    },
+    {
+      "id": "FC089",
+      "front": "What is the leading-prefix limitation?",
+      "back": "(lastname, firstname) helps lastname queries but not firstname-only queries.",
+      "source_pages": [
+        109
+      ]
+    },
+    {
+      "id": "FC090",
+      "front": "Why are multidimensional indexes needed?",
+      "back": "To constrain several dimensions simultaneously, such as latitude and longitude.",
+      "source_pages": [
+        109
+      ]
+    },
+    {
+      "id": "FC091",
+      "front": "Name a spatial indexing structure.",
+      "back": "R-tree.",
+      "source_pages": [
+        109
+      ]
+    },
+    {
+      "id": "FC092",
+      "front": "What is a space-filling-curve strategy?",
+      "back": "Map multidimensional coordinates to one number and index it with a B-tree.",
+      "source_pages": [
+        109
+      ]
+    },
+    {
+      "id": "FC093",
+      "front": "Why are fuzzy indexes different?",
+      "back": "They search similar values, not just exact or ordered ranges.",
+      "source_pages": [
+        110
+      ]
+    },
+    {
+      "id": "FC094",
+      "front": "What edit distance means one letter inserted/deleted/replaced?",
+      "back": "Edit distance 1.",
+      "source_pages": [
+        110
+      ]
+    },
+    {
+      "id": "FC095",
+      "front": "What does Lucene use in memory for term lookup?",
+      "back": "A finite-state automaton similar to a trie.",
+      "source_pages": [
+        110
+      ]
+    },
+    {
+      "id": "FC096",
+      "front": "What automaton supports edit-distance search?",
+      "back": "Levenshtein automaton.",
+      "source_pages": [
+        110
+      ]
+    },
+    {
+      "id": "FC097",
+      "front": "Why have in-memory databases become practical?",
+      "back": "RAM has become cheaper and many datasets fit in memory.",
+      "source_pages": [
+        110,
+        111
+      ]
+    },
+    {
+      "id": "FC098",
+      "front": "How can an in-memory DB achieve durability?",
+      "back": "Battery-backed RAM, disk log, snapshots, or replication.",
+      "source_pages": [
+        111
+      ]
+    },
+    {
+      "id": "FC099",
+      "front": "Why is a DB still 'in-memory' if it writes a disk log?",
+      "back": "Reads use memory; disk is only for durability/recovery.",
+      "source_pages": [
+        111
+      ]
+    },
+    {
+      "id": "FC100",
+      "front": "Name in-memory DB examples.",
+      "back": "VoltDB, MemSQL, Oracle TimesTen, RAMCloud, Redis, Couchbase.",
+      "source_pages": [
+        111
+      ]
+    },
+    {
+      "id": "FC101",
+      "front": "Why can in-memory DBs be faster even when disk DB blocks are cached?",
+      "back": "They avoid disk-oriented encoding/layout overhead.",
+      "source_pages": [
+        111
+      ]
+    },
+    {
+      "id": "FC102",
+      "front": "What is anti-caching?",
+      "back": "Evict cold records to disk and reload them when accessed.",
+      "source_pages": [
+        111,
+        112
+      ]
+    },
+    {
+      "id": "FC103",
+      "front": "What does OLTP stand for?",
+      "back": "Online Transaction Processing.",
+      "source_pages": [
+        112
+      ]
+    },
+    {
+      "id": "FC104",
+      "front": "What is OLTP's read pattern?",
+      "back": "Small number of records fetched by key.",
+      "source_pages": [
+        112,
+        113
+      ]
+    },
+    {
+      "id": "FC105",
+      "front": "What is OLTP's write pattern?",
+      "back": "Random-access low-latency user-driven writes.",
+      "source_pages": [
+        113
+      ]
+    },
+    {
+      "id": "FC106",
+      "front": "What does OLAP stand for?",
+      "back": "Online Analytic Processing.",
+      "source_pages": [
+        113
+      ]
+    },
+    {
+      "id": "FC107",
+      "front": "What is OLAP's read pattern?",
+      "back": "Large scans and aggregates over many records.",
+      "source_pages": [
+        112,
+        113
+      ]
+    },
+    {
+      "id": "FC108",
+      "front": "What is OLAP's write pattern?",
+      "back": "Bulk import/ETL or event streams.",
+      "source_pages": [
+        113
+      ]
+    },
+    {
+      "id": "FC109",
+      "front": "What does OLTP data usually represent?",
+      "back": "Latest/current state.",
+      "source_pages": [
+        113
+      ]
+    },
+    {
+      "id": "FC110",
+      "front": "What does OLAP data usually represent?",
+      "back": "Historical events.",
+      "source_pages": [
+        113
+      ]
+    },
+    {
+      "id": "FC111",
+      "front": "Typical OLTP dataset size?",
+      "back": "Gigabytes to terabytes.",
+      "source_pages": [
+        113
+      ]
+    },
+    {
+      "id": "FC112",
+      "front": "Typical OLAP dataset size?",
+      "back": "Terabytes to petabytes.",
+      "source_pages": [
+        113
+      ]
+    },
+    {
+      "id": "FC113",
+      "front": "Why separate analytics from OLTP?",
+      "back": "Large scans can harm latency and availability of transaction workloads.",
+      "source_pages": [
+        113,
+        114
+      ]
+    },
+    {
+      "id": "FC114",
+      "front": "What is a data warehouse?",
+      "back": "Separate database containing analytical copies of data from OLTP systems.",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "FC115",
+      "front": "What does ETL stand for?",
+      "back": "Extract-Transform-Load.",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "FC116",
+      "front": "What does ETL transform data into?",
+      "back": "An analysis-friendly, cleaned schema.",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "FC117",
+      "front": "Why can a warehouse use different storage internals despite also using SQL?",
+      "back": "Its workload is analytical rather than transactional.",
+      "source_pages": [
+        114,
+        115
+      ]
+    },
+    {
+      "id": "FC118",
+      "front": "What is a star schema?",
+      "back": "Fact table in the center with surrounding dimension tables.",
+      "source_pages": [
+        115,
+        116,
+        117
+      ]
+    },
+    {
+      "id": "FC119",
+      "front": "What does a fact-table row represent?",
+      "back": "An event such as a sale, page view, or click.",
+      "source_pages": [
+        115,
+        116
+      ]
+    },
+    {
+      "id": "FC120",
+      "front": "What do dimensions describe?",
+      "back": "Who, what, where, when, how, and why of an event.",
+      "source_pages": [
+        116
+      ]
+    },
+    {
+      "id": "FC121",
+      "front": "Why can dates be dimensions?",
+      "back": "They can encode holidays and other date metadata.",
+      "source_pages": [
+        117
+      ]
+    },
+    {
+      "id": "FC122",
+      "front": "What is a snowflake schema?",
+      "back": "A more normalized star-schema variant with subdimension tables.",
+      "source_pages": [
+        117
+      ]
+    },
+    {
+      "id": "FC123",
+      "front": "Why are star schemas often preferred?",
+      "back": "They are simpler for analysts.",
+      "source_pages": [
+        117
+      ]
+    },
+    {
+      "id": "FC124",
+      "front": "Why are fact tables challenging?",
+      "back": "They may contain trillions of rows and hundreds of columns.",
+      "source_pages": [
+        117
+      ]
+    },
+    {
+      "id": "FC125",
+      "front": "How many fact-table columns does a typical analytic query often read?",
+      "back": "Only around 4–5.",
+      "source_pages": [
+        117
+      ]
+    },
+    {
+      "id": "FC126",
+      "front": "What is row-oriented storage?",
+      "back": "Store all values from one row together.",
+      "source_pages": [
+        118
+      ]
+    },
+    {
+      "id": "FC127",
+      "front": "What is column-oriented storage?",
+      "back": "Store all values from each column together.",
+      "source_pages": [
+        118
+      ]
+    },
+    {
+      "id": "FC128",
+      "front": "Why is columnar storage efficient for analytics?",
+      "back": "Queries read only the columns they need.",
+      "source_pages": [
+        118
+      ]
+    },
+    {
+      "id": "FC129",
+      "front": "What nonrelational columnar format is named?",
+      "back": "Parquet.",
+      "source_pages": [
+        118
+      ]
+    },
+    {
+      "id": "FC130",
+      "front": "What invariant lets a column store reconstruct rows?",
+      "back": "Each column stores rows in the same order.",
+      "source_pages": [
+        119
+      ]
+    },
+    {
+      "id": "FC131",
+      "front": "Why does column storage compress well?",
+      "back": "Values within a column are often repetitive.",
+      "source_pages": [
+        119
+      ]
+    },
+    {
+      "id": "FC132",
+      "front": "What is bitmap encoding?",
+      "back": "One bitmap per distinct value, with one bit per row.",
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "FC133",
+      "front": "How do you query value A OR B using bitmaps?",
+      "back": "Bitwise OR the corresponding bitmaps.",
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "FC134",
+      "front": "How do you query condition A AND B?",
+      "back": "Bitwise AND the corresponding bitmaps.",
+      "source_pages": [
+        121
+      ]
+    },
+    {
+      "id": "FC135",
+      "front": "What can compress sparse bitmaps?",
+      "back": "Run-length encoding.",
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "FC136",
+      "front": "Are Bigtable/Cassandra/HBase column families truly column-oriented in this sense?",
+      "back": "No; rows within a family are still stored together.",
+      "source_pages": [
+        121
+      ]
+    },
+    {
+      "id": "FC137",
+      "front": "What is vectorized processing?",
+      "back": "Process compressed column chunks in tight CPU-efficient loops, often using SIMD.",
+      "source_pages": [
+        121
+      ]
+    },
+    {
+      "id": "FC138",
+      "front": "Why does compression help CPU efficiency?",
+      "back": "More values fit into CPU cache.",
+      "source_pages": [
+        121
+      ]
+    },
+    {
+      "id": "FC139",
+      "front": "Can column files be sorted independently?",
+      "back": "No; row correspondence would be lost.",
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "FC140",
+      "front": "Why sort by date_key first?",
+      "back": "Date-range queries can scan only the relevant rows.",
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "FC141",
+      "front": "How can sorting improve compression?",
+      "back": "Repeated values form long runs suitable for run-length encoding.",
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "FC142",
+      "front": "Why store replicated column data in different sort orders?",
+      "back": "Different query patterns benefit from different orderings.",
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "FC143",
+      "front": "Why are column-store writes hard?",
+      "back": "Sorted compressed columns cannot be efficiently updated in place.",
+      "source_pages": [
+        123
+      ]
+    },
+    {
+      "id": "FC144",
+      "front": "How are writes commonly handled?",
+      "back": "Buffer in memory, sort, then bulk-merge with on-disk columns.",
+      "source_pages": [
+        123
+      ]
+    },
+    {
+      "id": "FC145",
+      "front": "What is a virtual view?",
+      "back": "A stored query definition evaluated when read.",
+      "source_pages": [
+        123
+      ]
+    },
+    {
+      "id": "FC146",
+      "front": "What is a materialized view?",
+      "back": "A persisted copy of query results.",
+      "source_pages": [
+        123
+      ]
+    },
+    {
+      "id": "FC147",
+      "front": "Why do materialized views make writes more expensive?",
+      "back": "Underlying changes must update the copied result.",
+      "source_pages": [
+        123,
+        124
+      ]
+    },
+    {
+      "id": "FC148",
+      "front": "What is a data cube?",
+      "back": "A materialized multidimensional grid of aggregates.",
+      "source_pages": [
+        124
+      ]
+    },
+    {
+      "id": "FC149",
+      "front": "What is a cube's main benefit?",
+      "back": "Common aggregates become very fast because they are precomputed.",
+      "source_pages": [
+        124,
+        125
+      ]
+    },
+    {
+      "id": "FC150",
+      "front": "What is a cube's limitation?",
+      "back": "It cannot answer arbitrary conditions/dimensions not represented in the cube.",
+      "source_pages": [
+        125
+      ]
+    },
+    {
+      "id": "FC151",
+      "front": "What is OLTP often bottlenecked by?",
+      "back": "Disk seek time.",
+      "source_pages": [
+        125
+      ]
+    },
+    {
+      "id": "FC152",
+      "front": "What is OLAP often bottlenecked by?",
+      "back": "Disk bandwidth.",
+      "source_pages": [
+        125
+      ]
+    }
+  ],
+  "multiple_choice_questions": [
+    {
+      "id": "MCQ001",
+      "difficulty": "medium",
+      "question": "What does an append-only db_set optimize?",
+      "choices": {
+        "A": "Writes",
+        "B": "Range queries",
+        "C": "Joins",
+        "D": "Full-text search"
+      },
+      "answer": "A",
+      "source_pages": [
+        92,
+        93
+      ]
+    },
+    {
+      "id": "MCQ002",
+      "difficulty": "medium",
+      "question": "What is the simple db_get lookup complexity?",
+      "choices": {
+        "A": "O(n)",
+        "B": "O(1)",
+        "C": "O(log n)",
+        "D": "O(n log n)"
+      },
+      "answer": "A",
+      "source_pages": [
+        93
+      ]
+    },
+    {
+      "id": "MCQ003",
+      "difficulty": "medium",
+      "question": "What is an index?",
+      "choices": {
+        "A": "Derived lookup metadata",
+        "B": "Primary data itself only",
+        "C": "A transaction",
+        "D": "A network protocol"
+      },
+      "answer": "A",
+      "source_pages": [
+        93
+      ]
+    },
+    {
+      "id": "MCQ004",
+      "difficulty": "medium",
+      "question": "What is the index tradeoff?",
+      "choices": {
+        "A": "Faster reads, slower writes",
+        "B": "Faster writes, slower reads always",
+        "C": "No overhead",
+        "D": "Only more RAM"
+      },
+      "answer": "A",
+      "source_pages": [
+        93
+      ]
+    },
+    {
+      "id": "MCQ005",
+      "difficulty": "medium",
+      "question": "What does Bitcask keep in memory?",
+      "choices": {
+        "A": "Key-to-offset hash maps",
+        "B": "All values",
+        "C": "All files",
+        "D": "All logs and values"
+      },
+      "answer": "A",
+      "source_pages": [
+        94
+      ]
+    },
+    {
+      "id": "MCQ006",
+      "difficulty": "medium",
+      "question": "What is compaction?",
+      "choices": {
+        "A": "Drop obsolete duplicate values",
+        "B": "Encrypt segments",
+        "C": "Sort SQL queries",
+        "D": "Create joins"
+      },
+      "answer": "A",
+      "source_pages": [
+        95
+      ]
+    },
+    {
+      "id": "MCQ007",
+      "difficulty": "medium",
+      "question": "What represents deletion in an append-only log?",
+      "choices": {
+        "A": "Tombstone",
+        "B": "WAL",
+        "C": "Bloom filter",
+        "D": "Heap pointer"
+      },
+      "answer": "A",
+      "source_pages": [
+        96
+      ]
+    },
+    {
+      "id": "MCQ008",
+      "difficulty": "medium",
+      "question": "How are partial writes detected?",
+      "choices": {
+        "A": "Checksums",
+        "B": "Joins",
+        "C": "Indexes only",
+        "D": "Sorting"
+      },
+      "answer": "A",
+      "source_pages": [
+        97
+      ]
+    },
+    {
+      "id": "MCQ009",
+      "difficulty": "medium",
+      "question": "Which is a hash-index limitation?",
+      "choices": {
+        "A": "Poor range scans",
+        "B": "Poor point lookup",
+        "C": "Requires sorted keys",
+        "D": "Cannot update keys"
+      },
+      "answer": "A",
+      "source_pages": [
+        97
+      ]
+    },
+    {
+      "id": "MCQ010",
+      "difficulty": "medium",
+      "question": "What does SSTable stand for?",
+      "choices": {
+        "A": "Sorted String Table",
+        "B": "Sequential Storage Tree",
+        "C": "Simple Search Table",
+        "D": "Segmented String Tree"
+      },
+      "answer": "A",
+      "source_pages": [
+        98
+      ]
+    },
+    {
+      "id": "MCQ011",
+      "difficulty": "medium",
+      "question": "Why does SSTable merging work efficiently?",
+      "choices": {
+        "A": "Inputs are sorted",
+        "B": "Keys are random",
+        "C": "All data is in RAM",
+        "D": "No duplicates exist across segments"
+      },
+      "answer": "A",
+      "source_pages": [
+        98,
+        99
+      ]
+    },
+    {
+      "id": "MCQ012",
+      "difficulty": "medium",
+      "question": "Why can SSTable indexes be sparse?",
+      "choices": {
+        "A": "Sorted keys allow short scans",
+        "B": "Every key is fixed size",
+        "C": "Values are in RAM",
+        "D": "No disk is used"
+      },
+      "answer": "A",
+      "source_pages": [
+        99
+      ]
+    },
+    {
+      "id": "MCQ013",
+      "difficulty": "medium",
+      "question": "What is a memtable?",
+      "choices": {
+        "A": "In-memory sorted write structure",
+        "B": "Disk-only B-tree",
+        "C": "Bloom filter",
+        "D": "Data cube"
+      },
+      "answer": "A",
+      "source_pages": [
+        100
+      ]
+    },
+    {
+      "id": "MCQ014",
+      "difficulty": "medium",
+      "question": "What protects unflushed memtable writes?",
+      "choices": {
+        "A": "Append-only recovery log",
+        "B": "Secondary index",
+        "C": "Heap file",
+        "D": "R-tree"
+      },
+      "answer": "A",
+      "source_pages": [
+        100
+      ]
+    },
+    {
+      "id": "MCQ015",
+      "difficulty": "medium",
+      "question": "What is an LSM-tree?",
+      "choices": {
+        "A": "Log-Structured Merge-Tree",
+        "B": "Linked Sorted Map Tree",
+        "C": "Low Storage Memory Tree",
+        "D": "Linear Segment Map"
+      },
+      "answer": "A",
+      "source_pages": [
+        100,
+        101
+      ]
+    },
+    {
+      "id": "MCQ016",
+      "difficulty": "medium",
+      "question": "Which system uses LSM-style storage?",
+      "choices": {
+        "A": "RocksDB",
+        "B": "CSS",
+        "C": "RDF",
+        "D": "PostGIS only"
+      },
+      "answer": "A",
+      "source_pages": [
+        100,
+        101
+      ]
+    },
+    {
+      "id": "MCQ017",
+      "difficulty": "medium",
+      "question": "What does a Bloom filter optimize?",
+      "choices": {
+        "A": "Nonexistent-key lookup",
+        "B": "Range aggregation",
+        "C": "WAL writes",
+        "D": "Page splits"
+      },
+      "answer": "A",
+      "source_pages": [
+        101
+      ]
+    },
+    {
+      "id": "MCQ018",
+      "difficulty": "medium",
+      "question": "Which compaction strategy uses levels?",
+      "choices": {
+        "A": "Leveled",
+        "B": "Hash",
+        "C": "Bitmap",
+        "D": "Clustered"
+      },
+      "answer": "A",
+      "source_pages": [
+        101
+      ]
+    },
+    {
+      "id": "MCQ019",
+      "difficulty": "medium",
+      "question": "What is the dominant traditional index structure?",
+      "choices": {
+        "A": "B-tree",
+        "B": "Bitmap only",
+        "C": "Trie only",
+        "D": "Heap file"
+      },
+      "answer": "A",
+      "source_pages": [
+        101,
+        102
+      ]
+    },
+    {
+      "id": "MCQ020",
+      "difficulty": "medium",
+      "question": "How are B-trees organized?",
+      "choices": {
+        "A": "Fixed-size pages",
+        "B": "Append-only variable segments only",
+        "C": "One hash table",
+        "D": "One giant row"
+      },
+      "answer": "A",
+      "source_pages": [
+        102
+      ]
+    },
+    {
+      "id": "MCQ021",
+      "difficulty": "medium",
+      "question": "What starts a B-tree lookup?",
+      "choices": {
+        "A": "Root page",
+        "B": "Leaf sibling",
+        "C": "WAL",
+        "D": "Memtable"
+      },
+      "answer": "A",
+      "source_pages": [
+        102
+      ]
+    },
+    {
+      "id": "MCQ022",
+      "difficulty": "medium",
+      "question": "What does branching factor mean?",
+      "choices": {
+        "A": "Children per page",
+        "B": "Rows per transaction",
+        "C": "Segments per log",
+        "D": "Columns per row"
+      },
+      "answer": "A",
+      "source_pages": [
+        103
+      ]
+    },
+    {
+      "id": "MCQ023",
+      "difficulty": "medium",
+      "question": "What happens when a B-tree page is full?",
+      "choices": {
+        "A": "Split page and update parent",
+        "B": "Delete old records",
+        "C": "Compact SSTables",
+        "D": "Create Bloom filter"
+      },
+      "answer": "A",
+      "source_pages": [
+        103
+      ]
+    },
+    {
+      "id": "MCQ024",
+      "difficulty": "medium",
+      "question": "What is B-tree depth?",
+      "choices": {
+        "A": "O(log n)",
+        "B": "O(n)",
+        "C": "O(1) always",
+        "D": "O(n²)"
+      },
+      "answer": "A",
+      "source_pages": [
+        103
+      ]
+    },
+    {
+      "id": "MCQ025",
+      "difficulty": "medium",
+      "question": "What ensures B-tree crash recovery?",
+      "choices": {
+        "A": "WAL",
+        "B": "Bloom filter",
+        "C": "R-tree",
+        "D": "Bitmap"
+      },
+      "answer": "A",
+      "source_pages": [
+        104
+      ]
+    },
+    {
+      "id": "MCQ026",
+      "difficulty": "medium",
+      "question": "What controls concurrent B-tree updates?",
+      "choices": {
+        "A": "Latches",
+        "B": "Tombstones",
+        "C": "ETL",
+        "D": "Cubes"
+      },
+      "answer": "A",
+      "source_pages": [
+        104
+      ]
+    },
+    {
+      "id": "MCQ027",
+      "difficulty": "medium",
+      "question": "Which is a B-tree optimization?",
+      "choices": {
+        "A": "Copy-on-write",
+        "B": "SSTable compaction only",
+        "C": "MapReduce",
+        "D": "Star schema"
+      },
+      "answer": "A",
+      "source_pages": [
+        104,
+        105
+      ]
+    },
+    {
+      "id": "MCQ028",
+      "difficulty": "medium",
+      "question": "Rule of thumb: LSMs are faster for?",
+      "choices": {
+        "A": "Writes",
+        "B": "Reads only",
+        "C": "Joins only",
+        "D": "OLAP only"
+      },
+      "answer": "A",
+      "source_pages": [
+        105
+      ]
+    },
+    {
+      "id": "MCQ029",
+      "difficulty": "medium",
+      "question": "Rule of thumb: B-trees are often faster/more predictable for?",
+      "choices": {
+        "A": "Reads",
+        "B": "Bulk writes only",
+        "C": "Bitmap compression",
+        "D": "ETL"
+      },
+      "answer": "A",
+      "source_pages": [
+        105
+      ]
+    },
+    {
+      "id": "MCQ030",
+      "difficulty": "medium",
+      "question": "What is write amplification?",
+      "choices": {
+        "A": "One logical write causes multiple physical writes",
+        "B": "Multiple reads per query",
+        "C": "Only WAL growth",
+        "D": "Only replication"
+      },
+      "answer": "A",
+      "source_pages": [
+        106
+      ]
+    },
+    {
+      "id": "MCQ031",
+      "difficulty": "medium",
+      "question": "Why are sequential writes attractive?",
+      "choices": {
+        "A": "Higher throughput, especially on disks",
+        "B": "They remove all reads",
+        "C": "They require no storage",
+        "D": "They guarantee transactions"
+      },
+      "answer": "A",
+      "source_pages": [
+        106
+      ]
+    },
+    {
+      "id": "MCQ032",
+      "difficulty": "medium",
+      "question": "What is a key LSM downside?",
+      "choices": {
+        "A": "Compaction can interfere with latency",
+        "B": "No range queries",
+        "C": "No high write throughput",
+        "D": "Cannot exceed RAM"
+      },
+      "answer": "A",
+      "source_pages": [
+        106,
+        107
+      ]
+    },
+    {
+      "id": "MCQ033",
+      "difficulty": "medium",
+      "question": "What if compaction falls behind?",
+      "choices": {
+        "A": "Segments grow and disk/read performance degrades",
+        "B": "B-tree splits stop",
+        "C": "Data warehouse disappears",
+        "D": "Queries become constant time"
+      },
+      "answer": "A",
+      "source_pages": [
+        107
+      ]
+    },
+    {
+      "id": "MCQ034",
+      "difficulty": "medium",
+      "question": "Why can B-trees help locking?",
+      "choices": {
+        "A": "Each key exists in one index location",
+        "B": "Keys exist in many segments",
+        "C": "No ranges exist",
+        "D": "They use Bloom filters"
+      },
+      "answer": "A",
+      "source_pages": [
+        107
+      ]
+    },
+    {
+      "id": "MCQ035",
+      "difficulty": "medium",
+      "question": "What is a secondary index?",
+      "choices": {
+        "A": "Index on non-primary attributes",
+        "B": "Always unique primary key",
+        "C": "WAL",
+        "D": "Data warehouse"
+      },
+      "answer": "A",
+      "source_pages": [
+        107,
+        108
+      ]
+    },
+    {
+      "id": "MCQ036",
+      "difficulty": "medium",
+      "question": "How can nonunique secondary keys be stored?",
+      "choices": {
+        "A": "Key to row-ID list",
+        "B": "Only reject duplicates",
+        "C": "One file per row",
+        "D": "No index"
+      },
+      "answer": "A",
+      "source_pages": [
+        108
+      ]
+    },
+    {
+      "id": "MCQ037",
+      "difficulty": "medium",
+      "question": "What is a heap file?",
+      "choices": {
+        "A": "Unordered row storage referenced by indexes",
+        "B": "Sorted column file",
+        "C": "WAL",
+        "D": "Bloom filter"
+      },
+      "answer": "A",
+      "source_pages": [
+        108
+      ]
+    },
+    {
+      "id": "MCQ038",
+      "difficulty": "medium",
+      "question": "What is a clustered index?",
+      "choices": {
+        "A": "Stores row data in the index",
+        "B": "Only row references",
+        "C": "Only Bloom filters",
+        "D": "Only keys"
+      },
+      "answer": "A",
+      "source_pages": [
+        108
+      ]
+    },
+    {
+      "id": "MCQ039",
+      "difficulty": "medium",
+      "question": "What is a covering index?",
+      "choices": {
+        "A": "Includes extra columns needed by queries",
+        "B": "Always primary key",
+        "C": "Only a spatial index",
+        "D": "An OLAP cube"
+      },
+      "answer": "A",
+      "source_pages": [
+        108
+      ]
+    },
+    {
+      "id": "MCQ040",
+      "difficulty": "medium",
+      "question": "What is the leading-prefix behavior of (lastname, firstname)?",
+      "choices": {
+        "A": "Can query lastname efficiently",
+        "B": "Can only query firstname",
+        "C": "No sorted behavior",
+        "D": "Only geospatial"
+      },
+      "answer": "A",
+      "source_pages": [
+        109
+      ]
+    },
+    {
+      "id": "MCQ041",
+      "difficulty": "medium",
+      "question": "Which index is used for spatial data?",
+      "choices": {
+        "A": "R-tree",
+        "B": "WAL",
+        "C": "Tombstone",
+        "D": "Bloom filter"
+      },
+      "answer": "A",
+      "source_pages": [
+        109
+      ]
+    },
+    {
+      "id": "MCQ042",
+      "difficulty": "medium",
+      "question": "What can fuzzy search use?",
+      "choices": {
+        "A": "Edit distance",
+        "B": "Only equality",
+        "C": "Only numeric range",
+        "D": "Only primary key"
+      },
+      "answer": "A",
+      "source_pages": [
+        110
+      ]
+    },
+    {
+      "id": "MCQ043",
+      "difficulty": "medium",
+      "question": "What does Lucene use for fuzzy term lookup?",
+      "choices": {
+        "A": "Levenshtein automaton",
+        "B": "B-tree page split",
+        "C": "ETL",
+        "D": "Star schema"
+      },
+      "answer": "A",
+      "source_pages": [
+        110
+      ]
+    },
+    {
+      "id": "MCQ044",
+      "difficulty": "medium",
+      "question": "How can an in-memory DB be durable?",
+      "choices": {
+        "A": "Disk log/snapshots/replication",
+        "B": "It cannot",
+        "C": "Only RAID",
+        "D": "Only column compression"
+      },
+      "answer": "A",
+      "source_pages": [
+        111
+      ]
+    },
+    {
+      "id": "MCQ045",
+      "difficulty": "medium",
+      "question": "Why can in-memory DBs outperform disk-oriented ones?",
+      "choices": {
+        "A": "Avoid disk-oriented encoding/layout overhead",
+        "B": "They never write anywhere",
+        "C": "They require no CPU",
+        "D": "They have no indexes"
+      },
+      "answer": "A",
+      "source_pages": [
+        111
+      ]
+    },
+    {
+      "id": "MCQ046",
+      "difficulty": "medium",
+      "question": "What is anti-caching?",
+      "choices": {
+        "A": "Evict cold records to disk",
+        "B": "Delete all data",
+        "C": "Cache only WAL",
+        "D": "Compress every row"
+      },
+      "answer": "A",
+      "source_pages": [
+        111,
+        112
+      ]
+    },
+    {
+      "id": "MCQ047",
+      "difficulty": "medium",
+      "question": "What is OLTP's typical read pattern?",
+      "choices": {
+        "A": "Few records by key",
+        "B": "Scan millions of rows",
+        "C": "Only aggregates",
+        "D": "Only batch"
+      },
+      "answer": "A",
+      "source_pages": [
+        112,
+        113
+      ]
+    },
+    {
+      "id": "MCQ048",
+      "difficulty": "medium",
+      "question": "What is OLAP's typical read pattern?",
+      "choices": {
+        "A": "Large scans and aggregates",
+        "B": "One row by key",
+        "C": "Only user form writes",
+        "D": "Only cache reads"
+      },
+      "answer": "A",
+      "source_pages": [
+        112,
+        113
+      ]
+    },
+    {
+      "id": "MCQ049",
+      "difficulty": "medium",
+      "question": "What does OLTP data represent?",
+      "choices": {
+        "A": "Current state",
+        "B": "Only history",
+        "C": "Only dimensions",
+        "D": "Only aggregates"
+      },
+      "answer": "A",
+      "source_pages": [
+        113
+      ]
+    },
+    {
+      "id": "MCQ050",
+      "difficulty": "hard",
+      "question": "What does OLAP data represent?",
+      "choices": {
+        "A": "Historical events",
+        "B": "Only current row",
+        "C": "Only cache state",
+        "D": "Only WAL"
+      },
+      "answer": "A",
+      "source_pages": [
+        113
+      ]
+    },
+    {
+      "id": "MCQ051",
+      "difficulty": "hard",
+      "question": "Why use a separate data warehouse?",
+      "choices": {
+        "A": "Protect OLTP from expensive analytics",
+        "B": "Remove SQL",
+        "C": "Prevent aggregation",
+        "D": "Avoid ETL"
+      },
+      "answer": "A",
+      "source_pages": [
+        113,
+        114
+      ]
+    },
+    {
+      "id": "MCQ052",
+      "difficulty": "hard",
+      "question": "What does ETL stand for?",
+      "choices": {
+        "A": "Extract-Transform-Load",
+        "B": "Encode-Transfer-Log",
+        "C": "Evaluate-Tree-Lookup",
+        "D": "Extract-Transaction-Lock"
+      },
+      "answer": "A",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "MCQ053",
+      "difficulty": "hard",
+      "question": "What is at the center of a star schema?",
+      "choices": {
+        "A": "Fact table",
+        "B": "Dimension only",
+        "C": "WAL",
+        "D": "B-tree root"
+      },
+      "answer": "A",
+      "source_pages": [
+        115,
+        116
+      ]
+    },
+    {
+      "id": "MCQ054",
+      "difficulty": "hard",
+      "question": "What does a fact row represent?",
+      "choices": {
+        "A": "Event",
+        "B": "Index page",
+        "C": "Schema version",
+        "D": "Cache entry"
+      },
+      "answer": "A",
+      "source_pages": [
+        115,
+        116
+      ]
+    },
+    {
+      "id": "MCQ055",
+      "difficulty": "hard",
+      "question": "What do dimensions describe?",
+      "choices": {
+        "A": "Context of events",
+        "B": "Only keys",
+        "C": "Only indexes",
+        "D": "Only WAL entries"
+      },
+      "answer": "A",
+      "source_pages": [
+        116
+      ]
+    },
+    {
+      "id": "MCQ056",
+      "difficulty": "hard",
+      "question": "What is a snowflake schema?",
+      "choices": {
+        "A": "More normalized dimensional schema",
+        "B": "LSM variant",
+        "C": "B-tree variant",
+        "D": "Hash index"
+      },
+      "answer": "A",
+      "source_pages": [
+        117
+      ]
+    },
+    {
+      "id": "MCQ057",
+      "difficulty": "hard",
+      "question": "Why is column storage useful for analytics?",
+      "choices": {
+        "A": "Read only needed columns",
+        "B": "Always faster writes",
+        "C": "No compression needed",
+        "D": "No scans"
+      },
+      "answer": "A",
+      "source_pages": [
+        117,
+        118
+      ]
+    },
+    {
+      "id": "MCQ058",
+      "difficulty": "hard",
+      "question": "How are rows reconstructed in a column store?",
+      "choices": {
+        "A": "Same position across column files",
+        "B": "Foreign key join always",
+        "C": "Hash map",
+        "D": "WAL"
+      },
+      "answer": "A",
+      "source_pages": [
+        119
+      ]
+    },
+    {
+      "id": "MCQ059",
+      "difficulty": "hard",
+      "question": "What is bitmap encoding?",
+      "choices": {
+        "A": "One bitmap per distinct value",
+        "B": "One B-tree per row",
+        "C": "One WAL per column",
+        "D": "One cube per query"
+      },
+      "answer": "A",
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "MCQ060",
+      "difficulty": "hard",
+      "question": "How do you evaluate IN(A,B,C) with bitmaps?",
+      "choices": {
+        "A": "Bitwise OR",
+        "B": "Bitwise AND only",
+        "C": "Page split",
+        "D": "Hash collision"
+      },
+      "answer": "A",
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "MCQ061",
+      "difficulty": "hard",
+      "question": "How do you evaluate condition A AND B?",
+      "choices": {
+        "A": "Bitwise AND",
+        "B": "Bitwise OR only",
+        "C": "Concatenate",
+        "D": "Compact"
+      },
+      "answer": "A",
+      "source_pages": [
+        121
+      ]
+    },
+    {
+      "id": "MCQ062",
+      "difficulty": "hard",
+      "question": "What compresses sparse bitmaps?",
+      "choices": {
+        "A": "Run-length encoding",
+        "B": "WAL",
+        "C": "B-tree pages",
+        "D": "ETL"
+      },
+      "answer": "A",
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "MCQ063",
+      "difficulty": "hard",
+      "question": "What is vectorized processing?",
+      "choices": {
+        "A": "Operate on column chunks efficiently using CPU/cache/SIMD",
+        "B": "Row-by-row network calls",
+        "C": "Only disk seeks",
+        "D": "Only joins"
+      },
+      "answer": "A",
+      "source_pages": [
+        121
+      ]
+    },
+    {
+      "id": "MCQ064",
+      "difficulty": "hard",
+      "question": "Can each column be sorted independently?",
+      "choices": {
+        "A": "No",
+        "B": "Yes always",
+        "C": "Only dimensions",
+        "D": "Only strings"
+      },
+      "answer": "A",
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "MCQ065",
+      "difficulty": "hard",
+      "question": "Why choose a sort key?",
+      "choices": {
+        "A": "Match common filters and improve compression",
+        "B": "Increase random writes",
+        "C": "Remove rows",
+        "D": "Prevent scanning"
+      },
+      "answer": "A",
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "MCQ066",
+      "difficulty": "hard",
+      "question": "How can multiple replica sort orders help?",
+      "choices": {
+        "A": "Different queries use different layouts",
+        "B": "They remove replication",
+        "C": "They reduce all writes to zero",
+        "D": "They create OLTP transactions"
+      },
+      "answer": "A",
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "MCQ067",
+      "difficulty": "hard",
+      "question": "How are column-store writes commonly handled?",
+      "choices": {
+        "A": "Buffer then bulk merge",
+        "B": "Rewrite every file per row",
+        "C": "Use no memory",
+        "D": "Only random overwrite"
+      },
+      "answer": "A",
+      "source_pages": [
+        123
+      ]
+    },
+    {
+      "id": "MCQ068",
+      "difficulty": "hard",
+      "question": "What is a materialized view?",
+      "choices": {
+        "A": "Persisted query result",
+        "B": "Only query text",
+        "C": "B-tree root",
+        "D": "Heap file"
+      },
+      "answer": "A",
+      "source_pages": [
+        123
+      ]
+    },
+    {
+      "id": "MCQ069",
+      "difficulty": "hard",
+      "question": "What is a virtual view?",
+      "choices": {
+        "A": "Stored query definition evaluated on read",
+        "B": "Persisted data copy",
+        "C": "Column file",
+        "D": "Bloom filter"
+      },
+      "answer": "A",
+      "source_pages": [
+        123
+      ]
+    },
+    {
+      "id": "MCQ070",
+      "difficulty": "hard",
+      "question": "What is a data cube?",
+      "choices": {
+        "A": "Precomputed multidimensional aggregates",
+        "B": "LSM level",
+        "C": "Hash table",
+        "D": "WAL"
+      },
+      "answer": "A",
+      "source_pages": [
+        124
+      ]
+    },
+    {
+      "id": "MCQ071",
+      "difficulty": "hard",
+      "question": "Main data-cube tradeoff?",
+      "choices": {
+        "A": "Fast predefined aggregates but less flexible",
+        "B": "Slow all queries",
+        "C": "No storage cost",
+        "D": "No write overhead"
+      },
+      "answer": "A",
+      "source_pages": [
+        124,
+        125
+      ]
+    },
+    {
+      "id": "MCQ072",
+      "difficulty": "hard",
+      "question": "What bottleneck commonly dominates OLTP?",
+      "choices": {
+        "A": "Seek time",
+        "B": "Disk bandwidth only",
+        "C": "CPU SIMD only",
+        "D": "Compression ratio"
+      },
+      "answer": "A",
+      "source_pages": [
+        125
+      ]
+    },
+    {
+      "id": "MCQ073",
+      "difficulty": "hard",
+      "question": "What bottleneck commonly dominates OLAP?",
+      "choices": {
+        "A": "Disk bandwidth",
+        "B": "Only seek time",
+        "C": "Hash collision",
+        "D": "WAL sync"
+      },
+      "answer": "A",
+      "source_pages": [
+        125
+      ]
+    }
+  ],
+  "mix_and_match": [
+    {
+      "id": "MM01",
+      "title": "Storage structure to role",
+      "left": {
+        "A": "Hash index",
+        "B": "Memtable",
+        "C": "SSTable",
+        "D": "WAL",
+        "E": "Bloom filter"
+      },
+      "right": {
+        "1": "Key -> disk offset",
+        "2": "Sorted in-memory recent writes",
+        "3": "Sorted immutable disk segment",
+        "4": "Crash-recovery append log",
+        "5": "Approximate membership test for negative lookups"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        94,
+        100,
+        101,
+        104
+      ]
+    },
+    {
+      "id": "MM02",
+      "title": "Index type to behavior",
+      "left": {
+        "A": "Primary",
+        "B": "Secondary",
+        "C": "Clustered",
+        "D": "Covering",
+        "E": "R-tree"
+      },
+      "right": {
+        "1": "Uniquely identifies main record",
+        "2": "Indexes non-primary attributes",
+        "3": "Stores row data with index",
+        "4": "Stores selected extra columns",
+        "5": "Spatial/multidimensional index"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        107,
+        108,
+        109
+      ]
+    },
+    {
+      "id": "MM03",
+      "title": "OLTP/OLAP characteristic",
+      "left": {
+        "A": "OLTP read",
+        "B": "OLTP write",
+        "C": "OLAP read",
+        "D": "OLAP write",
+        "E": "OLAP data"
+      },
+      "right": {
+        "1": "Few records by key",
+        "2": "Low-latency random user writes",
+        "3": "Large scans and aggregates",
+        "4": "ETL/event-stream ingestion",
+        "5": "Historical events"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        112,
+        113
+      ]
+    },
+    {
+      "id": "MM04",
+      "title": "Warehouse term to meaning",
+      "left": {
+        "A": "Fact table",
+        "B": "Dimension table",
+        "C": "Star schema",
+        "D": "Snowflake schema",
+        "E": "ETL"
+      },
+      "right": {
+        "1": "Event rows",
+        "2": "Who/what/where/when context",
+        "3": "Fact center plus dimensions",
+        "4": "More normalized dimensions",
+        "5": "Extract-transform-load pipeline"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        114,
+        115,
+        116,
+        117
+      ]
+    },
+    {
+      "id": "MM05",
+      "title": "Column-store optimization to benefit",
+      "left": {
+        "A": "Columnar layout",
+        "B": "Bitmap encoding",
+        "C": "RLE",
+        "D": "Vectorized processing",
+        "E": "Multiple sort orders"
+      },
+      "right": {
+        "1": "Read only needed attributes",
+        "2": "Fast Boolean filtering",
+        "3": "Compress repeated runs",
+        "4": "Use CPU cache/SIMD efficiently",
+        "5": "Match different query access patterns"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        118,
+        119,
+        120,
+        121,
+        122
+      ]
+    }
+  ],
+  "true_false": [
+    {
+      "id": "TF001",
+      "statement": "Append-only writes can be very efficient.",
+      "answer": true,
+      "source_pages": [
+        93
+      ]
+    },
+    {
+      "id": "TF002",
+      "statement": "The simple db_get lookup is O(1).",
+      "answer": false,
+      "source_pages": [
+        93
+      ]
+    },
+    {
+      "id": "TF003",
+      "statement": "Indexes are derived from primary data.",
+      "answer": true,
+      "source_pages": [
+        93
+      ]
+    },
+    {
+      "id": "TF004",
+      "statement": "Adding indexes usually speeds writes.",
+      "answer": false,
+      "source_pages": [
+        93
+      ]
+    },
+    {
+      "id": "TF005",
+      "statement": "Bitcask keeps the key hash map in memory.",
+      "answer": true,
+      "source_pages": [
+        94
+      ]
+    },
+    {
+      "id": "TF006",
+      "statement": "Bitcask requires all values to fit in RAM.",
+      "answer": false,
+      "source_pages": [
+        94,
+        95
+      ]
+    },
+    {
+      "id": "TF007",
+      "statement": "Compaction keeps the newest value and removes obsolete duplicates.",
+      "answer": true,
+      "source_pages": [
+        95
+      ]
+    },
+    {
+      "id": "TF008",
+      "statement": "Tombstones represent deletions in append-only logs.",
+      "answer": true,
+      "source_pages": [
+        96
+      ]
+    },
+    {
+      "id": "TF009",
+      "statement": "Checksums can detect partially written records.",
+      "answer": true,
+      "source_pages": [
+        97
+      ]
+    },
+    {
+      "id": "TF010",
+      "statement": "Hash indexes are naturally efficient for range scans.",
+      "answer": false,
+      "source_pages": [
+        97
+      ]
+    },
+    {
+      "id": "TF011",
+      "statement": "SSTables are sorted by key.",
+      "answer": true,
+      "source_pages": [
+        98
+      ]
+    },
+    {
+      "id": "TF012",
+      "statement": "SSTable merging resembles mergesort.",
+      "answer": true,
+      "source_pages": [
+        98
+      ]
+    },
+    {
+      "id": "TF013",
+      "statement": "An SSTable requires every key to be in the in-memory index.",
+      "answer": false,
+      "source_pages": [
+        99
+      ]
+    },
+    {
+      "id": "TF014",
+      "statement": "Compressed SSTable blocks can reduce I/O bandwidth.",
+      "answer": true,
+      "source_pages": [
+        99
+      ]
+    },
+    {
+      "id": "TF015",
+      "statement": "A memtable is an in-memory sorted structure.",
+      "answer": true,
+      "source_pages": [
+        100
+      ]
+    },
+    {
+      "id": "TF016",
+      "statement": "LSM recovery logs need to be sorted.",
+      "answer": false,
+      "source_pages": [
+        100
+      ]
+    },
+    {
+      "id": "TF017",
+      "statement": "The recovery log exists to rebuild recent memtable state.",
+      "answer": true,
+      "source_pages": [
+        100
+      ]
+    },
+    {
+      "id": "TF018",
+      "statement": "Bloom filters help with nonexistent-key lookups.",
+      "answer": true,
+      "source_pages": [
+        101
+      ]
+    },
+    {
+      "id": "TF019",
+      "statement": "Leveled and size-tiered are compaction strategies.",
+      "answer": true,
+      "source_pages": [
+        101
+      ]
+    },
+    {
+      "id": "TF020",
+      "statement": "B-trees use variable-size append-only segments instead of pages.",
+      "answer": false,
+      "source_pages": [
+        102
+      ]
+    },
+    {
+      "id": "TF021",
+      "statement": "B-tree branching factor is often several hundred.",
+      "answer": true,
+      "source_pages": [
+        103
+      ]
+    },
+    {
+      "id": "TF022",
+      "statement": "B-tree depth is O(log n).",
+      "answer": true,
+      "source_pages": [
+        103
+      ]
+    },
+    {
+      "id": "TF023",
+      "statement": "B-tree page splits can require multiple page updates.",
+      "answer": true,
+      "source_pages": [
+        103,
+        104
+      ]
+    },
+    {
+      "id": "TF024",
+      "statement": "A WAL is written after the B-tree page update.",
+      "answer": false,
+      "source_pages": [
+        104
+      ]
+    },
+    {
+      "id": "TF025",
+      "statement": "Latches help coordinate concurrent B-tree access.",
+      "answer": true,
+      "source_pages": [
+        104
+      ]
+    },
+    {
+      "id": "TF026",
+      "statement": "Copy-on-write is a possible B-tree optimization.",
+      "answer": true,
+      "source_pages": [
+        104,
+        105
+      ]
+    },
+    {
+      "id": "TF027",
+      "statement": "LSM trees are always faster than B-trees for every workload.",
+      "answer": false,
+      "source_pages": [
+        105
+      ]
+    },
+    {
+      "id": "TF028",
+      "statement": "Write amplification occurs in both B-trees and LSM trees.",
+      "answer": true,
+      "source_pages": [
+        106
+      ]
+    },
+    {
+      "id": "TF029",
+      "statement": "Sequential writes can help LSM write throughput.",
+      "answer": true,
+      "source_pages": [
+        106
+      ]
+    },
+    {
+      "id": "TF030",
+      "statement": "Compaction can cause LSM tail-latency spikes.",
+      "answer": true,
+      "source_pages": [
+        106,
+        107
+      ]
+    },
+    {
+      "id": "TF031",
+      "statement": "If compaction falls behind, reads may slow because more segments must be checked.",
+      "answer": true,
+      "source_pages": [
+        107
+      ]
+    },
+    {
+      "id": "TF032",
+      "statement": "B-trees may be attractive for range-lock-based transactions.",
+      "answer": true,
+      "source_pages": [
+        107
+      ]
+    },
+    {
+      "id": "TF033",
+      "statement": "Secondary-index keys must always be unique.",
+      "answer": false,
+      "source_pages": [
+        108
+      ]
+    },
+    {
+      "id": "TF034",
+      "statement": "Heap files allow several indexes to reference one copy of a row.",
+      "answer": true,
+      "source_pages": [
+        108
+      ]
+    },
+    {
+      "id": "TF035",
+      "statement": "A clustered index stores row data directly in the index.",
+      "answer": true,
+      "source_pages": [
+        108
+      ]
+    },
+    {
+      "id": "TF036",
+      "statement": "A covering index can answer some queries without visiting the heap.",
+      "answer": true,
+      "source_pages": [
+        108
+      ]
+    },
+    {
+      "id": "TF037",
+      "statement": "A concatenated index on lastname,firstname efficiently supports firstname-only queries.",
+      "answer": false,
+      "source_pages": [
+        109
+      ]
+    },
+    {
+      "id": "TF038",
+      "statement": "R-trees can support spatial indexing.",
+      "answer": true,
+      "source_pages": [
+        109
+      ]
+    },
+    {
+      "id": "TF039",
+      "statement": "Full-text fuzzy search uses only exact key equality.",
+      "answer": false,
+      "source_pages": [
+        110
+      ]
+    },
+    {
+      "id": "TF040",
+      "statement": "Lucene can search by edit distance.",
+      "answer": true,
+      "source_pages": [
+        110
+      ]
+    },
+    {
+      "id": "TF041",
+      "statement": "In-memory databases can still persist a disk log.",
+      "answer": true,
+      "source_pages": [
+        111
+      ]
+    },
+    {
+      "id": "TF042",
+      "statement": "In-memory DB speed comes only from avoiding physical disk reads.",
+      "answer": false,
+      "source_pages": [
+        111
+      ]
+    },
+    {
+      "id": "TF043",
+      "statement": "Anti-caching moves cold records from memory to disk.",
+      "answer": true,
+      "source_pages": [
+        111,
+        112
+      ]
+    },
+    {
+      "id": "TF044",
+      "statement": "OLTP queries usually scan millions of rows.",
+      "answer": false,
+      "source_pages": [
+        112,
+        113
+      ]
+    },
+    {
+      "id": "TF045",
+      "statement": "OLAP queries often aggregate over many records.",
+      "answer": true,
+      "source_pages": [
+        112,
+        113
+      ]
+    },
+    {
+      "id": "TF046",
+      "statement": "A transaction-processing workload necessarily means ACID.",
+      "answer": false,
+      "source_pages": [
+        112
+      ]
+    },
+    {
+      "id": "TF047",
+      "statement": "OLTP generally represents current state.",
+      "answer": true,
+      "source_pages": [
+        113
+      ]
+    },
+    {
+      "id": "TF048",
+      "statement": "OLAP commonly stores historical event data.",
+      "answer": true,
+      "source_pages": [
+        113
+      ]
+    },
+    {
+      "id": "TF049",
+      "statement": "A data warehouse isolates analytics from production OLTP systems.",
+      "answer": true,
+      "source_pages": [
+        113,
+        114
+      ]
+    },
+    {
+      "id": "TF050",
+      "statement": "ETL means Extract-Transform-Load.",
+      "answer": true,
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "TF051",
+      "statement": "A star schema places dimensions at the center.",
+      "answer": false,
+      "source_pages": [
+        115,
+        116
+      ]
+    },
+    {
+      "id": "TF052",
+      "statement": "A fact row typically represents an event.",
+      "answer": true,
+      "source_pages": [
+        115,
+        116
+      ]
+    },
+    {
+      "id": "TF053",
+      "statement": "Snowflake schemas are more normalized than star schemas.",
+      "answer": true,
+      "source_pages": [
+        117
+      ]
+    },
+    {
+      "id": "TF054",
+      "statement": "Star schemas are often simpler for analysts.",
+      "answer": true,
+      "source_pages": [
+        117
+      ]
+    },
+    {
+      "id": "TF055",
+      "statement": "Analytics commonly uses SELECT * across hundreds of fact columns.",
+      "answer": false,
+      "source_pages": [
+        117
+      ]
+    },
+    {
+      "id": "TF056",
+      "statement": "Column stores keep all values for one column together.",
+      "answer": true,
+      "source_pages": [
+        118
+      ]
+    },
+    {
+      "id": "TF057",
+      "statement": "Column stores can reconstruct rows because column positions correspond.",
+      "answer": true,
+      "source_pages": [
+        119
+      ]
+    },
+    {
+      "id": "TF058",
+      "statement": "Columnar storage tends to compress well.",
+      "answer": true,
+      "source_pages": [
+        119
+      ]
+    },
+    {
+      "id": "TF059",
+      "statement": "Bitmap indexes use one bitmap per distinct value.",
+      "answer": true,
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "TF060",
+      "statement": "Bitwise OR can evaluate an IN predicate.",
+      "answer": true,
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "TF061",
+      "statement": "Bitwise AND can combine predicates from different columns.",
+      "answer": true,
+      "source_pages": [
+        121
+      ]
+    },
+    {
+      "id": "TF062",
+      "statement": "Bigtable column families are truly column-oriented in the analytic sense.",
+      "answer": false,
+      "source_pages": [
+        121
+      ]
+    },
+    {
+      "id": "TF063",
+      "statement": "Vectorized processing exploits compact column chunks and CPU cache.",
+      "answer": true,
+      "source_pages": [
+        121
+      ]
+    },
+    {
+      "id": "TF064",
+      "statement": "Each column in a column store can be sorted independently.",
+      "answer": false,
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "TF065",
+      "statement": "Sorting can improve run-length compression.",
+      "answer": true,
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "TF066",
+      "statement": "Replicated column data can be stored in different sort orders.",
+      "answer": true,
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "TF067",
+      "statement": "Compressed sorted column files are easy to update in place.",
+      "answer": false,
+      "source_pages": [
+        123
+      ]
+    },
+    {
+      "id": "TF068",
+      "statement": "LSM-style buffering can help column-store writes.",
+      "answer": true,
+      "source_pages": [
+        123
+      ]
+    },
+    {
+      "id": "TF069",
+      "statement": "A materialized view stores actual query results.",
+      "answer": true,
+      "source_pages": [
+        123
+      ]
+    },
+    {
+      "id": "TF070",
+      "statement": "A virtual view stores all result rows physically.",
+      "answer": false,
+      "source_pages": [
+        123
+      ]
+    },
+    {
+      "id": "TF071",
+      "statement": "Materialized views can add write overhead.",
+      "answer": true,
+      "source_pages": [
+        123,
+        124
+      ]
+    },
+    {
+      "id": "TF072",
+      "statement": "A data cube precomputes aggregates by dimensions.",
+      "answer": true,
+      "source_pages": [
+        124
+      ]
+    },
+    {
+      "id": "TF073",
+      "statement": "A data cube is more flexible than querying all raw data.",
+      "answer": false,
+      "source_pages": [
+        125
+      ]
+    },
+    {
+      "id": "TF074",
+      "statement": "OLTP is often seek-bound while OLAP is often bandwidth-bound.",
+      "answer": true,
+      "source_pages": [
+        125
+      ]
+    }
+  ],
+  "fill_in_the_blank": [
+    {
+      "id": "FIB001",
+      "prompt": "An append-only sequence of records is called a ______.",
+      "answer": "log",
+      "source_pages": [
+        93
+      ]
+    },
+    {
+      "id": "FIB002",
+      "prompt": "A simple full-file key lookup costs O(______).",
+      "answer": "n",
+      "source_pages": [
+        93
+      ]
+    },
+    {
+      "id": "FIB003",
+      "prompt": "Additional lookup metadata is called an ______.",
+      "answer": "index",
+      "source_pages": [
+        93
+      ]
+    },
+    {
+      "id": "FIB004",
+      "prompt": "Bitcask maps keys to byte ______.",
+      "answer": "offsets",
+      "source_pages": [
+        94
+      ]
+    },
+    {
+      "id": "FIB005",
+      "prompt": "A deletion record in a log is a ______.",
+      "answer": "tombstone",
+      "source_pages": [
+        96
+      ]
+    },
+    {
+      "id": "FIB006",
+      "prompt": "SSTable stands for Sorted String ______.",
+      "answer": "Table",
+      "source_pages": [
+        98
+      ]
+    },
+    {
+      "id": "FIB007",
+      "prompt": "Recent sorted in-memory writes are stored in a ______.",
+      "answer": "memtable",
+      "source_pages": [
+        100
+      ]
+    },
+    {
+      "id": "FIB008",
+      "prompt": "LSM stands for Log-Structured Merge-______.",
+      "answer": "Tree",
+      "source_pages": [
+        100,
+        101
+      ]
+    },
+    {
+      "id": "FIB009",
+      "prompt": "A ______ filter helps reject nonexistent keys.",
+      "answer": "Bloom",
+      "source_pages": [
+        101
+      ]
+    },
+    {
+      "id": "FIB010",
+      "prompt": "B-trees traditionally use fixed-size ______.",
+      "answer": "pages",
+      "source_pages": [
+        102
+      ]
+    },
+    {
+      "id": "FIB011",
+      "prompt": "The number of children per B-tree page is the branching ______.",
+      "answer": "factor",
+      "source_pages": [
+        103
+      ]
+    },
+    {
+      "id": "FIB012",
+      "prompt": "B-tree depth is O(log ______).",
+      "answer": "n",
+      "source_pages": [
+        103
+      ]
+    },
+    {
+      "id": "FIB013",
+      "prompt": "WAL stands for write-ahead ______.",
+      "answer": "log",
+      "source_pages": [
+        104
+      ]
+    },
+    {
+      "id": "FIB014",
+      "prompt": "One logical write causing multiple disk writes is write ______.",
+      "answer": "amplification",
+      "source_pages": [
+        106
+      ]
+    },
+    {
+      "id": "FIB015",
+      "prompt": "Unordered row storage outside indexes is a ______ file.",
+      "answer": "heap",
+      "source_pages": [
+        108
+      ]
+    },
+    {
+      "id": "FIB016",
+      "prompt": "An index storing row data directly is a ______ index.",
+      "answer": "clustered",
+      "source_pages": [
+        108
+      ]
+    },
+    {
+      "id": "FIB017",
+      "prompt": "An index including extra columns is a ______ index.",
+      "answer": "covering",
+      "source_pages": [
+        108
+      ]
+    },
+    {
+      "id": "FIB018",
+      "prompt": "A common multidimensional spatial index is an ______-tree.",
+      "answer": "R",
+      "source_pages": [
+        109
+      ]
+    },
+    {
+      "id": "FIB019",
+      "prompt": "Lucene supports typo search using edit ______.",
+      "answer": "distance",
+      "source_pages": [
+        110
+      ]
+    },
+    {
+      "id": "FIB020",
+      "prompt": "OLTP stands for Online Transaction ______.",
+      "answer": "Processing",
+      "source_pages": [
+        112
+      ]
+    },
+    {
+      "id": "FIB021",
+      "prompt": "OLAP stands for Online Analytic ______.",
+      "answer": "Processing",
+      "source_pages": [
+        113
+      ]
+    },
+    {
+      "id": "FIB022",
+      "prompt": "ETL stands for Extract-Transform-______.",
+      "answer": "Load",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "FIB023",
+      "prompt": "A warehouse's central event table is the ______ table.",
+      "answer": "fact",
+      "source_pages": [
+        115,
+        116
+      ]
+    },
+    {
+      "id": "FIB024",
+      "prompt": "Context tables around facts are ______ tables.",
+      "answer": "dimension",
+      "source_pages": [
+        116
+      ]
+    },
+    {
+      "id": "FIB025",
+      "prompt": "A more normalized dimensional model is a ______ schema.",
+      "answer": "snowflake",
+      "source_pages": [
+        117
+      ]
+    },
+    {
+      "id": "FIB026",
+      "prompt": "Storing values by attribute rather than row is ______-oriented storage.",
+      "answer": "column",
+      "source_pages": [
+        118
+      ]
+    },
+    {
+      "id": "FIB027",
+      "prompt": "One bitmap per distinct value is ______ encoding.",
+      "answer": "bitmap",
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "FIB028",
+      "prompt": "Compressing repeated runs is run-length ______.",
+      "answer": "encoding",
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "FIB029",
+      "prompt": "CPU-efficient chunk processing is called ______ processing.",
+      "answer": "vectorized",
+      "source_pages": [
+        121
+      ]
+    },
+    {
+      "id": "FIB030",
+      "prompt": "A persisted copy of query results is a ______ view.",
+      "answer": "materialized",
+      "source_pages": [
+        123
+      ]
+    },
+    {
+      "id": "FIB031",
+      "prompt": "A multidimensional precomputed aggregate is a data ______.",
+      "answer": "cube",
+      "source_pages": [
+        124
+      ]
+    }
+  ],
+  "ordering_exercises": [
+    {
+      "id": "ORD01",
+      "title": "LSM write path",
+      "items_scrambled": [
+        "Flush memtable to SSTable",
+        "Append to recovery log",
+        "Compact SSTables",
+        "Update memtable"
+      ],
+      "correct_order": [
+        "Append to recovery log",
+        "Update memtable",
+        "Flush memtable to SSTable",
+        "Compact SSTables"
+      ],
+      "source_pages": [
+        100,
+        101
+      ]
+    },
+    {
+      "id": "ORD02",
+      "title": "LSM read path",
+      "items_scrambled": [
+        "Older SSTables",
+        "Newest SSTable",
+        "Memtable"
+      ],
+      "correct_order": [
+        "Memtable",
+        "Newest SSTable",
+        "Older SSTables"
+      ],
+      "source_pages": [
+        100
+      ]
+    },
+    {
+      "id": "ORD03",
+      "title": "B-tree insertion",
+      "items_scrambled": [
+        "Update parent",
+        "Find target leaf/range",
+        "Insert key",
+        "Split page if full"
+      ],
+      "correct_order": [
+        "Find target leaf/range",
+        "Insert key",
+        "Split page if full",
+        "Update parent"
+      ],
+      "source_pages": [
+        103
+      ]
+    },
+    {
+      "id": "ORD04",
+      "title": "ETL pipeline",
+      "items_scrambled": [
+        "Load warehouse",
+        "Transform/clean",
+        "Extract source data"
+      ],
+      "correct_order": [
+        "Extract source data",
+        "Transform/clean",
+        "Load warehouse"
+      ],
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "ORD05",
+      "title": "Column-store write path",
+      "items_scrambled": [
+        "Merge with on-disk columns",
+        "Write into in-memory store",
+        "Write new bulk column files"
+      ],
+      "correct_order": [
+        "Write into in-memory store",
+        "Merge with on-disk columns",
+        "Write new bulk column files"
+      ],
+      "source_pages": [
+        123
+      ]
+    }
+  ],
+  "scenario_questions": [
+    {
+      "id": "SC01",
+      "difficulty": "medium",
+      "scenario": "A key-value database receives millions of writes but has only a few hundred thousand distinct keys.",
+      "question": "What early chapter design fits well?",
+      "expected_answer": "An append-only log with an in-memory hash index, similar to Bitcask, because keys fit in memory and values can remain on disk.",
+      "source_pages": [
+        94,
+        95
+      ]
+    },
+    {
+      "id": "SC02",
+      "difficulty": "hard",
+      "scenario": "An append-only database keeps growing because the same keys are updated repeatedly.",
+      "question": "How does the chapter reclaim space?",
+      "expected_answer": "Split into segments, compact each segment to keep newest values, and merge immutable segments in the background.",
+      "source_pages": [
+        95,
+        96
+      ]
+    },
+    {
+      "id": "SC03",
+      "difficulty": "medium",
+      "scenario": "A delete must survive future segment merging.",
+      "question": "What record is needed?",
+      "expected_answer": "A tombstone indicating that older values for the key must be discarded.",
+      "source_pages": [
+        96
+      ]
+    },
+    {
+      "id": "SC04",
+      "difficulty": "hard",
+      "scenario": "A key does not exist in an LSM database, causing checks of many SSTables.",
+      "question": "What optimization helps?",
+      "expected_answer": "A Bloom filter can quickly indicate that the key is definitely absent and avoid unnecessary disk reads.",
+      "source_pages": [
+        101
+      ]
+    },
+    {
+      "id": "SC05",
+      "difficulty": "hard",
+      "scenario": "A B-tree page split updates two child pages and a parent, then the machine crashes halfway through.",
+      "question": "What mechanism protects recovery?",
+      "expected_answer": "Write the modification first to the write-ahead/redo log so the tree can be restored to a consistent state.",
+      "source_pages": [
+        104
+      ]
+    },
+    {
+      "id": "SC06",
+      "difficulty": "hard",
+      "scenario": "An SSD-backed write-heavy database is wearing flash and saturating disk bandwidth.",
+      "question": "Which metric/tradeoff should you inspect?",
+      "expected_answer": "Write amplification: how many physical writes the storage engine performs per logical write.",
+      "source_pages": [
+        106
+      ]
+    },
+    {
+      "id": "SC07",
+      "difficulty": "hard",
+      "scenario": "An LSM database works well initially but later disk fills and reads get slower as writes continue.",
+      "question": "What might be happening?",
+      "expected_answer": "Compaction may be unable to keep up, causing unmerged segments to accumulate and consume disk/bandwidth.",
+      "source_pages": [
+        107
+      ]
+    },
+    {
+      "id": "SC08",
+      "difficulty": "medium",
+      "scenario": "A table has several secondary indexes and you want only one physical copy of each row.",
+      "question": "What layout helps?",
+      "expected_answer": "Store rows in a heap file and let secondary indexes point to heap locations.",
+      "source_pages": [
+        108
+      ]
+    },
+    {
+      "id": "SC09",
+      "difficulty": "medium",
+      "scenario": "A frequent query needs only indexed columns plus one extra attribute.",
+      "question": "What index can avoid a heap lookup?",
+      "expected_answer": "A covering index including that extra column.",
+      "source_pages": [
+        108
+      ]
+    },
+    {
+      "id": "SC10",
+      "difficulty": "hard",
+      "scenario": "You have an index on (lastname, firstname) but frequently search by firstname only.",
+      "question": "Why is the index ineffective?",
+      "expected_answer": "Concatenated indexes primarily support leading prefixes; firstname is not the leading field.",
+      "source_pages": [
+        109
+      ]
+    },
+    {
+      "id": "SC11",
+      "difficulty": "medium",
+      "scenario": "A restaurant app queries bounding boxes over latitude and longitude.",
+      "question": "What type of index is appropriate?",
+      "expected_answer": "A multidimensional spatial index such as an R-tree, or a space-filling curve mapped to a one-dimensional index.",
+      "source_pages": [
+        109
+      ]
+    },
+    {
+      "id": "SC12",
+      "difficulty": "medium",
+      "scenario": "Users expect misspelled product names to return close matches.",
+      "question": "Why won't a normal B-tree/LSM range index be enough?",
+      "expected_answer": "Fuzzy matching requires similarity/edit-distance techniques such as Lucene's Levenshtein automata.",
+      "source_pages": [
+        110
+      ]
+    },
+    {
+      "id": "SC13",
+      "difficulty": "hard",
+      "scenario": "A business analyst runs a huge full-table aggregate against the same DB serving checkout traffic.",
+      "question": "What architecture does the chapter recommend?",
+      "expected_answer": "Move analytics to a separate data warehouse populated from OLTP data, preventing analytic scans from harming transactional latency.",
+      "source_pages": [
+        113,
+        114
+      ]
+    },
+    {
+      "id": "SC14",
+      "difficulty": "medium",
+      "scenario": "A sales warehouse has one event table linked to product, store, date, customer, and promotion tables.",
+      "question": "What schema pattern is this?",
+      "expected_answer": "A star schema with a central fact table and dimension tables.",
+      "source_pages": [
+        115,
+        116,
+        117
+      ]
+    },
+    {
+      "id": "SC15",
+      "difficulty": "hard",
+      "scenario": "A fact table has 150 columns, but a query reads only date, product, and quantity across billions of rows.",
+      "question": "What storage layout is advantageous?",
+      "expected_answer": "Column-oriented storage because it reads only the required columns instead of entire rows.",
+      "source_pages": [
+        117,
+        118
+      ]
+    },
+    {
+      "id": "SC16",
+      "difficulty": "hard",
+      "scenario": "A product column has 100,000 distinct product IDs over billions of rows and queries often use IN lists.",
+      "question": "What compression/filter structure is useful?",
+      "expected_answer": "Bitmap encoding, potentially run-length compressed, allowing IN predicates to be evaluated with bitwise OR.",
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "SC17",
+      "difficulty": "hard",
+      "scenario": "An analytic engine is no longer disk-bound but spends time moving/decompressing values through CPU cache.",
+      "question": "What technique is relevant?",
+      "expected_answer": "Vectorized processing over compressed column chunks, exploiting cache locality and SIMD.",
+      "source_pages": [
+        121
+      ]
+    },
+    {
+      "id": "SC18",
+      "difficulty": "medium",
+      "scenario": "Most warehouse queries filter by date, then group by product.",
+      "question": "What sort order makes sense?",
+      "expected_answer": "date_key first, product_sk second, matching common filtering/grouping patterns.",
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "SC19",
+      "difficulty": "hard",
+      "scenario": "A column store receives continuous writes but on-disk data is sorted and compressed.",
+      "question": "How can it accept writes efficiently?",
+      "expected_answer": "Buffer recent writes in an in-memory sorted structure and periodically bulk-merge them with on-disk column files, LSM-style.",
+      "source_pages": [
+        123
+      ]
+    },
+    {
+      "id": "SC20",
+      "difficulty": "hard",
+      "scenario": "Analysts repeatedly ask for daily sales totals by store.",
+      "question": "What can accelerate this and what is the tradeoff?",
+      "expected_answer": "A materialized view/data cube can precompute totals, making reads fast but increasing write/storage cost and reducing flexibility.",
+      "source_pages": [
+        123,
+        124,
+        125
+      ]
+    }
+  ],
+  "short_answer_questions": [
+    {
+      "id": "SA01",
+      "question": "Why are indexes a tradeoff rather than a free optimization?",
+      "model_answer": "They add derived structures that speed reads, but every write must also update those structures, consuming storage and write I/O.",
+      "source_pages": [
+        93
+      ]
+    },
+    {
+      "id": "SA02",
+      "question": "How does Bitcask turn an append-only file into an efficient key-value store?",
+      "model_answer": "It keeps an in-memory hash map from each key to the byte offset of its newest value, while values stay on disk.",
+      "source_pages": [
+        94,
+        95
+      ]
+    },
+    {
+      "id": "SA03",
+      "question": "Why are immutable segments useful?",
+      "model_answer": "They simplify concurrent reads and crash recovery; background compaction can build new merged segments and atomically replace old ones.",
+      "source_pages": [
+        95,
+        96,
+        97
+      ]
+    },
+    {
+      "id": "SA04",
+      "question": "What does sorting buy you in SSTables?",
+      "model_answer": "Efficient merges, sparse indexes, range scans, and block compression because nearby key ranges are physically grouped.",
+      "source_pages": [
+        98,
+        99
+      ]
+    },
+    {
+      "id": "SA05",
+      "question": "Walk through an LSM-tree write and read.",
+      "model_answer": "Writes append to a recovery log and update a sorted memtable; full memtables flush to SSTables and are compacted. Reads check memtable, newest SSTable, then older SSTables.",
+      "source_pages": [
+        100,
+        101
+      ]
+    },
+    {
+      "id": "SA06",
+      "question": "How does a B-tree differ fundamentally from an LSM-tree?",
+      "model_answer": "B-trees update fixed-size pages in place and use a WAL for recovery; LSMs append/flush sorted segments and merge them in the background.",
+      "source_pages": [
+        101,
+        102,
+        104,
+        125
+      ]
+    },
+    {
+      "id": "SA07",
+      "question": "What is write amplification and how do the two major designs incur it?",
+      "model_answer": "A logical write results in multiple disk writes. B-trees write WAL plus pages and sometimes splits/double writes; LSMs rewrite data during repeated compactions.",
+      "source_pages": [
+        106
+      ]
+    },
+    {
+      "id": "SA08",
+      "question": "Why can compaction become an operational problem?",
+      "model_answer": "Compaction consumes finite disk bandwidth, can increase tail latency, and if it falls behind, segments and disk usage grow while reads slow.",
+      "source_pages": [
+        106,
+        107
+      ]
+    },
+    {
+      "id": "SA09",
+      "question": "Compare heap, clustered, and covering index layouts.",
+      "model_answer": "Heap files store rows separately and indexes point to them; clustered indexes place full rows in the index; covering indexes place selected extra columns in the index.",
+      "source_pages": [
+        108
+      ]
+    },
+    {
+      "id": "SA10",
+      "question": "Why aren't ordinary one-dimensional indexes enough for geospatial bounding boxes?",
+      "model_answer": "Latitude and longitude must be constrained simultaneously. A one-dimensional sorted index efficiently restricts one dimension at a time, so multidimensional structures such as R-trees are useful.",
+      "source_pages": [
+        109
+      ]
+    },
+    {
+      "id": "SA11",
+      "question": "What is surprising about in-memory database performance?",
+      "model_answer": "Their advantage is not simply avoiding disk reads, because OS caches may already do that. They can avoid the overhead of disk-oriented encoding and data structures.",
+      "source_pages": [
+        111
+      ]
+    },
+    {
+      "id": "SA12",
+      "question": "What is the central OLTP versus OLAP distinction?",
+      "model_answer": "OLTP handles many low-latency point queries and user writes over current state; OLAP handles fewer but much larger scans/aggregations over historical data.",
+      "source_pages": [
+        112,
+        113,
+        125
+      ]
+    },
+    {
+      "id": "SA13",
+      "question": "Why is a data warehouse separate from OLTP systems?",
+      "model_answer": "Expensive ad hoc analytics can scan large datasets and degrade production transaction performance, while a warehouse can be optimized for analytical access.",
+      "source_pages": [
+        113,
+        114
+      ]
+    },
+    {
+      "id": "SA14",
+      "question": "Explain fact and dimension tables.",
+      "model_answer": "Facts are high-volume event rows with measurements and foreign keys; dimensions provide descriptive context such as product, date, store, promotion, and customer.",
+      "source_pages": [
+        115,
+        116,
+        117
+      ]
+    },
+    {
+      "id": "SA15",
+      "question": "Why is column-oriented storage well suited to analytics?",
+      "model_answer": "Analytic queries scan many rows but usually need only a few columns. Column stores read only those attributes and compress homogeneous values efficiently.",
+      "source_pages": [
+        117,
+        118,
+        119
+      ]
+    },
+    {
+      "id": "SA16",
+      "question": "How do bitmap indexes evaluate filters?",
+      "model_answer": "Each distinct value has a bitmap. OR combines alternative values such as IN lists; AND combines predicates across columns.",
+      "source_pages": [
+        120,
+        121
+      ]
+    },
+    {
+      "id": "SA17",
+      "question": "What is vectorized processing?",
+      "model_answer": "Analytic operators process compact chunks of column values in tight loops that fit CPU cache and exploit SIMD, reducing branches and per-row function overhead.",
+      "source_pages": [
+        121
+      ]
+    },
+    {
+      "id": "SA18",
+      "question": "Why can sort order improve both queries and compression in column stores?",
+      "model_answer": "Queries can scan only relevant key ranges, and repeated values become long runs that compress well.",
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "SA19",
+      "question": "How does an analytical column store solve its write problem?",
+      "model_answer": "Use an LSM-like in-memory buffer for recent writes, then merge those writes with immutable/compressed on-disk column files in bulk.",
+      "source_pages": [
+        123
+      ]
+    },
+    {
+      "id": "SA20",
+      "question": "Compare virtual views, materialized views, and data cubes.",
+      "model_answer": "Virtual views are stored query definitions; materialized views persist results; data cubes are multidimensional materialized aggregates optimized for repeated analytical summaries.",
+      "source_pages": [
+        123,
+        124,
+        125
+      ]
+    }
+  ],
+  "active_recall_prompts": [
+    {
+      "id": "AR01",
+      "prompt": "Explain the simple append-only database and why it motivates indexes.",
+      "target_points": [
+        "append write",
+        "scan read",
+        "last occurrence",
+        "O(n)",
+        "index",
+        "read/write tradeoff"
+      ],
+      "source_pages": [
+        92,
+        93
+      ]
+    },
+    {
+      "id": "AR02",
+      "prompt": "Recite Bitcask/hash-index architecture and operational details.",
+      "target_points": [
+        "key->offset",
+        "RAM keys",
+        "disk values",
+        "segments",
+        "compaction",
+        "tombstone",
+        "snapshot",
+        "checksum",
+        "single writer"
+      ],
+      "source_pages": [
+        94,
+        95,
+        96,
+        97
+      ]
+    },
+    {
+      "id": "AR03",
+      "prompt": "Explain every SSTable advantage.",
+      "target_points": [
+        "sorted",
+        "merge",
+        "most recent wins",
+        "sparse index",
+        "compressed blocks",
+        "range scan"
+      ],
+      "source_pages": [
+        98,
+        99
+      ]
+    },
+    {
+      "id": "AR04",
+      "prompt": "Reconstruct LSM-tree write/read/recovery.",
+      "target_points": [
+        "recovery log",
+        "memtable",
+        "flush",
+        "SSTable",
+        "read order",
+        "compaction",
+        "Bloom filter"
+      ],
+      "source_pages": [
+        100,
+        101
+      ]
+    },
+    {
+      "id": "AR05",
+      "prompt": "Describe B-tree structure from root to page split.",
+      "target_points": [
+        "fixed pages",
+        "root",
+        "range boundaries",
+        "children",
+        "leaf",
+        "branching factor",
+        "split",
+        "O(log n)"
+      ],
+      "source_pages": [
+        102,
+        103
+      ]
+    },
+    {
+      "id": "AR06",
+      "prompt": "Explain B-tree WAL and concurrency.",
+      "target_points": [
+        "multiple page updates",
+        "crash inconsistency",
+        "WAL first",
+        "redo",
+        "latches",
+        "copy-on-write"
+      ],
+      "source_pages": [
+        104,
+        105
+      ]
+    },
+    {
+      "id": "AR07",
+      "prompt": "Compare B-tree and LSM-tree tradeoffs.",
+      "target_points": [
+        "reads",
+        "writes",
+        "write amplification",
+        "random/sequential I/O",
+        "compression",
+        "fragmentation",
+        "compaction",
+        "transactions"
+      ],
+      "source_pages": [
+        105,
+        106,
+        107
+      ]
+    },
+    {
+      "id": "AR08",
+      "prompt": "Recite all secondary-index layouts.",
+      "target_points": [
+        "nonunique",
+        "row-ID list",
+        "heap",
+        "clustered",
+        "covering",
+        "write/storage tradeoff"
+      ],
+      "source_pages": [
+        107,
+        108,
+        109
+      ]
+    },
+    {
+      "id": "AR09",
+      "prompt": "Explain concatenated, multidimensional, and fuzzy indexes.",
+      "target_points": [
+        "leading prefix",
+        "lat/long",
+        "R-tree",
+        "space-filling curve",
+        "edit distance",
+        "Levenshtein"
+      ],
+      "source_pages": [
+        109,
+        110
+      ]
+    },
+    {
+      "id": "AR10",
+      "prompt": "Explain in-memory durability and performance.",
+      "target_points": [
+        "disk log",
+        "snapshots",
+        "replication",
+        "reload",
+        "encoding overhead",
+        "Redis structures",
+        "anti-caching"
+      ],
+      "source_pages": [
+        110,
+        111,
+        112
+      ]
+    },
+    {
+      "id": "AR11",
+      "prompt": "Compare OLTP and OLAP from memory.",
+      "target_points": [
+        "read pattern",
+        "write pattern",
+        "users",
+        "current vs history",
+        "dataset size",
+        "seek vs bandwidth"
+      ],
+      "source_pages": [
+        112,
+        113,
+        125
+      ]
+    },
+    {
+      "id": "AR12",
+      "prompt": "Explain data warehouse and ETL.",
+      "target_points": [
+        "separate analytics",
+        "OLTP protection",
+        "extract",
+        "transform",
+        "clean",
+        "load",
+        "analysis schema"
+      ],
+      "source_pages": [
+        113,
+        114,
+        115
+      ]
+    },
+    {
+      "id": "AR13",
+      "prompt": "Draw/describe a star schema.",
+      "target_points": [
+        "fact",
+        "date",
+        "product",
+        "store",
+        "promotion",
+        "customer",
+        "event attributes",
+        "foreign keys"
+      ],
+      "source_pages": [
+        115,
+        116,
+        117
+      ]
+    },
+    {
+      "id": "AR14",
+      "prompt": "Explain column-oriented storage and compression.",
+      "target_points": [
+        "few columns",
+        "same row order",
+        "column files",
+        "bitmap",
+        "RLE",
+        "OR",
+        "AND"
+      ],
+      "source_pages": [
+        117,
+        118,
+        119,
+        120,
+        121
+      ]
+    },
+    {
+      "id": "AR15",
+      "prompt": "Explain vectorized processing and column sorting.",
+      "target_points": [
+        "CPU cache",
+        "SIMD",
+        "tight loop",
+        "primary/secondary sort",
+        "compression",
+        "multiple orders"
+      ],
+      "source_pages": [
+        121,
+        122
+      ]
+    },
+    {
+      "id": "AR16",
+      "prompt": "Explain writes, materialized views, and cubes in a warehouse.",
+      "target_points": [
+        "in-memory buffer",
+        "bulk merge",
+        "virtual view",
+        "materialized copy",
+        "cube",
+        "precompute",
+        "flexibility cost"
+      ],
+      "source_pages": [
+        123,
+        124,
+        125
+      ]
+    }
+  ],
+  "diagram_reconstruction_drills": [
+    {
+      "id": "DR01",
+      "name": "Hash-indexed log",
+      "task": "Redraw Figure 3-1: in-memory key->offset hash map pointing into an append-only log.",
+      "source_pages": [
+        94
+      ]
+    },
+    {
+      "id": "DR02",
+      "name": "Compaction and merge",
+      "task": "Redraw Figures 3-2/3-3 showing duplicate updates compacted and immutable segments merged.",
+      "source_pages": [
+        95,
+        96
+      ]
+    },
+    {
+      "id": "DR03",
+      "name": "SSTable sparse index",
+      "task": "Redraw sorted segment plus sparse in-memory offsets and compressed blocks.",
+      "source_pages": [
+        98,
+        99
+      ]
+    },
+    {
+      "id": "DR04",
+      "name": "LSM pipeline",
+      "task": "Draw WAL -> memtable -> SSTable flush -> multi-level/segment compaction, with read order.",
+      "source_pages": [
+        100,
+        101
+      ]
+    },
+    {
+      "id": "DR05",
+      "name": "B-tree lookup and split",
+      "task": "Draw root/interior/leaf pages, key ranges, child references, then show a full leaf splitting.",
+      "source_pages": [
+        102,
+        103
+      ]
+    },
+    {
+      "id": "DR06",
+      "name": "OLTP vs OLAP",
+      "task": "Create a two-column comparison for read pattern, write pattern, users, data meaning, size, and bottleneck.",
+      "source_pages": [
+        113,
+        125
+      ]
+    },
+    {
+      "id": "DR07",
+      "name": "ETL warehouse",
+      "task": "Draw multiple OLTP sources -> extract/transform/load -> warehouse -> analytics.",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "DR08",
+      "name": "Star schema",
+      "task": "Redraw fact_sales at center with date, product, store, promotion, customer dimensions.",
+      "source_pages": [
+        116
+      ]
+    },
+    {
+      "id": "DR09",
+      "name": "Columnar layout",
+      "task": "Take a row table and redraw each attribute as a separate same-order column file.",
+      "source_pages": [
+        118,
+        119
+      ]
+    },
+    {
+      "id": "DR10",
+      "name": "Bitmap compression",
+      "task": "Draw one bitmap per distinct product value and illustrate OR/AND filtering plus run-length compression.",
+      "source_pages": [
+        120,
+        121
+      ]
+    },
+    {
+      "id": "DR11",
+      "name": "Data cube",
+      "task": "Redraw a date × product aggregate grid with row/column totals and explain how higher-dimensional cubes generalize it.",
+      "source_pages": [
+        124
+      ]
+    }
+  ],
+  "interview_style_questions": [
+    {
+      "id": "INT01",
+      "question": "Why does adding an index improve some queries but hurt writes?",
+      "strong_answer_outline": [
+        "derived metadata",
+        "extra write/update",
+        "query pattern selection",
+        "don't index everything"
+      ],
+      "source_pages": [
+        93
+      ]
+    },
+    {
+      "id": "INT02",
+      "question": "Design a simple persistent key-value store.",
+      "strong_answer_outline": [
+        "append-only log",
+        "key->offset hash index",
+        "segments",
+        "compaction",
+        "tombstones",
+        "checksums",
+        "recovery"
+      ],
+      "source_pages": [
+        92,
+        94,
+        95,
+        96,
+        97
+      ]
+    },
+    {
+      "id": "INT03",
+      "question": "How does an LSM-tree work?",
+      "strong_answer_outline": [
+        "WAL",
+        "memtable",
+        "SSTable",
+        "sorted merge",
+        "compaction",
+        "Bloom filter",
+        "range queries"
+      ],
+      "source_pages": [
+        98,
+        99,
+        100,
+        101
+      ]
+    },
+    {
+      "id": "INT04",
+      "question": "How does a B-tree work?",
+      "strong_answer_outline": [
+        "fixed pages",
+        "root",
+        "branching factor",
+        "leaf",
+        "split",
+        "balanced",
+        "WAL",
+        "latches"
+      ],
+      "source_pages": [
+        102,
+        103,
+        104
+      ]
+    },
+    {
+      "id": "INT05",
+      "question": "When might you prefer LSM over B-tree?",
+      "strong_answer_outline": [
+        "write-heavy",
+        "sequential I/O",
+        "write amplification",
+        "compression",
+        "range queries",
+        "compaction cost"
+      ],
+      "source_pages": [
+        105,
+        106,
+        107
+      ]
+    },
+    {
+      "id": "INT06",
+      "question": "When might B-tree be preferable?",
+      "strong_answer_outline": [
+        "read predictability",
+        "single key location",
+        "transaction/range locking",
+        "mature implementation"
+      ],
+      "source_pages": [
+        105,
+        107
+      ]
+    },
+    {
+      "id": "INT07",
+      "question": "Explain heap, clustered, and covering indexes.",
+      "strong_answer_outline": [
+        "row separate",
+        "full row in index",
+        "selected columns in index",
+        "read/write/storage tradeoff"
+      ],
+      "source_pages": [
+        108,
+        109
+      ]
+    },
+    {
+      "id": "INT08",
+      "question": "How would you index latitude/longitude or fuzzy text?",
+      "strong_answer_outline": [
+        "multidimensional index",
+        "R-tree/space-filling curve",
+        "full-text engine",
+        "edit distance",
+        "Levenshtein"
+      ],
+      "source_pages": [
+        109,
+        110
+      ]
+    },
+    {
+      "id": "INT09",
+      "question": "Compare OLTP and OLAP storage requirements.",
+      "strong_answer_outline": [
+        "point reads",
+        "random writes",
+        "seek time",
+        "large scans",
+        "aggregates",
+        "bandwidth",
+        "columnar"
+      ],
+      "source_pages": [
+        112,
+        113,
+        125,
+        126
+      ]
+    },
+    {
+      "id": "INT10",
+      "question": "Why do data warehouses often use columnar storage?",
+      "strong_answer_outline": [
+        "wide facts",
+        "few selected columns",
+        "compression",
+        "bandwidth",
+        "vectorized processing"
+      ],
+      "source_pages": [
+        117,
+        118,
+        119,
+        121
+      ]
+    },
+    {
+      "id": "INT11",
+      "question": "How do column stores handle write-heavy ingestion despite sorted compressed files?",
+      "strong_answer_outline": [
+        "in-memory buffer",
+        "sorted recent writes",
+        "LSM-like merge",
+        "bulk new files",
+        "optimizer combines recent/disk data"
+      ],
+      "source_pages": [
+        123
+      ]
+    },
+    {
+      "id": "INT12",
+      "question": "What are materialized views/data cubes good for and what do they cost?",
+      "strong_answer_outline": [
+        "precomputed aggregates",
+        "fast repeated reads",
+        "write maintenance",
+        "storage",
+        "reduced flexibility",
+        "keep raw data"
+      ],
+      "source_pages": [
+        123,
+        124,
+        125
+      ]
+    }
+  ],
+  "common_confusions": [
+    {
+      "confusion": "An index is part of the primary data and has no write cost.",
+      "correction": "An index is a derived structure. It speeds selected reads but must be updated on writes.",
+      "source_pages": [
+        93
+      ]
+    },
+    {
+      "confusion": "Append-only means data can never be deleted.",
+      "correction": "Deletions are represented by tombstones, and old data is removed during compaction.",
+      "source_pages": [
+        96
+      ]
+    },
+    {
+      "confusion": "SSTables require an in-memory entry for every key.",
+      "correction": "Because keys are sorted, a sparse index is enough; the engine can scan a short range.",
+      "source_pages": [
+        99
+      ]
+    },
+    {
+      "confusion": "An LSM recovery log must be sorted.",
+      "correction": "It does not need sorting because its only job is to reconstruct the memtable after a crash.",
+      "source_pages": [
+        100
+      ]
+    },
+    {
+      "confusion": "Bloom filters prove a key is present.",
+      "correction": "Their key benefit here is efficiently determining that a key is definitely absent; positive results may need verification.",
+      "source_pages": [
+        101
+      ]
+    },
+    {
+      "confusion": "B-trees and LSM-trees use the same physical update model.",
+      "correction": "B-trees overwrite fixed pages in place; LSM designs append/flush immutable sorted files and compact them.",
+      "source_pages": [
+        102,
+        104,
+        125
+      ]
+    },
+    {
+      "confusion": "LSM trees always outperform B-trees.",
+      "correction": "Performance depends on workload/configuration; the chapter explicitly recommends empirical testing.",
+      "source_pages": [
+        105,
+        107
+      ]
+    },
+    {
+      "confusion": "Write amplification is only an LSM problem.",
+      "correction": "Both B-trees and LSMs cause multiple physical writes per logical write, for different reasons.",
+      "source_pages": [
+        106
+      ]
+    },
+    {
+      "confusion": "Column-family databases such as Cassandra are the same as analytic column stores.",
+      "correction": "The chapter says their column families still store a row's columns together and are mostly row-oriented.",
+      "source_pages": [
+        121
+      ]
+    },
+    {
+      "confusion": "A transaction-processing database must provide ACID merely because it is OLTP.",
+      "correction": "Here transaction processing means low-latency reads/writes; ACID is a separate topic.",
+      "source_pages": [
+        112
+      ]
+    },
+    {
+      "confusion": "OLAP and OLTP can use the same engine equally well because both speak SQL.",
+      "correction": "Their access patterns and bottlenecks differ enough that internals often diverge significantly.",
+      "source_pages": [
+        113,
+        114,
+        115
+      ]
+    },
+    {
+      "confusion": "Column stores are faster because they never scan many rows.",
+      "correction": "They may scan millions/billions of rows, but read only needed columns and encode them compactly.",
+      "source_pages": [
+        117,
+        118,
+        125
+      ]
+    },
+    {
+      "confusion": "Each column in a column store may be sorted independently.",
+      "correction": "Row positions must correspond across all columns, so the entire row order must be consistent.",
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "confusion": "Materialized views are just query shortcuts.",
+      "correction": "Virtual views are query shortcuts; materialized views physically store query results.",
+      "source_pages": [
+        123
+      ]
+    },
+    {
+      "confusion": "Data cubes replace the need to retain raw data.",
+      "correction": "Cubes accelerate predefined dimensions but are less flexible, so warehouses generally retain raw data.",
+      "source_pages": [
+        125
+      ]
+    }
+  ],
+  "practice_problems": [
+    {
+      "id": "P01",
+      "type": "complexity",
+      "prompt": "A log has 10 million records and no index. What happens to lookup cost when it grows to 20 million records?",
+      "solution": "With O(n) scan-based lookup, lookup work roughly doubles.",
+      "based_on_source_pages": [
+        93
+      ]
+    },
+    {
+      "id": "P02",
+      "type": "hash_index",
+      "prompt": "A hash index says key X is at byte offset 25,000. What does the engine do?",
+      "solution": "Seek directly to that byte offset in the data file and read the value.",
+      "based_on_source_pages": [
+        94
+      ]
+    },
+    {
+      "id": "P03",
+      "type": "compaction",
+      "prompt": "A segment contains k=1, k=2, k=3. What remains after compaction?",
+      "solution": "Only the newest value, k=3.",
+      "based_on_source_pages": [
+        95
+      ]
+    },
+    {
+      "id": "P04",
+      "type": "lsm",
+      "prompt": "A key is missing from memtable and newest SSTable. What happens next?",
+      "solution": "Check progressively older SSTables; Bloom filters can help skip files that definitely do not contain the key.",
+      "based_on_source_pages": [
+        100,
+        101
+      ]
+    },
+    {
+      "id": "P05",
+      "type": "b_tree",
+      "prompt": "A B-tree insert fills a leaf page. What structural changes occur?",
+      "solution": "Split the page into two and update the parent with the new key-range subdivision.",
+      "based_on_source_pages": [
+        103
+      ]
+    },
+    {
+      "id": "P06",
+      "type": "write_amplification",
+      "prompt": "A logical write causes WAL write, page write, and an extra split-related write. How many physical write events are involved in this simplified example?",
+      "solution": "At least three physical write events; this illustrates write amplification.",
+      "based_on_source_pages": [
+        106
+      ]
+    },
+    {
+      "id": "P07",
+      "type": "index",
+      "prompt": "You have a concatenated index (country, city). Which query is naturally supported: country='US' or city='Atlanta' only?",
+      "solution": "country='US' is naturally supported because country is the leading field.",
+      "based_on_source_pages": [
+        109
+      ]
+    },
+    {
+      "id": "P08",
+      "type": "oltp_olap",
+      "prompt": "Classify: 'Fetch account 123 and update balance' versus 'Compute average monthly balance across 50 million accounts.'",
+      "solution": "First is OLTP; second is OLAP.",
+      "based_on_source_pages": [
+        112,
+        113
+      ]
+    },
+    {
+      "id": "P09",
+      "type": "bitmap",
+      "prompt": "Rows matching product=A are 10110 and rows matching store=X are 11010. What bitmap represents A AND X?",
+      "solution": "10010.",
+      "based_on_source_pages": [
+        120,
+        121
+      ]
+    },
+    {
+      "id": "P10",
+      "type": "materialized_view",
+      "prompt": "A dashboard repeatedly shows yesterday's sales by store. What optimization could help?",
+      "solution": "A materialized aggregate/data cube storing sales totals by date and store.",
+      "based_on_source_pages": [
+        123,
+        124,
+        125
+      ]
+    }
+  ],
+  "mastery_check": {
+    "beginner": [
+      "Can explain append-only logs, indexes, and the read/write tradeoff.",
+      "Can define hash index, SSTable, memtable, LSM-tree, B-tree, WAL, and Bloom filter.",
+      "Can distinguish OLTP from OLAP.",
+      "Can define fact table, dimension table, star schema, and column-oriented storage."
+    ],
+    "intermediate": [
+      "Can reconstruct Bitcask compaction/recovery.",
+      "Can walk through LSM write/read paths.",
+      "Can walk through B-tree lookup, split, and recovery.",
+      "Can compare B-tree and LSM write amplification.",
+      "Can explain secondary, clustered, covering, and multidimensional indexes.",
+      "Can explain ETL, column compression, and bitmap filtering."
+    ],
+    "advanced": [
+      "Can reason about when compaction becomes the bottleneck.",
+      "Can choose between B-tree and LSM based on real workload measurements.",
+      "Can distinguish seek-bound OLTP from bandwidth-bound OLAP.",
+      "Can explain vectorized analytical execution and sort-order effects.",
+      "Can design a warehouse layout with facts, dimensions, column storage, and materialized aggregates.",
+      "Can identify the operational cost of every read optimization introduced in the chapter."
+    ]
+  },
+  "final_review": {
+    "must_memorize": [
+      "Indexes speed reads but add write overhead.",
+      "Append-only logs make writes simple and fast.",
+      "Hash index = key -> byte offset; Bitcask requires keys to fit in RAM.",
+      "Segments + compaction + merging reclaim log space.",
+      "Tombstones represent deletion; checksums detect partial records.",
+      "Hash indexes are poor for range queries.",
+      "SSTable = sorted immutable key/value segment.",
+      "Sorted segments enable sparse indexes, merges, range scans, and compression.",
+      "LSM path = WAL -> memtable -> SSTable -> compaction.",
+      "Bloom filters accelerate negative lookups.",
+      "Compaction strategies include size-tiered and leveled.",
+      "B-tree = fixed-size pages, root-to-leaf lookup, balanced O(log n), page splitting.",
+      "B-trees use WAL/redo logs for crash recovery and latches for concurrency.",
+      "LSMs usually favor write throughput; B-trees often favor read predictability.",
+      "Write amplification affects both B-trees and LSMs.",
+      "Compaction can create tail latency and must keep up with ingestion.",
+      "Secondary indexes may contain duplicate keys.",
+      "Heap file = one row copy plus index pointers.",
+      "Clustered index stores full rows; covering index stores selected extra columns.",
+      "Concatenated indexes obey leading-prefix behavior.",
+      "R-trees support multidimensional/geospatial indexing.",
+      "Lucene supports fuzzy matching using edit-distance techniques.",
+      "In-memory DB durability can come from logs, snapshots, or replication.",
+      "OLTP = many low-latency point reads/writes over current state.",
+      "OLAP = fewer but massive scans/aggregations over history.",
+      "OLTP is often seek-bound; OLAP is often disk-bandwidth-bound.",
+      "Data warehouse isolates analytical scans from OLTP.",
+      "ETL = Extract-Transform-Load.",
+      "Star schema = central fact table + dimensions.",
+      "Snowflake schema further normalizes dimensions.",
+      "Column storage reads only needed attributes.",
+      "Bitmap + run-length encoding compress repetitive column values.",
+      "OR combines alternatives; AND combines predicates.",
+      "Vectorized processing uses compressed column chunks and CPU/SIMD efficiently.",
+      "Column stores preserve the same row order across columns.",
+      "Sorting helps query pruning and compression.",
+      "Column-store writes can use LSM-like memory buffers and bulk merges.",
+      "Materialized views persist query results.",
+      "Data cubes precompute multidimensional aggregates but sacrifice flexibility."
+    ],
+    "memory_chain": "APPEND LOG -> INDEX TRADEOFF -> HASH INDEX -> SEGMENTS/COMPACTION -> SSTABLE -> MEMTABLE -> LSM -> BLOOM FILTER -> B-TREE -> WAL -> LSM vs B-TREE -> SECONDARY/CLUSTERED/COVERING -> MULTIDIMENSIONAL/FUZZY -> IN-MEMORY -> OLTP vs OLAP -> WAREHOUSE/ETL -> STAR/SNOWFLAKE -> COLUMN STORE -> BITMAP/RLE -> VECTORIZED PROCESSING -> SORT ORDER -> BULK MERGE WRITES -> MATERIALIZED VIEW -> DATA CUBE",
+    "one_sentence_takeaway": "Storage-engine design is a sequence of workload-specific tradeoffs: OLTP relies on indexes and structures such as B-trees or LSM-trees to make point reads/writes efficient, while OLAP relies on compact columnar layouts, compression, sequential scans, and precomputed aggregates to maximize analytical throughput."
+  }
+}

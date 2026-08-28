@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <title>Study Guide — System Design Flashcards</title>
+  <link rel="stylesheet" href="styles.css?v=4" />
+</head>
+<body>
+  <div id="app">
+    <!-- Landing / open-folder screen -->
+    <section id="landing" class="landing">
+      <div class="landing-card">
+        <h1>System Design Study Guide</h1>
+        <p class="landing-sub">
+          Open a folder of study-guide JSON files to review flashcards,
+          multiple-choice questions, summaries, and more.
+        </p>
+
+        <div class="landing-actions">
+          <button id="open-folder-btn" class="btn btn-primary">Open folder…</button>
+          <label class="btn btn-secondary" for="folder-input">Choose folder (fallback)</label>
+          <input id="folder-input" type="file" webkitdirectory directory multiple hidden />
+          <label class="btn btn-secondary" for="files-input">Choose JSON files…</label>
+          <input id="files-input" type="file" accept="application/json,.json" multiple hidden />
+        </div>
+
+        <p id="landing-hint" class="landing-hint">
+          Tip: your browser may ask for permission to read the folder. Nothing
+          leaves your machine — all parsing happens locally.
+        </p>
+        <p id="landing-error" class="landing-error" hidden></p>
+      </div>
+    </section>
+
+    <!-- Main study interface -->
+    <div id="study" class="study" hidden>
+      <aside class="sidebar">
+        <div class="sidebar-head">
+          <button id="reopen-btn" class="btn btn-ghost btn-small" title="Open a different folder">↻ Change folder</button>
+          <button id="reset-btn" class="btn btn-ghost btn-small" title="Clear saved progress">⟲ Reset progress</button>
+        </div>
+        <div class="sidebar-book">
+          <select id="book-select" aria-label="Select book"></select>
+        </div>
+        <div class="sidebar-search">
+          <input id="chapter-search" type="search" placeholder="Filter chapters…" />
+        </div>
+        <nav id="chapter-list" class="chapter-list" aria-label="Chapters"></nav>
+      </aside>
+
+      <main class="content">
+        <header class="content-head">
+          <div id="chapter-title-block">
+            <h1 id="chapter-title">Select a chapter</h1>
+            <p id="chapter-meta" class="chapter-meta"></p>
+          </div>
+          <div class="mode-tabs" id="mode-tabs">
+            <button class="mode-tab active" data-mode="all">All</button>
+            <button class="mode-tab" data-mode="study">Study</button>
+            <button class="mode-tab" data-mode="reference">Reference</button>
+          </div>
+        </header>
+
+        <nav id="section-nav" class="section-nav" aria-label="Sections"></nav>
+
+        <div id="sections" class="sections"></div>
+      </main>
+    </div>
+  </div>
+
+  <script src="app.js?v=4"></script>
+</body>
+</html>

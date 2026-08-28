@@ -1,0 +1,2904 @@
+{
+  "chapter": {
+    "number": 7,
+    "title": "Design a Unique ID Generator in Distributed Systems",
+    "source": "System Design Interview: An Insider's Guide by Alex Xu",
+    "pdf_pages": {
+      "chapter_start": 110,
+      "chapter_end": 117,
+      "references_page": 118
+    },
+    "primary_goal": "Design a distributed unique-ID generator that produces numeric, 64-bit, time-ordered IDs at more than 10,000 IDs per second, while comparing multi-master replication, UUIDs, ticket servers, and a Twitter Snowflake-like design."
+  },
+  "chapter_summary": {
+    "overview": "Chapter 7 explains why a traditional database auto_increment primary key is insufficient for large distributed systems: one database server is not enough, and coordinating unique IDs across multiple databases with minimal delay is difficult. The chapter first clarifies the requirements—IDs must be unique, numeric, fit in 64 bits, increase with time, and support more than 10,000 IDs per second. It then compares four approaches: multi-master replication, UUIDs, a centralized ticket server, and a Twitter Snowflake-like generator. The first three each violate one or more requirements. Snowflake divides a 64-bit ID into a sign bit, 41-bit timestamp, 5-bit datacenter ID, 5-bit machine ID, and 12-bit sequence number. The deep dive explains why timestamps make IDs sortable, how the 41-bit timestamp lasts about 69 years, and how the 12-bit sequence permits up to 4096 IDs per millisecond per machine. The wrap-up highlights clock synchronization, section-length tuning, and high availability.",
+    "why_auto_increment_is_not_enough": [
+      "A single database server is not large enough for the target distributed environment.",
+      "Generating unique IDs across multiple databases with minimal delay is challenging."
+    ],
+    "approaches_compared": [
+      "Multi-master replication",
+      "UUID",
+      "Ticket server",
+      "Twitter Snowflake-like generator"
+    ],
+    "chosen_approach": "Twitter Snowflake-like generator",
+    "source_pages": [
+      110,
+      111,
+      112,
+      113,
+      114,
+      115,
+      116,
+      117
+    ]
+  },
+  "learning_objectives": [
+    {
+      "id": "LO1",
+      "objective": "Explain why a single auto_increment database is not sufficient for distributed ID generation.",
+      "source_pages": [
+        110
+      ]
+    },
+    {
+      "id": "LO2",
+      "objective": "State all five requirements for the ID generator.",
+      "source_pages": [
+        111
+      ]
+    },
+    {
+      "id": "LO3",
+      "objective": "Explain multi-master replication and why its IDs increment by k rather than 1.",
+      "source_pages": [
+        112
+      ]
+    },
+    {
+      "id": "LO4",
+      "objective": "Explain the scalability benefits and three drawbacks of multi-master replication.",
+      "source_pages": [
+        112
+      ]
+    },
+    {
+      "id": "LO5",
+      "objective": "Explain UUID generation, its decentralized scaling benefit, and why it does not meet the chapter's requirements.",
+      "source_pages": [
+        112,
+        113
+      ]
+    },
+    {
+      "id": "LO6",
+      "objective": "Explain the ticket-server architecture and its single-point-of-failure tradeoff.",
+      "source_pages": [
+        113,
+        114
+      ]
+    },
+    {
+      "id": "LO7",
+      "objective": "Reconstruct the full 64-bit Snowflake-like ID layout.",
+      "source_pages": [
+        114,
+        115
+      ]
+    },
+    {
+      "id": "LO8",
+      "objective": "Explain how the timestamp field makes generated IDs sortable by time.",
+      "source_pages": [
+        115
+      ]
+    },
+    {
+      "id": "LO9",
+      "objective": "Explain the role and operational safety requirements of datacenter ID and machine ID.",
+      "source_pages": [
+        114,
+        115
+      ]
+    },
+    {
+      "id": "LO10",
+      "objective": "Explain the 12-bit sequence field and its per-millisecond generation capacity.",
+      "source_pages": [
+        114,
+        116
+      ]
+    },
+    {
+      "id": "LO11",
+      "objective": "Calculate why a 41-bit millisecond timestamp lasts about 69 years.",
+      "source_pages": [
+        116
+      ]
+    },
+    {
+      "id": "LO12",
+      "objective": "Explain why using a recent custom epoch postpones timestamp overflow.",
+      "source_pages": [
+        114,
+        116
+      ]
+    },
+    {
+      "id": "LO13",
+      "objective": "Discuss clock synchronization, section-length tuning, and high availability as follow-up topics.",
+      "source_pages": [
+        117
+      ]
+    }
+  ],
+  "requirements": [
+    {
+      "requirement": "Unique",
+      "detail": "Every generated ID must be unique.",
+      "source_pages": [
+        111
+      ]
+    },
+    {
+      "requirement": "Numeric only",
+      "detail": "IDs contain numerical values only.",
+      "source_pages": [
+        111
+      ]
+    },
+    {
+      "requirement": "64-bit",
+      "detail": "IDs must fit into 64 bits.",
+      "source_pages": [
+        111
+      ]
+    },
+    {
+      "requirement": "Ordered by date/time",
+      "detail": "IDs do not have to increase by exactly 1, but IDs created later in time should be larger than IDs created earlier in time.",
+      "source_pages": [
+        111
+      ]
+    },
+    {
+      "requirement": "High throughput",
+      "detail": "Generate over 10,000 unique IDs per second.",
+      "source_pages": [
+        111
+      ]
+    }
+  ],
+  "clarification_dialogue": [
+    {
+      "candidate_question": "What are the characteristics of unique IDs?",
+      "interviewer_answer": "IDs must be unique and sortable.",
+      "source_pages": [
+        111
+      ]
+    },
+    {
+      "candidate_question": "For each new record, does ID increment by 1?",
+      "interviewer_answer": "The ID increases with time, but not necessarily by exactly 1. IDs created in the evening are larger than IDs created in the morning on the same day.",
+      "source_pages": [
+        111
+      ]
+    },
+    {
+      "candidate_question": "Do IDs only contain numerical values?",
+      "interviewer_answer": "Yes.",
+      "source_pages": [
+        111
+      ]
+    },
+    {
+      "candidate_question": "What is the ID length requirement?",
+      "interviewer_answer": "64-bit.",
+      "source_pages": [
+        111
+      ]
+    },
+    {
+      "candidate_question": "What is the scale of the system?",
+      "interviewer_answer": "10,000 IDs per second.",
+      "source_pages": [
+        111
+      ]
+    }
+  ],
+  "candidate_solutions": [
+    {
+      "name": "Multi-Master Replication",
+      "mechanism": "Use each database server's auto_increment feature, but increment IDs by k instead of 1, where k is the number of database servers.",
+      "chapter_example": {
+        "database_servers": 2,
+        "increment_step": 2,
+        "server_sequences": [
+          "Server A: 1, 3, 5, ...",
+          "Server B: 2, 4, 6, ..."
+        ]
+      },
+      "advantages": [
+        "Solves some scalability issues.",
+        "ID generation capacity can scale with the number of database servers."
+      ],
+      "disadvantages": [
+        "Hard to scale across multiple data centers.",
+        "IDs do not increase with time across multiple servers.",
+        "Does not scale well when a server is added or removed."
+      ],
+      "meets_requirements": "Partially",
+      "source_pages": [
+        112
+      ]
+    },
+    {
+      "name": "UUID",
+      "mechanism": "Each web server independently generates UUIDs without coordinating with other servers.",
+      "bit_length": 128,
+      "example": "09c93e62-50b4-468d-bf8a-c07e1040bfb2",
+      "source_probability_statement": "The chapter quotes a reference saying that even generating 1 billion UUIDs per second for about 100 years would only then bring duplicate probability to 50%.",
+      "source_wording_note": "The chapter text uses the word 'collusion' in this sentence; this guide preserves the source's substantive claim without silently rewriting the chapter's terminology elsewhere.",
+      "advantages": [
+        "Simple to generate.",
+        "No server coordination is required.",
+        "No synchronization issue between ID generators.",
+        "Easy to scale because each web server can generate the IDs it consumes."
+      ],
+      "disadvantages": [
+        "UUIDs are 128 bits, while the requirement is 64 bits.",
+        "UUIDs do not increase with time.",
+        "UUIDs can be non-numeric."
+      ],
+      "meets_requirements": "No",
+      "source_pages": [
+        112,
+        113
+      ]
+    },
+    {
+      "name": "Ticket Server",
+      "mechanism": "Use a centralized database server with auto_increment to issue unique numeric IDs.",
+      "chapter_reference": "Flickr developed ticket servers for distributed primary keys.",
+      "advantages": [
+        "Numeric IDs.",
+        "Easy to implement.",
+        "Works for small- to medium-scale applications."
+      ],
+      "disadvantages": [
+        "A single ticket server is a single point of failure.",
+        "Using multiple ticket servers to avoid the single point of failure introduces synchronization challenges."
+      ],
+      "meets_requirements": "Not selected for the target distributed design",
+      "source_pages": [
+        113,
+        114
+      ]
+    },
+    {
+      "name": "Twitter Snowflake-like Generator",
+      "mechanism": "Divide one 64-bit ID into multiple sections so uniqueness, time ordering, distributed generation, and high throughput can be achieved without one centralized auto_increment database.",
+      "advantages": [
+        "Meets the chapter's stated requirements.",
+        "Scales in a distributed environment.",
+        "Provides time-sortable numeric IDs."
+      ],
+      "selected": true,
+      "source_pages": [
+        114,
+        115,
+        117
+      ]
+    }
+  ],
+  "solution_comparison": [
+    {
+      "approach": "Multi-master replication",
+      "numeric": "Yes",
+      "fits_64_bit_requirement": "Can",
+      "time_ordered_across_servers": "No",
+      "distributed_generation": "Yes",
+      "key_issue": "Membership and multi-data-center scaling",
+      "source_pages": [
+        112
+      ]
+    },
+    {
+      "approach": "UUID",
+      "numeric": "Not guaranteed",
+      "fits_64_bit_requirement": "No; UUID is 128-bit",
+      "time_ordered": "No",
+      "distributed_generation": "Yes, independently",
+      "key_issue": "Violates 64-bit/time-order/numeric requirements",
+      "source_pages": [
+        112,
+        113
+      ]
+    },
+    {
+      "approach": "Ticket server",
+      "numeric": "Yes",
+      "distributed_generation": "Centralized issuance",
+      "key_issue": "Single point of failure; multiple ticket servers introduce synchronization problems",
+      "source_pages": [
+        113,
+        114
+      ]
+    },
+    {
+      "approach": "Snowflake-like",
+      "numeric": "Yes",
+      "fits_64_bit_requirement": "Yes",
+      "time_ordered": "Yes, through timestamp field",
+      "distributed_generation": "Yes",
+      "key_issue": "Clock synchronization and careful section/ID assignment",
+      "source_pages": [
+        114,
+        115,
+        117
+      ]
+    }
+  ],
+  "snowflake_layout": {
+    "total_bits": 64,
+    "fields": [
+      {
+        "field": "Sign bit",
+        "bits": 1,
+        "value": 0,
+        "purpose": "Reserved for future uses; the chapter notes it could potentially distinguish signed and unsigned numbers.",
+        "source_pages": [
+          114
+        ]
+      },
+      {
+        "field": "Timestamp",
+        "bits": 41,
+        "unit": "milliseconds",
+        "meaning": "Milliseconds since an epoch or custom epoch.",
+        "default_epoch_in_chapter": 1288834974657,
+        "default_epoch_utc": "Nov 04, 2010, 01:42:54 UTC",
+        "purpose": "Makes IDs sortable by time because the timestamp increases over time.",
+        "source_pages": [
+          114,
+          115
+        ]
+      },
+      {
+        "field": "Datacenter ID",
+        "bits": 5,
+        "capacity": 32,
+        "calculation": "2^5 = 32 datacenters",
+        "source_pages": [
+          114
+        ]
+      },
+      {
+        "field": "Machine ID",
+        "bits": 5,
+        "capacity": 32,
+        "calculation": "2^5 = 32 machines per datacenter",
+        "source_pages": [
+          114
+        ]
+      },
+      {
+        "field": "Sequence number",
+        "bits": 12,
+        "capacity_per_millisecond_per_machine": 4096,
+        "calculation": "2^12 = 4096 combinations",
+        "behavior": "Increment for every ID generated by the same machine/process within a millisecond; reset to 0 every millisecond.",
+        "source_pages": [
+          114,
+          116
+        ]
+      }
+    ],
+    "bit_sum_check": "1 + 41 + 5 + 5 + 12 = 64",
+    "source_pages": [
+      114,
+      115
+    ]
+  },
+  "snowflake_deep_dive": {
+    "startup_fixed_fields": [
+      "Datacenter ID",
+      "Machine ID"
+    ],
+    "runtime_generated_fields": [
+      "Timestamp",
+      "Sequence number"
+    ],
+    "configuration_warning": "Datacenter IDs and machine IDs are generally selected at startup and fixed while the system is running. Accidental changes can create ID conflicts.",
+    "source_pages": [
+      115
+    ]
+  },
+  "timestamp_deep_dive": {
+    "bits": 41,
+    "importance": "The chapter calls the timestamp the most important 41 bits.",
+    "sortability": "As the timestamp increases with time, the generated IDs are sortable by time.",
+    "maximum_timestamp_value_ms": 2199023255551,
+    "formula": "2^41 - 1 = 2,199,023,255,551 milliseconds",
+    "approximate_lifetime": "69 years",
+    "chapter_lifetime_calculation": "2,199,023,255,551 ms / 1000 / 365 / 24 / 3600 ≈ 69 years",
+    "custom_epoch_benefit": "Choosing a custom epoch close to the current date delays the point at which the 41-bit timestamp overflows.",
+    "after_exhaustion": "After roughly 69 years, use a new epoch or adopt another migration technique for IDs.",
+    "figure_7_7_example": {
+      "timestamp_delta_decimal": 297616116568,
+      "twitter_epoch": 1288834974657,
+      "absolute_timestamp_ms": 1586451091225,
+      "utc_time": "Apr 09 2020 16:51:31 UTC"
+    },
+    "source_pages": [
+      115,
+      116
+    ]
+  },
+  "sequence_deep_dive": {
+    "bits": 12,
+    "combinations": 4096,
+    "reset_interval": "Every millisecond",
+    "normal_behavior": "The field is 0 unless more than one ID is generated in the same millisecond on the same server.",
+    "theoretical_machine_capacity": "4096 new IDs per millisecond",
+    "source_pages": [
+      116
+    ]
+  },
+  "capacity_derivations_from_source": {
+    "note": "The following arithmetic is derived directly from the bit allocations in the chapter. These combined capacities are study calculations, not additional claims printed by the source.",
+    "datacenters": {
+      "formula": "2^5",
+      "result": 32
+    },
+    "machines_per_datacenter": {
+      "formula": "2^5",
+      "result": 32
+    },
+    "maximum_machine_id_combinations_across_datacenters": {
+      "formula": "32 * 32",
+      "result": 1024
+    },
+    "ids_per_machine_per_millisecond": {
+      "formula": "2^12",
+      "result": 4096
+    },
+    "theoretical_ids_per_machine_per_second_if_every_ms_is_fully_used": {
+      "formula": "4096 * 1000",
+      "result": 4096000
+    },
+    "theoretical_ids_per_millisecond_across_1024_machine_slots": {
+      "formula": "1024 * 4096",
+      "result": 4194304
+    },
+    "requirement_comparison": "The required throughput is over 10,000 IDs/second, far below the theoretical sequence capacity of one machine if every millisecond were fully utilized.",
+    "based_on_source_pages": [
+      111,
+      114,
+      116
+    ]
+  },
+  "wrap_up_topics": [
+    {
+      "topic": "Clock synchronization",
+      "problem": "The design assumes ID-generation servers share the same clock, but this assumption may fail across cores and machines.",
+      "chapter_reference_solution": "Network Time Protocol (NTP) is described as the most popular solution.",
+      "implementation_detail_scope": "Detailed clock-synchronization solutions are outside the scope of the book.",
+      "source_pages": [
+        117
+      ]
+    },
+    {
+      "topic": "Section length tuning",
+      "idea": "The bit allocation can be changed for workload needs. The chapter gives fewer sequence bits and more timestamp bits as an example for low-concurrency, long-term applications.",
+      "source_pages": [
+        117
+      ]
+    },
+    {
+      "topic": "High availability",
+      "idea": "The ID generator is mission-critical and therefore must be highly available.",
+      "source_pages": [
+        117
+      ]
+    }
+  ],
+  "key_concepts": [
+    {
+      "term": "Distributed Unique ID Generator",
+      "definition": "A system that generates unique identifiers across multiple machines without relying on a single traditional auto_increment database.",
+      "source_pages": [
+        110
+      ]
+    },
+    {
+      "term": "Sortable ID",
+      "definition": "An ID whose ordering reflects creation time; later IDs are larger than earlier IDs under the chapter's requirement.",
+      "source_pages": [
+        111,
+        115
+      ]
+    },
+    {
+      "term": "Multi-Master ID Generation",
+      "definition": "Multiple database servers generate IDs using auto_increment with a step size equal to the number of servers.",
+      "source_pages": [
+        112
+      ]
+    },
+    {
+      "term": "UUID",
+      "definition": "A 128-bit identifier that can be generated independently by different servers with extremely low duplicate probability.",
+      "source_pages": [
+        112,
+        113
+      ]
+    },
+    {
+      "term": "Ticket Server",
+      "definition": "A centralized database server using auto_increment to issue numeric IDs.",
+      "source_pages": [
+        113
+      ]
+    },
+    {
+      "term": "Snowflake ID",
+      "definition": "A 64-bit ID assembled from timestamp, location/machine identity, and sequence fields.",
+      "source_pages": [
+        114,
+        115
+      ]
+    },
+    {
+      "term": "Epoch",
+      "definition": "The reference time from which the timestamp field measures elapsed milliseconds.",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "term": "Custom Epoch",
+      "definition": "A chosen reference timestamp, typically near the system's start time, which extends the useful life of a fixed-width timestamp field.",
+      "source_pages": [
+        114,
+        116
+      ]
+    },
+    {
+      "term": "Datacenter ID",
+      "definition": "The 5-bit Snowflake field identifying one of up to 32 datacenters.",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "term": "Machine ID",
+      "definition": "The 5-bit Snowflake field identifying one of up to 32 machines in a datacenter.",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "term": "Sequence Number",
+      "definition": "The 12-bit per-machine counter used to distinguish IDs generated in the same millisecond.",
+      "source_pages": [
+        114,
+        116
+      ]
+    },
+    {
+      "term": "Clock Synchronization",
+      "definition": "The requirement that distributed ID generators have compatible notions of time so timestamp-based ordering does not break.",
+      "source_pages": [
+        117
+      ]
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "FC01",
+      "front": "What problem does Chapter 7 ask you to design?",
+      "back": "A unique ID generator for distributed systems.",
+      "source_pages": [
+        110
+      ]
+    },
+    {
+      "id": "FC02",
+      "front": "Why not simply use a traditional auto_increment primary key?",
+      "back": "One database server is not large enough for the distributed target, and coordinating unique IDs across multiple databases with minimal delay is difficult.",
+      "source_pages": [
+        110
+      ]
+    },
+    {
+      "id": "FC03",
+      "front": "What are the five ID requirements?",
+      "back": "Unique, numeric, 64-bit, ordered by date/time, and capable of generating over 10,000 IDs per second.",
+      "source_pages": [
+        111
+      ]
+    },
+    {
+      "id": "FC04",
+      "front": "Must IDs increase by exactly 1?",
+      "back": "No. They should increase with time, but not necessarily by exactly 1.",
+      "source_pages": [
+        111
+      ]
+    },
+    {
+      "id": "FC05",
+      "front": "What does time ordering mean in the requirement example?",
+      "back": "An ID created in the evening should be larger than one created in the morning on the same day.",
+      "source_pages": [
+        111
+      ]
+    },
+    {
+      "id": "FC06",
+      "front": "What throughput must the generator support?",
+      "back": "Over 10,000 unique IDs per second.",
+      "source_pages": [
+        111
+      ]
+    },
+    {
+      "id": "FC07",
+      "front": "What four designs are considered?",
+      "back": "Multi-master replication, UUID, ticket server, and Twitter Snowflake-like generation.",
+      "source_pages": [
+        112
+      ]
+    },
+    {
+      "id": "FC08",
+      "front": "How does multi-master replication generate unique IDs?",
+      "back": "Each database uses auto_increment with step size k, where k is the number of database servers.",
+      "source_pages": [
+        112
+      ]
+    },
+    {
+      "id": "FC09",
+      "front": "With two multi-master database servers, what example sequences are shown?",
+      "back": "1,3,5,... on one server and 2,4,6,... on the other.",
+      "source_pages": [
+        112
+      ]
+    },
+    {
+      "id": "FC10",
+      "front": "Why can multi-master replication scale ID generation?",
+      "back": "More database servers can generate IDs in parallel using disjoint increment sequences.",
+      "source_pages": [
+        112
+      ]
+    },
+    {
+      "id": "FC11",
+      "front": "What are the three multi-master drawbacks?",
+      "back": "Hard across multiple data centers, IDs are not time-ordered across servers, and adding/removing servers is difficult.",
+      "source_pages": [
+        112
+      ]
+    },
+    {
+      "id": "FC12",
+      "front": "How large is a UUID?",
+      "back": "128 bits.",
+      "source_pages": [
+        112
+      ]
+    },
+    {
+      "id": "FC13",
+      "front": "Can UUIDs be generated independently?",
+      "back": "Yes. Each web server can generate them without coordination.",
+      "source_pages": [
+        112,
+        113
+      ]
+    },
+    {
+      "id": "FC14",
+      "front": "What synchronization advantage does UUID have?",
+      "back": "No coordination between servers is required, so the ID generators do not have synchronization issues.",
+      "source_pages": [
+        113
+      ]
+    },
+    {
+      "id": "FC15",
+      "front": "Why is UUID easy to scale?",
+      "back": "Each web server independently generates the IDs it consumes, so ID generation scales with web servers.",
+      "source_pages": [
+        113
+      ]
+    },
+    {
+      "id": "FC16",
+      "front": "Why does UUID violate the bit-length requirement?",
+      "back": "UUID is 128-bit while the design requires 64-bit IDs.",
+      "source_pages": [
+        113
+      ]
+    },
+    {
+      "id": "FC17",
+      "front": "Why does UUID violate the ordering requirement?",
+      "back": "UUIDs do not increase with time in the design discussed.",
+      "source_pages": [
+        113
+      ]
+    },
+    {
+      "id": "FC18",
+      "front": "Why does UUID violate the numeric-only requirement?",
+      "back": "UUIDs can contain non-numeric characters.",
+      "source_pages": [
+        113
+      ]
+    },
+    {
+      "id": "FC19",
+      "front": "What is a ticket server?",
+      "back": "A centralized database server using auto_increment to generate distributed primary-key IDs.",
+      "source_pages": [
+        113
+      ]
+    },
+    {
+      "id": "FC20",
+      "front": "Which company is credited with ticket servers in the chapter?",
+      "back": "Flickr.",
+      "source_pages": [
+        113
+      ]
+    },
+    {
+      "id": "FC21",
+      "front": "What are ticket-server advantages?",
+      "back": "Numeric IDs, easy implementation, and suitability for small- to medium-scale applications.",
+      "source_pages": [
+        113
+      ]
+    },
+    {
+      "id": "FC22",
+      "front": "What is the ticket server's major weakness?",
+      "back": "A single ticket server is a single point of failure.",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "FC23",
+      "front": "What happens if you add multiple ticket servers for availability?",
+      "back": "You introduce data-synchronization challenges.",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "FC24",
+      "front": "Which approach does the chapter ultimately choose?",
+      "back": "A Twitter Snowflake-like ID generator.",
+      "source_pages": [
+        114,
+        117
+      ]
+    },
+    {
+      "id": "FC25",
+      "front": "How many total bits are in the chosen Snowflake-style ID?",
+      "back": "64 bits.",
+      "source_pages": [
+        114,
+        115
+      ]
+    },
+    {
+      "id": "FC26",
+      "front": "What are the five Snowflake fields?",
+      "back": "1-bit sign, 41-bit timestamp, 5-bit datacenter ID, 5-bit machine ID, 12-bit sequence.",
+      "source_pages": [
+        114,
+        115
+      ]
+    },
+    {
+      "id": "FC27",
+      "front": "How large is the sign field?",
+      "back": "1 bit.",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "FC28",
+      "front": "What value does the sign bit use?",
+      "back": "0.",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "FC29",
+      "front": "Why is the sign bit reserved?",
+      "back": "For future use; the chapter says it could potentially distinguish signed from unsigned numbers.",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "FC30",
+      "front": "How large is the timestamp field?",
+      "back": "41 bits.",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "FC31",
+      "front": "What unit does the timestamp use?",
+      "back": "Milliseconds since an epoch/custom epoch.",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "FC32",
+      "front": "What Snowflake epoch does the chapter use?",
+      "back": "1288834974657.",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "FC33",
+      "front": "What UTC date corresponds to that epoch?",
+      "back": "Nov 04, 2010, 01:42:54 UTC.",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "FC34",
+      "front": "Why are Snowflake IDs sortable by time?",
+      "back": "The 41-bit timestamp increases with time and occupies the most significant time-varying portion of the ID.",
+      "source_pages": [
+        115
+      ]
+    },
+    {
+      "id": "FC35",
+      "front": "How many bits are used for datacenter ID?",
+      "back": "5 bits.",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "FC36",
+      "front": "How many datacenters can 5 bits represent?",
+      "back": "32.",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "FC37",
+      "front": "How many bits are used for machine ID?",
+      "back": "5 bits.",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "FC38",
+      "front": "How many machines per datacenter can 5 bits represent?",
+      "back": "32.",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "FC39",
+      "front": "How many bits are used for the sequence number?",
+      "back": "12 bits.",
+      "source_pages": [
+        114,
+        116
+      ]
+    },
+    {
+      "id": "FC40",
+      "front": "How many sequence combinations are available per millisecond per machine?",
+      "back": "4096.",
+      "source_pages": [
+        116
+      ]
+    },
+    {
+      "id": "FC41",
+      "front": "When does the sequence number increment?",
+      "back": "For every additional ID generated on the same machine/process within the same millisecond.",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "FC42",
+      "front": "When is the sequence reset?",
+      "back": "To 0 every millisecond.",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "FC43",
+      "front": "When is the sequence field normally 0?",
+      "back": "Unless more than one ID is generated in the same millisecond on the same server.",
+      "source_pages": [
+        116
+      ]
+    },
+    {
+      "id": "FC44",
+      "front": "What is the theoretical maximum IDs per millisecond per machine?",
+      "back": "4096.",
+      "source_pages": [
+        116
+      ]
+    },
+    {
+      "id": "FC45",
+      "front": "Which Snowflake fields are generally selected at startup?",
+      "back": "Datacenter ID and machine ID.",
+      "source_pages": [
+        115
+      ]
+    },
+    {
+      "id": "FC46",
+      "front": "Which fields are generated while the ID generator runs?",
+      "back": "Timestamp and sequence number.",
+      "source_pages": [
+        115
+      ]
+    },
+    {
+      "id": "FC47",
+      "front": "Why must datacenter and machine IDs be changed carefully?",
+      "back": "Accidental changes can cause ID conflicts.",
+      "source_pages": [
+        115
+      ]
+    },
+    {
+      "id": "FC48",
+      "front": "What is the maximum value representable by the 41-bit timestamp?",
+      "back": "2^41 - 1 = 2,199,023,255,551 milliseconds.",
+      "source_pages": [
+        116
+      ]
+    },
+    {
+      "id": "FC49",
+      "front": "How long does the 41-bit millisecond timestamp last?",
+      "back": "Approximately 69 years.",
+      "source_pages": [
+        116
+      ]
+    },
+    {
+      "id": "FC50",
+      "front": "How does a recent custom epoch help?",
+      "back": "It postpones timestamp overflow by starting the 41-bit elapsed-time count close to deployment time.",
+      "source_pages": [
+        116
+      ]
+    },
+    {
+      "id": "FC51",
+      "front": "What happens after the timestamp range is exhausted?",
+      "back": "A new epoch or another ID migration technique is required.",
+      "source_pages": [
+        116
+      ]
+    },
+    {
+      "id": "FC52",
+      "front": "What timestamp delta is shown in Figure 7-7?",
+      "back": "297616116568 milliseconds.",
+      "source_pages": [
+        115
+      ]
+    },
+    {
+      "id": "FC53",
+      "front": "What absolute timestamp is shown after adding the Twitter epoch?",
+      "back": "1586451091225 milliseconds.",
+      "source_pages": [
+        115
+      ]
+    },
+    {
+      "id": "FC54",
+      "front": "What UTC time does Figure 7-7 show?",
+      "back": "Apr 09 2020 16:51:31 UTC.",
+      "source_pages": [
+        115
+      ]
+    },
+    {
+      "id": "FC55",
+      "front": "What three follow-up topics are suggested in the wrap-up?",
+      "back": "Clock synchronization, section-length tuning, and high availability.",
+      "source_pages": [
+        117
+      ]
+    },
+    {
+      "id": "FC56",
+      "front": "What clock assumption does Snowflake make?",
+      "back": "ID-generation servers have the same/synchronized clock.",
+      "source_pages": [
+        117
+      ]
+    },
+    {
+      "id": "FC57",
+      "front": "Why can clock synchronization be difficult?",
+      "back": "Clock behavior can differ across cores and machines in a distributed environment.",
+      "source_pages": [
+        117
+      ]
+    },
+    {
+      "id": "FC58",
+      "front": "Which synchronization technology does the chapter mention?",
+      "back": "Network Time Protocol (NTP).",
+      "source_pages": [
+        117
+      ]
+    },
+    {
+      "id": "FC59",
+      "front": "How can section lengths be tuned for low concurrency and long lifetime?",
+      "back": "Use fewer sequence bits and more timestamp bits.",
+      "source_pages": [
+        117
+      ]
+    },
+    {
+      "id": "FC60",
+      "front": "Why must the ID generator be highly available?",
+      "back": "The chapter describes it as a mission-critical system.",
+      "source_pages": [
+        117
+      ]
+    }
+  ],
+  "multiple_choice_questions": [
+    {
+      "id": "MCQ01",
+      "difficulty": "easy",
+      "question": "What is the target ID width?",
+      "choices": {
+        "A": "32 bits",
+        "B": "64 bits",
+        "C": "128 bits",
+        "D": "256 bits"
+      },
+      "answer": "B",
+      "source_pages": [
+        111
+      ]
+    },
+    {
+      "id": "MCQ02",
+      "difficulty": "easy",
+      "question": "What throughput must the system support?",
+      "choices": {
+        "A": "100 IDs/s",
+        "B": "1,000 IDs/s",
+        "C": "Over 10,000 IDs/s",
+        "D": "Exactly 1 million IDs/s"
+      },
+      "answer": "C",
+      "source_pages": [
+        111
+      ]
+    },
+    {
+      "id": "MCQ03",
+      "difficulty": "medium",
+      "question": "Which is NOT a requirement?",
+      "choices": {
+        "A": "Unique",
+        "B": "Numeric",
+        "C": "64-bit",
+        "D": "Must increase exactly by 1"
+      },
+      "answer": "D",
+      "source_pages": [
+        111
+      ]
+    },
+    {
+      "id": "MCQ04",
+      "difficulty": "medium",
+      "question": "In multi-master replication, the increment step k equals what?",
+      "choices": {
+        "A": "Number of IDs",
+        "B": "Number of database servers",
+        "C": "Number of bits",
+        "D": "Number of users"
+      },
+      "answer": "B",
+      "source_pages": [
+        112
+      ]
+    },
+    {
+      "id": "MCQ05",
+      "difficulty": "medium",
+      "question": "With two multi-master databases, which sequences are shown?",
+      "choices": {
+        "A": "1,2,3 and 4,5,6",
+        "B": "1,3,5 and 2,4,6",
+        "C": "1,4,7 and 2,5,8",
+        "D": "Random UUIDs"
+      },
+      "answer": "B",
+      "source_pages": [
+        112
+      ]
+    },
+    {
+      "id": "MCQ06",
+      "difficulty": "hard",
+      "question": "Which is a drawback of multi-master ID generation?",
+      "choices": {
+        "A": "No numeric IDs",
+        "B": "IDs do not increase with time across multiple servers",
+        "C": "Always 128-bit",
+        "D": "Requires no databases"
+      },
+      "answer": "B",
+      "source_pages": [
+        112
+      ]
+    },
+    {
+      "id": "MCQ07",
+      "difficulty": "medium",
+      "question": "How large is a UUID?",
+      "choices": {
+        "A": "32 bits",
+        "B": "64 bits",
+        "C": "96 bits",
+        "D": "128 bits"
+      },
+      "answer": "D",
+      "source_pages": [
+        112
+      ]
+    },
+    {
+      "id": "MCQ08",
+      "difficulty": "medium",
+      "question": "What is the primary distributed-generation advantage of UUID?",
+      "choices": {
+        "A": "Every server must coordinate",
+        "B": "Servers can generate independently",
+        "C": "UUIDs are always 64-bit",
+        "D": "UUIDs are time ordered"
+      },
+      "answer": "B",
+      "source_pages": [
+        112,
+        113
+      ]
+    },
+    {
+      "id": "MCQ09",
+      "difficulty": "hard",
+      "question": "Why does UUID fail the chapter's requirements?",
+      "choices": {
+        "A": "It is 128-bit, not time ordered, and may be non-numeric",
+        "B": "It cannot be unique",
+        "C": "It requires one central ticket server",
+        "D": "It increments only by 2"
+      },
+      "answer": "A",
+      "source_pages": [
+        113
+      ]
+    },
+    {
+      "id": "MCQ10",
+      "difficulty": "medium",
+      "question": "What is the ticket server based on?",
+      "choices": {
+        "A": "Centralized auto_increment",
+        "B": "UUID hashing",
+        "C": "Consistent hashing",
+        "D": "Vector clocks"
+      },
+      "answer": "A",
+      "source_pages": [
+        113
+      ]
+    },
+    {
+      "id": "MCQ11",
+      "difficulty": "medium",
+      "question": "What is the ticket server's main failure concern?",
+      "choices": {
+        "A": "It cannot generate numeric IDs",
+        "B": "Single point of failure",
+        "C": "It is 128-bit",
+        "D": "It requires no storage"
+      },
+      "answer": "B",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "MCQ12",
+      "difficulty": "hard",
+      "question": "What issue appears if multiple ticket servers are introduced?",
+      "choices": {
+        "A": "Data synchronization challenges",
+        "B": "UUID collisions only",
+        "C": "No numeric IDs",
+        "D": "No throughput"
+      },
+      "answer": "A",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "MCQ13",
+      "difficulty": "easy",
+      "question": "Which approach is selected?",
+      "choices": {
+        "A": "UUID",
+        "B": "Ticket server",
+        "C": "Snowflake-like generator",
+        "D": "Single auto_increment DB"
+      },
+      "answer": "C",
+      "source_pages": [
+        114,
+        117
+      ]
+    },
+    {
+      "id": "MCQ14",
+      "difficulty": "medium",
+      "question": "How many fields compose the Snowflake-style ID?",
+      "choices": {
+        "A": "3",
+        "B": "4",
+        "C": "5",
+        "D": "6"
+      },
+      "answer": "C",
+      "source_pages": [
+        114,
+        115
+      ]
+    },
+    {
+      "id": "MCQ15",
+      "difficulty": "medium",
+      "question": "Which is the correct bit layout?",
+      "choices": {
+        "A": "1/41/5/5/12",
+        "B": "1/32/10/10/11",
+        "C": "8/32/8/8/8",
+        "D": "0/64/0/0/0"
+      },
+      "answer": "A",
+      "source_pages": [
+        114,
+        115
+      ]
+    },
+    {
+      "id": "MCQ16",
+      "difficulty": "medium",
+      "question": "What is the sign bit set to?",
+      "choices": {
+        "A": "Always 0",
+        "B": "Always 1",
+        "C": "Random",
+        "D": "Current second"
+      },
+      "answer": "A",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "MCQ17",
+      "difficulty": "medium",
+      "question": "How many bits are devoted to timestamp?",
+      "choices": {
+        "A": "12",
+        "B": "32",
+        "C": "41",
+        "D": "64"
+      },
+      "answer": "C",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "MCQ18",
+      "difficulty": "medium",
+      "question": "What time unit does the timestamp field use?",
+      "choices": {
+        "A": "Seconds",
+        "B": "Milliseconds",
+        "C": "Microseconds",
+        "D": "Days"
+      },
+      "answer": "B",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "MCQ19",
+      "difficulty": "hard",
+      "question": "Why are the IDs sortable by time?",
+      "choices": {
+        "A": "UUID section is first",
+        "B": "Timestamp grows with time",
+        "C": "Machine ID increments each request",
+        "D": "Sign bit is random"
+      },
+      "answer": "B",
+      "source_pages": [
+        115
+      ]
+    },
+    {
+      "id": "MCQ20",
+      "difficulty": "medium",
+      "question": "How many datacenters can the 5-bit datacenter field represent?",
+      "choices": {
+        "A": "5",
+        "B": "16",
+        "C": "32",
+        "D": "64"
+      },
+      "answer": "C",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "MCQ21",
+      "difficulty": "medium",
+      "question": "How many machines per datacenter can the 5-bit machine field represent?",
+      "choices": {
+        "A": "12",
+        "B": "16",
+        "C": "32",
+        "D": "4096"
+      },
+      "answer": "C",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "MCQ22",
+      "difficulty": "medium",
+      "question": "How many sequence values does 12 bits provide?",
+      "choices": {
+        "A": "1024",
+        "B": "2048",
+        "C": "4096",
+        "D": "8192"
+      },
+      "answer": "C",
+      "source_pages": [
+        116
+      ]
+    },
+    {
+      "id": "MCQ23",
+      "difficulty": "hard",
+      "question": "When does the sequence number reset?",
+      "choices": {
+        "A": "Every second",
+        "B": "Every millisecond",
+        "C": "Every minute",
+        "D": "At server startup only"
+      },
+      "answer": "B",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "MCQ24",
+      "difficulty": "hard",
+      "question": "What is the theoretical per-machine capacity per millisecond?",
+      "choices": {
+        "A": "32 IDs",
+        "B": "64 IDs",
+        "C": "1024 IDs",
+        "D": "4096 IDs"
+      },
+      "answer": "D",
+      "source_pages": [
+        116
+      ]
+    },
+    {
+      "id": "MCQ25",
+      "difficulty": "hard",
+      "question": "Which fields are usually fixed once the generator starts?",
+      "choices": {
+        "A": "Timestamp and sequence",
+        "B": "Datacenter ID and machine ID",
+        "C": "Sign and timestamp only",
+        "D": "Sequence and sign"
+      },
+      "answer": "B",
+      "source_pages": [
+        115
+      ]
+    },
+    {
+      "id": "MCQ26",
+      "difficulty": "hard",
+      "question": "Why must datacenter/machine IDs be changed carefully?",
+      "choices": {
+        "A": "They change UUID size",
+        "B": "Accidental changes can produce ID conflicts",
+        "C": "They make IDs non-numeric",
+        "D": "They disable timestamps"
+      },
+      "answer": "B",
+      "source_pages": [
+        115
+      ]
+    },
+    {
+      "id": "MCQ27",
+      "difficulty": "medium",
+      "question": "What is the maximum 41-bit timestamp value?",
+      "choices": {
+        "A": "2^12-1",
+        "B": "2^32-1",
+        "C": "2^41-1",
+        "D": "2^64-1"
+      },
+      "answer": "C",
+      "source_pages": [
+        116
+      ]
+    },
+    {
+      "id": "MCQ28",
+      "difficulty": "medium",
+      "question": "Approximately how long does the 41-bit millisecond timestamp last?",
+      "choices": {
+        "A": "6.9 years",
+        "B": "32 years",
+        "C": "69 years",
+        "D": "128 years"
+      },
+      "answer": "C",
+      "source_pages": [
+        116
+      ]
+    },
+    {
+      "id": "MCQ29",
+      "difficulty": "hard",
+      "question": "Why choose a custom epoch close to deployment time?",
+      "choices": {
+        "A": "To make UUIDs numeric",
+        "B": "To delay timestamp overflow",
+        "C": "To eliminate machine IDs",
+        "D": "To reduce sequence capacity"
+      },
+      "answer": "B",
+      "source_pages": [
+        116
+      ]
+    },
+    {
+      "id": "MCQ30",
+      "difficulty": "medium",
+      "question": "What must happen after the timestamp space is exhausted?",
+      "choices": {
+        "A": "Use a new epoch or another migration technique",
+        "B": "Increase sign bit automatically",
+        "C": "Switch to UUID without changes",
+        "D": "Stop storing IDs forever"
+      },
+      "answer": "A",
+      "source_pages": [
+        116
+      ]
+    },
+    {
+      "id": "MCQ31",
+      "difficulty": "medium",
+      "question": "What clock technology does the chapter mention?",
+      "choices": {
+        "A": "NTP",
+        "B": "DNS",
+        "C": "TLS",
+        "D": "SMTP"
+      },
+      "answer": "A",
+      "source_pages": [
+        117
+      ]
+    },
+    {
+      "id": "MCQ32",
+      "difficulty": "hard",
+      "question": "For low concurrency and a very long desired lifetime, what tuning example does the chapter give?",
+      "choices": {
+        "A": "More sequence bits, fewer timestamp bits",
+        "B": "Fewer sequence bits, more timestamp bits",
+        "C": "Remove timestamp completely",
+        "D": "Use 128-bit UUIDs"
+      },
+      "answer": "B",
+      "source_pages": [
+        117
+      ]
+    },
+    {
+      "id": "MCQ33",
+      "difficulty": "medium",
+      "question": "Why is high availability important?",
+      "choices": {
+        "A": "The ID generator is mission-critical",
+        "B": "UUIDs are 128-bit",
+        "C": "The sign bit is zero",
+        "D": "Ticket servers cannot use SQL"
+      },
+      "answer": "A",
+      "source_pages": [
+        117
+      ]
+    },
+    {
+      "id": "MCQ34",
+      "difficulty": "hard",
+      "question": "Which solution best satisfies all of the chapter's requirements?",
+      "choices": {
+        "A": "Multi-master replication",
+        "B": "UUID",
+        "C": "Single ticket server",
+        "D": "Snowflake-like generator"
+      },
+      "answer": "D",
+      "source_pages": [
+        114,
+        117
+      ]
+    },
+    {
+      "id": "MCQ35",
+      "difficulty": "hard",
+      "question": "What does 1+41+5+5+12 equal?",
+      "choices": {
+        "A": "63",
+        "B": "64",
+        "C": "65",
+        "D": "128"
+      },
+      "answer": "B",
+      "explanation": "This verifies the complete Snowflake bit layout.",
+      "source_pages": [
+        114,
+        115
+      ]
+    },
+    {
+      "id": "MCQ36",
+      "difficulty": "hard",
+      "question": "Based directly on the 5-bit datacenter and 5-bit machine fields, how many datacenter-machine combinations are possible?",
+      "choices": {
+        "A": "64",
+        "B": "256",
+        "C": "1024",
+        "D": "4096"
+      },
+      "answer": "C",
+      "explanation": "32 datacenters × 32 machines per datacenter = 1024 combinations. This is a derived study calculation.",
+      "based_on_source_pages": [
+        114
+      ]
+    }
+  ],
+  "mix_and_match": [
+    {
+      "id": "MM01",
+      "title": "Approach to Main Tradeoff",
+      "instructions": "Match each ID-generation approach with its defining tradeoff.",
+      "left": {
+        "A": "Multi-master replication",
+        "B": "UUID",
+        "C": "Ticket server",
+        "D": "Snowflake-like"
+      },
+      "right": {
+        "1": "128-bit and not time ordered; easy independent generation",
+        "2": "Central numeric generator but single point of failure",
+        "3": "64-bit sectioned design selected by the chapter",
+        "4": "Increment by k across databases but difficult membership/time ordering"
+      },
+      "answer_key": {
+        "A": "4",
+        "B": "1",
+        "C": "2",
+        "D": "3"
+      },
+      "source_pages": [
+        112,
+        113,
+        114,
+        115
+      ]
+    },
+    {
+      "id": "MM02",
+      "title": "Snowflake Field to Bit Width",
+      "left": {
+        "A": "Sign",
+        "B": "Timestamp",
+        "C": "Datacenter ID",
+        "D": "Machine ID",
+        "E": "Sequence"
+      },
+      "right": {
+        "1": "12 bits",
+        "2": "5 bits",
+        "3": "41 bits",
+        "4": "1 bit",
+        "5": "5 bits"
+      },
+      "answer_key": {
+        "A": "4",
+        "B": "3",
+        "C": "2",
+        "D": "5",
+        "E": "1"
+      },
+      "source_pages": [
+        114,
+        115
+      ]
+    },
+    {
+      "id": "MM03",
+      "title": "Field to Purpose",
+      "left": {
+        "A": "Timestamp",
+        "B": "Datacenter ID",
+        "C": "Machine ID",
+        "D": "Sequence number",
+        "E": "Sign bit"
+      },
+      "right": {
+        "1": "Differentiate IDs generated in same millisecond on same machine",
+        "2": "Reserved future-use field",
+        "3": "Identify machine within datacenter",
+        "4": "Provide time ordering",
+        "5": "Identify datacenter"
+      },
+      "answer_key": {
+        "A": "4",
+        "B": "5",
+        "C": "3",
+        "D": "1",
+        "E": "2"
+      },
+      "source_pages": [
+        114,
+        115,
+        116
+      ]
+    },
+    {
+      "id": "MM04",
+      "title": "Bit Width to Capacity",
+      "left": {
+        "A": "5-bit datacenter ID",
+        "B": "5-bit machine ID",
+        "C": "12-bit sequence",
+        "D": "41-bit timestamp"
+      },
+      "right": {
+        "1": "4096 combinations per millisecond per machine",
+        "2": "32 machines per datacenter",
+        "3": "~69 years of millisecond timestamps",
+        "4": "32 datacenters"
+      },
+      "answer_key": {
+        "A": "4",
+        "B": "2",
+        "C": "1",
+        "D": "3"
+      },
+      "source_pages": [
+        114,
+        116
+      ]
+    },
+    {
+      "id": "MM05",
+      "title": "Requirement to Failing Approach",
+      "instructions": "Match a requirement with the approach problem highlighted by the chapter.",
+      "left": {
+        "A": "64-bit",
+        "B": "Time ordered across generators",
+        "C": "No central single point of failure",
+        "D": "Easy server add/remove"
+      },
+      "right": {
+        "1": "Multi-master membership changes are difficult",
+        "2": "UUID is 128-bit",
+        "3": "Ticket server is centralized",
+        "4": "Multi-master IDs do not rise with time across servers"
+      },
+      "answer_key": {
+        "A": "2",
+        "B": "4",
+        "C": "3",
+        "D": "1"
+      },
+      "source_pages": [
+        112,
+        113,
+        114
+      ]
+    }
+  ],
+  "true_false": [
+    {
+      "id": "TF01",
+      "statement": "A single traditional auto_increment database is the selected distributed solution.",
+      "answer": false,
+      "source_pages": [
+        110
+      ]
+    },
+    {
+      "id": "TF02",
+      "statement": "IDs must be unique and numeric.",
+      "answer": true,
+      "source_pages": [
+        111
+      ]
+    },
+    {
+      "id": "TF03",
+      "statement": "IDs must increase by exactly 1.",
+      "answer": false,
+      "source_pages": [
+        111
+      ]
+    },
+    {
+      "id": "TF04",
+      "statement": "Later IDs should be larger than earlier IDs.",
+      "answer": true,
+      "source_pages": [
+        111
+      ]
+    },
+    {
+      "id": "TF05",
+      "statement": "The system target is over 10,000 IDs per second.",
+      "answer": true,
+      "source_pages": [
+        111
+      ]
+    },
+    {
+      "id": "TF06",
+      "statement": "Multi-master replication increments each database by k, the number of database servers.",
+      "answer": true,
+      "source_pages": [
+        112
+      ]
+    },
+    {
+      "id": "TF07",
+      "statement": "Multi-master replication naturally preserves global time ordering across all servers.",
+      "answer": false,
+      "source_pages": [
+        112
+      ]
+    },
+    {
+      "id": "TF08",
+      "statement": "UUIDs are 64-bit in the chapter.",
+      "answer": false,
+      "source_pages": [
+        112,
+        113
+      ]
+    },
+    {
+      "id": "TF09",
+      "statement": "UUID generation requires coordination between all web servers.",
+      "answer": false,
+      "source_pages": [
+        112,
+        113
+      ]
+    },
+    {
+      "id": "TF10",
+      "statement": "UUIDs can be non-numeric.",
+      "answer": true,
+      "source_pages": [
+        113
+      ]
+    },
+    {
+      "id": "TF11",
+      "statement": "A ticket server uses centralized auto_increment.",
+      "answer": true,
+      "source_pages": [
+        113
+      ]
+    },
+    {
+      "id": "TF12",
+      "statement": "A single ticket server has no availability risk.",
+      "answer": false,
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "TF13",
+      "statement": "Multiple ticket servers can create synchronization challenges.",
+      "answer": true,
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "TF14",
+      "statement": "The selected Snowflake-like layout is 64 bits total.",
+      "answer": true,
+      "source_pages": [
+        114,
+        115
+      ]
+    },
+    {
+      "id": "TF15",
+      "statement": "The sign bit is 1 bit and always 0 in this design.",
+      "answer": true,
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "TF16",
+      "statement": "The timestamp is 41 bits.",
+      "answer": true,
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "TF17",
+      "statement": "The datacenter ID supports 32 datacenters.",
+      "answer": true,
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "TF18",
+      "statement": "The machine ID supports 32 machines per datacenter.",
+      "answer": true,
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "TF19",
+      "statement": "The sequence number is 12 bits.",
+      "answer": true,
+      "source_pages": [
+        114,
+        116
+      ]
+    },
+    {
+      "id": "TF20",
+      "statement": "The sequence resets once per second.",
+      "answer": false,
+      "explanation": "It resets every millisecond.",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "TF21",
+      "statement": "Datacenter ID and machine ID are generally selected at startup.",
+      "answer": true,
+      "source_pages": [
+        115
+      ]
+    },
+    {
+      "id": "TF22",
+      "statement": "Changing datacenter or machine IDs carelessly can cause ID conflicts.",
+      "answer": true,
+      "source_pages": [
+        115
+      ]
+    },
+    {
+      "id": "TF23",
+      "statement": "The timestamp field provides time sortability.",
+      "answer": true,
+      "source_pages": [
+        115
+      ]
+    },
+    {
+      "id": "TF24",
+      "statement": "A 41-bit millisecond timestamp lasts about 69 years.",
+      "answer": true,
+      "source_pages": [
+        116
+      ]
+    },
+    {
+      "id": "TF25",
+      "statement": "A custom epoch near deployment makes overflow happen sooner.",
+      "answer": false,
+      "source_pages": [
+        116
+      ]
+    },
+    {
+      "id": "TF26",
+      "statement": "One machine can theoretically generate up to 4096 IDs in one millisecond.",
+      "answer": true,
+      "source_pages": [
+        116
+      ]
+    },
+    {
+      "id": "TF27",
+      "statement": "Clock synchronization is irrelevant to timestamp-based IDs.",
+      "answer": false,
+      "source_pages": [
+        117
+      ]
+    },
+    {
+      "id": "TF28",
+      "statement": "The chapter mentions NTP as a popular clock-synchronization solution.",
+      "answer": true,
+      "source_pages": [
+        117
+      ]
+    },
+    {
+      "id": "TF29",
+      "statement": "Bit-section lengths can be tuned for different workloads.",
+      "answer": true,
+      "source_pages": [
+        117
+      ]
+    },
+    {
+      "id": "TF30",
+      "statement": "The ID generator should be highly available because it is mission-critical.",
+      "answer": true,
+      "source_pages": [
+        117
+      ]
+    }
+  ],
+  "fill_in_the_blank": [
+    {
+      "id": "FIB01",
+      "prompt": "The IDs must fit into ______ bits.",
+      "answer": "64",
+      "source_pages": [
+        111
+      ]
+    },
+    {
+      "id": "FIB02",
+      "prompt": "The generator must support over ______ IDs per second.",
+      "answer": "10,000",
+      "source_pages": [
+        111
+      ]
+    },
+    {
+      "id": "FIB03",
+      "prompt": "Multi-master auto_increment increases by ______, where that value is the number of database servers.",
+      "answer": "k",
+      "source_pages": [
+        112
+      ]
+    },
+    {
+      "id": "FIB04",
+      "prompt": "A UUID is ______ bits long.",
+      "answer": "128",
+      "source_pages": [
+        112
+      ]
+    },
+    {
+      "id": "FIB05",
+      "prompt": "The centralized auto_increment approach is called a ______ server.",
+      "answer": "ticket",
+      "source_pages": [
+        113
+      ]
+    },
+    {
+      "id": "FIB06",
+      "prompt": "The chosen design is inspired by Twitter ______.",
+      "answer": "Snowflake",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "FIB07",
+      "prompt": "The sign field is ______ bit.",
+      "answer": "1",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "FIB08",
+      "prompt": "The timestamp field is ______ bits.",
+      "answer": "41",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "FIB09",
+      "prompt": "The datacenter field is ______ bits.",
+      "answer": "5",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "FIB10",
+      "prompt": "The machine field is ______ bits.",
+      "answer": "5",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "FIB11",
+      "prompt": "The sequence field is ______ bits.",
+      "answer": "12",
+      "source_pages": [
+        114,
+        116
+      ]
+    },
+    {
+      "id": "FIB12",
+      "prompt": "Five bits support ______ datacenters.",
+      "answer": "32",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "FIB13",
+      "prompt": "Twelve bits give ______ sequence combinations.",
+      "answer": "4096",
+      "source_pages": [
+        116
+      ]
+    },
+    {
+      "id": "FIB14",
+      "prompt": "The sequence resets every ______.",
+      "answer": "millisecond",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "FIB15",
+      "prompt": "The 41-bit timestamp lasts approximately ______ years.",
+      "answer": "69",
+      "source_pages": [
+        116
+      ]
+    },
+    {
+      "id": "FIB16",
+      "prompt": "The chapter mentions ______ Time Protocol for clock synchronization.",
+      "answer": "Network",
+      "source_pages": [
+        117
+      ]
+    },
+    {
+      "id": "FIB17",
+      "prompt": "For low concurrency and long-term applications, the chapter suggests fewer sequence bits and more ______ bits.",
+      "answer": "timestamp",
+      "source_pages": [
+        117
+      ]
+    }
+  ],
+  "ordering_exercises": [
+    {
+      "id": "ORD01",
+      "title": "Snowflake Field Order",
+      "items_scrambled": [
+        "Machine ID",
+        "Sequence number",
+        "Timestamp",
+        "Sign bit",
+        "Datacenter ID"
+      ],
+      "correct_order": [
+        "Sign bit",
+        "Timestamp",
+        "Datacenter ID",
+        "Machine ID",
+        "Sequence number"
+      ],
+      "source_pages": [
+        114,
+        115
+      ]
+    },
+    {
+      "id": "ORD02",
+      "title": "Design Decision Progression",
+      "items_scrambled": [
+        "Select Snowflake-like design",
+        "Clarify ID requirements",
+        "Compare UUID/ticket/multi-master/Snowflake",
+        "Deep dive into timestamp and sequence"
+      ],
+      "correct_order": [
+        "Clarify ID requirements",
+        "Compare UUID/ticket/multi-master/Snowflake",
+        "Select Snowflake-like design",
+        "Deep dive into timestamp and sequence"
+      ],
+      "source_pages": [
+        111,
+        112,
+        114,
+        115
+      ]
+    },
+    {
+      "id": "ORD03",
+      "title": "Timestamp Conversion Concept",
+      "items_scrambled": [
+        "Convert milliseconds to UTC",
+        "Interpret timestamp bits as decimal elapsed milliseconds",
+        "Add custom/Twitter epoch"
+      ],
+      "correct_order": [
+        "Interpret timestamp bits as decimal elapsed milliseconds",
+        "Add custom/Twitter epoch",
+        "Convert milliseconds to UTC"
+      ],
+      "source_pages": [
+        115
+      ]
+    }
+  ],
+  "scenario_questions": [
+    {
+      "id": "SC01",
+      "difficulty": "medium",
+      "scenario": "You need unique IDs from four database servers and consider setting auto_increment step size to 4.",
+      "question": "Which chapter approach is this?",
+      "expected_answer": "Multi-master replication.",
+      "source_pages": [
+        112
+      ]
+    },
+    {
+      "id": "SC02",
+      "difficulty": "hard",
+      "scenario": "Your multi-master design works in one data center, but you need globally time-ordered IDs and frequent server membership changes.",
+      "question": "What drawbacks should you identify?",
+      "expected_answer": "Multi-master is hard to scale across multiple data centers, IDs do not increase with time across servers, and adding/removing servers is awkward.",
+      "source_pages": [
+        112
+      ]
+    },
+    {
+      "id": "SC03",
+      "difficulty": "medium",
+      "scenario": "Each web server independently generates 128-bit IDs without coordination.",
+      "question": "Which approach is this and why does it fail the target requirements?",
+      "expected_answer": "UUID. It is 128-bit, not time ordered, and can be non-numeric.",
+      "source_pages": [
+        112,
+        113
+      ]
+    },
+    {
+      "id": "SC04",
+      "difficulty": "medium",
+      "scenario": "All application servers request IDs from one centralized auto_increment database.",
+      "question": "Which approach is this and what is its main weakness?",
+      "expected_answer": "Ticket server; the central ticket server is a single point of failure.",
+      "source_pages": [
+        113,
+        114
+      ]
+    },
+    {
+      "id": "SC05",
+      "difficulty": "hard",
+      "scenario": "You add a second ticket server to eliminate the single point of failure.",
+      "question": "What new problem does the chapter warn about?",
+      "expected_answer": "Data synchronization between ticket servers.",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "SC06",
+      "difficulty": "medium",
+      "scenario": "You need numeric, 64-bit, time-sortable distributed IDs at high throughput.",
+      "question": "Which design does the chapter select?",
+      "expected_answer": "A Twitter Snowflake-like generator.",
+      "source_pages": [
+        114,
+        117
+      ]
+    },
+    {
+      "id": "SC07",
+      "difficulty": "hard",
+      "scenario": "Two machines in the same datacenter generate IDs during exactly the same millisecond with the same sequence number.",
+      "question": "Which Snowflake field keeps their IDs distinct?",
+      "expected_answer": "Machine ID, assuming the machines have distinct machine IDs.",
+      "source_pages": [
+        114,
+        115
+      ]
+    },
+    {
+      "id": "SC08",
+      "difficulty": "hard",
+      "scenario": "Two machines in different datacenters generate IDs at the same millisecond with the same machine ID and sequence.",
+      "question": "Which field differentiates them?",
+      "expected_answer": "Datacenter ID.",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "SC09",
+      "difficulty": "hard",
+      "scenario": "One machine generates many IDs during the same millisecond.",
+      "question": "Which field changes and how many values are available?",
+      "expected_answer": "The 12-bit sequence field increments, providing 4096 combinations.",
+      "source_pages": [
+        114,
+        116
+      ]
+    },
+    {
+      "id": "SC10",
+      "difficulty": "hard",
+      "scenario": "The system is expected to run for much longer than the useful life of a 41-bit millisecond timestamp.",
+      "question": "What design discussion does the chapter suggest?",
+      "expected_answer": "Use a new epoch/migration strategy when needed, or tune section lengths—for example more timestamp bits and fewer sequence bits for low-concurrency long-term workloads.",
+      "source_pages": [
+        116,
+        117
+      ]
+    },
+    {
+      "id": "SC11",
+      "difficulty": "hard",
+      "scenario": "A generator's machine ID is accidentally changed to an ID already used by another live machine in the same datacenter.",
+      "question": "Why is this dangerous?",
+      "expected_answer": "Datacenter and machine IDs are part of uniqueness; accidental duplicate assignments can create ID conflicts.",
+      "source_pages": [
+        115
+      ]
+    },
+    {
+      "id": "SC12",
+      "difficulty": "hard",
+      "scenario": "One ID generator's clock is behind another generator's clock.",
+      "question": "What system-design issue from the wrap-up does this expose?",
+      "expected_answer": "Clock synchronization; timestamp-based ordering assumes compatible clocks across ID generators.",
+      "source_pages": [
+        117
+      ]
+    }
+  ],
+  "short_answer_questions": [
+    {
+      "id": "SA01",
+      "question": "Why is auto_increment difficult in a distributed ID generator?",
+      "model_answer": "A single database server is not large enough for the distributed target, while coordinating globally unique IDs across multiple databases with minimal delay is difficult.",
+      "source_pages": [
+        110
+      ]
+    },
+    {
+      "id": "SA02",
+      "question": "Compare the four approaches at a high level.",
+      "model_answer": "Multi-master uses disjoint auto_increment sequences but has multi-data-center, time-ordering, and membership problems. UUID is decentralized and simple but 128-bit, not ordered, and potentially non-numeric. Ticket server gives easy numeric IDs but creates a central point of failure. Snowflake partitions a 64-bit ID into time, location, machine, and sequence fields and is selected because it satisfies the requirements.",
+      "source_pages": [
+        112,
+        113,
+        114,
+        117
+      ]
+    },
+    {
+      "id": "SA03",
+      "question": "Why is Snowflake considered divide and conquer?",
+      "model_answer": "Instead of trying to generate a globally unique 64-bit number as one opaque value, it divides the ID into fields that separately encode time, datacenter, machine, and same-millisecond sequence information.",
+      "source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "SA04",
+      "question": "Explain every Snowflake field.",
+      "model_answer": "The sign bit is one reserved bit fixed at 0; 41 timestamp bits represent milliseconds since an epoch; 5 datacenter bits identify up to 32 datacenters; 5 machine bits identify up to 32 machines per datacenter; and 12 sequence bits distinguish IDs produced by one machine in the same millisecond.",
+      "source_pages": [
+        114,
+        115,
+        116
+      ]
+    },
+    {
+      "id": "SA05",
+      "question": "How does Snowflake achieve time ordering?",
+      "model_answer": "The 41-bit timestamp increases as time moves forward. Because this timestamp forms the major time-varying portion of the ID, IDs generated later are larger and can be sorted by creation time.",
+      "source_pages": [
+        115
+      ]
+    },
+    {
+      "id": "SA06",
+      "question": "Why do datacenter and machine IDs matter for uniqueness?",
+      "model_answer": "They partition the ID-generation namespace across locations and machines. The same timestamp and sequence can therefore still produce different IDs on different configured generators.",
+      "source_pages": [
+        114,
+        115
+      ]
+    },
+    {
+      "id": "SA07",
+      "question": "Explain sequence-number behavior.",
+      "model_answer": "The 12-bit sequence distinguishes multiple IDs generated by the same machine in one millisecond. It increments for additional IDs and resets to zero every millisecond, giving 4096 possible values.",
+      "source_pages": [
+        114,
+        116
+      ]
+    },
+    {
+      "id": "SA08",
+      "question": "Why is the timestamp lifetime about 69 years?",
+      "model_answer": "A 41-bit field holds 2^41 possible millisecond positions. The maximum elapsed value is 2^41-1 = 2,199,023,255,551 ms; converting that to years yields approximately 69.",
+      "source_pages": [
+        116
+      ]
+    },
+    {
+      "id": "SA09",
+      "question": "What is the purpose of a custom epoch?",
+      "model_answer": "The timestamp stores elapsed milliseconds rather than the entire absolute Unix timestamp. Choosing an epoch close to deployment makes more of the 41-bit range available for the system's future lifetime and delays overflow.",
+      "source_pages": [
+        114,
+        116
+      ]
+    },
+    {
+      "id": "SA10",
+      "question": "What follow-up risks should you discuss in an interview?",
+      "model_answer": "Clock synchronization across cores/machines, tuning the bit lengths for workload characteristics, and making the ID generator highly available because it is mission-critical.",
+      "source_pages": [
+        117
+      ]
+    }
+  ],
+  "active_recall_prompts": [
+    {
+      "id": "AR01",
+      "prompt": "Recite all five requirements without looking.",
+      "target_points": [
+        "Unique",
+        "Numeric",
+        "64-bit",
+        "Ordered by date/time",
+        ">10,000 IDs/sec"
+      ],
+      "source_pages": [
+        111
+      ]
+    },
+    {
+      "id": "AR02",
+      "prompt": "Name all four approaches and one weakness of each rejected design.",
+      "target_points": [
+        "Multi-master: global time order/membership/multi-DC issues",
+        "UUID: 128-bit/non-numeric/not ordered",
+        "Ticket: single point of failure",
+        "Snowflake: selected"
+      ],
+      "source_pages": [
+        112,
+        113,
+        114
+      ]
+    },
+    {
+      "id": "AR03",
+      "prompt": "Reconstruct the Snowflake layout from most significant to least significant field.",
+      "target_points": [
+        "1 sign",
+        "41 timestamp",
+        "5 datacenter",
+        "5 machine",
+        "12 sequence"
+      ],
+      "source_pages": [
+        114,
+        115
+      ]
+    },
+    {
+      "id": "AR04",
+      "prompt": "Recite the capacities implied by the bit fields.",
+      "target_points": [
+        "32 datacenters",
+        "32 machines/datacenter",
+        "4096 sequence values/ms/machine",
+        "~69 years timestamp"
+      ],
+      "source_pages": [
+        114,
+        116
+      ]
+    },
+    {
+      "id": "AR05",
+      "prompt": "Explain which fields are static and which are dynamic.",
+      "target_points": [
+        "Startup/fixed: datacenter ID, machine ID",
+        "Runtime: timestamp, sequence"
+      ],
+      "source_pages": [
+        115
+      ]
+    },
+    {
+      "id": "AR06",
+      "prompt": "Explain why accidental machine/datacenter-ID changes are dangerous.",
+      "target_points": [
+        "Fields contribute to uniqueness",
+        "Duplicate assignment can create conflicts",
+        "Changes require careful review"
+      ],
+      "source_pages": [
+        115
+      ]
+    },
+    {
+      "id": "AR07",
+      "prompt": "Reconstruct the timestamp lifetime calculation.",
+      "target_points": [
+        "2^41-1 ms",
+        "2,199,023,255,551 ms",
+        "divide by 1000/365/24/3600",
+        "~69 years"
+      ],
+      "source_pages": [
+        116
+      ]
+    },
+    {
+      "id": "AR08",
+      "prompt": "Explain the sequence field.",
+      "target_points": [
+        "12 bits",
+        "4096 values",
+        "same machine",
+        "same millisecond",
+        "increment per ID",
+        "reset each millisecond"
+      ],
+      "source_pages": [
+        114,
+        116
+      ]
+    },
+    {
+      "id": "AR09",
+      "prompt": "Name the three wrap-up talking points.",
+      "target_points": [
+        "Clock synchronization",
+        "Section length tuning",
+        "High availability"
+      ],
+      "source_pages": [
+        117
+      ]
+    }
+  ],
+  "diagram_reconstruction_drills": [
+    {
+      "id": "DR01",
+      "name": "Figure 7-2 Multi-Master Replication",
+      "task": "Draw two MySQL servers producing alternating ID sequences to web servers.",
+      "required_labels": [
+        "MySQL A: 1,3,5,...",
+        "MySQL B: 2,4,6,...",
+        "Web servers"
+      ],
+      "source_pages": [
+        112
+      ]
+    },
+    {
+      "id": "DR02",
+      "name": "Figure 7-3 UUID",
+      "task": "Draw multiple web servers, each containing its own independent ID generator.",
+      "source_pages": [
+        112,
+        113
+      ]
+    },
+    {
+      "id": "DR03",
+      "name": "Figure 7-4 Ticket Server",
+      "task": "Draw multiple web servers depending on one centralized ticket server.",
+      "source_pages": [
+        113
+      ]
+    },
+    {
+      "id": "DR04",
+      "name": "Figure 7-5/7-6 Snowflake Layout",
+      "task": "Draw the 64-bit field layout in order.",
+      "required_fields": [
+        "1 bit sign",
+        "41 bits timestamp",
+        "5 bits datacenter ID",
+        "5 bits machine ID",
+        "12 bits sequence"
+      ],
+      "source_pages": [
+        114,
+        115
+      ]
+    },
+    {
+      "id": "DR05",
+      "name": "Figure 7-7 Timestamp Conversion",
+      "task": "Show timestamp bits converted to decimal elapsed milliseconds, add the Twitter epoch, then convert to UTC.",
+      "required_values": [
+        "297616116568",
+        "1288834974657",
+        "1586451091225",
+        "Apr 09 2020 16:51:31 UTC"
+      ],
+      "source_pages": [
+        115
+      ]
+    }
+  ],
+  "interview_style_questions": [
+    {
+      "id": "INT01",
+      "question": "What requirements would you clarify before designing a distributed ID generator?",
+      "strong_answer_outline": [
+        "Uniqueness",
+        "Ordering/sortability",
+        "Exact increment-by-one requirement or not",
+        "Numeric-only constraint",
+        "Bit width",
+        "Throughput"
+      ],
+      "source_pages": [
+        111
+      ]
+    },
+    {
+      "id": "INT02",
+      "question": "Why reject a standard auto_increment database?",
+      "strong_answer_outline": [
+        "Single database capacity",
+        "Distributed environment",
+        "Cross-database uniqueness",
+        "Coordination latency"
+      ],
+      "source_pages": [
+        110
+      ]
+    },
+    {
+      "id": "INT03",
+      "question": "Compare multi-master, UUID, and ticket-server approaches.",
+      "strong_answer_outline": [
+        "Multi-master: scale with databases but weak multi-DC/time-order/membership behavior",
+        "UUID: simple/no coordination/easy scale but 128-bit/non-time-ordered/non-numeric",
+        "Ticket: simple numeric but centralized SPOF; multiple servers create synchronization"
+      ],
+      "source_pages": [
+        112,
+        113,
+        114
+      ]
+    },
+    {
+      "id": "INT04",
+      "question": "Explain the Snowflake bit layout.",
+      "strong_answer_outline": [
+        "1 sign",
+        "41 timestamp milliseconds since custom epoch",
+        "5 datacenter",
+        "5 machine",
+        "12 sequence",
+        "Total 64 bits"
+      ],
+      "source_pages": [
+        114,
+        115
+      ]
+    },
+    {
+      "id": "INT05",
+      "question": "How does Snowflake guarantee uniqueness at high concurrency?",
+      "strong_answer_outline": [
+        "Timestamp separates milliseconds",
+        "Datacenter ID separates locations",
+        "Machine ID separates generators",
+        "Sequence distinguishes multiple IDs in the same millisecond on one generator",
+        "Static generator IDs must be assigned carefully"
+      ],
+      "source_pages": [
+        114,
+        115,
+        116
+      ]
+    },
+    {
+      "id": "INT06",
+      "question": "What are Snowflake's operational concerns?",
+      "strong_answer_outline": [
+        "Clock synchronization",
+        "Timestamp overflow after ~69 years",
+        "Safe datacenter/machine-ID assignment",
+        "Bit-allocation tuning",
+        "High availability"
+      ],
+      "source_pages": [
+        115,
+        116,
+        117
+      ]
+    }
+  ],
+  "common_confusions": [
+    {
+      "confusion": "The requirement is strictly sequential IDs increasing by exactly 1.",
+      "correction": "The interviewer says IDs need to increase with time, but not necessarily by exactly 1.",
+      "source_pages": [
+        111
+      ]
+    },
+    {
+      "confusion": "UUID is rejected because it is not unique enough.",
+      "correction": "The chapter emphasizes that UUID has extremely low duplicate probability; it is rejected because it is 128-bit, not time ordered, and may be non-numeric.",
+      "source_pages": [
+        112,
+        113
+      ]
+    },
+    {
+      "confusion": "A ticket server is fully distributed.",
+      "correction": "The presented ticket-server design uses one centralized auto_increment database server.",
+      "source_pages": [
+        113
+      ]
+    },
+    {
+      "confusion": "Snowflake is just a timestamp.",
+      "correction": "The 64-bit ID also contains sign, datacenter, machine, and sequence fields.",
+      "source_pages": [
+        114,
+        115
+      ]
+    },
+    {
+      "confusion": "The 12-bit sequence is a global counter.",
+      "correction": "It increments for IDs generated on the same machine/process within a millisecond and resets every millisecond.",
+      "source_pages": [
+        114,
+        116
+      ]
+    },
+    {
+      "confusion": "Datacenter and machine IDs can be changed casually at runtime.",
+      "correction": "They are generally selected at startup and fixed; accidental changes can cause ID conflicts.",
+      "source_pages": [
+        115
+      ]
+    },
+    {
+      "confusion": "A 41-bit timestamp lasts forever.",
+      "correction": "At millisecond precision it lasts about 69 years from the chosen epoch.",
+      "source_pages": [
+        116
+      ]
+    },
+    {
+      "confusion": "Clock synchronization does not matter because machine IDs are unique.",
+      "correction": "The chapter explicitly calls clock synchronization a follow-up concern because time is encoded into the ID.",
+      "source_pages": [
+        117
+      ]
+    }
+  ],
+  "practice_problems": [
+    {
+      "id": "PRACTICE01",
+      "type": "bit_layout",
+      "prompt": "Verify that the Snowflake fields fit into 64 bits.",
+      "solution": "1 + 41 + 5 + 5 + 12 = 64.",
+      "note": "Derived directly from the chapter's field widths.",
+      "based_on_source_pages": [
+        114,
+        115
+      ]
+    },
+    {
+      "id": "PRACTICE02",
+      "type": "capacity",
+      "prompt": "How many datacenter-machine combinations are available from 5 datacenter bits and 5 machine bits?",
+      "solution": "2^5 × 2^5 = 32 × 32 = 1024 combinations.",
+      "note": "Derived practice calculation.",
+      "based_on_source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "PRACTICE03",
+      "type": "capacity",
+      "prompt": "What is one machine's theoretical per-second generation capacity if all 4096 sequence values are used every millisecond?",
+      "solution": "4096 × 1000 = 4,096,000 IDs/second.",
+      "note": "Derived practice calculation; the source explicitly gives 4096 IDs/ms per machine.",
+      "based_on_source_pages": [
+        116
+      ]
+    },
+    {
+      "id": "PRACTICE04",
+      "type": "requirement_check",
+      "prompt": "Does the theoretical per-machine sequence capacity exceed the 10,000 IDs/second requirement?",
+      "solution": "Yes. 4,096,000 theoretical IDs/second is much greater than 10,000 IDs/second.",
+      "note": "Derived comparison from the chapter's requirement and sequence capacity.",
+      "based_on_source_pages": [
+        111,
+        116
+      ]
+    },
+    {
+      "id": "PRACTICE05",
+      "type": "field_reasoning",
+      "prompt": "Two IDs have the same timestamp, datacenter ID, and machine ID. What field must differ for both to be unique?",
+      "solution": "Sequence number.",
+      "based_on_source_pages": [
+        114,
+        116
+      ]
+    },
+    {
+      "id": "PRACTICE06",
+      "type": "field_reasoning",
+      "prompt": "Two IDs have the same timestamp, machine ID, and sequence but were generated in different datacenters. What field differs?",
+      "solution": "Datacenter ID.",
+      "based_on_source_pages": [
+        114
+      ]
+    },
+    {
+      "id": "PRACTICE07",
+      "type": "timestamp",
+      "prompt": "Why can a custom epoch improve the useful lifetime of a 41-bit timestamp field?",
+      "solution": "The field stores elapsed milliseconds since the epoch; choosing a recent epoch avoids spending bits representing time long before the system existed.",
+      "based_on_source_pages": [
+        114,
+        116
+      ]
+    }
+  ],
+  "mastery_check": {
+    "beginner": [
+      "Can state all five requirements.",
+      "Can name all four approaches.",
+      "Can identify the chosen approach.",
+      "Can recite the Snowflake field widths."
+    ],
+    "intermediate": [
+      "Can explain why multi-master, UUID, and ticket server are rejected.",
+      "Can explain how timestamp, datacenter, machine, and sequence fields contribute to the design.",
+      "Can calculate 32 datacenters, 32 machines/datacenter, and 4096 sequence values.",
+      "Can explain why the timestamp lasts about 69 years."
+    ],
+    "advanced": [
+      "Can defend Snowflake against the alternatives in an interview.",
+      "Can reason about same-millisecond concurrency and generator identity.",
+      "Can explain the operational risk of incorrect datacenter/machine IDs.",
+      "Can discuss clock synchronization and timestamp rollback concerns at the level supported by the chapter.",
+      "Can tune bit allocations conceptually for concurrency versus system lifetime.",
+      "Can derive capacity from the field sizes while clearly distinguishing derivation from source text."
+    ]
+  },
+  "chapter_seven_final_review": {
+    "must_memorize": [
+      "Requirements: unique, numeric, 64-bit, time ordered, >10,000 IDs/sec.",
+      "Traditional auto_increment does not scale cleanly across distributed databases.",
+      "Multi-master: increment by k; difficult multi-DC scaling, global time ordering, and server membership.",
+      "UUID: simple, decentralized, scalable; but 128-bit, not time ordered, potentially non-numeric.",
+      "Ticket server: easy numeric IDs; centralized single point of failure.",
+      "Chosen design: Twitter Snowflake-like generator.",
+      "Layout: 1 sign + 41 timestamp + 5 datacenter + 5 machine + 12 sequence = 64 bits.",
+      "5 datacenter bits = 32 datacenters.",
+      "5 machine bits = 32 machines per datacenter.",
+      "12 sequence bits = 4096 IDs/ms/machine.",
+      "Sequence resets every millisecond.",
+      "Datacenter and machine IDs are chosen at startup and should remain stable.",
+      "Timestamp makes IDs sortable by time.",
+      "41-bit millisecond timestamp lasts about 69 years.",
+      "Recent custom epoch delays overflow.",
+      "Clock synchronization is an important distributed concern.",
+      "Bit sections can be tuned for workload needs.",
+      "The ID generator must be highly available."
+    ],
+    "memory_chain": "REQUIREMENTS -> REJECT AUTO_INCREMENT -> MULTI-MASTER -> UUID -> TICKET SERVER -> SNOWFLAKE -> 1|41|5|5|12 -> TIMESTAMP LIFETIME -> SEQUENCE THROUGHPUT -> CLOCK SYNC + BIT TUNING + HIGH AVAILABILITY",
+    "one_sentence_takeaway": "A Snowflake-like generator creates scalable 64-bit numeric IDs by combining time, generator identity, and a per-millisecond sequence, avoiding centralized ID allocation while preserving uniqueness and time ordering."
+  }
+}

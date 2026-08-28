@@ -1,0 +1,2778 @@
+{
+  "chapter": {
+    "number": 1,
+    "title": "Scale From Zero to Millions of Users",
+    "source": "System Design Interview: An Insider's Guide by Alex Xu",
+    "pdf_pages": {
+      "start": 5,
+      "end": 32
+    },
+    "primary_goal": "Understand how a simple application can evolve incrementally from a single-server system into an architecture capable of supporting millions of users."
+  },
+  "chapter_summary": {
+    "overview": "The chapter demonstrates system scaling as an iterative architectural process. It starts with a single server containing the web application, database, cache, and other functionality. As traffic and data increase, responsibilities are separated into independently scalable tiers. The architecture progressively introduces dedicated databases, horizontal scaling, load balancing, database replication, caching, CDNs, stateless web servers, autoscaling, multiple data centers, message queues, observability and automation, and database sharding.",
+    "central_principle": "Do not begin with maximum complexity. Start with the simplest architecture that satisfies current requirements and introduce additional infrastructure as specific scalability, availability, performance, reliability, or operational problems emerge.",
+    "final_scaling_principles": [
+      "Keep the web tier stateless.",
+      "Build redundancy at every tier.",
+      "Cache data as much as possible.",
+      "Support multiple data centers.",
+      "Host static assets in a CDN.",
+      "Scale the data tier through sharding when necessary.",
+      "Split tiers into individual services so they can scale independently.",
+      "Monitor the system and use automation tools."
+    ]
+  },
+  "learning_objectives": [
+    {
+      "id": "LO1",
+      "objective": "Explain the complete request flow from DNS resolution to the web server response.",
+      "source_pages": [
+        6,
+        7
+      ]
+    },
+    {
+      "id": "LO2",
+      "objective": "Explain why the web tier and data tier should eventually be separated.",
+      "source_pages": [
+        8
+      ]
+    },
+    {
+      "id": "LO3",
+      "objective": "Distinguish relational databases from non-relational databases and identify situations described in the chapter where NoSQL may be appropriate.",
+      "source_pages": [
+        8
+      ]
+    },
+    {
+      "id": "LO4",
+      "objective": "Compare vertical scaling with horizontal scaling and explain why horizontal scaling is preferred for large-scale applications.",
+      "source_pages": [
+        9,
+        28
+      ]
+    },
+    {
+      "id": "LO5",
+      "objective": "Explain how load balancers improve scalability, availability, and failover of the web tier.",
+      "source_pages": [
+        9,
+        10
+      ]
+    },
+    {
+      "id": "LO6",
+      "objective": "Explain database replication, read/write routing, replication benefits, and database failover.",
+      "source_pages": [
+        12,
+        13,
+        14
+      ]
+    },
+    {
+      "id": "LO7",
+      "objective": "Explain how caching reduces latency and database load and describe cache expiration, consistency, failure, overprovisioning, and eviction concerns.",
+      "source_pages": [
+        15,
+        16
+      ]
+    },
+    {
+      "id": "LO8",
+      "objective": "Explain the CDN request flow and identify major considerations when using a CDN.",
+      "source_pages": [
+        17,
+        18,
+        19
+      ]
+    },
+    {
+      "id": "LO9",
+      "objective": "Distinguish stateful and stateless web architectures and explain why statelessness enables easier horizontal scaling and autoscaling.",
+      "source_pages": [
+        20,
+        21,
+        22
+      ]
+    },
+    {
+      "id": "LO10",
+      "objective": "Explain how geoDNS and multiple data centers improve availability and geographic performance.",
+      "source_pages": [
+        23,
+        24
+      ]
+    },
+    {
+      "id": "LO11",
+      "objective": "Explain how message queues decouple producers and consumers and enable asynchronous processing.",
+      "source_pages": [
+        25
+      ]
+    },
+    {
+      "id": "LO12",
+      "objective": "Distinguish logging, metrics, monitoring, and automation concerns in a large-scale system.",
+      "source_pages": [
+        26,
+        27
+      ]
+    },
+    {
+      "id": "LO13",
+      "objective": "Explain database sharding, sharding keys, hash-based routing, and major sharding challenges.",
+      "source_pages": [
+        28,
+        29,
+        30,
+        31
+      ]
+    }
+  ],
+  "architecture_evolution": [
+    {
+      "stage": 1,
+      "name": "Single Server",
+      "architecture": [
+        "Web application",
+        "Database",
+        "Cache",
+        "Other application functionality"
+      ],
+      "reason_for_stage": "The simplest possible starting architecture.",
+      "new_problem": "As the user base grows, one machine becomes insufficient and all components compete for the same server resources.",
+      "source_pages": [
+        6,
+        7
+      ]
+    },
+    {
+      "stage": 2,
+      "name": "Separate Web Tier and Data Tier",
+      "change": "Move the database onto a separate server from the web application.",
+      "benefit": "The web tier and data tier can now be scaled independently.",
+      "source_pages": [
+        8
+      ]
+    },
+    {
+      "stage": 3,
+      "name": "Horizontal Web Scaling with Load Balancer",
+      "change": "Add a load balancer and multiple web servers.",
+      "benefits": [
+        "Incoming requests can be distributed among web servers.",
+        "A failed web server does not necessarily make the application unavailable.",
+        "Additional web servers can be added as traffic grows."
+      ],
+      "source_pages": [
+        9,
+        10
+      ]
+    },
+    {
+      "stage": 4,
+      "name": "Database Replication",
+      "change": "Introduce a master database and one or more slave databases.",
+      "write_path": "Data-modifying operations are sent to the master database.",
+      "read_path": "Read operations are normally sent to slave databases.",
+      "benefits": [
+        "Improved read performance",
+        "Reliability",
+        "High availability"
+      ],
+      "source_pages": [
+        12,
+        13,
+        14
+      ]
+    },
+    {
+      "stage": 5,
+      "name": "Cache Tier",
+      "change": "Place frequently accessed or expensive-to-compute data in memory.",
+      "benefits": [
+        "Lower response time",
+        "Reduced database workload",
+        "Cache infrastructure can scale independently"
+      ],
+      "source_pages": [
+        15,
+        16
+      ]
+    },
+    {
+      "stage": 6,
+      "name": "Content Delivery Network",
+      "change": "Move static content such as images, JavaScript, CSS, and video closer to users.",
+      "benefits": [
+        "Reduced static-content load on web servers",
+        "Improved load times for geographically distributed users"
+      ],
+      "source_pages": [
+        17,
+        18,
+        19
+      ]
+    },
+    {
+      "stage": 7,
+      "name": "Stateless Web Tier",
+      "change": "Move user session state out of individual web servers and into shared storage.",
+      "benefits": [
+        "Requests can go to any web server.",
+        "Servers can be added and removed more easily.",
+        "Autoscaling becomes easier.",
+        "The web tier becomes more robust and scalable."
+      ],
+      "source_pages": [
+        20,
+        21,
+        22
+      ]
+    },
+    {
+      "stage": 8,
+      "name": "Multiple Data Centers",
+      "change": "Deploy infrastructure across multiple geographic locations and use geoDNS for routing.",
+      "benefits": [
+        "Users can be routed toward geographically closer infrastructure.",
+        "Traffic can be redirected to another data center during a major outage."
+      ],
+      "source_pages": [
+        23,
+        24
+      ]
+    },
+    {
+      "stage": 9,
+      "name": "Message Queues and Independent Workers",
+      "change": "Introduce asynchronous messaging between producers and consumers.",
+      "benefits": [
+        "Decouples system components.",
+        "Producer and consumer can remain temporarily unavailable independently.",
+        "Workers can scale independently according to queue size."
+      ],
+      "source_pages": [
+        25
+      ]
+    },
+    {
+      "stage": 10,
+      "name": "Logging, Metrics, Monitoring, and Automation",
+      "change": "Introduce operational tooling required to understand and manage a large system.",
+      "benefits": [
+        "Detect system errors.",
+        "Understand system health.",
+        "Track business metrics.",
+        "Automate build, test, integration, and deployment processes."
+      ],
+      "source_pages": [
+        26,
+        27
+      ]
+    },
+    {
+      "stage": 11,
+      "name": "Database Sharding",
+      "change": "Partition database data across multiple database servers.",
+      "benefits": [
+        "Scale storage horizontally.",
+        "Scale database traffic horizontally."
+      ],
+      "new_complexities": [
+        "Resharding",
+        "Uneven data distribution",
+        "Hotspot keys",
+        "Cross-shard joins",
+        "Denormalization"
+      ],
+      "source_pages": [
+        28,
+        29,
+        30,
+        31
+      ]
+    }
+  ],
+  "key_concepts": [
+    {
+      "term": "DNS",
+      "definition": "The Domain Name System resolves a domain name into an IP address that the client can use to contact the system.",
+      "source_pages": [
+        6,
+        7
+      ]
+    },
+    {
+      "term": "IP Address",
+      "definition": "The network address returned after DNS resolution and used by a client to communicate with the server or load balancer.",
+      "source_pages": [
+        7,
+        10
+      ]
+    },
+    {
+      "term": "HTTP",
+      "definition": "The protocol used by clients to send requests to the web server in the chapter's architecture.",
+      "source_pages": [
+        7
+      ]
+    },
+    {
+      "term": "JSON",
+      "definition": "A commonly used API response format, especially for communication between mobile applications and web servers.",
+      "source_pages": [
+        7
+      ]
+    },
+    {
+      "term": "Web Tier",
+      "definition": "The application servers responsible for handling web or mobile traffic and application logic.",
+      "source_pages": [
+        8
+      ]
+    },
+    {
+      "term": "Data Tier",
+      "definition": "The database infrastructure responsible for storing and retrieving application data.",
+      "source_pages": [
+        8
+      ]
+    },
+    {
+      "term": "Relational Database",
+      "definition": "A database that represents data using tables and rows and supports SQL joins across tables.",
+      "examples": [
+        "MySQL",
+        "Oracle Database",
+        "PostgreSQL"
+      ],
+      "source_pages": [
+        8
+      ]
+    },
+    {
+      "term": "NoSQL Database",
+      "definition": "A non-relational database category that includes key-value, graph, column, and document stores.",
+      "examples": [
+        "CouchDB",
+        "Neo4j",
+        "Cassandra",
+        "HBase",
+        "Amazon DynamoDB"
+      ],
+      "source_pages": [
+        8
+      ]
+    },
+    {
+      "term": "Vertical Scaling",
+      "alias": "Scale Up",
+      "definition": "Increase the CPU, RAM, disk, or other resources of an existing machine.",
+      "source_pages": [
+        9,
+        28
+      ]
+    },
+    {
+      "term": "Horizontal Scaling",
+      "alias": "Scale Out",
+      "definition": "Increase capacity by adding additional servers.",
+      "source_pages": [
+        9
+      ]
+    },
+    {
+      "term": "Load Balancer",
+      "definition": "A component that distributes incoming traffic among a set of web servers.",
+      "source_pages": [
+        10
+      ]
+    },
+    {
+      "term": "Private IP",
+      "definition": "An IP address reachable by servers within the same network but not directly reachable over the public internet.",
+      "source_pages": [
+        10
+      ]
+    },
+    {
+      "term": "Database Replication",
+      "definition": "Maintaining copies of database data on additional database servers.",
+      "source_pages": [
+        12,
+        13
+      ]
+    },
+    {
+      "term": "Cache",
+      "definition": "Temporary in-memory storage for frequently accessed data or expensive responses so subsequent requests can be served faster.",
+      "source_pages": [
+        15
+      ]
+    },
+    {
+      "term": "Read-Through Cache",
+      "definition": "The chapter's caching flow where the web server checks cache first, queries the database on a miss, stores the result in cache, and returns the result.",
+      "source_pages": [
+        15
+      ]
+    },
+    {
+      "term": "Cache Expiration",
+      "definition": "A policy determining when cached data should be removed or considered expired.",
+      "source_pages": [
+        15
+      ]
+    },
+    {
+      "term": "Cache Eviction",
+      "definition": "Removal of existing cache entries when the cache is full and space is required for new data.",
+      "source_pages": [
+        16
+      ]
+    },
+    {
+      "term": "LRU",
+      "definition": "Least Recently Used, described as the most popular cache eviction policy in the chapter.",
+      "source_pages": [
+        16
+      ]
+    },
+    {
+      "term": "LFU",
+      "definition": "Least Frequently Used, an alternative cache eviction policy.",
+      "source_pages": [
+        16
+      ]
+    },
+    {
+      "term": "FIFO",
+      "definition": "First In First Out, another cache eviction policy.",
+      "source_pages": [
+        16
+      ]
+    },
+    {
+      "term": "SPOF",
+      "definition": "Single Point of Failure: a component whose failure can stop the entire system from operating.",
+      "source_pages": [
+        16
+      ]
+    },
+    {
+      "term": "CDN",
+      "definition": "A geographically distributed network of servers used in this chapter primarily to cache and serve static content.",
+      "source_pages": [
+        17
+      ]
+    },
+    {
+      "term": "TTL",
+      "definition": "Time-to-Live, which specifies how long an object may remain cached before expiring.",
+      "source_pages": [
+        17,
+        18
+      ]
+    },
+    {
+      "term": "Origin",
+      "definition": "The source from which a CDN obtains an asset when that asset is not currently cached at the CDN.",
+      "source_pages": [
+        17
+      ]
+    },
+    {
+      "term": "Stateful Web Server",
+      "definition": "A server that remembers client state between requests.",
+      "source_pages": [
+        20
+      ]
+    },
+    {
+      "term": "Stateless Web Server",
+      "definition": "A server that does not retain client state between requests; state is obtained from shared storage.",
+      "source_pages": [
+        20,
+        21
+      ]
+    },
+    {
+      "term": "Sticky Session",
+      "definition": "A load-balancing mechanism that repeatedly routes a client's requests to the same server.",
+      "source_pages": [
+        20
+      ]
+    },
+    {
+      "term": "Autoscaling",
+      "definition": "Automatically adding or removing web servers based on traffic load.",
+      "source_pages": [
+        22
+      ]
+    },
+    {
+      "term": "geoDNS",
+      "definition": "A DNS service that resolves domain names to IP addresses based on the geographic location of the user.",
+      "source_pages": [
+        23
+      ]
+    },
+    {
+      "term": "Message Queue",
+      "definition": "A durable component used as a buffer for asynchronous communication between producers and consumers.",
+      "source_pages": [
+        25
+      ]
+    },
+    {
+      "term": "Producer",
+      "alias": "Publisher",
+      "definition": "A service that creates messages and publishes them to a message queue.",
+      "source_pages": [
+        25
+      ]
+    },
+    {
+      "term": "Consumer",
+      "alias": "Subscriber",
+      "definition": "A service that retrieves messages from a message queue and performs the associated work.",
+      "source_pages": [
+        25
+      ]
+    },
+    {
+      "term": "Sharding",
+      "definition": "Horizontal database scaling that separates a large database into smaller independently stored partitions called shards.",
+      "source_pages": [
+        28
+      ]
+    },
+    {
+      "term": "Sharding Key",
+      "alias": "Partition Key",
+      "definition": "One or more columns used to determine how data is distributed among shards.",
+      "source_pages": [
+        29,
+        30
+      ]
+    },
+    {
+      "term": "Resharding",
+      "definition": "Redistributing data and potentially changing the sharding function when existing shards no longer provide adequate capacity or distribution.",
+      "source_pages": [
+        30
+      ]
+    },
+    {
+      "term": "Hotspot Key",
+      "alias": "Celebrity Problem",
+      "definition": "A condition where excessive requests are concentrated on one shard, potentially overloading it.",
+      "source_pages": [
+        30
+      ]
+    },
+    {
+      "term": "Denormalization",
+      "definition": "A workaround described for reducing the need for difficult joins across different database shards.",
+      "source_pages": [
+        30
+      ]
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "FC01",
+      "front": "What is the first step when a user accesses a domain such as api.mysite.com?",
+      "back": "DNS resolves the domain name and returns an IP address.",
+      "source_pages": [
+        6,
+        7
+      ]
+    },
+    {
+      "id": "FC02",
+      "front": "What happens after the client receives the server's IP address?",
+      "back": "The client sends an HTTP request to the web server.",
+      "source_pages": [
+        7
+      ]
+    },
+    {
+      "id": "FC03",
+      "front": "What can the web server return to the client?",
+      "back": "HTML pages or a JSON response for rendering.",
+      "source_pages": [
+        7
+      ]
+    },
+    {
+      "id": "FC04",
+      "front": "Why separate the web tier from the database?",
+      "back": "Separating them allows the web tier and data tier to be scaled independently.",
+      "source_pages": [
+        8
+      ]
+    },
+    {
+      "id": "FC05",
+      "front": "What type of data structure characterizes relational databases?",
+      "back": "Tables and rows.",
+      "source_pages": [
+        8
+      ]
+    },
+    {
+      "id": "FC06",
+      "front": "What important operation is generally available in relational databases but generally unsupported by the NoSQL systems described in the chapter?",
+      "back": "Join operations across tables.",
+      "source_pages": [
+        8
+      ]
+    },
+    {
+      "id": "FC07",
+      "front": "What are the four NoSQL categories listed in Chapter 1?",
+      "back": "Key-value stores, graph stores, column stores, and document stores.",
+      "source_pages": [
+        8
+      ]
+    },
+    {
+      "id": "FC08",
+      "front": "When might the chapter suggest exploring a NoSQL database?",
+      "back": "When super-low latency is required, data is unstructured or non-relational, the application mainly serializes/deserializes data, or massive amounts of data must be stored.",
+      "source_pages": [
+        8
+      ]
+    },
+    {
+      "id": "FC09",
+      "front": "What is vertical scaling?",
+      "back": "Adding more CPU, RAM, disk, or other power to an existing server.",
+      "source_pages": [
+        9,
+        28
+      ]
+    },
+    {
+      "id": "FC10",
+      "front": "What is horizontal scaling?",
+      "back": "Adding more servers to the resource pool.",
+      "source_pages": [
+        9
+      ]
+    },
+    {
+      "id": "FC11",
+      "front": "What are two major limitations of vertical scaling for the web tier?",
+      "back": "Hardware resources have a hard upper limit, and a single server lacks failover and redundancy.",
+      "source_pages": [
+        9
+      ]
+    },
+    {
+      "id": "FC12",
+      "front": "What is the primary role of a load balancer?",
+      "back": "To distribute incoming traffic among the web servers in a load-balanced set.",
+      "source_pages": [
+        10
+      ]
+    },
+    {
+      "id": "FC13",
+      "front": "Which public IP do users connect to after a load balancer is introduced?",
+      "back": "The public IP of the load balancer.",
+      "source_pages": [
+        10
+      ]
+    },
+    {
+      "id": "FC14",
+      "front": "How does the load balancer communicate with web servers in the chapter's architecture?",
+      "back": "Through their private IP addresses.",
+      "source_pages": [
+        10
+      ]
+    },
+    {
+      "id": "FC15",
+      "front": "What happens if one web server behind the load balancer goes offline?",
+      "back": "Traffic is routed to another healthy web server, and a replacement server can be added to the pool.",
+      "source_pages": [
+        10
+      ]
+    },
+    {
+      "id": "FC16",
+      "front": "Where are database writes sent in the chapter's replicated database architecture?",
+      "back": "To the master database.",
+      "source_pages": [
+        12,
+        14
+      ]
+    },
+    {
+      "id": "FC17",
+      "front": "Where are database reads normally sent?",
+      "back": "To slave databases.",
+      "source_pages": [
+        12,
+        14
+      ]
+    },
+    {
+      "id": "FC18",
+      "front": "Why are there often more slave databases than master databases?",
+      "back": "Most applications have substantially more reads than writes.",
+      "source_pages": [
+        12
+      ]
+    },
+    {
+      "id": "FC19",
+      "front": "What are the three replication advantages emphasized by the chapter?",
+      "back": "Better performance, reliability, and high availability.",
+      "source_pages": [
+        12,
+        13
+      ]
+    },
+    {
+      "id": "FC20",
+      "front": "What can happen when the master database fails?",
+      "back": "A slave can be promoted to become the new master, although production promotion is more complicated if the slave is not fully up to date.",
+      "source_pages": [
+        13
+      ]
+    },
+    {
+      "id": "FC21",
+      "front": "What is the primary purpose of a cache?",
+      "back": "To store frequently accessed data or expensive responses in memory so later requests can be served faster.",
+      "source_pages": [
+        15
+      ]
+    },
+    {
+      "id": "FC22",
+      "front": "Describe the read-through cache flow in the chapter.",
+      "back": "Check cache first. On a cache hit, return the cached data. On a miss, query the database, store the returned data in cache, and return it to the client.",
+      "source_pages": [
+        15
+      ]
+    },
+    {
+      "id": "FC23",
+      "front": "What kind of data is particularly suitable for caching?",
+      "back": "Data that is read frequently and modified infrequently.",
+      "source_pages": [
+        15
+      ]
+    },
+    {
+      "id": "FC24",
+      "front": "Why should cache not be the only persistent storage for important data?",
+      "back": "Cache typically uses volatile memory, so its contents can be lost when the cache server restarts.",
+      "source_pages": [
+        15
+      ]
+    },
+    {
+      "id": "FC25",
+      "front": "What happens if cache expiration is too short?",
+      "back": "The application reloads data from the database too frequently.",
+      "source_pages": [
+        15
+      ]
+    },
+    {
+      "id": "FC26",
+      "front": "What happens if cache expiration is too long?",
+      "back": "Cached data can become stale.",
+      "source_pages": [
+        15
+      ]
+    },
+    {
+      "id": "FC27",
+      "front": "Why can cache consistency become difficult?",
+      "back": "Updates to the database and cache are not performed as one transaction, and multi-region deployments make synchronization even more challenging.",
+      "source_pages": [
+        15,
+        16
+      ]
+    },
+    {
+      "id": "FC28",
+      "front": "What does overprovisioning cache memory accomplish?",
+      "back": "It provides additional capacity as memory usage grows.",
+      "source_pages": [
+        16
+      ]
+    },
+    {
+      "id": "FC29",
+      "front": "What is cache eviction?",
+      "back": "Removing existing cached items when the cache is full and space is needed for new entries.",
+      "source_pages": [
+        16
+      ]
+    },
+    {
+      "id": "FC30",
+      "front": "Which cache eviction algorithm does the chapter identify as the most popular?",
+      "back": "LRU, or Least Recently Used.",
+      "source_pages": [
+        16
+      ]
+    },
+    {
+      "id": "FC31",
+      "front": "What does a CDN primarily cache in this chapter?",
+      "back": "Static assets such as images, videos, CSS, and JavaScript.",
+      "source_pages": [
+        17
+      ]
+    },
+    {
+      "id": "FC32",
+      "front": "What happens on a CDN cache miss?",
+      "back": "The CDN requests the file from the origin, receives it, caches it according to its TTL, and returns it to the user.",
+      "source_pages": [
+        17,
+        18
+      ]
+    },
+    {
+      "id": "FC33",
+      "front": "What is CDN TTL?",
+      "back": "The amount of time an asset remains cached before it expires.",
+      "source_pages": [
+        17,
+        18
+      ]
+    },
+    {
+      "id": "FC34",
+      "front": "How can an asset be changed before its existing CDN TTL expires?",
+      "back": "Invalidate the object using the CDN provider's API or use object versioning, such as image.png?v=2.",
+      "source_pages": [
+        18
+      ]
+    },
+    {
+      "id": "FC35",
+      "front": "Why are stateful web servers difficult to scale?",
+      "back": "A user's requests may have to return to the specific server holding that user's state, making server addition, removal, and failure handling more difficult.",
+      "source_pages": [
+        20
+      ]
+    },
+    {
+      "id": "FC36",
+      "front": "Where is session state placed in a stateless web architecture?",
+      "back": "In shared storage outside the individual web servers.",
+      "source_pages": [
+        20,
+        21,
+        22
+      ]
+    },
+    {
+      "id": "FC37",
+      "front": "Why does statelessness make autoscaling easier?",
+      "back": "Because any request can be handled by any web server, servers can be added or removed without depending on locally stored client state.",
+      "source_pages": [
+        21,
+        22
+      ]
+    },
+    {
+      "id": "FC38",
+      "front": "What does geoDNS do?",
+      "back": "It resolves domain names to IP addresses based on the geographic location of the user.",
+      "source_pages": [
+        23
+      ]
+    },
+    {
+      "id": "FC39",
+      "front": "What are three challenges of operating multiple data centers?",
+      "back": "Traffic redirection, data synchronization, and testing/deployment consistency.",
+      "source_pages": [
+        24
+      ]
+    },
+    {
+      "id": "FC40",
+      "front": "What is the fundamental purpose of a message queue?",
+      "back": "To provide a buffer for asynchronous communication between producers and consumers.",
+      "source_pages": [
+        25
+      ]
+    },
+    {
+      "id": "FC41",
+      "front": "Why does a message queue decouple producers and consumers?",
+      "back": "The producer can publish while the consumer is unavailable, and the consumer can process queued messages even when the producer is unavailable.",
+      "source_pages": [
+        25
+      ]
+    },
+    {
+      "id": "FC42",
+      "front": "How might worker count respond to message queue size?",
+      "back": "Add workers when the queue becomes large and reduce workers when the queue remains mostly empty.",
+      "source_pages": [
+        25
+      ]
+    },
+    {
+      "id": "FC43",
+      "front": "What three categories of metrics does Chapter 1 mention?",
+      "back": "Host-level metrics, aggregated-level metrics, and key business metrics.",
+      "source_pages": [
+        26
+      ]
+    },
+    {
+      "id": "FC44",
+      "front": "What is the purpose of centralized logging?",
+      "back": "To aggregate error logs into a service where they can be searched and viewed more easily.",
+      "source_pages": [
+        26
+      ]
+    },
+    {
+      "id": "FC45",
+      "front": "What is sharding?",
+      "back": "Horizontal database scaling by separating a large database into smaller parts called shards.",
+      "source_pages": [
+        28
+      ]
+    },
+    {
+      "id": "FC46",
+      "front": "Do all shards necessarily have different schemas?",
+      "back": "No. The chapter's shards share the same schema while containing different data.",
+      "source_pages": [
+        28
+      ]
+    },
+    {
+      "id": "FC47",
+      "front": "What sharding function is used in the chapter's example?",
+      "back": "user_id % 4.",
+      "source_pages": [
+        28,
+        29
+      ]
+    },
+    {
+      "id": "FC48",
+      "front": "What is arguably the most important decision in a sharding strategy according to the chapter?",
+      "back": "Choosing the sharding key so that data can be distributed evenly and queries can be routed efficiently.",
+      "source_pages": [
+        29,
+        30
+      ]
+    },
+    {
+      "id": "FC49",
+      "front": "What is the celebrity problem in sharding?",
+      "back": "A hotspot-key problem in which a particular shard receives excessive traffic and becomes overloaded.",
+      "source_pages": [
+        30
+      ]
+    },
+    {
+      "id": "FC50",
+      "front": "Why can joins become difficult after sharding?",
+      "back": "The required records may reside on different database servers, making cross-shard joins difficult.",
+      "source_pages": [
+        30
+      ]
+    }
+  ],
+  "multiple_choice_questions": [
+    {
+      "id": "MCQ01",
+      "difficulty": "easy",
+      "question": "What is the correct high-level request sequence in the chapter's initial architecture?",
+      "choices": {
+        "A": "HTTP request -> DNS -> IP address -> web server",
+        "B": "DNS lookup -> IP address -> HTTP request -> web server response",
+        "C": "Database -> DNS -> load balancer -> browser",
+        "D": "CDN -> database -> DNS -> application"
+      },
+      "answer": "B",
+      "explanation": "The user first accesses a domain name, DNS returns an IP address, the client sends an HTTP request, and the web server returns HTML or JSON.",
+      "source_pages": [
+        6,
+        7
+      ]
+    },
+    {
+      "id": "MCQ02",
+      "difficulty": "easy",
+      "question": "What is the primary benefit of separating the web server from the database server?",
+      "choices": {
+        "A": "DNS is no longer necessary",
+        "B": "HTTP becomes faster by definition",
+        "C": "The web tier and data tier can be scaled independently",
+        "D": "Database replication becomes unnecessary"
+      },
+      "answer": "C",
+      "explanation": "Independent scaling is the major architectural reason given for separating the web and database tiers.",
+      "source_pages": [
+        8
+      ]
+    },
+    {
+      "id": "MCQ03",
+      "difficulty": "medium",
+      "question": "Which characteristic best matches a relational database as described in Chapter 1?",
+      "choices": {
+        "A": "Stores only key-value pairs",
+        "B": "Stores data in tables and rows and supports joins",
+        "C": "Cannot represent structured data",
+        "D": "Must always be distributed across many servers"
+      },
+      "answer": "B",
+      "explanation": "The chapter describes relational databases as table-and-row systems supporting SQL joins.",
+      "source_pages": [
+        8
+      ]
+    },
+    {
+      "id": "MCQ04",
+      "difficulty": "medium",
+      "question": "Which situation is specifically identified as a possible reason to consider a NoSQL database?",
+      "choices": {
+        "A": "The application requires complex relational joins",
+        "B": "The application requires super-low latency",
+        "C": "The application has only one user",
+        "D": "The application cannot use JSON"
+      },
+      "answer": "B",
+      "explanation": "Super-low latency is one of the explicit NoSQL use cases listed in the chapter.",
+      "source_pages": [
+        8
+      ]
+    },
+    {
+      "id": "MCQ05",
+      "difficulty": "easy",
+      "question": "What does scale up mean?",
+      "choices": {
+        "A": "Adding additional servers",
+        "B": "Adding additional data centers",
+        "C": "Adding more resources to an existing server",
+        "D": "Adding additional database replicas"
+      },
+      "answer": "C",
+      "explanation": "Scale up is vertical scaling: increasing CPU, RAM, disk, or other resources on an existing machine.",
+      "source_pages": [
+        9,
+        28
+      ]
+    },
+    {
+      "id": "MCQ06",
+      "difficulty": "medium",
+      "question": "Why does the chapter prefer horizontal scaling for large applications?",
+      "choices": {
+        "A": "Vertical scaling can never increase performance",
+        "B": "Vertical scaling has hardware limits and poor redundancy characteristics",
+        "C": "Horizontal scaling requires no additional infrastructure",
+        "D": "Horizontal scaling eliminates databases"
+      },
+      "answer": "B",
+      "explanation": "Vertical scaling eventually encounters hardware limits and does not inherently provide failover or redundancy.",
+      "source_pages": [
+        9
+      ]
+    },
+    {
+      "id": "MCQ07",
+      "difficulty": "medium",
+      "question": "After a load balancer is introduced, what should clients normally connect to?",
+      "choices": {
+        "A": "The private IP of Server 1",
+        "B": "The private IP of every web server",
+        "C": "The public IP of the load balancer",
+        "D": "The database's public IP"
+      },
+      "answer": "C",
+      "explanation": "Clients connect to the load balancer's public IP, and the load balancer communicates with web servers through private IPs.",
+      "source_pages": [
+        10
+      ]
+    },
+    {
+      "id": "MCQ08",
+      "difficulty": "medium",
+      "question": "Server 1 fails in a two-web-server load-balanced system. According to the chapter, what should happen?",
+      "choices": {
+        "A": "All traffic should stop",
+        "B": "Traffic should be redirected to Server 2",
+        "C": "All traffic should be sent directly to the database",
+        "D": "DNS should permanently remove the application"
+      },
+      "answer": "B",
+      "explanation": "The load balancer redirects traffic to the remaining healthy server, preventing the web tier from becoming unavailable.",
+      "source_pages": [
+        10
+      ]
+    },
+    {
+      "id": "MCQ09",
+      "difficulty": "easy",
+      "question": "In the replicated database model described in Chapter 1, which database normally handles writes?",
+      "choices": {
+        "A": "Any slave database",
+        "B": "The CDN",
+        "C": "The master database",
+        "D": "The cache"
+      },
+      "answer": "C",
+      "explanation": "Insert, update, delete, and other data-modifying commands are sent to the master database.",
+      "source_pages": [
+        12,
+        14
+      ]
+    },
+    {
+      "id": "MCQ10",
+      "difficulty": "medium",
+      "question": "Why are multiple slave databases useful in a read-heavy system?",
+      "choices": {
+        "A": "They eliminate all write operations",
+        "B": "Read queries can be processed in parallel across replicas",
+        "C": "They replace DNS",
+        "D": "They store only static assets"
+      },
+      "answer": "B",
+      "explanation": "Distributing read operations among slaves allows more queries to be processed in parallel.",
+      "source_pages": [
+        12
+      ]
+    },
+    {
+      "id": "MCQ11",
+      "difficulty": "hard",
+      "question": "What complication does the chapter identify when promoting a slave after master database failure?",
+      "choices": {
+        "A": "The slave may not have the most recent data",
+        "B": "The slave has no schema",
+        "C": "The load balancer cannot communicate with databases",
+        "D": "The slave contains only cached data"
+      },
+      "answer": "A",
+      "explanation": "A slave might not be completely up to date, requiring recovery of missing data.",
+      "source_pages": [
+        13
+      ]
+    },
+    {
+      "id": "MCQ12",
+      "difficulty": "medium",
+      "question": "Which workload is best suited for caching according to the chapter?",
+      "choices": {
+        "A": "Data modified continuously and almost never read",
+        "B": "Data read frequently and modified infrequently",
+        "C": "Data that cannot be lost and exists nowhere else",
+        "D": "Only data stored on disk"
+      },
+      "answer": "B",
+      "explanation": "Frequently read, infrequently modified information is a strong cache candidate.",
+      "source_pages": [
+        15
+      ]
+    },
+    {
+      "id": "MCQ13",
+      "difficulty": "medium",
+      "question": "A requested value is absent from cache. What happens next in the chapter's read-through flow?",
+      "choices": {
+        "A": "The request immediately fails",
+        "B": "The web server queries the database, caches the returned result, and responds",
+        "C": "The database is permanently bypassed",
+        "D": "The CDN is asked to perform the query"
+      },
+      "answer": "B",
+      "explanation": "A cache miss causes the application to obtain the data from the database and populate the cache.",
+      "source_pages": [
+        15
+      ]
+    },
+    {
+      "id": "MCQ14",
+      "difficulty": "hard",
+      "question": "Why is an extremely short cache expiration period potentially harmful?",
+      "choices": {
+        "A": "It prevents database replication",
+        "B": "It causes repeated database reloads",
+        "C": "It disables HTTP",
+        "D": "It prevents cache eviction"
+      },
+      "answer": "B",
+      "explanation": "Entries expire so quickly that the system repeatedly retrieves the same data from the database.",
+      "source_pages": [
+        15
+      ]
+    },
+    {
+      "id": "MCQ15",
+      "difficulty": "hard",
+      "question": "Why can an extremely long cache expiration period also be harmful?",
+      "choices": {
+        "A": "It makes data stale",
+        "B": "It removes all data immediately",
+        "C": "It prevents memory allocation",
+        "D": "It forces every request to use the database"
+      },
+      "answer": "A",
+      "explanation": "Long-lived cache entries can continue serving information after the underlying data has changed.",
+      "source_pages": [
+        15
+      ]
+    },
+    {
+      "id": "MCQ16",
+      "difficulty": "medium",
+      "question": "Which cache eviction policy is identified as the most popular?",
+      "choices": {
+        "A": "FIFO",
+        "B": "LFU",
+        "C": "LRU",
+        "D": "TTL"
+      },
+      "answer": "C",
+      "explanation": "The chapter identifies Least Recently Used as the most popular cache eviction policy.",
+      "source_pages": [
+        16
+      ]
+    },
+    {
+      "id": "MCQ17",
+      "difficulty": "medium",
+      "question": "Why would a system deploy multiple cache servers?",
+      "choices": {
+        "A": "To remove all persistent databases",
+        "B": "To avoid a cache server becoming a single point of failure",
+        "C": "To eliminate cache expiration",
+        "D": "To prevent DNS resolution"
+      },
+      "answer": "B",
+      "explanation": "A single cache server can become a SPOF, so redundancy is recommended.",
+      "source_pages": [
+        16
+      ]
+    },
+    {
+      "id": "MCQ18",
+      "difficulty": "easy",
+      "question": "What content does the chapter primarily recommend placing in a CDN?",
+      "choices": {
+        "A": "Database transactions",
+        "B": "Static assets",
+        "C": "Session state",
+        "D": "Message queue jobs"
+      },
+      "answer": "B",
+      "explanation": "Images, video, CSS, and JavaScript are the primary CDN content discussed.",
+      "source_pages": [
+        17
+      ]
+    },
+    {
+      "id": "MCQ19",
+      "difficulty": "medium",
+      "question": "A CDN receives a request for image.png but does not contain it. What should it do?",
+      "choices": {
+        "A": "Query geoDNS repeatedly",
+        "B": "Request the object from the origin",
+        "C": "Create the image itself",
+        "D": "Send the request to a slave database"
+      },
+      "answer": "B",
+      "explanation": "On a CDN miss, the CDN retrieves the asset from the origin.",
+      "source_pages": [
+        17
+      ]
+    },
+    {
+      "id": "MCQ20",
+      "difficulty": "medium",
+      "question": "What does a CDN TTL determine?",
+      "choices": {
+        "A": "Which database receives writes",
+        "B": "How many web servers are available",
+        "C": "How long an object remains cached",
+        "D": "Which sharding key should be selected"
+      },
+      "answer": "C",
+      "explanation": "TTL determines the lifetime of an object in the CDN cache.",
+      "source_pages": [
+        17,
+        18
+      ]
+    },
+    {
+      "id": "MCQ21",
+      "difficulty": "hard",
+      "question": "Which is an appropriate CDN failure strategy according to the chapter?",
+      "choices": {
+        "A": "Make the CDN the only location containing the asset",
+        "B": "Allow clients to obtain the resource from the origin during a CDN outage",
+        "C": "Disable static resources permanently",
+        "D": "Route static resources into the database master"
+      },
+      "answer": "B",
+      "explanation": "The chapter recommends considering fallback to the origin when the CDN becomes temporarily unavailable.",
+      "source_pages": [
+        18
+      ]
+    },
+    {
+      "id": "MCQ22",
+      "difficulty": "medium",
+      "question": "What is the central scaling problem with stateful web servers?",
+      "choices": {
+        "A": "Every request must use JSON",
+        "B": "Users may need to repeatedly reach the same server holding their state",
+        "C": "The database can no longer store data",
+        "D": "CDNs stop functioning"
+      },
+      "answer": "B",
+      "explanation": "Local session state ties users to particular servers and complicates scaling and failure handling.",
+      "source_pages": [
+        20
+      ]
+    },
+    {
+      "id": "MCQ23",
+      "difficulty": "medium",
+      "question": "What architectural change makes the web tier stateless?",
+      "choices": {
+        "A": "Move state into shared storage",
+        "B": "Store additional state on every web server",
+        "C": "Remove the load balancer",
+        "D": "Move all state into the CDN"
+      },
+      "answer": "A",
+      "explanation": "Removing session state from individual web servers allows any server to handle any request.",
+      "source_pages": [
+        20,
+        21,
+        22
+      ]
+    },
+    {
+      "id": "MCQ24",
+      "difficulty": "hard",
+      "question": "Why does statelessness work particularly well with autoscaling?",
+      "choices": {
+        "A": "Each server owns a permanent set of users",
+        "B": "New servers do not need preexisting local session state to handle requests",
+        "C": "It prevents servers from being removed",
+        "D": "It requires sticky sessions"
+      },
+      "answer": "B",
+      "explanation": "Because state lives elsewhere, adding or removing application servers does not break a user's dependency on a specific machine.",
+      "source_pages": [
+        21,
+        22
+      ]
+    },
+    {
+      "id": "MCQ25",
+      "difficulty": "medium",
+      "question": "What does geoDNS use when deciding which IP address to return?",
+      "choices": {
+        "A": "The user's geographic location",
+        "B": "The database schema",
+        "C": "The cache eviction algorithm",
+        "D": "The user's password"
+      },
+      "answer": "A",
+      "explanation": "geoDNS can resolve a domain differently depending on where the user is located.",
+      "source_pages": [
+        23
+      ]
+    },
+    {
+      "id": "MCQ26",
+      "difficulty": "hard",
+      "question": "Which is NOT one of the three multi-data-center challenges emphasized by the chapter?",
+      "choices": {
+        "A": "Traffic redirection",
+        "B": "Data synchronization",
+        "C": "Testing and deployment",
+        "D": "Replacing HTTP with FTP"
+      },
+      "answer": "D",
+      "explanation": "Traffic routing, synchronization, and deployment consistency are the stated challenges.",
+      "source_pages": [
+        24
+      ]
+    },
+    {
+      "id": "MCQ27",
+      "difficulty": "medium",
+      "question": "What property of a message queue allows the producer and consumer to operate independently?",
+      "choices": {
+        "A": "Synchronous blocking",
+        "B": "Asynchronous buffering",
+        "C": "Sticky sessions",
+        "D": "Database joins"
+      },
+      "answer": "B",
+      "explanation": "The queue buffers messages, allowing production and consumption to occur asynchronously.",
+      "source_pages": [
+        25
+      ]
+    },
+    {
+      "id": "MCQ28",
+      "difficulty": "hard",
+      "question": "A photo-processing queue is growing rapidly. What scaling response does the chapter suggest?",
+      "choices": {
+        "A": "Remove workers",
+        "B": "Add more workers",
+        "C": "Disable the queue",
+        "D": "Increase CDN TTL"
+      },
+      "answer": "B",
+      "explanation": "Increasing the worker pool allows queued jobs to be processed faster.",
+      "source_pages": [
+        25
+      ]
+    },
+    {
+      "id": "MCQ29",
+      "difficulty": "medium",
+      "question": "Which of the following is a host-level metric listed in Chapter 1?",
+      "choices": {
+        "A": "Daily active users",
+        "B": "Revenue",
+        "C": "CPU utilization",
+        "D": "Retention"
+      },
+      "answer": "C",
+      "explanation": "CPU, memory, and disk I/O are examples of host-level metrics.",
+      "source_pages": [
+        26
+      ]
+    },
+    {
+      "id": "MCQ30",
+      "difficulty": "medium",
+      "question": "What is database horizontal scaling called in the chapter?",
+      "choices": {
+        "A": "Replication",
+        "B": "Sharding",
+        "C": "Caching",
+        "D": "Serialization"
+      },
+      "answer": "B",
+      "explanation": "The database-scaling section describes horizontal database scaling as sharding.",
+      "source_pages": [
+        28
+      ]
+    },
+    {
+      "id": "MCQ31",
+      "difficulty": "medium",
+      "question": "Using the chapter's example function user_id % 4, which shard stores user_id 14?",
+      "choices": {
+        "A": "Shard 0",
+        "B": "Shard 1",
+        "C": "Shard 2",
+        "D": "Shard 3"
+      },
+      "answer": "C",
+      "explanation": "14 % 4 = 2, so the request is routed to shard 2.",
+      "source_pages": [
+        28,
+        29
+      ]
+    },
+    {
+      "id": "MCQ32",
+      "difficulty": "hard",
+      "question": "What property is particularly important when selecting a sharding key?",
+      "choices": {
+        "A": "It should concentrate all users on one shard",
+        "B": "It should help distribute data evenly",
+        "C": "It should prevent all hashing",
+        "D": "It must contain static assets"
+      },
+      "answer": "B",
+      "explanation": "Uneven distribution can cause shard exhaustion and hotspots, so even distribution is an important criterion.",
+      "source_pages": [
+        29,
+        30
+      ]
+    },
+    {
+      "id": "MCQ33",
+      "difficulty": "hard",
+      "question": "Which situation may require resharding?",
+      "choices": {
+        "A": "A single shard reaches capacity",
+        "B": "DNS resolves correctly",
+        "C": "A CDN has a cache hit",
+        "D": "A web server receives an HTTP request"
+      },
+      "answer": "A",
+      "explanation": "Resharding may be required when a shard becomes full or uneven distribution causes some shards to become exhausted earlier than others.",
+      "source_pages": [
+        30
+      ]
+    },
+    {
+      "id": "MCQ34",
+      "difficulty": "hard",
+      "question": "A social network stores several extremely popular celebrity accounts on the same shard. What problem may occur?",
+      "choices": {
+        "A": "TTL expiration",
+        "B": "Hotspot key or celebrity problem",
+        "C": "DNS poisoning",
+        "D": "Cache invalidation"
+      },
+      "answer": "B",
+      "explanation": "Large amounts of traffic to the same shard can overload that shard.",
+      "source_pages": [
+        30
+      ]
+    },
+    {
+      "id": "MCQ35",
+      "difficulty": "hard",
+      "question": "What workaround does the chapter give for difficult joins across database shards?",
+      "choices": {
+        "A": "Denormalization",
+        "B": "Sticky sessions",
+        "C": "CDN invalidation",
+        "D": "Cache overprovisioning"
+      },
+      "answer": "A",
+      "explanation": "Denormalization can restructure data so needed queries can often be completed from a single table rather than requiring cross-shard joins.",
+      "source_pages": [
+        30
+      ]
+    }
+  ],
+  "mix_and_match": [
+    {
+      "id": "MM01",
+      "title": "Core Infrastructure Components",
+      "instructions": "Match each component on the left with its primary responsibility on the right.",
+      "left": {
+        "A": "DNS",
+        "B": "Load Balancer",
+        "C": "Cache",
+        "D": "CDN",
+        "E": "Message Queue",
+        "F": "Database Slave",
+        "G": "geoDNS"
+      },
+      "right": {
+        "1": "Supports asynchronous communication between producers and consumers",
+        "2": "Serves frequently accessed application data from memory",
+        "3": "Resolves a domain name into an IP address",
+        "4": "Distributes requests among web servers",
+        "5": "Serves static content from geographically dispersed servers",
+        "6": "Handles database read operations in the replication model",
+        "7": "Returns IP addresses based on user geography"
+      },
+      "answer_key": {
+        "A": "3",
+        "B": "4",
+        "C": "2",
+        "D": "5",
+        "E": "1",
+        "F": "6",
+        "G": "7"
+      },
+      "source_pages": [
+        7,
+        10,
+        12,
+        15,
+        17,
+        23,
+        25
+      ]
+    },
+    {
+      "id": "MM02",
+      "title": "Problem to Solution",
+      "instructions": "Match each scalability problem with the technique introduced to address it.",
+      "left": {
+        "A": "One web server is overloaded or can fail",
+        "B": "Repeated database queries increase latency",
+        "C": "Static files must be delivered to geographically distant users",
+        "D": "Users are tied to specific web servers",
+        "E": "Services need to operate asynchronously",
+        "F": "One database can no longer hold or serve all data"
+      },
+      "right": {
+        "1": "Message queue",
+        "2": "Stateless web tier",
+        "3": "Sharding",
+        "4": "Cache",
+        "5": "Load balancer plus additional web servers",
+        "6": "CDN"
+      },
+      "answer_key": {
+        "A": "5",
+        "B": "4",
+        "C": "6",
+        "D": "2",
+        "E": "1",
+        "F": "3"
+      },
+      "source_pages": [
+        9,
+        10,
+        15,
+        17,
+        20,
+        21,
+        25,
+        28
+      ]
+    },
+    {
+      "id": "MM03",
+      "title": "Cache Concepts",
+      "instructions": "Match each cache-related term with its definition.",
+      "left": {
+        "A": "TTL or Expiration",
+        "B": "LRU",
+        "C": "LFU",
+        "D": "FIFO",
+        "E": "SPOF",
+        "F": "Cache Miss",
+        "G": "Overprovisioning"
+      },
+      "right": {
+        "1": "Remove the least recently accessed item",
+        "2": "The requested value is absent and must be retrieved elsewhere",
+        "3": "Maintain additional memory capacity as a buffer",
+        "4": "Remove the least frequently accessed item",
+        "5": "A component whose failure can stop the system",
+        "6": "Determines when cached data should be removed",
+        "7": "Remove entries in insertion order"
+      },
+      "answer_key": {
+        "A": "6",
+        "B": "1",
+        "C": "4",
+        "D": "7",
+        "E": "5",
+        "F": "2",
+        "G": "3"
+      },
+      "source_pages": [
+        15,
+        16
+      ]
+    },
+    {
+      "id": "MM04",
+      "title": "Database Scaling Problems",
+      "instructions": "Match each database scaling concept with its description.",
+      "left": {
+        "A": "Vertical Scaling",
+        "B": "Sharding",
+        "C": "Sharding Key",
+        "D": "Resharding",
+        "E": "Celebrity Problem",
+        "F": "Denormalization"
+      },
+      "right": {
+        "1": "Redistributing data because the existing partitioning scheme no longer works adequately",
+        "2": "Adding resources to one database machine",
+        "3": "Reducing the need for joins across different shards",
+        "4": "Partitioning data across multiple database servers",
+        "5": "A key used to determine where data should be stored",
+        "6": "A heavily accessed key causes one shard to receive disproportionate traffic"
+      },
+      "answer_key": {
+        "A": "2",
+        "B": "4",
+        "C": "5",
+        "D": "1",
+        "E": "6",
+        "F": "3"
+      },
+      "source_pages": [
+        28,
+        29,
+        30
+      ]
+    }
+  ],
+  "true_false": [
+    {
+      "id": "TF01",
+      "statement": "A relational database stores data using tables and rows.",
+      "answer": true,
+      "explanation": "This is the relational model described in Chapter 1.",
+      "source_pages": [
+        8
+      ]
+    },
+    {
+      "id": "TF02",
+      "statement": "Horizontal scaling means increasing CPU and RAM on the same server.",
+      "answer": false,
+      "explanation": "That is vertical scaling. Horizontal scaling means adding servers.",
+      "source_pages": [
+        9
+      ]
+    },
+    {
+      "id": "TF03",
+      "statement": "Clients normally communicate directly with individual private web-server IPs after the chapter introduces a load balancer.",
+      "answer": false,
+      "explanation": "Clients reach the public load-balancer IP; the load balancer communicates with the servers through private IPs.",
+      "source_pages": [
+        10
+      ]
+    },
+    {
+      "id": "TF04",
+      "statement": "Database replication can improve performance, reliability, and availability.",
+      "answer": true,
+      "source_pages": [
+        12,
+        13
+      ]
+    },
+    {
+      "id": "TF05",
+      "statement": "In the chapter's replication model, all writes should normally go to slave databases.",
+      "answer": false,
+      "explanation": "Writes go to the master database.",
+      "source_pages": [
+        12,
+        14
+      ]
+    },
+    {
+      "id": "TF06",
+      "statement": "Cache is a safe replacement for persistent storage because its data always survives server restarts.",
+      "answer": false,
+      "explanation": "The chapter emphasizes that cache data is generally stored in volatile memory.",
+      "source_pages": [
+        15
+      ]
+    },
+    {
+      "id": "TF07",
+      "statement": "Making cache expiration extremely short can increase database traffic.",
+      "answer": true,
+      "source_pages": [
+        15
+      ]
+    },
+    {
+      "id": "TF08",
+      "statement": "LRU stands for Least Recently Used.",
+      "answer": true,
+      "source_pages": [
+        16
+      ]
+    },
+    {
+      "id": "TF09",
+      "statement": "The chapter focuses primarily on using CDNs for static content.",
+      "answer": true,
+      "source_pages": [
+        17
+      ]
+    },
+    {
+      "id": "TF10",
+      "statement": "A stateless server stores a user's session only on the local web server.",
+      "answer": false,
+      "explanation": "State is kept outside the web server in shared storage.",
+      "source_pages": [
+        20,
+        21
+      ]
+    },
+    {
+      "id": "TF11",
+      "statement": "Sticky sessions are one way to maintain user-to-server affinity in a stateful architecture.",
+      "answer": true,
+      "source_pages": [
+        20
+      ]
+    },
+    {
+      "id": "TF12",
+      "statement": "geoDNS can route users based on their geographic location.",
+      "answer": true,
+      "source_pages": [
+        23
+      ]
+    },
+    {
+      "id": "TF13",
+      "statement": "A producer must always wait until the consumer is available before publishing to a message queue.",
+      "answer": false,
+      "explanation": "The queue decouples them so a producer may publish even while the consumer is unavailable.",
+      "source_pages": [
+        25
+      ]
+    },
+    {
+      "id": "TF14",
+      "statement": "All shards in the chapter's example have different schemas.",
+      "answer": false,
+      "explanation": "The shards share the same schema but contain different data.",
+      "source_pages": [
+        28
+      ]
+    },
+    {
+      "id": "TF15",
+      "statement": "Sharding simplifies joins across multiple database servers.",
+      "answer": false,
+      "explanation": "Cross-shard joins become more difficult, which can lead to denormalization.",
+      "source_pages": [
+        30
+      ]
+    }
+  ],
+  "fill_in_the_blank": [
+    {
+      "id": "FIB01",
+      "prompt": "________ translates a domain such as api.mysite.com into an IP address.",
+      "answer": "DNS",
+      "source_pages": [
+        6,
+        7
+      ]
+    },
+    {
+      "id": "FIB02",
+      "prompt": "Adding CPU and RAM to an existing machine is called ________ scaling.",
+      "answer": "vertical",
+      "source_pages": [
+        9
+      ]
+    },
+    {
+      "id": "FIB03",
+      "prompt": "Adding additional servers is called ________ scaling.",
+      "answer": "horizontal",
+      "source_pages": [
+        9
+      ]
+    },
+    {
+      "id": "FIB04",
+      "prompt": "A ________ distributes incoming traffic across multiple web servers.",
+      "answer": "load balancer",
+      "source_pages": [
+        10
+      ]
+    },
+    {
+      "id": "FIB05",
+      "prompt": "In the replication model described in Chapter 1, writes normally go to the ________ database.",
+      "answer": "master",
+      "source_pages": [
+        12
+      ]
+    },
+    {
+      "id": "FIB06",
+      "prompt": "Frequently accessed data can be placed in a ________ to avoid repeated database queries.",
+      "answer": "cache",
+      "source_pages": [
+        15
+      ]
+    },
+    {
+      "id": "FIB07",
+      "prompt": "LRU stands for Least ________ Used.",
+      "answer": "Recently",
+      "source_pages": [
+        16
+      ]
+    },
+    {
+      "id": "FIB08",
+      "prompt": "The amount of time an object remains cached is commonly represented by ________.",
+      "answer": "TTL",
+      "source_pages": [
+        17,
+        18
+      ]
+    },
+    {
+      "id": "FIB09",
+      "prompt": "A ________ serves static assets from geographically distributed servers.",
+      "answer": "CDN",
+      "source_pages": [
+        17
+      ]
+    },
+    {
+      "id": "FIB10",
+      "prompt": "Moving session state out of individual web servers creates a ________ web tier.",
+      "answer": "stateless",
+      "source_pages": [
+        20,
+        21
+      ]
+    },
+    {
+      "id": "FIB11",
+      "prompt": "Automatically adding and removing servers based on load is called ________.",
+      "answer": "autoscaling",
+      "source_pages": [
+        22
+      ]
+    },
+    {
+      "id": "FIB12",
+      "prompt": "A ________ queue enables asynchronous communication between producers and consumers.",
+      "answer": "message",
+      "source_pages": [
+        25
+      ]
+    },
+    {
+      "id": "FIB13",
+      "prompt": "Horizontal database partitioning is called ________.",
+      "answer": "sharding",
+      "source_pages": [
+        28
+      ]
+    },
+    {
+      "id": "FIB14",
+      "prompt": "A sharding key is also known as a ________ key.",
+      "answer": "partition",
+      "source_pages": [
+        29
+      ]
+    },
+    {
+      "id": "FIB15",
+      "prompt": "A disproportionately popular shard can suffer from the celebrity or ________ key problem.",
+      "answer": "hotspot",
+      "source_pages": [
+        30
+      ]
+    }
+  ],
+  "ordering_exercises": [
+    {
+      "id": "ORD01",
+      "title": "Initial HTTP Request Flow",
+      "items_scrambled": [
+        "Web server returns HTML or JSON",
+        "DNS returns an IP address",
+        "User accesses the application using a domain name",
+        "Client sends HTTP request to the server IP"
+      ],
+      "correct_order": [
+        "User accesses the application using a domain name",
+        "DNS returns an IP address",
+        "Client sends HTTP request to the server IP",
+        "Web server returns HTML or JSON"
+      ],
+      "source_pages": [
+        6,
+        7
+      ]
+    },
+    {
+      "id": "ORD02",
+      "title": "Read-Through Cache Miss",
+      "items_scrambled": [
+        "Store response in cache",
+        "Check cache",
+        "Query database",
+        "Return response to client",
+        "Determine requested value is not cached"
+      ],
+      "correct_order": [
+        "Check cache",
+        "Determine requested value is not cached",
+        "Query database",
+        "Store response in cache",
+        "Return response to client"
+      ],
+      "source_pages": [
+        15
+      ]
+    },
+    {
+      "id": "ORD03",
+      "title": "CDN Cache Miss",
+      "items_scrambled": [
+        "Origin returns the file",
+        "CDN caches the file",
+        "User requests an asset",
+        "CDN discovers the asset is missing",
+        "CDN requests the asset from the origin",
+        "CDN returns the asset"
+      ],
+      "correct_order": [
+        "User requests an asset",
+        "CDN discovers the asset is missing",
+        "CDN requests the asset from the origin",
+        "Origin returns the file",
+        "CDN caches the file",
+        "CDN returns the asset"
+      ],
+      "source_pages": [
+        17,
+        18
+      ]
+    },
+    {
+      "id": "ORD04",
+      "title": "Asynchronous Photo Processing",
+      "items_scrambled": [
+        "Worker processes photo",
+        "Web server publishes a photo job",
+        "Job waits in message queue",
+        "Worker consumes job"
+      ],
+      "correct_order": [
+        "Web server publishes a photo job",
+        "Job waits in message queue",
+        "Worker consumes job",
+        "Worker processes photo"
+      ],
+      "source_pages": [
+        25
+      ]
+    },
+    {
+      "id": "ORD05",
+      "title": "High-Level Scaling Progression",
+      "items_scrambled": [
+        "Introduce stateless web servers",
+        "Start with one server",
+        "Shard the database",
+        "Introduce load balancing",
+        "Add cache and CDN",
+        "Introduce multiple data centers",
+        "Separate the database from the web tier"
+      ],
+      "correct_order": [
+        "Start with one server",
+        "Separate the database from the web tier",
+        "Introduce load balancing",
+        "Add cache and CDN",
+        "Introduce stateless web servers",
+        "Introduce multiple data centers",
+        "Shard the database"
+      ],
+      "source_pages": [
+        6,
+        8,
+        10,
+        15,
+        17,
+        20,
+        23,
+        28
+      ]
+    }
+  ],
+  "scenario_questions": [
+    {
+      "id": "SC01",
+      "difficulty": "medium",
+      "scenario": "Your application runs on one powerful web server. Traffic has increased enough that the machine occasionally reaches its capacity. If the machine fails, the entire website becomes unavailable.",
+      "question": "What architectural change from Chapter 1 directly addresses both concerns?",
+      "expected_answer": "Scale horizontally by introducing multiple web servers behind a load balancer.",
+      "reasoning": [
+        "Multiple servers increase capacity.",
+        "The load balancer distributes incoming traffic.",
+        "If one server fails, requests can be redirected to another healthy server."
+      ],
+      "source_pages": [
+        9,
+        10
+      ]
+    },
+    {
+      "id": "SC02",
+      "difficulty": "medium",
+      "scenario": "An application repeatedly queries the database for the same product information. Product details are viewed frequently but are updated infrequently.",
+      "question": "What technique should be considered first?",
+      "expected_answer": "Cache the frequently accessed data.",
+      "reasoning": "The workload matches the chapter's recommendation to cache frequently read and infrequently modified data.",
+      "source_pages": [
+        15
+      ]
+    },
+    {
+      "id": "SC03",
+      "difficulty": "hard",
+      "scenario": "After enabling caching, users sometimes continue seeing outdated values for a long period after the database has changed.",
+      "question": "Which cache configuration issue should you investigate?",
+      "expected_answer": "The expiration period may be too long, and cache/database consistency must also be considered.",
+      "source_pages": [
+        15,
+        16
+      ]
+    },
+    {
+      "id": "SC04",
+      "difficulty": "hard",
+      "scenario": "Every request from User A must be routed to Server 1 because Server 1 contains User A's session information. Adding or removing application servers has become difficult.",
+      "question": "What architectural problem exists, and how does Chapter 1 address it?",
+      "expected_answer": "The web tier is stateful. Move session state into shared storage so the web servers become stateless.",
+      "source_pages": [
+        20,
+        21,
+        22
+      ]
+    },
+    {
+      "id": "SC05",
+      "difficulty": "medium",
+      "scenario": "Users in Europe have significantly slower access to your site's images than users who live near your origin server.",
+      "question": "Which Chapter 1 technique directly targets this problem?",
+      "expected_answer": "Use a CDN so static assets can be delivered from geographically closer servers.",
+      "source_pages": [
+        17
+      ]
+    },
+    {
+      "id": "SC06",
+      "difficulty": "hard",
+      "scenario": "Your application operates in US-East and US-West. US-West suffers a major outage.",
+      "question": "What behavior does the chapter's multi-data-center design describe?",
+      "expected_answer": "Redirect traffic to the healthy data center, such as routing 100% of traffic to US-East.",
+      "source_pages": [
+        23,
+        24
+      ]
+    },
+    {
+      "id": "SC07",
+      "difficulty": "hard",
+      "scenario": "Photo-processing requests take several seconds and are causing your web servers to wait for processing workers.",
+      "question": "How does Chapter 1 suggest decoupling these components?",
+      "expected_answer": "Have the web servers publish photo-processing jobs to a message queue and allow independent worker processes to consume the jobs asynchronously.",
+      "source_pages": [
+        25
+      ]
+    },
+    {
+      "id": "SC08",
+      "difficulty": "hard",
+      "scenario": "The photo-processing queue is growing faster than workers can consume jobs.",
+      "question": "How should the consumer tier respond?",
+      "expected_answer": "Increase the number of workers to reduce processing time.",
+      "source_pages": [
+        25
+      ]
+    },
+    {
+      "id": "SC09",
+      "difficulty": "hard",
+      "scenario": "Your database has been split into four shards using user_id % 4. User 123456 receives huge amounts of traffic and the corresponding shard becomes overloaded.",
+      "question": "What general sharding problem does this illustrate?",
+      "expected_answer": "A hotspot-key or celebrity problem.",
+      "source_pages": [
+        29,
+        30
+      ]
+    },
+    {
+      "id": "SC10",
+      "difficulty": "hard",
+      "scenario": "After sharding the database, a query frequently needs tables located on different database servers.",
+      "question": "What problem does this create, and what workaround does Chapter 1 mention?",
+      "expected_answer": "Cross-shard joins become difficult. The chapter suggests denormalizing data so some queries can be performed within a single table.",
+      "source_pages": [
+        30
+      ]
+    }
+  ],
+  "short_answer_questions": [
+    {
+      "id": "SA01",
+      "question": "Explain the difference between vertical and horizontal scaling.",
+      "model_answer": "Vertical scaling increases the resources of an existing machine, such as CPU or RAM. Horizontal scaling adds additional machines. Vertical scaling is simple but ultimately limited by hardware capacity and does not inherently provide redundancy. Horizontal scaling is therefore more suitable for large-scale systems.",
+      "source_pages": [
+        9
+      ]
+    },
+    {
+      "id": "SA02",
+      "question": "Why does a load balancer improve availability?",
+      "model_answer": "A load balancer can route requests around an unavailable web server. With multiple web servers, failure of one server does not necessarily make the application unavailable because requests can be directed toward healthy servers.",
+      "source_pages": [
+        10
+      ]
+    },
+    {
+      "id": "SA03",
+      "question": "Explain why database replication can improve read performance.",
+      "model_answer": "Writes are handled by the master while read operations can be distributed among multiple slave databases. This allows multiple read queries to execute in parallel and prevents one database from handling the full read workload.",
+      "source_pages": [
+        12
+      ]
+    },
+    {
+      "id": "SA04",
+      "question": "Explain the tradeoff involved in choosing a cache expiration period.",
+      "model_answer": "An expiration period that is too short creates unnecessary database reloads because entries expire frequently. An expiration period that is too long increases the chance of serving stale data.",
+      "source_pages": [
+        15
+      ]
+    },
+    {
+      "id": "SA05",
+      "question": "Why is a stateless web tier preferable for horizontal scaling?",
+      "model_answer": "When session state exists in shared storage rather than individual servers, any web server can process any user's request. Servers can therefore be added, removed, replaced, or autoscaled without maintaining user-to-server affinity.",
+      "source_pages": [
+        20,
+        21,
+        22
+      ]
+    },
+    {
+      "id": "SA06",
+      "question": "What additional complications are introduced by multiple data centers?",
+      "model_answer": "The architecture must correctly redirect traffic, synchronize data between geographic locations, and ensure that testing and deployment keep services consistent across data centers.",
+      "source_pages": [
+        24
+      ]
+    },
+    {
+      "id": "SA07",
+      "question": "How does a message queue improve system decoupling?",
+      "model_answer": "The producer places messages into a durable queue rather than depending directly on the consumer. The consumer processes queued work independently, so each side can temporarily be unavailable and can scale independently.",
+      "source_pages": [
+        25
+      ]
+    },
+    {
+      "id": "SA08",
+      "question": "What kinds of metrics should a large system collect according to Chapter 1?",
+      "model_answer": "The chapter describes host-level metrics such as CPU, memory, and disk I/O; aggregated metrics such as database-tier or cache-tier performance; and business metrics such as daily active users, retention, and revenue.",
+      "source_pages": [
+        26
+      ]
+    },
+    {
+      "id": "SA09",
+      "question": "What makes a good sharding key?",
+      "model_answer": "A good sharding key routes queries efficiently to the correct database and distributes data as evenly as possible so that individual shards do not become disproportionately full or overloaded.",
+      "source_pages": [
+        29,
+        30
+      ]
+    },
+    {
+      "id": "SA10",
+      "question": "Why is sharding not a free scalability solution?",
+      "model_answer": "Sharding introduces operational and data-model complexity. The chapter specifically identifies resharding, hotspot keys, and difficulty performing joins across shards.",
+      "source_pages": [
+        30
+      ]
+    }
+  ],
+  "diagram_reconstruction_drills": [
+    {
+      "id": "DR01",
+      "name": "Figure 1-2 Request Flow",
+      "task": "Draw the initial request flow from memory.",
+      "required_components": [
+        "User",
+        "Web browser or mobile app",
+        "DNS",
+        "IP address",
+        "Web server",
+        "HTTP request",
+        "HTML or JSON response"
+      ],
+      "correct_flow": "User -> DNS lookup -> IP address returned -> HTTP request to web server -> HTML/JSON response returned",
+      "source_pages": [
+        6,
+        7
+      ]
+    },
+    {
+      "id": "DR02",
+      "name": "Load-Balanced Web Tier",
+      "task": "Draw a user connecting through a load balancer to two web servers.",
+      "required_details": [
+        "Public IP on load balancer",
+        "Private IP communication between load balancer and web servers",
+        "At least two web servers"
+      ],
+      "source_pages": [
+        10
+      ]
+    },
+    {
+      "id": "DR03",
+      "name": "Database Replication",
+      "task": "Draw web servers, one master database, and multiple slave databases.",
+      "required_details": [
+        "Writes point toward master",
+        "Replication flows from master toward slaves",
+        "Reads point toward slaves"
+      ],
+      "source_pages": [
+        12,
+        14
+      ]
+    },
+    {
+      "id": "DR04",
+      "name": "Stateless Web Tier",
+      "task": "Draw multiple users, a pool of web servers, and shared state storage.",
+      "required_details": [
+        "Any user can reach any web server",
+        "Web servers retrieve state from shared storage",
+        "No user session is permanently tied to an individual web server"
+      ],
+      "source_pages": [
+        20,
+        21,
+        22
+      ]
+    },
+    {
+      "id": "DR05",
+      "name": "Message Queue",
+      "task": "Draw the producer-consumer relationship.",
+      "required_components": [
+        "Producer",
+        "Message queue",
+        "Consumer"
+      ],
+      "correct_flow": "Producer -> publish -> message queue -> consume -> consumer",
+      "source_pages": [
+        25
+      ]
+    },
+    {
+      "id": "DR06",
+      "name": "Four-Way Sharding",
+      "task": "Draw four database shards using user_id % 4 as the routing function.",
+      "examples": {
+        "user_id_8": "Shard 0",
+        "user_id_13": "Shard 1",
+        "user_id_14": "Shard 2",
+        "user_id_19": "Shard 3"
+      },
+      "source_pages": [
+        28,
+        29
+      ]
+    }
+  ],
+  "compare_and_contrast": [
+    {
+      "topic": "Vertical Scaling vs Horizontal Scaling",
+      "vertical_scaling": {
+        "method": "Increase resources on an existing server",
+        "strength": "Simple",
+        "weaknesses": [
+          "Hardware limit",
+          "Greater single-machine failure risk",
+          "Can become expensive"
+        ]
+      },
+      "horizontal_scaling": {
+        "method": "Add additional servers",
+        "strength": "Better suited to large-scale systems",
+        "database_form": "Sharding"
+      },
+      "source_pages": [
+        9,
+        28
+      ]
+    },
+    {
+      "topic": "Stateful vs Stateless Web Tier",
+      "stateful": {
+        "state_location": "Individual web server",
+        "request_routing": "User requests need server affinity",
+        "mechanism": "Sticky sessions can be used",
+        "scaling_effect": "Adding/removing servers and handling failures becomes more difficult"
+      },
+      "stateless": {
+        "state_location": "Shared storage",
+        "request_routing": "Any request can reach any web server",
+        "scaling_effect": "Simpler, more robust, and easier to autoscale"
+      },
+      "source_pages": [
+        20,
+        21,
+        22
+      ]
+    },
+    {
+      "topic": "Cache vs CDN",
+      "cache": {
+        "primary_role": "Accelerate frequently accessed application data and reduce database load",
+        "typical_location_in_design": "Between web servers and database/data sources"
+      },
+      "cdn": {
+        "primary_role": "Serve static content from geographically distributed servers",
+        "examples": [
+          "Images",
+          "Videos",
+          "CSS",
+          "JavaScript"
+        ]
+      },
+      "source_pages": [
+        15,
+        17,
+        19
+      ]
+    },
+    {
+      "topic": "Replication vs Sharding",
+      "replication": {
+        "idea": "Maintain copies of data",
+        "major_goals": [
+          "Read scalability",
+          "Reliability",
+          "Availability"
+        ]
+      },
+      "sharding": {
+        "idea": "Partition different data across servers",
+        "major_goal": "Scale the data tier horizontally",
+        "major_challenges": [
+          "Resharding",
+          "Hotspots",
+          "Cross-shard joins"
+        ]
+      },
+      "source_pages": [
+        12,
+        13,
+        28,
+        29,
+        30
+      ]
+    }
+  ],
+  "common_confusions": [
+    {
+      "confusion": "Replication and sharding are the same thing.",
+      "correction": "Replication copies data to additional databases. Sharding divides different portions of the dataset among different database servers.",
+      "source_pages": [
+        12,
+        28
+      ]
+    },
+    {
+      "confusion": "A load balancer makes a web server more powerful.",
+      "correction": "The load balancer distributes traffic across multiple servers; it enables horizontal scaling rather than increasing the hardware capacity of one server.",
+      "source_pages": [
+        9,
+        10
+      ]
+    },
+    {
+      "confusion": "Cache and persistent storage are interchangeable.",
+      "correction": "The chapter describes cache as temporary volatile storage. Important data should remain in persistent storage.",
+      "source_pages": [
+        15
+      ]
+    },
+    {
+      "confusion": "Stateless means the application has no user state.",
+      "correction": "The application can still have user state. Stateless web servers simply keep that state outside the individual web servers in shared storage.",
+      "source_pages": [
+        20,
+        21
+      ]
+    },
+    {
+      "confusion": "A CDN and application cache solve exactly the same problem.",
+      "correction": "The chapter uses application caching primarily to reduce expensive or repeated data access and uses CDN caching primarily for geographically distributed static assets.",
+      "source_pages": [
+        15,
+        17,
+        19
+      ]
+    },
+    {
+      "confusion": "Sharding automatically solves every database scalability problem.",
+      "correction": "Sharding introduces substantial complexity, including resharding, hotspots, and difficult cross-shard joins.",
+      "source_pages": [
+        30
+      ]
+    }
+  ],
+  "active_recall_prompts": [
+    {
+      "id": "AR01",
+      "prompt": "Without looking at the book, describe the system architecture at the very beginning of Chapter 1.",
+      "target_points": [
+        "Everything initially runs on one server",
+        "Web application",
+        "Database",
+        "Cache"
+      ]
+    },
+    {
+      "id": "AR02",
+      "prompt": "Explain the full path of an HTTP request beginning with a domain name.",
+      "target_points": [
+        "Domain",
+        "DNS",
+        "IP address",
+        "HTTP request",
+        "Web server",
+        "HTML or JSON response"
+      ]
+    },
+    {
+      "id": "AR03",
+      "prompt": "Name two reasons vertical scaling eventually becomes insufficient.",
+      "target_points": [
+        "Hardware limits",
+        "Lack of failover/redundancy"
+      ]
+    },
+    {
+      "id": "AR04",
+      "prompt": "Explain how load balancing and database replication solve different availability problems.",
+      "target_points": [
+        "Load balancer protects web tier from individual web-server failure",
+        "Replication protects data availability from individual database failure"
+      ]
+    },
+    {
+      "id": "AR05",
+      "prompt": "Describe a cache hit and a cache miss.",
+      "target_points": [
+        "Hit: return data directly from cache",
+        "Miss: fetch from database, populate cache, return result"
+      ]
+    },
+    {
+      "id": "AR06",
+      "prompt": "List all five cache considerations discussed in the chapter.",
+      "target_points": [
+        "When to use cache",
+        "Expiration policy",
+        "Consistency",
+        "Mitigating failures",
+        "Eviction policy"
+      ]
+    },
+    {
+      "id": "AR07",
+      "prompt": "Describe the complete CDN miss-to-hit lifecycle for two users requesting the same image.",
+      "target_points": [
+        "User A requests asset",
+        "CDN miss",
+        "CDN requests origin",
+        "Origin responds with asset and possible TTL",
+        "CDN caches asset",
+        "User A receives asset",
+        "User B requests same asset",
+        "CDN serves cached asset while TTL remains valid"
+      ]
+    },
+    {
+      "id": "AR08",
+      "prompt": "Explain why sticky sessions are a symptom of stateful architecture.",
+      "target_points": [
+        "State stored locally",
+        "Same user must reach same server",
+        "Scaling becomes harder",
+        "Failure handling becomes harder"
+      ]
+    },
+    {
+      "id": "AR09",
+      "prompt": "Name the three major challenges involved in multiple data centers.",
+      "target_points": [
+        "Traffic redirection",
+        "Data synchronization",
+        "Testing and deployment"
+      ]
+    },
+    {
+      "id": "AR10",
+      "prompt": "Explain why a message queue allows producers and consumers to scale independently.",
+      "target_points": [
+        "Queue buffers messages",
+        "Producer does not require consumer to process immediately",
+        "Consumer can process existing messages independently",
+        "Worker count can respond to queue size"
+      ]
+    },
+    {
+      "id": "AR11",
+      "prompt": "Explain the difference among host metrics, aggregated metrics, and business metrics.",
+      "target_points": [
+        "Host: CPU, memory, disk I/O",
+        "Aggregated: database/cache tier performance",
+        "Business: DAU, retention, revenue"
+      ]
+    },
+    {
+      "id": "AR12",
+      "prompt": "Name the three major complexities introduced by sharding.",
+      "target_points": [
+        "Resharding",
+        "Celebrity/hotspot problem",
+        "Join and denormalization issues"
+      ]
+    }
+  ],
+  "interview_style_questions": [
+    {
+      "id": "INT01",
+      "question": "You have designed an application for only a few users. Walk me through how you would evolve the architecture as traffic grows toward millions of users.",
+      "strong_answer_outline": [
+        "Begin with a single server.",
+        "Separate the web tier and data tier.",
+        "Scale the web tier horizontally.",
+        "Add a load balancer.",
+        "Introduce database replication.",
+        "Add caching.",
+        "Move static assets to a CDN.",
+        "Make the web tier stateless.",
+        "Introduce autoscaling.",
+        "Support multiple data centers when geographic scale requires it.",
+        "Decouple expensive asynchronous tasks through message queues.",
+        "Introduce logging, metrics, monitoring, and automation.",
+        "Shard the database when vertical data-tier scaling is insufficient."
+      ],
+      "source_pages": [
+        6,
+        8,
+        10,
+        12,
+        15,
+        17,
+        20,
+        22,
+        23,
+        25,
+        26,
+        28
+      ]
+    },
+    {
+      "id": "INT02",
+      "question": "Your application is read-heavy. What techniques from Chapter 1 could reduce database pressure?",
+      "strong_answer_outline": [
+        "Add read replicas so reads can be distributed.",
+        "Cache frequently accessed data.",
+        "Serve static assets through a CDN instead of application servers.",
+        "Move appropriate non-relational workloads to a NoSQL data store when applicable."
+      ],
+      "source_pages": [
+        12,
+        15,
+        17,
+        19,
+        30
+      ]
+    },
+    {
+      "id": "INT03",
+      "question": "What single points of failure exist as the architecture evolves, and how are they reduced?",
+      "strong_answer_outline": [
+        "Single web server -> multiple servers plus load balancer",
+        "Single database -> database replication",
+        "Single cache server -> multiple cache servers",
+        "Single data center -> multiple data centers"
+      ],
+      "source_pages": [
+        9,
+        10,
+        12,
+        16,
+        23,
+        24
+      ]
+    },
+    {
+      "id": "INT04",
+      "question": "Why would you not immediately shard a database for a small application?",
+      "strong_answer_outline": [
+        "Scaling is iterative.",
+        "Vertical scaling can initially be simpler.",
+        "Sharding adds substantial complexity.",
+        "Sharding introduces resharding, hotspot, and join problems.",
+        "Use complexity when growth requirements justify it."
+      ],
+      "source_pages": [
+        28,
+        30,
+        32
+      ]
+    }
+  ],
+  "mastery_check": {
+    "beginner": [
+      "Can define DNS, load balancer, cache, CDN, replication, and sharding.",
+      "Can distinguish scale up from scale out.",
+      "Can describe the basic HTTP request flow."
+    ],
+    "intermediate": [
+      "Can explain why each component is introduced during the scaling journey.",
+      "Can explain cache and CDN request flows.",
+      "Can explain stateful versus stateless architecture.",
+      "Can explain read/write routing in the replicated database architecture."
+    ],
+    "advanced": [
+      "Can reason about failure scenarios for web servers, database replicas, caches, CDNs, and data centers.",
+      "Can identify when a system is being limited by the web tier versus the data tier.",
+      "Can explain why message queues provide decoupling.",
+      "Can explain the operational problems introduced by sharding.",
+      "Can reconstruct the architecture from a single server through the final Figure 1-23 architecture without looking at the book."
+    ]
+  },
+  "chapter_one_final_review": {
+    "must_memorize": [
+      "Scale up = larger machine.",
+      "Scale out = more machines.",
+      "Load balancer distributes traffic across web servers.",
+      "Database replication provides performance, reliability, and availability improvements.",
+      "Writes go to the master and reads generally go to slaves in the chapter's model.",
+      "Cache frequently read and infrequently modified data.",
+      "Cache expiration that is too short increases database load; too long increases staleness.",
+      "LRU = Least Recently Used.",
+      "CDN primarily serves geographically distributed static assets in this chapter.",
+      "Stateless web servers keep user state outside individual application servers.",
+      "Statelessness makes horizontal scaling and autoscaling easier.",
+      "geoDNS routes users according to geographic location.",
+      "Message queues enable asynchronous producer-consumer communication.",
+      "Sharding partitions database data across servers.",
+      "A sharding key determines data placement.",
+      "Sharding introduces resharding, hotspot, and cross-shard join challenges."
+    ],
+    "core_architecture_memory_chain": "DNS -> Load Balancer -> Stateless Web Servers -> Cache/Data Tier/Message Queue -> Workers, with CDN for static content, database replication and later sharding for the data tier, plus multiple data centers, monitoring, logging, metrics, and automation.",
+    "one_sentence_takeaway": "Scaling from zero to millions of users is a sequence of removing bottlenecks and single points of failure while making application and data components increasingly distributed, redundant, independently scalable, and observable."
+  }
+}

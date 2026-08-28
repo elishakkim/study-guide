@@ -1,0 +1,5546 @@
+{
+  "chapter": {
+    "number": 8,
+    "title": "The Trouble with Distributed Systems",
+    "book": "Designing Data-Intensive Applications",
+    "author": "Martin Kleppmann",
+    "pdf_pages": {
+      "chapter_start": 295,
+      "summary_end": 334
+    },
+    "book_pages": {
+      "chapter_start": 273,
+      "summary_end": 312
+    },
+    "primary_goal": "Understand why distributed systems must be designed around partial failures, unreliable networks, unreliable clocks, process pauses, uncertainty, quorums, fencing, system models, and explicit correctness assumptions."
+  },
+  "chapter_summary": {
+    "overview": "Chapter 8 is deliberately pessimistic: it explains why distributed systems are fundamentally harder than single-machine programs. A distributed system can experience partial failure—some components continue working while others fail or become arbitrarily slow—and the remaining nodes often cannot tell whether a remote node is dead, slow, disconnected, or merely delayed. Shared-nothing systems communicate only through asynchronous packet networks, where requests and responses may be lost, delayed, duplicated, reordered, or queued for an unbounded amount of time. Timeouts are therefore guesses, not proofs of failure. The chapter examines network congestion, queueing, TCP/UDP tradeoffs, circuit-switched versus packet-switched networks, and the cost tradeoff between predictable latency and high resource utilization. It then turns to clocks. Time-of-day clocks can jump backward or forward and differ between machines, while monotonic clocks are suitable for elapsed-time measurement but cannot be compared across machines. NTP can reduce but not eliminate uncertainty. Wall-clock timestamps are unsafe for causal ordering; logical clocks are safer for ordering events. Google Spanner's TrueTime explicitly exposes clock uncertainty and waits out uncertainty intervals for globally ordered snapshots. Process pauses—GC, VM suspension, OS scheduling, disk I/O, swapping, SIGSTOP—mean a node may be considered dead and later resume without realizing its lease has expired. This motivates quorum-based decisions and fencing tokens, where a resource rejects operations bearing older tokens. The chapter briefly distinguishes ordinary non-Byzantine faults from Byzantine faults, then formalizes distributed assumptions using synchronous, partially synchronous, and asynchronous system models, plus crash-stop, crash-recovery, and Byzantine node-failure models. Finally it distinguishes safety properties, which must never be violated, from liveness properties, which say that something good eventually happens.",
+    "major_sections": [
+      "Faults and Partial Failures",
+      "Cloud Computing and Supercomputing",
+      "Building a Reliable System from Unreliable Components",
+      "Unreliable Networks",
+      "Network Faults in Practice",
+      "Detecting Faults",
+      "Timeouts and Unbounded Delays",
+      "Network Congestion and Queueing",
+      "TCP Versus UDP",
+      "Synchronous Versus Asynchronous Networks",
+      "Latency and Resource Utilization",
+      "Unreliable Clocks",
+      "Monotonic Versus Time-of-Day Clocks",
+      "Clock Synchronization and Accuracy",
+      "Relying on Synchronized Clocks",
+      "Timestamps for Ordering Events",
+      "Clock Readings Have a Confidence Interval",
+      "Synchronized Clocks for Global Snapshots",
+      "Process Pauses",
+      "Response Time Guarantees",
+      "Knowledge, Truth, and Lies",
+      "The Truth Is Defined by the Majority",
+      "Fencing Tokens",
+      "Byzantine Faults",
+      "System Model and Reality",
+      "Correctness of an Algorithm",
+      "Safety and Liveness"
+    ],
+    "source_pages": [
+      295,
+      296,
+      297,
+      298,
+      299,
+      300,
+      301,
+      302,
+      303,
+      304,
+      305,
+      306,
+      307,
+      308,
+      309,
+      310,
+      311,
+      312,
+      313,
+      314,
+      315,
+      316,
+      317,
+      318,
+      319,
+      320,
+      321,
+      322,
+      323,
+      324,
+      325,
+      326,
+      327,
+      328,
+      329,
+      330,
+      331,
+      332,
+      333,
+      334
+    ]
+  },
+  "learning_objectives": [
+    {
+      "id": "LO01",
+      "objective": "Explain partial failure and why it is the defining challenge of distributed systems.",
+      "source_pages": [
+        296,
+        297
+      ]
+    },
+    {
+      "id": "LO02",
+      "objective": "Compare cloud/internet-service fault handling with supercomputer fault handling.",
+      "source_pages": [
+        297,
+        298
+      ]
+    },
+    {
+      "id": "LO03",
+      "objective": "Explain how reliable abstractions can be built from unreliable components.",
+      "source_pages": [
+        299
+      ]
+    },
+    {
+      "id": "LO04",
+      "objective": "Explain why a missing network response is fundamentally ambiguous.",
+      "source_pages": [
+        300,
+        301
+      ]
+    },
+    {
+      "id": "LO05",
+      "objective": "Explain why timeouts detect suspicion rather than prove failure.",
+      "source_pages": [
+        301,
+        302,
+        303,
+        304
+      ]
+    },
+    {
+      "id": "LO06",
+      "objective": "Identify sources of variable network latency and queueing.",
+      "source_pages": [
+        304,
+        305,
+        306
+      ]
+    },
+    {
+      "id": "LO07",
+      "objective": "Compare TCP and UDP for latency-sensitive workloads.",
+      "source_pages": [
+        305
+      ]
+    },
+    {
+      "id": "LO08",
+      "objective": "Compare packet-switched and circuit-switched networks.",
+      "source_pages": [
+        306,
+        307,
+        308
+      ]
+    },
+    {
+      "id": "LO09",
+      "objective": "Explain the latency-versus-resource-utilization tradeoff.",
+      "source_pages": [
+        308,
+        309
+      ]
+    },
+    {
+      "id": "LO10",
+      "objective": "Distinguish time-of-day clocks from monotonic clocks.",
+      "source_pages": [
+        309,
+        310,
+        311
+      ]
+    },
+    {
+      "id": "LO11",
+      "objective": "Explain NTP, drift, clock jumps, leap seconds, and synchronization limits.",
+      "source_pages": [
+        310,
+        311,
+        312,
+        313
+      ]
+    },
+    {
+      "id": "LO12",
+      "objective": "Explain why wall-clock timestamps can violate causal event ordering.",
+      "source_pages": [
+        313,
+        314,
+        315
+      ]
+    },
+    {
+      "id": "LO13",
+      "objective": "Explain logical clocks as an ordering alternative.",
+      "source_pages": [
+        315
+      ]
+    },
+    {
+      "id": "LO14",
+      "objective": "Treat a clock reading as a confidence interval rather than an exact instant.",
+      "source_pages": [
+        315,
+        316
+      ]
+    },
+    {
+      "id": "LO15",
+      "objective": "Explain TrueTime and why Spanner waits out uncertainty.",
+      "source_pages": [
+        316,
+        317
+      ]
+    },
+    {
+      "id": "LO16",
+      "objective": "Explain why leases are unsafe if process pauses are ignored.",
+      "source_pages": [
+        317,
+        318,
+        319,
+        320
+      ]
+    },
+    {
+      "id": "LO17",
+      "objective": "List major causes of process pauses.",
+      "source_pages": [
+        318,
+        319,
+        320
+      ]
+    },
+    {
+      "id": "LO18",
+      "objective": "Distinguish hard real-time systems from ordinary server systems.",
+      "source_pages": [
+        320,
+        321
+      ]
+    },
+    {
+      "id": "LO19",
+      "objective": "Explain techniques for reducing GC-pause impact.",
+      "source_pages": [
+        321
+      ]
+    },
+    {
+      "id": "LO20",
+      "objective": "Explain why one node cannot know the global truth of a distributed system.",
+      "source_pages": [
+        322,
+        323
+      ]
+    },
+    {
+      "id": "LO21",
+      "objective": "Explain majority quorums as a basis for distributed decisions.",
+      "source_pages": [
+        323
+      ]
+    },
+    {
+      "id": "LO22",
+      "objective": "Explain stale leaders/lease holders and why fencing tokens are necessary.",
+      "source_pages": [
+        324,
+        325
+      ]
+    },
+    {
+      "id": "LO23",
+      "objective": "Explain fencing-token monotonicity and server-side enforcement.",
+      "source_pages": [
+        325
+      ]
+    },
+    {
+      "id": "LO24",
+      "objective": "Define Byzantine faults and explain where Byzantine fault tolerance matters.",
+      "source_pages": [
+        326,
+        327,
+        328
+      ]
+    },
+    {
+      "id": "LO25",
+      "objective": "Explain pragmatic defenses against weak forms of lying/corruption.",
+      "source_pages": [
+        328
+      ]
+    },
+    {
+      "id": "LO26",
+      "objective": "Compare synchronous, partially synchronous, and asynchronous system models.",
+      "source_pages": [
+        329
+      ]
+    },
+    {
+      "id": "LO27",
+      "objective": "Compare crash-stop, crash-recovery, and Byzantine node models.",
+      "source_pages": [
+        329,
+        330
+      ]
+    },
+    {
+      "id": "LO28",
+      "objective": "Define correctness through algorithm properties.",
+      "source_pages": [
+        330
+      ]
+    },
+    {
+      "id": "LO29",
+      "objective": "Distinguish safety from liveness properties.",
+      "source_pages": [
+        330,
+        331
+      ]
+    },
+    {
+      "id": "LO30",
+      "objective": "Explain the limits of formal system models when mapped to real hardware/software.",
+      "source_pages": [
+        331,
+        332
+      ]
+    },
+    {
+      "id": "LO31",
+      "objective": "Summarize why distributed systems require explicit fault tolerance and assumptions.",
+      "source_pages": [
+        332,
+        333,
+        334
+      ]
+    }
+  ],
+  "core_concepts": {
+    "partial_failures": {
+      "definition": "Some components fail or become slow while the rest of the system continues operating.",
+      "why_hard": "Partial failures are nondeterministic, and a caller may not know whether an operation succeeded.",
+      "single_machine_contrast": "Single machines usually present an idealized all-working-or-crashed model.",
+      "source_pages": [
+        296,
+        297
+      ]
+    },
+    "cloud_vs_hpc": {
+      "hpc": "Often checkpoint computation and stop/restart the whole job when one node fails.",
+      "internet_services": "Must usually stay online and tolerate individual-node failures while continuing to serve users.",
+      "cloud_traits": [
+        "Commodity hardware",
+        "IP/Ethernet",
+        "Elastic resources",
+        "Multi-tenancy",
+        "Geographic distribution"
+      ],
+      "operational_benefit": "Node-level fault tolerance permits rolling upgrades and replacement of bad machines without service-wide downtime.",
+      "source_pages": [
+        297,
+        298
+      ]
+    },
+    "reliable_from_unreliable": {
+      "examples": {
+        "error_correcting_codes": "Recover from a limited amount of bit corruption.",
+        "tcp_over_ip": "Hides packet loss, duplication, and reordering through retransmission and ordering."
+      },
+      "limit": "Higher layers can hide some faults but cannot eliminate all underlying limitations, such as arbitrary delay.",
+      "source_pages": [
+        299
+      ]
+    },
+    "asynchronous_network": {
+      "assumption": "Packet network provides no fixed guarantee of delivery time or even delivery.",
+      "missing_response_causes": [
+        "Request lost",
+        "Request queued/delayed",
+        "Remote node failed",
+        "Remote process paused",
+        "Request processed but response lost",
+        "Response delayed"
+      ],
+      "key_fact": "No response does not reveal which cause occurred.",
+      "source_pages": [
+        300,
+        301
+      ]
+    },
+    "network_faults": {
+      "reality": "Network faults occur even in well-managed datacenters and public clouds.",
+      "asymmetric_fault": "One direction may work while the other fails.",
+      "terminology": "Network partition/netsplit means one part of the network is cut off; the book prefers 'network fault' to avoid confusion with database partitions.",
+      "testing": "Fault handling should be defined, tested, and sometimes deliberately triggered.",
+      "source_pages": [
+        301,
+        302
+      ]
+    },
+    "fault_detection": {
+      "possible_signals": [
+        "TCP RST/FIN",
+        "Node-local crash notification",
+        "Switch management data",
+        "ICMP Destination Unreachable"
+      ],
+      "limitation": "None provides a universal reliable failure oracle.",
+      "strong_success_evidence": "A positive response from the application itself.",
+      "common_strategy": "Retry, wait for timeout, then suspect/declare node dead.",
+      "source_pages": [
+        302,
+        303
+      ]
+    },
+    "timeouts": {
+      "short_timeout": "Faster detection but more false suspicions.",
+      "long_timeout": "Slower failover and longer user-visible delay.",
+      "false_positive_costs": [
+        "Duplicate work",
+        "Premature failover",
+        "Additional cluster/network load",
+        "Cascading failure"
+      ],
+      "bounded_hypothetical": "If packet delay <= d and request processing <= r, a successful round trip would complete within 2d+r.",
+      "real_world": "Most practical networks and processes have no known hard upper bound.",
+      "adaptive": "Phi Accrual failure detector adapts using observed latency/jitter; cited in Akka and Cassandra.",
+      "source_pages": [
+        303,
+        304,
+        306
+      ]
+    },
+    "network_queueing": {
+      "sources": [
+        "Switch output queues under congestion",
+        "Destination OS request queue when CPU is busy",
+        "VM scheduling/virtualization pauses",
+        "Sender-side TCP congestion-control queues",
+        "Retransmission delays after TCP timeout",
+        "Multi-tenant noisy neighbors"
+      ],
+      "near_capacity": "Queueing delay variability grows sharply when utilization is high.",
+      "source_pages": [
+        304,
+        305,
+        306
+      ]
+    },
+    "tcp_vs_udp": {
+      "tcp": "Retransmits, orders, flow-controls; increases reliability but can increase variable latency.",
+      "udp": "No retransmission or flow control; can reduce some delay variability.",
+      "good_udp_case": "When stale/delayed data is worthless, such as interactive voice where silence is preferable to late audio.",
+      "source_pages": [
+        305
+      ]
+    },
+    "synchronous_vs_asynchronous_networks": {
+      "circuit_switched": "Reserve fixed bandwidth for a connection, producing bounded delay.",
+      "packet_switched": "Dynamically share bandwidth, leading to queueing and unbounded delay.",
+      "why_packet_switched": "Efficient for bursty traffic and higher utilization.",
+      "source_pages": [
+        306,
+        307,
+        308
+      ]
+    },
+    "latency_utilization_tradeoff": {
+      "static_partitioning": "Can give latency guarantees but wastes unused resources and costs more.",
+      "dynamic_partitioning": "Improves utilization/cost but causes queueing and variable delays.",
+      "lesson": "Variable latency is a cost/utilization tradeoff, not a fundamental law of nature.",
+      "source_pages": [
+        308,
+        309
+      ]
+    },
+    "time_of_day_clock": {
+      "purpose": "Calendar/date-time timestamps.",
+      "examples": [
+        "Linux CLOCK_REALTIME",
+        "Java System.currentTimeMillis()"
+      ],
+      "sync": "Usually adjusted with NTP.",
+      "hazard": "May jump backward/forward and is unsuitable for measuring elapsed duration.",
+      "source_pages": [
+        309,
+        310
+      ]
+    },
+    "monotonic_clock": {
+      "purpose": "Measure durations/timeouts.",
+      "examples": [
+        "Linux CLOCK_MONOTONIC",
+        "Java System.nanoTime()"
+      ],
+      "property": "Moves forward rather than jumping backward.",
+      "absolute_value": "Meaningless across processes/machines and should not be compared between nodes.",
+      "ntp_slew": "NTP may change its rate slightly but should not make it jump backward/forward.",
+      "source_pages": [
+        310,
+        311
+      ]
+    },
+    "clock_accuracy": {
+      "issues": [
+        "Quartz drift",
+        "NTP reset causing jumps",
+        "Firewall blocking NTP",
+        "Variable network delay",
+        "Wrong NTP servers",
+        "Leap seconds",
+        "VM pauses",
+        "Untrusted end-user clocks"
+      ],
+      "monitoring": "Systems that depend on synchronized clocks should monitor clock offsets and remove badly drifting nodes.",
+      "source_pages": [
+        311,
+        312,
+        313
+      ]
+    },
+    "timestamp_ordering": {
+      "danger": "Wall-clock order can disagree with causal order even with very small clock skew.",
+      "lww_problem": "Last-write-wins can discard a causally later update because its timestamp is lower.",
+      "causality": "Wall clocks cannot reliably distinguish sequential writes from truly concurrent writes.",
+      "same_timestamp": "Equal timestamp collisions may require tie-breakers that still do not restore causality.",
+      "alternative": "Logical clocks order events by counters/causal relationships rather than physical time.",
+      "source_pages": [
+        313,
+        314,
+        315
+      ]
+    },
+    "clock_confidence_interval": {
+      "idea": "Clock time should be thought of as a range of possible times, not an exact point.",
+      "error_sources": [
+        "Quartz drift",
+        "NTP server uncertainty",
+        "Network round-trip time"
+      ],
+      "truetime": "Spanner TrueTime returns [earliest, latest].",
+      "source_pages": [
+        315,
+        316
+      ]
+    },
+    "global_snapshots_with_truetime": {
+      "problem": "A global monotonically increasing transaction ID is difficult without coordination.",
+      "causality_requirement": "If B reads A, B must be ordered after A.",
+      "truetime_logic": "Non-overlapping confidence intervals establish definite temporal order.",
+      "commit_wait": "Spanner waits out the confidence interval so later readers have non-overlapping timestamps.",
+      "infrastructure": "GPS receivers/atomic clocks reduce uncertainty; chapter cites roughly 7 ms.",
+      "source_pages": [
+        316,
+        317
+      ]
+    },
+    "process_pauses": {
+      "lease_problem": "A node checks that its lease is valid, pauses, lease expires, another leader takes over, then old node resumes and acts unsafely.",
+      "causes": [
+        "Stop-the-world garbage collection",
+        "VM suspension/live migration",
+        "Laptop suspend/resume",
+        "OS/hypervisor scheduling and steal time",
+        "Synchronous disk I/O",
+        "Page faults/swapping/thrashing",
+        "SIGSTOP"
+      ],
+      "rule": "Assume a process can pause at any point for an unbounded amount of time.",
+      "source_pages": [
+        317,
+        318,
+        319,
+        320
+      ]
+    },
+    "hard_real_time": {
+      "definition": "System is engineered and tested to meet a specified response deadline in all allowed circumstances.",
+      "requirements": [
+        "RTOS scheduling guarantees",
+        "Bounded execution times",
+        "Restricted dynamic allocation",
+        "Extensive testing"
+      ],
+      "tradeoff": "Expensive and may sacrifice throughput/utilization for predictability.",
+      "ordinary_servers": "Usually do not provide hard real-time guarantees.",
+      "source_pages": [
+        320,
+        321
+      ]
+    },
+    "gc_mitigation": {
+      "planned_outage_model": "Treat GC pause as a brief planned node outage and route traffic elsewhere.",
+      "process_restart_model": "Use GC mainly for short-lived objects and periodically restart one process/node at a time before large full-GC pressure builds.",
+      "limit": "Reduces but does not eliminate pauses.",
+      "source_pages": [
+        321
+      ]
+    },
+    "knowledge_and_truth": {
+      "central_problem": "A node knows remote state only through messages over an unreliable network.",
+      "consequence": "No node can rely exclusively on its own view of who is alive, leader, or lock holder.",
+      "system_model": "Make assumptions explicit and prove algorithms relative to those assumptions.",
+      "source_pages": [
+        322
+      ]
+    },
+    "quorum_truth": {
+      "idea": "Distributed decisions often require votes from multiple nodes instead of trusting one node.",
+      "majority": "More than half the nodes.",
+      "fault_tolerance": "3 nodes tolerate 1 failure; 5 nodes tolerate 2.",
+      "safety_reason": "Two conflicting absolute majorities cannot exist at the same time.",
+      "source_pages": [
+        323
+      ]
+    },
+    "stale_leader_and_lock": {
+      "problem": "A node may believe it is still leader/lock holder after others have declared it dead and elected/granted a replacement.",
+      "corruption_example": "Expired lease holder resumes after pause and writes concurrently with the new holder.",
+      "source_pages": [
+        324
+      ]
+    },
+    "fencing_tokens": {
+      "definition": "Monotonically increasing token issued whenever a lock/lease is granted.",
+      "rule": "Every protected-resource write includes the token.",
+      "resource_enforcement": "Resource remembers highest token seen and rejects older tokens.",
+      "example": "Token 34 accepted; later stale token 33 rejected.",
+      "zookeeper": "zxid or cversion can serve as fencing tokens.",
+      "important": "Client-side lease checking alone is insufficient; the resource must enforce fencing.",
+      "source_pages": [
+        325
+      ]
+    },
+    "byzantine_faults": {
+      "ordinary_assumption": "Nodes may fail, pause, or be outdated but are assumed honest when they respond.",
+      "byzantine": "Node may send arbitrary, deceptive, or corrupted responses.",
+      "relevant_cases": [
+        "Aerospace/radiation",
+        "Mutually untrusting organizations",
+        "Peer-to-peer/blockchain contexts"
+      ],
+      "usually_not_needed": "Typical server-side datacenter systems under one organization's control.",
+      "supermajority": "Many Byzantine-tolerant algorithms require more than two-thirds correct nodes.",
+      "source_pages": [
+        326,
+        327
+      ]
+    },
+    "weak_lying_defenses": {
+      "examples": [
+        "Application-level checksums",
+        "Input validation and sanity checking",
+        "Multiple NTP servers with majority/outlier rejection"
+      ],
+      "not_bft": "These are pragmatic reliability measures, not full Byzantine fault tolerance.",
+      "source_pages": [
+        328
+      ]
+    },
+    "timing_models": {
+      "synchronous": "Known upper bounds on network delay, process pauses, and clock error.",
+      "partially_synchronous": "Usually within bounds, but bounds can occasionally be exceeded arbitrarily.",
+      "asynchronous": "No timing assumptions and effectively no usable clock/timeouts.",
+      "practical_choice": "Partially synchronous is generally the most useful model for real systems.",
+      "source_pages": [
+        329,
+        330
+      ]
+    },
+    "node_failure_models": {
+      "crash_stop": "Node can crash and never return.",
+      "crash_recovery": "Node may crash and recover; stable storage survives, in-memory state is lost.",
+      "byzantine": "Node may behave arbitrarily or deceptively.",
+      "source_pages": [
+        329
+      ]
+    },
+    "correctness_properties": {
+      "fencing_example": {
+        "uniqueness": "No two fencing-token requests return the same value.",
+        "monotonic_sequence": "If x completes before y begins, token(x) < token(y).",
+        "availability": "A non-crashed requester eventually receives a response."
+      },
+      "correct_algorithm": "Properties hold in every situation allowed by the stated system model.",
+      "source_pages": [
+        330
+      ]
+    },
+    "safety_and_liveness": {
+      "safety": "A violation can be pinpointed to a finite moment and cannot be undone; informally, nothing bad happens.",
+      "liveness": "May be temporarily unsatisfied but can become true later; often includes 'eventually'.",
+      "examples": {
+        "safety": [
+          "Fencing-token uniqueness",
+          "Monotonic token ordering"
+        ],
+        "liveness": [
+          "Availability",
+          "Eventual consistency"
+        ]
+      },
+      "design_rule": "Safety is usually required under all allowed faults; liveness may depend on conditions such as majority availability and eventual network recovery.",
+      "source_pages": [
+        330,
+        331
+      ]
+    },
+    "models_vs_reality": {
+      "limitation": "Real systems can violate assumptions such as stable storage always surviving a crash.",
+      "example": "Disk corruption/amnesia can invalidate quorum-algorithm assumptions.",
+      "value": "Formal models make reasoning tractable and expose hidden algorithmic flaws.",
+      "engineering_rule": "Theoretical analysis and empirical testing are both important.",
+      "source_pages": [
+        331,
+        332
+      ]
+    }
+  },
+  "flashcards": [
+    {
+      "id": "FC001",
+      "front": "What is the chapter's defining distributed-systems failure pattern?",
+      "back": "Partial failure.",
+      "source_pages": [
+        296,
+        297
+      ]
+    },
+    {
+      "id": "FC002",
+      "front": "What is a partial failure?",
+      "back": "Some components fail or slow down while other parts continue working.",
+      "source_pages": [
+        297
+      ]
+    },
+    {
+      "id": "FC003",
+      "front": "Why are partial failures hard?",
+      "back": "They are nondeterministic and may leave you unsure whether an operation succeeded.",
+      "source_pages": [
+        297
+      ]
+    },
+    {
+      "id": "FC004",
+      "front": "How does a single computer often react to an internal fault?",
+      "back": "Prefer total failure/crash over silently returning wrong results.",
+      "source_pages": [
+        296
+      ]
+    },
+    {
+      "id": "FC005",
+      "front": "How does HPC often handle one failed node?",
+      "back": "Stop the job/cluster workload and restart from a checkpoint.",
+      "source_pages": [
+        297
+      ]
+    },
+    {
+      "id": "FC006",
+      "front": "Why can't internet services usually do that?",
+      "back": "They need low-latency online availability and cannot routinely stop the whole service.",
+      "source_pages": [
+        298
+      ]
+    },
+    {
+      "id": "FC007",
+      "front": "What operational benefit comes from node-level fault tolerance?",
+      "back": "Rolling upgrades and node replacement without service-wide interruption.",
+      "source_pages": [
+        298
+      ]
+    },
+    {
+      "id": "FC008",
+      "front": "What is the book's reliability goal?",
+      "back": "Build a reliable system from unreliable components.",
+      "source_pages": [
+        298,
+        299
+      ]
+    },
+    {
+      "id": "FC009",
+      "front": "What do error-correcting codes demonstrate?",
+      "back": "A higher-level system can tolerate some lower-level corruption.",
+      "source_pages": [
+        299
+      ]
+    },
+    {
+      "id": "FC010",
+      "front": "What does TCP hide from applications?",
+      "back": "Some packet loss, duplication, and reordering.",
+      "source_pages": [
+        299
+      ]
+    },
+    {
+      "id": "FC011",
+      "front": "What can TCP not remove?",
+      "back": "Arbitrary network delay.",
+      "source_pages": [
+        299
+      ]
+    },
+    {
+      "id": "FC012",
+      "front": "What architecture does the chapter assume?",
+      "back": "Shared-nothing machines communicating over a network.",
+      "source_pages": [
+        299,
+        300
+      ]
+    },
+    {
+      "id": "FC013",
+      "front": "Can one shared-nothing node directly read another node's RAM/disk?",
+      "back": "No; it must use network requests.",
+      "source_pages": [
+        300
+      ]
+    },
+    {
+      "id": "FC014",
+      "front": "Does an asynchronous packet network guarantee delivery time?",
+      "back": "No.",
+      "source_pages": [
+        300
+      ]
+    },
+    {
+      "id": "FC015",
+      "front": "Does it guarantee delivery at all?",
+      "back": "No.",
+      "source_pages": [
+        300
+      ]
+    },
+    {
+      "id": "FC016",
+      "front": "What can a missing response mean?",
+      "back": "Lost request, delayed request, failed/paused node, lost response, or delayed response.",
+      "source_pages": [
+        300
+      ]
+    },
+    {
+      "id": "FC017",
+      "front": "Can a sender know whether a request was processed if no response arrives?",
+      "back": "No.",
+      "source_pages": [
+        300,
+        301
+      ]
+    },
+    {
+      "id": "FC018",
+      "front": "What is the usual response to uncertainty?",
+      "back": "Timeout and give up waiting.",
+      "source_pages": [
+        301
+      ]
+    },
+    {
+      "id": "FC019",
+      "front": "Does timeout prove the remote node never processed the request?",
+      "back": "No.",
+      "source_pages": [
+        301
+      ]
+    },
+    {
+      "id": "FC020",
+      "front": "What is a network partition/netsplit?",
+      "back": "A network fault cutting one part of the network off from another.",
+      "source_pages": [
+        301
+      ]
+    },
+    {
+      "id": "FC021",
+      "front": "Why does the book often say network fault instead?",
+      "back": "To avoid confusion with database data partitions/shards.",
+      "source_pages": [
+        301
+      ]
+    },
+    {
+      "id": "FC022",
+      "front": "Should rare network faults still be tested?",
+      "back": "Yes.",
+      "source_pages": [
+        302
+      ]
+    },
+    {
+      "id": "FC023",
+      "front": "What is Chaos Monkey's relevant idea?",
+      "back": "Deliberately trigger failures to test system behavior.",
+      "source_pages": [
+        302
+      ]
+    },
+    {
+      "id": "FC024",
+      "front": "Why do systems need failure detection?",
+      "back": "For actions like removing dead nodes from load balancers or electing new leaders.",
+      "source_pages": [
+        302
+      ]
+    },
+    {
+      "id": "FC025",
+      "front": "Can TCP RST/FIN always tell how much work a crashed process completed?",
+      "back": "No.",
+      "source_pages": [
+        302
+      ]
+    },
+    {
+      "id": "FC026",
+      "front": "What is stronger evidence that a request succeeded?",
+      "back": "A positive application-level response.",
+      "source_pages": [
+        303
+      ]
+    },
+    {
+      "id": "FC027",
+      "front": "What is the basic failure detector strategy?",
+      "back": "Retry, wait for timeout, then suspect/declare node dead.",
+      "source_pages": [
+        303
+      ]
+    },
+    {
+      "id": "FC028",
+      "front": "Tradeoff of long timeouts?",
+      "back": "Slow failure detection.",
+      "source_pages": [
+        303
+      ]
+    },
+    {
+      "id": "FC029",
+      "front": "Tradeoff of short timeouts?",
+      "back": "More false failure suspicions.",
+      "source_pages": [
+        303
+      ]
+    },
+    {
+      "id": "FC030",
+      "front": "Why can a false failure suspicion duplicate work?",
+      "back": "An old node may still be executing while a replacement takes over.",
+      "source_pages": [
+        303
+      ]
+    },
+    {
+      "id": "FC031",
+      "front": "Why can false failure suspicion cause cascading failure?",
+      "back": "Reassignment adds load to already stressed nodes/network.",
+      "source_pages": [
+        303
+      ]
+    },
+    {
+      "id": "FC032",
+      "front": "What timeout is possible in a hypothetical bounded system?",
+      "back": "2d + r for one request/response if each network leg <= d and processing <= r.",
+      "source_pages": [
+        304
+      ]
+    },
+    {
+      "id": "FC033",
+      "front": "Why can't we use that in most systems?",
+      "back": "Network and process delays have no hard known upper bound.",
+      "source_pages": [
+        304
+      ]
+    },
+    {
+      "id": "FC034",
+      "front": "What is a major source of network delay variability?",
+      "back": "Queueing.",
+      "source_pages": [
+        304,
+        305
+      ]
+    },
+    {
+      "id": "FC035",
+      "front": "What happens when a switch queue fills?",
+      "back": "Packets are dropped and must be resent.",
+      "source_pages": [
+        304
+      ]
+    },
+    {
+      "id": "FC036",
+      "front": "What happens if destination CPUs are busy?",
+      "back": "Requests wait in an OS queue.",
+      "source_pages": [
+        304
+      ]
+    },
+    {
+      "id": "FC037",
+      "front": "How does virtualization add latency variability?",
+      "back": "VMs can be paused while another VM uses the CPU.",
+      "source_pages": [
+        304
+      ]
+    },
+    {
+      "id": "FC038",
+      "front": "What does TCP flow control/backpressure do?",
+      "back": "Limits sending rate to avoid overwhelming network/receiver.",
+      "source_pages": [
+        304,
+        305
+      ]
+    },
+    {
+      "id": "FC039",
+      "front": "What latency cost follows TCP packet loss?",
+      "back": "Wait for retransmission timeout, then retransmit/acknowledge.",
+      "source_pages": [
+        305
+      ]
+    },
+    {
+      "id": "FC040",
+      "front": "Why might VoIP use UDP?",
+      "back": "Late data is worthless, so avoiding retransmission can reduce variable delay.",
+      "source_pages": [
+        305
+      ]
+    },
+    {
+      "id": "FC041",
+      "front": "Does UDP eliminate all network delay?",
+      "back": "No; queueing/scheduling still exist.",
+      "source_pages": [
+        305
+      ]
+    },
+    {
+      "id": "FC042",
+      "front": "What happens to missing VoIP audio under UDP?",
+      "back": "The application can substitute silence and move on.",
+      "source_pages": [
+        305
+      ]
+    },
+    {
+      "id": "FC043",
+      "front": "What happens to queues near maximum utilization?",
+      "back": "They can grow very quickly.",
+      "source_pages": [
+        305,
+        306
+      ]
+    },
+    {
+      "id": "FC044",
+      "front": "What is a noisy neighbor?",
+      "back": "Another tenant using shared resources and increasing your latency variability.",
+      "source_pages": [
+        306
+      ]
+    },
+    {
+      "id": "FC045",
+      "front": "How should practical timeouts often be chosen?",
+      "back": "Measure latency distributions experimentally.",
+      "source_pages": [
+        306
+      ]
+    },
+    {
+      "id": "FC046",
+      "front": "What is a Phi Accrual failure detector?",
+      "back": "Adaptive failure detector using observed response-time distributions/jitter.",
+      "source_pages": [
+        306
+      ]
+    },
+    {
+      "id": "FC047",
+      "front": "Which systems are cited using Phi Accrual?",
+      "back": "Akka and Cassandra.",
+      "source_pages": [
+        306
+      ]
+    },
+    {
+      "id": "FC048",
+      "front": "What is a circuit-switched network?",
+      "back": "Bandwidth is reserved end-to-end for the connection.",
+      "source_pages": [
+        306,
+        307
+      ]
+    },
+    {
+      "id": "FC049",
+      "front": "Why does circuit switching give bounded delay?",
+      "back": "Reserved capacity eliminates queueing for the circuit.",
+      "source_pages": [
+        307
+      ]
+    },
+    {
+      "id": "FC050",
+      "front": "How is TCP different from a circuit?",
+      "back": "TCP opportunistically uses dynamically available bandwidth rather than reserving fixed bandwidth.",
+      "source_pages": [
+        307
+      ]
+    },
+    {
+      "id": "FC051",
+      "front": "Why are IP/Ethernet packet-switched?",
+      "back": "They efficiently support bursty traffic and maximize utilization.",
+      "source_pages": [
+        307
+      ]
+    },
+    {
+      "id": "FC052",
+      "front": "What is packet switching's latency cost?",
+      "back": "Queueing and unbounded delay.",
+      "source_pages": [
+        307
+      ]
+    },
+    {
+      "id": "FC053",
+      "front": "What does static resource allocation optimize?",
+      "back": "Predictability/bounded latency.",
+      "source_pages": [
+        308
+      ]
+    },
+    {
+      "id": "FC054",
+      "front": "What does dynamic resource sharing optimize?",
+      "back": "Utilization and cost efficiency.",
+      "source_pages": [
+        308
+      ]
+    },
+    {
+      "id": "FC055",
+      "front": "What is the price of high dynamic utilization?",
+      "back": "Variable delays.",
+      "source_pages": [
+        308
+      ]
+    },
+    {
+      "id": "FC056",
+      "front": "Are variable delays a fundamental law of nature?",
+      "back": "No; they are largely a cost/utilization tradeoff.",
+      "source_pages": [
+        308
+      ]
+    },
+    {
+      "id": "FC057",
+      "front": "What two clock types must be distinguished?",
+      "back": "Time-of-day and monotonic clocks.",
+      "source_pages": [
+        310
+      ]
+    },
+    {
+      "id": "FC058",
+      "front": "What is a time-of-day clock for?",
+      "back": "Calendar/date-time timestamps.",
+      "source_pages": [
+        310
+      ]
+    },
+    {
+      "id": "FC059",
+      "front": "Example Java time-of-day API?",
+      "back": "System.currentTimeMillis().",
+      "source_pages": [
+        310
+      ]
+    },
+    {
+      "id": "FC060",
+      "front": "Why is a time-of-day clock bad for elapsed time?",
+      "back": "It may jump backward/forward due to synchronization adjustments.",
+      "source_pages": [
+        310
+      ]
+    },
+    {
+      "id": "FC061",
+      "front": "What is a monotonic clock for?",
+      "back": "Measuring durations such as timeouts and response times.",
+      "source_pages": [
+        310
+      ]
+    },
+    {
+      "id": "FC062",
+      "front": "Example Java monotonic API?",
+      "back": "System.nanoTime().",
+      "source_pages": [
+        310
+      ]
+    },
+    {
+      "id": "FC063",
+      "front": "Can monotonic clock values be compared across machines?",
+      "back": "No.",
+      "source_pages": [
+        311
+      ]
+    },
+    {
+      "id": "FC064",
+      "front": "Can NTP change a monotonic clock's rate?",
+      "back": "Yes, slightly, by slewing.",
+      "source_pages": [
+        311
+      ]
+    },
+    {
+      "id": "FC065",
+      "front": "Should NTP make a monotonic clock jump backward?",
+      "back": "No.",
+      "source_pages": [
+        311
+      ]
+    },
+    {
+      "id": "FC066",
+      "front": "Why do hardware clocks drift?",
+      "back": "Quartz oscillators are imperfect and affected by factors such as temperature.",
+      "source_pages": [
+        311
+      ]
+    },
+    {
+      "id": "FC067",
+      "front": "What drift rate does the chapter say Google assumes?",
+      "back": "200 ppm.",
+      "source_pages": [
+        311
+      ]
+    },
+    {
+      "id": "FC068",
+      "front": "What can happen if local clock differs greatly from NTP?",
+      "back": "It may refuse sync or be forcibly reset, causing jumps.",
+      "source_pages": [
+        311
+      ]
+    },
+    {
+      "id": "FC069",
+      "front": "What if NTP is firewalled?",
+      "back": "Clock drift may grow unnoticed.",
+      "source_pages": [
+        312
+      ]
+    },
+    {
+      "id": "FC070",
+      "front": "Why is NTP accuracy limited by network delay?",
+      "back": "Synchronization itself uses messages with variable delays.",
+      "source_pages": [
+        312
+      ]
+    },
+    {
+      "id": "FC071",
+      "front": "Can NTP servers themselves be wrong?",
+      "back": "Yes; clients query several servers and reject outliers.",
+      "source_pages": [
+        312
+      ]
+    },
+    {
+      "id": "FC072",
+      "front": "What are leap seconds?",
+      "back": "Occasional minutes of 59 or 61 seconds that break naive timing assumptions.",
+      "source_pages": [
+        312
+      ]
+    },
+    {
+      "id": "FC073",
+      "front": "What is leap smearing?",
+      "back": "Gradually distribute the leap-second adjustment over time.",
+      "source_pages": [
+        312
+      ]
+    },
+    {
+      "id": "FC074",
+      "front": "Why are VM clocks tricky?",
+      "back": "VM pauses can make application-observed time jump forward.",
+      "source_pages": [
+        312
+      ]
+    },
+    {
+      "id": "FC075",
+      "front": "Can end-user device clocks be trusted?",
+      "back": "Not necessarily; users may set them incorrectly.",
+      "source_pages": [
+        312
+      ]
+    },
+    {
+      "id": "FC076",
+      "front": "What should clock-dependent systems monitor?",
+      "back": "Clock offsets/drift among nodes.",
+      "source_pages": [
+        313
+      ]
+    },
+    {
+      "id": "FC077",
+      "front": "What should happen to a badly drifting node?",
+      "back": "Remove/declare it dead before it damages correctness.",
+      "source_pages": [
+        313
+      ]
+    },
+    {
+      "id": "FC078",
+      "front": "Why are wall-clock timestamps unsafe for event ordering?",
+      "back": "Different node clocks can disagree enough to invert causal order.",
+      "source_pages": [
+        313,
+        314
+      ]
+    },
+    {
+      "id": "FC079",
+      "front": "What happens in Figure 8-3?",
+      "back": "A causally later x=2 write gets an earlier timestamp than x=1.",
+      "source_pages": [
+        314
+      ]
+    },
+    {
+      "id": "FC080",
+      "front": "What can LWW do in that case?",
+      "back": "Discard the newer causal update and lose data.",
+      "source_pages": [
+        314
+      ]
+    },
+    {
+      "id": "FC081",
+      "front": "Can LWW distinguish causally sequential from concurrent writes using timestamps alone?",
+      "back": "No.",
+      "source_pages": [
+        314,
+        315
+      ]
+    },
+    {
+      "id": "FC082",
+      "front": "What additional tool tracks causality?",
+      "back": "Version vectors or other causality tracking.",
+      "source_pages": [
+        314,
+        315
+      ]
+    },
+    {
+      "id": "FC083",
+      "front": "What if two writes have identical timestamps?",
+      "back": "A tie-breaker is needed, but it still may violate causality.",
+      "source_pages": [
+        315
+      ]
+    },
+    {
+      "id": "FC084",
+      "front": "What are logical clocks for?",
+      "back": "Ordering events by logical/causal sequence rather than physical time.",
+      "source_pages": [
+        315
+      ]
+    },
+    {
+      "id": "FC085",
+      "front": "Do logical clocks tell wall-clock time?",
+      "back": "No.",
+      "source_pages": [
+        315
+      ]
+    },
+    {
+      "id": "FC086",
+      "front": "What are time-of-day and monotonic clocks collectively called?",
+      "back": "Physical clocks.",
+      "source_pages": [
+        315
+      ]
+    },
+    {
+      "id": "FC087",
+      "front": "How should a physical clock reading be interpreted?",
+      "back": "As a confidence interval/range, not an exact point.",
+      "source_pages": [
+        315,
+        316
+      ]
+    },
+    {
+      "id": "FC088",
+      "front": "Does microsecond clock resolution imply microsecond accuracy?",
+      "back": "No.",
+      "source_pages": [
+        315
+      ]
+    },
+    {
+      "id": "FC089",
+      "front": "What does TrueTime return?",
+      "back": "[earliest, latest] possible current time.",
+      "source_pages": [
+        316
+      ]
+    },
+    {
+      "id": "FC090",
+      "front": "Why is global monotonic transaction-ID assignment difficult?",
+      "back": "It requires coordination across nodes/partitions.",
+      "source_pages": [
+        316,
+        317
+      ]
+    },
+    {
+      "id": "FC091",
+      "front": "What ordering requirement must distributed transaction IDs preserve?",
+      "back": "Causality: if B reads A, B must be ordered after A.",
+      "source_pages": [
+        316
+      ]
+    },
+    {
+      "id": "FC092",
+      "front": "How does Spanner use non-overlapping TrueTime intervals?",
+      "back": "They prove one event definitely occurred after another.",
+      "source_pages": [
+        317
+      ]
+    },
+    {
+      "id": "FC093",
+      "front": "Why does Spanner perform commit wait?",
+      "back": "To wait out uncertainty so later transaction intervals do not overlap.",
+      "source_pages": [
+        317
+      ]
+    },
+    {
+      "id": "FC094",
+      "front": "What clock infrastructure does Spanner use?",
+      "back": "GPS receivers or atomic clocks in datacenters.",
+      "source_pages": [
+        317
+      ]
+    },
+    {
+      "id": "FC095",
+      "front": "Rough clock uncertainty cited for Spanner?",
+      "back": "About 7 ms.",
+      "source_pages": [
+        317
+      ]
+    },
+    {
+      "id": "FC096",
+      "front": "What is a lease?",
+      "back": "A time-limited lock/right, often used for leadership.",
+      "source_pages": [
+        317
+      ]
+    },
+    {
+      "id": "FC097",
+      "front": "What is the lease-pause bug?",
+      "back": "Node checks lease, pauses, lease expires/reassigned, then node resumes and acts as if still valid.",
+      "source_pages": [
+        318
+      ]
+    },
+    {
+      "id": "FC098",
+      "front": "Can a monotonic clock alone eliminate the lease-pause bug?",
+      "back": "No; the process can pause between clock check and action.",
+      "source_pages": [
+        318
+      ]
+    },
+    {
+      "id": "FC099",
+      "front": "What can cause multi-minute process pauses?",
+      "back": "Stop-the-world garbage collection.",
+      "source_pages": [
+        318
+      ]
+    },
+    {
+      "id": "FC100",
+      "front": "How can VM migration affect a process?",
+      "back": "Suspend it for an arbitrary period and later resume it.",
+      "source_pages": [
+        319
+      ]
+    },
+    {
+      "id": "FC101",
+      "front": "What is steal time?",
+      "back": "CPU time consumed by other VMs while your VM is not running.",
+      "source_pages": [
+        319
+      ]
+    },
+    {
+      "id": "FC102",
+      "front": "How can disk I/O pause a process unexpectedly?",
+      "back": "Lazy class loading, filesystem access, or network block devices can block threads.",
+      "source_pages": [
+        319
+      ]
+    },
+    {
+      "id": "FC103",
+      "front": "What is thrashing?",
+      "back": "System spends most time swapping pages in/out and little time doing useful work.",
+      "source_pages": [
+        319
+      ]
+    },
+    {
+      "id": "FC104",
+      "front": "What Unix signals can pause/resume a process?",
+      "back": "SIGSTOP and SIGCONT.",
+      "source_pages": [
+        319
+      ]
+    },
+    {
+      "id": "FC105",
+      "front": "What must a distributed node assume about its own execution?",
+      "back": "It may pause for a long time at any point.",
+      "source_pages": [
+        320
+      ]
+    },
+    {
+      "id": "FC106",
+      "front": "What can happen while a node is paused?",
+      "back": "Others continue, may declare it dead, and may replace it.",
+      "source_pages": [
+        320
+      ]
+    },
+    {
+      "id": "FC107",
+      "front": "What is a hard real-time system?",
+      "back": "A system engineered to meet specified response deadlines in all allowed conditions.",
+      "source_pages": [
+        320,
+        321
+      ]
+    },
+    {
+      "id": "FC108",
+      "front": "Does 'real-time' on the web usually mean hard real-time?",
+      "back": "No.",
+      "source_pages": [
+        320
+      ]
+    },
+    {
+      "id": "FC109",
+      "front": "What does hard real-time require?",
+      "back": "RTOS support, bounded execution, restricted allocation, extensive testing.",
+      "source_pages": [
+        320,
+        321
+      ]
+    },
+    {
+      "id": "FC110",
+      "front": "Is hard real-time the same as high throughput?",
+      "back": "No.",
+      "source_pages": [
+        321
+      ]
+    },
+    {
+      "id": "FC111",
+      "front": "Why are hard real-time server systems uncommon?",
+      "back": "They are expensive and restrict tools/languages/utilization.",
+      "source_pages": [
+        321
+      ]
+    },
+    {
+      "id": "FC112",
+      "front": "How can GC pauses be hidden from clients?",
+      "back": "Treat GC as planned outage and reroute traffic before collecting.",
+      "source_pages": [
+        321
+      ]
+    },
+    {
+      "id": "FC113",
+      "front": "Another GC mitigation?",
+      "back": "Periodically restart processes/nodes before large old-generation collections.",
+      "source_pages": [
+        321
+      ]
+    },
+    {
+      "id": "FC114",
+      "front": "Can GC mitigation fully eliminate pauses?",
+      "back": "No.",
+      "source_pages": [
+        321
+      ]
+    },
+    {
+      "id": "FC115",
+      "front": "What can a node know about another node directly?",
+      "back": "Only what it learns through network messages.",
+      "source_pages": [
+        322
+      ]
+    },
+    {
+      "id": "FC116",
+      "front": "Why can't a node trust its own view of being leader?",
+      "back": "Others may have declared it dead and elected a replacement.",
+      "source_pages": [
+        323,
+        324
+      ]
+    },
+    {
+      "id": "FC117",
+      "front": "What is a quorum?",
+      "back": "A minimum number of node votes needed for a decision.",
+      "source_pages": [
+        323
+      ]
+    },
+    {
+      "id": "FC118",
+      "front": "What quorum is most common?",
+      "back": "Absolute majority, more than half.",
+      "source_pages": [
+        323
+      ]
+    },
+    {
+      "id": "FC119",
+      "front": "How many failures can 3 nodes tolerate with majority decisions?",
+      "back": "1.",
+      "source_pages": [
+        323
+      ]
+    },
+    {
+      "id": "FC120",
+      "front": "How many failures can 5 nodes tolerate?",
+      "back": "2.",
+      "source_pages": [
+        323
+      ]
+    },
+    {
+      "id": "FC121",
+      "front": "Why can there not be two conflicting majorities?",
+      "back": "Two sets each containing more than half must overlap.",
+      "source_pages": [
+        323
+      ]
+    },
+    {
+      "id": "FC122",
+      "front": "What bug can an expired lease holder cause?",
+      "back": "Resume after pause and corrupt a resource concurrently with the new holder.",
+      "source_pages": [
+        324
+      ]
+    },
+    {
+      "id": "FC123",
+      "front": "What is a fencing token?",
+      "back": "Monotonically increasing number attached to each granted lock/lease.",
+      "source_pages": [
+        325
+      ]
+    },
+    {
+      "id": "FC124",
+      "front": "Who must validate fencing tokens?",
+      "back": "The protected resource/service.",
+      "source_pages": [
+        325
+      ]
+    },
+    {
+      "id": "FC125",
+      "front": "What does the resource do with an older token?",
+      "back": "Reject it.",
+      "source_pages": [
+        325
+      ]
+    },
+    {
+      "id": "FC126",
+      "front": "In the example, which token wins: 33 or 34?",
+      "back": "34; later token 33 is rejected.",
+      "source_pages": [
+        325
+      ]
+    },
+    {
+      "id": "FC127",
+      "front": "What ZooKeeper values can be fencing tokens?",
+      "back": "zxid or cversion.",
+      "source_pages": [
+        325
+      ]
+    },
+    {
+      "id": "FC128",
+      "front": "Why is client-only lease checking insufficient?",
+      "back": "A paused/stale client may wrongly think the lease is valid.",
+      "source_pages": [
+        325
+      ]
+    },
+    {
+      "id": "FC129",
+      "front": "What assumption does the book usually make about faulty nodes?",
+      "back": "They are unreliable but honest/non-Byzantine.",
+      "source_pages": [
+        326
+      ]
+    },
+    {
+      "id": "FC130",
+      "front": "What is a Byzantine fault?",
+      "back": "A node may behave arbitrarily or send deceptive/corrupt messages.",
+      "source_pages": [
+        326
+      ]
+    },
+    {
+      "id": "FC131",
+      "front": "What is the Byzantine Generals Problem?",
+      "back": "Reaching agreement when some participants may lie/deceive.",
+      "source_pages": [
+        326
+      ]
+    },
+    {
+      "id": "FC132",
+      "front": "Where is BFT especially relevant?",
+      "back": "Aerospace and mutually untrusting multi-party/peer-to-peer systems.",
+      "source_pages": [
+        327
+      ]
+    },
+    {
+      "id": "FC133",
+      "front": "Why isn't full BFT usually used in ordinary datacenter systems?",
+      "back": "Complexity/cost is usually not justified under one trusted organization.",
+      "source_pages": [
+        327
+      ]
+    },
+    {
+      "id": "FC134",
+      "front": "What fraction of correct nodes do many BFT algorithms require?",
+      "back": "More than two-thirds.",
+      "source_pages": [
+        327
+      ]
+    },
+    {
+      "id": "FC135",
+      "front": "Can identical software bugs on every node be solved by BFT replication?",
+      "back": "No.",
+      "source_pages": [
+        327
+      ]
+    },
+    {
+      "id": "FC136",
+      "front": "What traditional security controls remain necessary?",
+      "back": "Authentication, access control, encryption, firewalls.",
+      "source_pages": [
+        328
+      ]
+    },
+    {
+      "id": "FC137",
+      "front": "What is a weak-form-of-lying defense?",
+      "back": "Application-level checksum, input validation, or multiple NTP servers.",
+      "source_pages": [
+        328
+      ]
+    },
+    {
+      "id": "FC138",
+      "front": "What is a system model?",
+      "back": "An abstraction describing what faults/timing behavior an algorithm may assume.",
+      "source_pages": [
+        329
+      ]
+    },
+    {
+      "id": "FC139",
+      "front": "What is the synchronous model?",
+      "back": "Bounded network delay, bounded process pause, bounded clock error.",
+      "source_pages": [
+        329
+      ]
+    },
+    {
+      "id": "FC140",
+      "front": "Why is the synchronous model unrealistic for most systems?",
+      "back": "Real networks/processes can exceed any expected bound.",
+      "source_pages": [
+        329
+      ]
+    },
+    {
+      "id": "FC141",
+      "front": "What is partial synchrony?",
+      "back": "Usually bounded behavior, but occasional arbitrarily large delays/pauses/errors.",
+      "source_pages": [
+        329
+      ]
+    },
+    {
+      "id": "FC142",
+      "front": "Why is partial synchrony useful?",
+      "back": "It matches many real systems reasonably well.",
+      "source_pages": [
+        329,
+        330
+      ]
+    },
+    {
+      "id": "FC143",
+      "front": "What is the asynchronous model?",
+      "back": "No timing assumptions; effectively no clock/timeouts.",
+      "source_pages": [
+        329
+      ]
+    },
+    {
+      "id": "FC144",
+      "front": "What is crash-stop?",
+      "back": "A node crashes and never returns.",
+      "source_pages": [
+        329
+      ]
+    },
+    {
+      "id": "FC145",
+      "front": "What is crash-recovery?",
+      "back": "A node may crash and later recover; stable storage survives but memory is lost.",
+      "source_pages": [
+        329
+      ]
+    },
+    {
+      "id": "FC146",
+      "front": "What is the generally useful real-system model cited?",
+      "back": "Partially synchronous with crash-recovery faults.",
+      "source_pages": [
+        330
+      ]
+    },
+    {
+      "id": "FC147",
+      "front": "How is algorithm correctness defined?",
+      "back": "By properties that must hold in all situations allowed by a system model.",
+      "source_pages": [
+        330
+      ]
+    },
+    {
+      "id": "FC148",
+      "front": "What fencing-token properties are listed?",
+      "back": "Uniqueness, monotonic sequence, availability.",
+      "source_pages": [
+        330
+      ]
+    },
+    {
+      "id": "FC149",
+      "front": "Which of those are safety properties?",
+      "back": "Uniqueness and monotonic sequence.",
+      "source_pages": [
+        330
+      ]
+    },
+    {
+      "id": "FC150",
+      "front": "Which is a liveness property?",
+      "back": "Availability.",
+      "source_pages": [
+        330
+      ]
+    },
+    {
+      "id": "FC151",
+      "front": "What informal phrase describes safety?",
+      "back": "Nothing bad happens.",
+      "source_pages": [
+        330
+      ]
+    },
+    {
+      "id": "FC152",
+      "front": "What informal phrase describes liveness?",
+      "back": "Something good eventually happens.",
+      "source_pages": [
+        330
+      ]
+    },
+    {
+      "id": "FC153",
+      "front": "What word often signals liveness?",
+      "back": "Eventually.",
+      "source_pages": [
+        330
+      ]
+    },
+    {
+      "id": "FC154",
+      "front": "Is eventual consistency a safety or liveness property?",
+      "back": "Liveness.",
+      "source_pages": [
+        330
+      ]
+    },
+    {
+      "id": "FC155",
+      "front": "Can a safety violation be undone later?",
+      "back": "No; once violated, damage has occurred.",
+      "source_pages": [
+        331
+      ]
+    },
+    {
+      "id": "FC156",
+      "front": "Can a liveness property be temporarily false?",
+      "back": "Yes, as long as it can eventually become true.",
+      "source_pages": [
+        331
+      ]
+    },
+    {
+      "id": "FC157",
+      "front": "What is usually required of safety under failures?",
+      "back": "It must hold in all allowed situations.",
+      "source_pages": [
+        331
+      ]
+    },
+    {
+      "id": "FC158",
+      "front": "Can liveness have conditions?",
+      "back": "Yes, e.g. majority alive and network eventually recovers.",
+      "source_pages": [
+        331
+      ]
+    },
+    {
+      "id": "FC159",
+      "front": "What hidden assumption do crash-recovery algorithms often make?",
+      "back": "Stable storage survives crashes.",
+      "source_pages": [
+        331
+      ]
+    },
+    {
+      "id": "FC160",
+      "front": "What can disk corruption do to quorum assumptions?",
+      "back": "Cause node amnesia and invalidate correctness.",
+      "source_pages": [
+        331
+      ]
+    },
+    {
+      "id": "FC161",
+      "front": "Why are formal models still valuable?",
+      "back": "They simplify reasoning and can uncover hidden flaws.",
+      "source_pages": [
+        332
+      ]
+    },
+    {
+      "id": "FC162",
+      "front": "Is proof alone enough for implementation correctness?",
+      "back": "No; empirical testing is also important.",
+      "source_pages": [
+        332
+      ]
+    },
+    {
+      "id": "FC163",
+      "front": "What three broad problems does the summary emphasize?",
+      "back": "Network uncertainty, clock uncertainty, and process pauses.",
+      "source_pages": [
+        332
+      ]
+    },
+    {
+      "id": "FC164",
+      "front": "Why is fault detection itself hard?",
+      "back": "Timeouts cannot distinguish network failure, node failure, and slowness.",
+      "source_pages": [
+        333
+      ]
+    },
+    {
+      "id": "FC165",
+      "front": "What can be worse than a cleanly dead node?",
+      "back": "A degraded/limping node.",
+      "source_pages": [
+        333
+      ]
+    },
+    {
+      "id": "FC166",
+      "front": "Why are major decisions not safely made by one node?",
+      "back": "No single node has complete shared truth; protocols need agreement/quorums.",
+      "source_pages": [
+        333
+      ]
+    },
+    {
+      "id": "FC167",
+      "front": "When should you avoid distributed systems if possible?",
+      "back": "When the problem can reasonably stay on one machine.",
+      "source_pages": [
+        333
+      ]
+    },
+    {
+      "id": "FC168",
+      "front": "Why use distribution despite complexity?",
+      "back": "Scalability, fault tolerance, and geographic low latency.",
+      "source_pages": [
+        333
+      ]
+    },
+    {
+      "id": "FC169",
+      "front": "What is the cost of hard bounds/reliability?",
+      "back": "Higher expense and lower hardware utilization.",
+      "source_pages": [
+        333
+      ]
+    }
+  ],
+  "multiple_choice_questions": [
+    {
+      "id": "MCQ001",
+      "difficulty": "medium",
+      "question": "What makes distributed systems fundamentally difficult?",
+      "choices": {
+        "A": "Partial failures",
+        "B": "B-trees",
+        "C": "Compression",
+        "D": "Schema migration"
+      },
+      "answer": "A",
+      "source_pages": [
+        296,
+        297
+      ]
+    },
+    {
+      "id": "MCQ002",
+      "difficulty": "medium",
+      "question": "A partial failure means?",
+      "choices": {
+        "A": "Some parts fail while others work",
+        "B": "Entire machine always crashes",
+        "C": "All replicas agree",
+        "D": "Only network fails"
+      },
+      "answer": "A",
+      "source_pages": [
+        297
+      ]
+    },
+    {
+      "id": "MCQ003",
+      "difficulty": "medium",
+      "question": "How do supercomputers often recover?",
+      "choices": {
+        "A": "Restart job from checkpoint",
+        "B": "Keep all nodes serving",
+        "C": "Use fencing only",
+        "D": "Use LWW"
+      },
+      "answer": "A",
+      "source_pages": [
+        297
+      ]
+    },
+    {
+      "id": "MCQ004",
+      "difficulty": "medium",
+      "question": "What abstraction can be more reliable than its substrate?",
+      "choices": {
+        "A": "TCP over IP",
+        "B": "IP over TCP",
+        "C": "LWW over clocks",
+        "D": "Timeout over proof"
+      },
+      "answer": "A",
+      "source_pages": [
+        299
+      ]
+    },
+    {
+      "id": "MCQ005",
+      "difficulty": "medium",
+      "question": "If no response arrives, what do you know?",
+      "choices": {
+        "A": "Only that no response arrived yet",
+        "B": "Remote node definitely died",
+        "C": "Request definitely failed",
+        "D": "Request definitely succeeded"
+      },
+      "answer": "A",
+      "source_pages": [
+        300,
+        301
+      ]
+    },
+    {
+      "id": "MCQ006",
+      "difficulty": "medium",
+      "question": "What does a timeout prove?",
+      "choices": {
+        "A": "Nothing definitive about whether request executed",
+        "B": "Request was lost",
+        "C": "Node crashed",
+        "D": "Response never existed"
+      },
+      "answer": "A",
+      "source_pages": [
+        301
+      ]
+    },
+    {
+      "id": "MCQ007",
+      "difficulty": "medium",
+      "question": "Why can a short timeout be dangerous?",
+      "choices": {
+        "A": "False failure suspicions",
+        "B": "Slow detection only",
+        "C": "No failover",
+        "D": "No retries"
+      },
+      "answer": "A",
+      "source_pages": [
+        303
+      ]
+    },
+    {
+      "id": "MCQ008",
+      "difficulty": "medium",
+      "question": "False failure detection can cause?",
+      "choices": {
+        "A": "Duplicate work and cascading failure",
+        "B": "Clock accuracy",
+        "C": "Lower load",
+        "D": "Guaranteed safety"
+      },
+      "answer": "A",
+      "source_pages": [
+        303
+      ]
+    },
+    {
+      "id": "MCQ009",
+      "difficulty": "medium",
+      "question": "In a bounded system with network leg d and processing r, timeout could be?",
+      "choices": {
+        "A": "2d+r",
+        "B": "d+r",
+        "C": "2r+d",
+        "D": "d*r"
+      },
+      "answer": "A",
+      "source_pages": [
+        304
+      ]
+    },
+    {
+      "id": "MCQ010",
+      "difficulty": "medium",
+      "question": "Why is that formula not generally usable?",
+      "choices": {
+        "A": "Real systems lack hard delay bounds",
+        "B": "TCP has no packets",
+        "C": "Processes never pause",
+        "D": "Networks are synchronous"
+      },
+      "answer": "A",
+      "source_pages": [
+        304
+      ]
+    },
+    {
+      "id": "MCQ011",
+      "difficulty": "medium",
+      "question": "Major source of variable network delay?",
+      "choices": {
+        "A": "Queueing",
+        "B": "Cryptography",
+        "C": "Serialization",
+        "D": "Checksums"
+      },
+      "answer": "A",
+      "source_pages": [
+        304,
+        305
+      ]
+    },
+    {
+      "id": "MCQ012",
+      "difficulty": "medium",
+      "question": "Why may VoIP prefer UDP?",
+      "choices": {
+        "A": "Late packets are worthless",
+        "B": "UDP guarantees delivery",
+        "C": "UDP orders packets",
+        "D": "UDP reserves bandwidth"
+      },
+      "answer": "A",
+      "source_pages": [
+        305
+      ]
+    },
+    {
+      "id": "MCQ013",
+      "difficulty": "medium",
+      "question": "What does circuit switching reserve?",
+      "choices": {
+        "A": "Bandwidth",
+        "B": "Database rows",
+        "C": "CPU threads only",
+        "D": "Clock intervals"
+      },
+      "answer": "A",
+      "source_pages": [
+        306,
+        307
+      ]
+    },
+    {
+      "id": "MCQ014",
+      "difficulty": "medium",
+      "question": "Why can circuit switching bound delay?",
+      "choices": {
+        "A": "No queueing for reserved capacity",
+        "B": "It uses TCP",
+        "C": "It has more retries",
+        "D": "It hashes packets"
+      },
+      "answer": "A",
+      "source_pages": [
+        307
+      ]
+    },
+    {
+      "id": "MCQ015",
+      "difficulty": "medium",
+      "question": "Packet switching is optimized for?",
+      "choices": {
+        "A": "Bursty traffic and utilization",
+        "B": "Hard latency bounds",
+        "C": "Fixed bandwidth",
+        "D": "No sharing"
+      },
+      "answer": "A",
+      "source_pages": [
+        307
+      ]
+    },
+    {
+      "id": "MCQ016",
+      "difficulty": "medium",
+      "question": "Dynamic resource sharing trades predictability for?",
+      "choices": {
+        "A": "Higher utilization",
+        "B": "Lower utilization",
+        "C": "No queueing",
+        "D": "No cost benefit"
+      },
+      "answer": "A",
+      "source_pages": [
+        308
+      ]
+    },
+    {
+      "id": "MCQ017",
+      "difficulty": "medium",
+      "question": "Which clock measures durations?",
+      "choices": {
+        "A": "Monotonic",
+        "B": "Time-of-day",
+        "C": "Wall clock only",
+        "D": "NTP server time only"
+      },
+      "answer": "A",
+      "source_pages": [
+        310
+      ]
+    },
+    {
+      "id": "MCQ018",
+      "difficulty": "medium",
+      "question": "Which clock can jump backward?",
+      "choices": {
+        "A": "Time-of-day",
+        "B": "Monotonic by design",
+        "C": "Logical clock",
+        "D": "Fencing token"
+      },
+      "answer": "A",
+      "source_pages": [
+        310
+      ]
+    },
+    {
+      "id": "MCQ019",
+      "difficulty": "medium",
+      "question": "Can monotonic values be compared across machines?",
+      "choices": {
+        "A": "No",
+        "B": "Yes",
+        "C": "Only with NTP",
+        "D": "Only in Java"
+      },
+      "answer": "A",
+      "source_pages": [
+        311
+      ]
+    },
+    {
+      "id": "MCQ020",
+      "difficulty": "medium",
+      "question": "NTP can adjust a monotonic clock by?",
+      "choices": {
+        "A": "Slewing its rate",
+        "B": "Jumping it backward",
+        "C": "Resetting transaction IDs",
+        "D": "Changing fencing token"
+      },
+      "answer": "A",
+      "source_pages": [
+        311
+      ]
+    },
+    {
+      "id": "MCQ021",
+      "difficulty": "medium",
+      "question": "Clock drift comes from?",
+      "choices": {
+        "A": "Imperfect quartz oscillators",
+        "B": "TCP ordering",
+        "C": "Quorum overlap",
+        "D": "Predicate locks"
+      },
+      "answer": "A",
+      "source_pages": [
+        311
+      ]
+    },
+    {
+      "id": "MCQ022",
+      "difficulty": "medium",
+      "question": "What makes NTP accuracy limited?",
+      "choices": {
+        "A": "Network delay and clock drift",
+        "B": "No servers",
+        "C": "No timestamps",
+        "D": "Only leap seconds"
+      },
+      "answer": "A",
+      "source_pages": [
+        312
+      ]
+    },
+    {
+      "id": "MCQ023",
+      "difficulty": "medium",
+      "question": "What is leap smearing?",
+      "choices": {
+        "A": "Gradual leap-second adjustment",
+        "B": "Delete leap second",
+        "C": "Use monotonic clock as UTC",
+        "D": "Pause cluster"
+      },
+      "answer": "A",
+      "source_pages": [
+        312
+      ]
+    },
+    {
+      "id": "MCQ024",
+      "difficulty": "medium",
+      "question": "If correctness relies on clocks, you should?",
+      "choices": {
+        "A": "Monitor clock offsets",
+        "B": "Trust NTP blindly",
+        "C": "Use client clocks",
+        "D": "Ignore drift"
+      },
+      "answer": "A",
+      "source_pages": [
+        313
+      ]
+    },
+    {
+      "id": "MCQ025",
+      "difficulty": "medium",
+      "question": "Why can LWW lose a causally later write?",
+      "choices": {
+        "A": "Clock skew can invert timestamps",
+        "B": "Hash collision",
+        "C": "Quorum size",
+        "D": "TCP retransmit"
+      },
+      "answer": "A",
+      "source_pages": [
+        314
+      ]
+    },
+    {
+      "id": "MCQ026",
+      "difficulty": "medium",
+      "question": "What is safer for causal ordering?",
+      "choices": {
+        "A": "Logical clocks",
+        "B": "Wall clocks",
+        "C": "Client clocks",
+        "D": "Time-of-day only"
+      },
+      "answer": "A",
+      "source_pages": [
+        315
+      ]
+    },
+    {
+      "id": "MCQ027",
+      "difficulty": "medium",
+      "question": "How should a physical clock reading be viewed?",
+      "choices": {
+        "A": "Confidence interval",
+        "B": "Exact point",
+        "C": "Logical counter",
+        "D": "Quorum"
+      },
+      "answer": "A",
+      "source_pages": [
+        315,
+        316
+      ]
+    },
+    {
+      "id": "MCQ028",
+      "difficulty": "medium",
+      "question": "What does TrueTime return?",
+      "choices": {
+        "A": "Earliest/latest possible time",
+        "B": "One exact nanosecond",
+        "C": "Only monotonic counter",
+        "D": "Leader epoch"
+      },
+      "answer": "A",
+      "source_pages": [
+        316
+      ]
+    },
+    {
+      "id": "MCQ029",
+      "difficulty": "medium",
+      "question": "Why does Spanner wait before commit?",
+      "choices": {
+        "A": "Wait out clock uncertainty",
+        "B": "Wait for GC",
+        "C": "Wait for UDP",
+        "D": "Wait for DNS"
+      },
+      "answer": "A",
+      "source_pages": [
+        317
+      ]
+    },
+    {
+      "id": "MCQ030",
+      "difficulty": "medium",
+      "question": "What can invalidate a lease after a check?",
+      "choices": {
+        "A": "Process pause",
+        "B": "Monotonic clock read",
+        "C": "Checksum",
+        "D": "Range scan"
+      },
+      "answer": "A",
+      "source_pages": [
+        318
+      ]
+    },
+    {
+      "id": "MCQ031",
+      "difficulty": "medium",
+      "question": "Which can cause long process pauses?",
+      "choices": {
+        "A": "GC",
+        "B": "Only network loss",
+        "C": "Only NTP",
+        "D": "Only disk corruption"
+      },
+      "answer": "A",
+      "source_pages": [
+        318,
+        319
+      ]
+    },
+    {
+      "id": "MCQ032",
+      "difficulty": "medium",
+      "question": "What is steal time?",
+      "choices": {
+        "A": "CPU time used by another VM",
+        "B": "Lost network packet",
+        "C": "Expired lease",
+        "D": "Clock drift"
+      },
+      "answer": "A",
+      "source_pages": [
+        319
+      ]
+    },
+    {
+      "id": "MCQ033",
+      "difficulty": "medium",
+      "question": "What is thrashing?",
+      "choices": {
+        "A": "Excessive swapping with little useful work",
+        "B": "TCP congestion only",
+        "C": "Leader election",
+        "D": "GC only"
+      },
+      "answer": "A",
+      "source_pages": [
+        319
+      ]
+    },
+    {
+      "id": "MCQ034",
+      "difficulty": "medium",
+      "question": "What must a node assume about its execution?",
+      "choices": {
+        "A": "It may pause at any point",
+        "B": "It runs continuously",
+        "C": "GC is bounded",
+        "D": "CPU is dedicated"
+      },
+      "answer": "A",
+      "source_pages": [
+        320
+      ]
+    },
+    {
+      "id": "MCQ035",
+      "difficulty": "medium",
+      "question": "Hard real-time means?",
+      "choices": {
+        "A": "Specified deadlines are guaranteed under allowed conditions",
+        "B": "Very fast average latency",
+        "C": "Streaming data",
+        "D": "No clocks"
+      },
+      "answer": "A",
+      "source_pages": [
+        320,
+        321
+      ]
+    },
+    {
+      "id": "MCQ036",
+      "difficulty": "medium",
+      "question": "Hard real-time systems tend to be?",
+      "choices": {
+        "A": "Expensive and restrictive",
+        "B": "Cheap and highly utilized",
+        "C": "Best for all web servers",
+        "D": "No testing needed"
+      },
+      "answer": "A",
+      "source_pages": [
+        321
+      ]
+    },
+    {
+      "id": "MCQ037",
+      "difficulty": "medium",
+      "question": "How can GC impact be reduced?",
+      "choices": {
+        "A": "Route traffic away during planned GC",
+        "B": "Disable all replicas",
+        "C": "Use LWW",
+        "D": "Use UDP"
+      },
+      "answer": "A",
+      "source_pages": [
+        321
+      ]
+    },
+    {
+      "id": "MCQ038",
+      "difficulty": "medium",
+      "question": "How does a node learn remote state?",
+      "choices": {
+        "A": "Messages over the network",
+        "B": "Shared global memory",
+        "C": "Universal clock",
+        "D": "Direct RAM access"
+      },
+      "answer": "A",
+      "source_pages": [
+        322
+      ]
+    },
+    {
+      "id": "MCQ039",
+      "difficulty": "medium",
+      "question": "What does a quorum reduce?",
+      "choices": {
+        "A": "Dependence on one node's judgment",
+        "B": "Network latency to zero",
+        "C": "Clock drift",
+        "D": "Data size"
+      },
+      "answer": "A",
+      "source_pages": [
+        323
+      ]
+    },
+    {
+      "id": "MCQ040",
+      "difficulty": "medium",
+      "question": "Common quorum form?",
+      "choices": {
+        "A": "Absolute majority",
+        "B": "Exactly one node",
+        "C": "All nodes always",
+        "D": "Random client"
+      },
+      "answer": "A",
+      "source_pages": [
+        323
+      ]
+    },
+    {
+      "id": "MCQ041",
+      "difficulty": "medium",
+      "question": "Three nodes with majority can tolerate?",
+      "choices": {
+        "A": "1 failure",
+        "B": "2 failures",
+        "C": "0 failures",
+        "D": "3 failures"
+      },
+      "answer": "A",
+      "source_pages": [
+        323
+      ]
+    },
+    {
+      "id": "MCQ042",
+      "difficulty": "medium",
+      "question": "Why can stale leaders be dangerous?",
+      "choices": {
+        "A": "They may continue acting after replacement",
+        "B": "They cannot send messages",
+        "C": "They always crash",
+        "D": "They lose disk"
+      },
+      "answer": "A",
+      "source_pages": [
+        324
+      ]
+    },
+    {
+      "id": "MCQ043",
+      "difficulty": "medium",
+      "question": "What solves stale lease-holder writes?",
+      "choices": {
+        "A": "Fencing tokens",
+        "B": "Time-of-day only",
+        "C": "LWW",
+        "D": "Shorter GC"
+      },
+      "answer": "A",
+      "source_pages": [
+        325
+      ]
+    },
+    {
+      "id": "MCQ044",
+      "difficulty": "medium",
+      "question": "What property must fencing tokens have?",
+      "choices": {
+        "A": "Monotonically increasing",
+        "B": "Random decreasing",
+        "C": "Wall-clock timestamp only",
+        "D": "Same value"
+      },
+      "answer": "A",
+      "source_pages": [
+        325
+      ]
+    },
+    {
+      "id": "MCQ045",
+      "difficulty": "medium",
+      "question": "Who enforces fencing?",
+      "choices": {
+        "A": "Protected resource",
+        "B": "Only client",
+        "C": "DNS",
+        "D": "NTP"
+      },
+      "answer": "A",
+      "source_pages": [
+        325
+      ]
+    },
+    {
+      "id": "MCQ046",
+      "difficulty": "medium",
+      "question": "A stale token should be?",
+      "choices": {
+        "A": "Rejected",
+        "B": "Accepted",
+        "C": "Retried forever",
+        "D": "Converted to timestamp"
+      },
+      "answer": "A",
+      "source_pages": [
+        325
+      ]
+    },
+    {
+      "id": "MCQ047",
+      "difficulty": "medium",
+      "question": "Byzantine fault means?",
+      "choices": {
+        "A": "Arbitrary/deceptive behavior",
+        "B": "Only crash",
+        "C": "Only pause",
+        "D": "Only packet loss"
+      },
+      "answer": "A",
+      "source_pages": [
+        326
+      ]
+    },
+    {
+      "id": "MCQ048",
+      "difficulty": "medium",
+      "question": "The book usually assumes nodes are?",
+      "choices": {
+        "A": "Unreliable but honest",
+        "B": "Malicious",
+        "C": "Perfect",
+        "D": "Synchronous"
+      },
+      "answer": "A",
+      "source_pages": [
+        326
+      ]
+    },
+    {
+      "id": "MCQ049",
+      "difficulty": "hard",
+      "question": "Where is BFT particularly relevant?",
+      "choices": {
+        "A": "Mutually untrusting parties/aerospace",
+        "B": "Ordinary single-org CRUD only",
+        "C": "Single-thread Redis only",
+        "D": "DNS"
+      },
+      "answer": "A",
+      "source_pages": [
+        327
+      ]
+    },
+    {
+      "id": "MCQ050",
+      "difficulty": "hard",
+      "question": "Many BFT algorithms need correct nodes of?",
+      "choices": {
+        "A": "More than two-thirds",
+        "B": "More than one-third",
+        "C": "Exactly half",
+        "D": "One node"
+      },
+      "answer": "A",
+      "source_pages": [
+        327
+      ]
+    },
+    {
+      "id": "MCQ051",
+      "difficulty": "hard",
+      "question": "Application-level checksums are?",
+      "choices": {
+        "A": "Pragmatic weak-corruption defense",
+        "B": "Full BFT",
+        "C": "Consensus",
+        "D": "A clock"
+      },
+      "answer": "A",
+      "source_pages": [
+        328
+      ]
+    },
+    {
+      "id": "MCQ052",
+      "difficulty": "hard",
+      "question": "What is a synchronous system model?",
+      "choices": {
+        "A": "Bounded delay, pause, clock error",
+        "B": "No clocks",
+        "C": "Unbounded everything",
+        "D": "Only crash-stop"
+      },
+      "answer": "A",
+      "source_pages": [
+        329
+      ]
+    },
+    {
+      "id": "MCQ053",
+      "difficulty": "hard",
+      "question": "What is partial synchrony?",
+      "choices": {
+        "A": "Usually bounded but occasionally arbitrarily bad",
+        "B": "Always bounded",
+        "C": "No timing assumptions ever",
+        "D": "No failures"
+      },
+      "answer": "A",
+      "source_pages": [
+        329
+      ]
+    },
+    {
+      "id": "MCQ054",
+      "difficulty": "hard",
+      "question": "What is asynchronous model?",
+      "choices": {
+        "A": "No timing assumptions",
+        "B": "Fixed packet delay",
+        "C": "Fixed clock error",
+        "D": "Only one node"
+      },
+      "answer": "A",
+      "source_pages": [
+        329
+      ]
+    },
+    {
+      "id": "MCQ055",
+      "difficulty": "hard",
+      "question": "Crash-stop means?",
+      "choices": {
+        "A": "Crash and never return",
+        "B": "Crash and recover",
+        "C": "Lie arbitrarily",
+        "D": "Only pause"
+      },
+      "answer": "A",
+      "source_pages": [
+        329
+      ]
+    },
+    {
+      "id": "MCQ056",
+      "difficulty": "hard",
+      "question": "Crash-recovery means?",
+      "choices": {
+        "A": "May crash and recover; stable storage survives",
+        "B": "Never recover",
+        "C": "May lie",
+        "D": "No disk"
+      },
+      "answer": "A",
+      "source_pages": [
+        329
+      ]
+    },
+    {
+      "id": "MCQ057",
+      "difficulty": "hard",
+      "question": "Most useful practical model cited?",
+      "choices": {
+        "A": "Partially synchronous + crash-recovery",
+        "B": "Synchronous + Byzantine",
+        "C": "Asynchronous + no failures",
+        "D": "Single node"
+      },
+      "answer": "A",
+      "source_pages": [
+        330
+      ]
+    },
+    {
+      "id": "MCQ058",
+      "difficulty": "hard",
+      "question": "Algorithm correctness is defined by?",
+      "choices": {
+        "A": "Properties under a system model",
+        "B": "Average latency only",
+        "C": "Implementation language",
+        "D": "Node count only"
+      },
+      "answer": "A",
+      "source_pages": [
+        330
+      ]
+    },
+    {
+      "id": "MCQ059",
+      "difficulty": "hard",
+      "question": "Fencing-token uniqueness is?",
+      "choices": {
+        "A": "Safety",
+        "B": "Liveness",
+        "C": "Availability",
+        "D": "Performance"
+      },
+      "answer": "A",
+      "source_pages": [
+        330
+      ]
+    },
+    {
+      "id": "MCQ060",
+      "difficulty": "hard",
+      "question": "Fencing-token availability is?",
+      "choices": {
+        "A": "Liveness",
+        "B": "Safety",
+        "C": "Durability",
+        "D": "Isolation"
+      },
+      "answer": "A",
+      "source_pages": [
+        330
+      ]
+    },
+    {
+      "id": "MCQ061",
+      "difficulty": "hard",
+      "question": "A safety violation can?",
+      "choices": {
+        "A": "Be pinpointed and cannot be undone",
+        "B": "Always be fixed later",
+        "C": "Only occur eventually",
+        "D": "Never happen in theory"
+      },
+      "answer": "A",
+      "source_pages": [
+        331
+      ]
+    },
+    {
+      "id": "MCQ062",
+      "difficulty": "hard",
+      "question": "Liveness often includes which word?",
+      "choices": {
+        "A": "Eventually",
+        "B": "Never",
+        "C": "Exactly",
+        "D": "Atomic"
+      },
+      "answer": "A",
+      "source_pages": [
+        330
+      ]
+    },
+    {
+      "id": "MCQ063",
+      "difficulty": "hard",
+      "question": "Can liveness depend on network recovery?",
+      "choices": {
+        "A": "Yes",
+        "B": "No",
+        "C": "Only in synchronous model",
+        "D": "Only with BFT"
+      },
+      "answer": "A",
+      "source_pages": [
+        331
+      ]
+    },
+    {
+      "id": "MCQ064",
+      "difficulty": "hard",
+      "question": "What can break crash-recovery assumptions?",
+      "choices": {
+        "A": "Stable-storage corruption/amnesia",
+        "B": "Healthy disk",
+        "C": "Monotonic token",
+        "D": "Majority quorum"
+      },
+      "answer": "A",
+      "source_pages": [
+        331
+      ]
+    },
+    {
+      "id": "MCQ065",
+      "difficulty": "hard",
+      "question": "Why use system models?",
+      "choices": {
+        "A": "Make fault assumptions tractable for reasoning/proofs",
+        "B": "Eliminate real faults",
+        "C": "Guarantee implementation perfection",
+        "D": "Replace testing"
+      },
+      "answer": "A",
+      "source_pages": [
+        332
+      ]
+    },
+    {
+      "id": "MCQ066",
+      "difficulty": "hard",
+      "question": "What complements theoretical proof?",
+      "choices": {
+        "A": "Empirical testing",
+        "B": "Nothing",
+        "C": "Only NTP",
+        "D": "Only BFT"
+      },
+      "answer": "A",
+      "source_pages": [
+        332
+      ]
+    },
+    {
+      "id": "MCQ067",
+      "difficulty": "hard",
+      "question": "What three problems dominate the summary?",
+      "choices": {
+        "A": "Network uncertainty, clock uncertainty, process pauses",
+        "B": "Indexes, joins, schemas",
+        "C": "B-trees, LSM, WAL",
+        "D": "HTTP, RPC, REST"
+      },
+      "answer": "A",
+      "source_pages": [
+        332
+      ]
+    },
+    {
+      "id": "MCQ068",
+      "difficulty": "hard",
+      "question": "What can be harder than a cleanly failed node?",
+      "choices": {
+        "A": "A limping/degraded node",
+        "B": "A healthy node",
+        "C": "A single machine",
+        "D": "A local process"
+      },
+      "answer": "A",
+      "source_pages": [
+        333
+      ]
+    },
+    {
+      "id": "MCQ069",
+      "difficulty": "hard",
+      "question": "Why use quorums for major decisions?",
+      "choices": {
+        "A": "No one node has globally authoritative knowledge",
+        "B": "Quorums remove network faults",
+        "C": "Quorums synchronize clocks",
+        "D": "Quorums prevent GC"
+      },
+      "answer": "A",
+      "source_pages": [
+        333
+      ]
+    },
+    {
+      "id": "MCQ070",
+      "difficulty": "hard",
+      "question": "If a single machine is sufficient, the chapter suggests?",
+      "choices": {
+        "A": "Prefer it when practical",
+        "B": "Always distribute anyway",
+        "C": "Use Byzantine consensus",
+        "D": "Use circuit switching"
+      },
+      "answer": "A",
+      "source_pages": [
+        333
+      ]
+    }
+  ],
+  "mix_and_match": [
+    {
+      "id": "MM01",
+      "title": "Failure/uncertainty concept",
+      "left": {
+        "A": "Partial failure",
+        "B": "Timeout",
+        "C": "Network partition",
+        "D": "Process pause",
+        "E": "Limping node"
+      },
+      "right": {
+        "1": "Some components fail while others work",
+        "2": "Suspicion threshold, not proof",
+        "3": "Network split between groups",
+        "4": "Execution stops and later resumes",
+        "5": "Degraded but not fully dead node"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        297,
+        301,
+        303,
+        320,
+        333
+      ]
+    },
+    {
+      "id": "MM02",
+      "title": "Clock concept",
+      "left": {
+        "A": "Time-of-day",
+        "B": "Monotonic",
+        "C": "Logical clock",
+        "D": "TrueTime",
+        "E": "NTP"
+      },
+      "right": {
+        "1": "Calendar time and may jump",
+        "2": "Elapsed durations",
+        "3": "Relative event ordering",
+        "4": "Earliest/latest confidence interval",
+        "5": "Synchronizes wall clocks"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        310,
+        311,
+        315,
+        316
+      ]
+    },
+    {
+      "id": "MM03",
+      "title": "Process-pause cause",
+      "left": {
+        "A": "GC",
+        "B": "VM suspension",
+        "C": "Steal time",
+        "D": "Paging",
+        "E": "SIGSTOP"
+      },
+      "right": {
+        "1": "Stop-the-world runtime pause",
+        "2": "Hypervisor saves/restores execution",
+        "3": "Another VM consumes CPU",
+        "4": "Disk-backed page fault/swapping",
+        "5": "Unix process suspension signal"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        318,
+        319
+      ]
+    },
+    {
+      "id": "MM04",
+      "title": "System model",
+      "left": {
+        "A": "Synchronous",
+        "B": "Partially synchronous",
+        "C": "Asynchronous",
+        "D": "Crash-stop",
+        "E": "Crash-recovery"
+      },
+      "right": {
+        "1": "Known timing bounds",
+        "2": "Usually bounded, occasionally unbounded",
+        "3": "No timing assumptions",
+        "4": "Crash and never return",
+        "5": "Crash/recover with stable storage"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        329
+      ]
+    },
+    {
+      "id": "MM05",
+      "title": "Correctness property",
+      "left": {
+        "A": "Uniqueness",
+        "B": "Monotonic token",
+        "C": "Availability",
+        "D": "Safety",
+        "E": "Liveness"
+      },
+      "right": {
+        "1": "No duplicate fencing token",
+        "2": "Later completed request gets higher token",
+        "3": "Non-crashed request eventually responds",
+        "4": "Cannot suffer a finite irreversible bad event",
+        "5": "Good condition eventually becomes true"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        330,
+        331
+      ]
+    },
+    {
+      "id": "MM06",
+      "title": "Network/resource model",
+      "left": {
+        "A": "Circuit switching",
+        "B": "Packet switching",
+        "C": "TCP",
+        "D": "UDP",
+        "E": "Dynamic resource sharing"
+      },
+      "right": {
+        "1": "Reserved bandwidth and bounded delay",
+        "2": "Bursty traffic and queueing",
+        "3": "Retransmission/order/flow control",
+        "4": "No retransmission/flow control",
+        "5": "High utilization but variable latency"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        305,
+        306,
+        307,
+        308
+      ]
+    }
+  ],
+  "true_false": [
+    {
+      "id": "TF001",
+      "statement": "Partial failure means the whole distributed system necessarily crashes.",
+      "answer": false,
+      "source_pages": [
+        297
+      ]
+    },
+    {
+      "id": "TF002",
+      "statement": "Distributed partial failures can be nondeterministic.",
+      "answer": true,
+      "source_pages": [
+        297
+      ]
+    },
+    {
+      "id": "TF003",
+      "statement": "HPC commonly handles node failure by continuing every job unchanged.",
+      "answer": false,
+      "source_pages": [
+        297
+      ]
+    },
+    {
+      "id": "TF004",
+      "statement": "Internet services often need to tolerate node failures without service-wide downtime.",
+      "answer": true,
+      "source_pages": [
+        298
+      ]
+    },
+    {
+      "id": "TF005",
+      "statement": "TCP can hide packet loss but not eliminate arbitrary delay.",
+      "answer": true,
+      "source_pages": [
+        299
+      ]
+    },
+    {
+      "id": "TF006",
+      "statement": "A missing response proves the request was lost.",
+      "answer": false,
+      "source_pages": [
+        300,
+        301
+      ]
+    },
+    {
+      "id": "TF007",
+      "statement": "A timeout proves the remote node is dead.",
+      "answer": false,
+      "source_pages": [
+        301
+      ]
+    },
+    {
+      "id": "TF008",
+      "statement": "Network faults should be explicitly tested.",
+      "answer": true,
+      "source_pages": [
+        302
+      ]
+    },
+    {
+      "id": "TF009",
+      "statement": "Application-level acknowledgement is stronger evidence of success than transport-level delivery alone.",
+      "answer": true,
+      "source_pages": [
+        303
+      ]
+    },
+    {
+      "id": "TF010",
+      "statement": "Short timeouts reduce false positives.",
+      "answer": false,
+      "source_pages": [
+        303
+      ]
+    },
+    {
+      "id": "TF011",
+      "statement": "False failure detection can cause duplicate work.",
+      "answer": true,
+      "source_pages": [
+        303
+      ]
+    },
+    {
+      "id": "TF012",
+      "statement": "False failure detection can trigger cascading failure.",
+      "answer": true,
+      "source_pages": [
+        303
+      ]
+    },
+    {
+      "id": "TF013",
+      "statement": "Most internet/datacenter networks provide a hard packet-delay upper bound.",
+      "answer": false,
+      "source_pages": [
+        304
+      ]
+    },
+    {
+      "id": "TF014",
+      "statement": "Queueing is a major source of network latency variance.",
+      "answer": true,
+      "source_pages": [
+        304,
+        305
+      ]
+    },
+    {
+      "id": "TF015",
+      "statement": "TCP retransmission can increase observed application latency.",
+      "answer": true,
+      "source_pages": [
+        305
+      ]
+    },
+    {
+      "id": "TF016",
+      "statement": "UDP retransmits lost packets.",
+      "answer": false,
+      "source_pages": [
+        305
+      ]
+    },
+    {
+      "id": "TF017",
+      "statement": "UDP can be useful when late data is useless.",
+      "answer": true,
+      "source_pages": [
+        305
+      ]
+    },
+    {
+      "id": "TF018",
+      "statement": "Circuit switching reserves bandwidth.",
+      "answer": true,
+      "source_pages": [
+        306,
+        307
+      ]
+    },
+    {
+      "id": "TF019",
+      "statement": "Packet switching eliminates queueing.",
+      "answer": false,
+      "source_pages": [
+        307
+      ]
+    },
+    {
+      "id": "TF020",
+      "statement": "Dynamic resource sharing improves utilization at the cost of variable delay.",
+      "answer": true,
+      "source_pages": [
+        308
+      ]
+    },
+    {
+      "id": "TF021",
+      "statement": "Variable network delay is an unavoidable law of physics.",
+      "answer": false,
+      "source_pages": [
+        308
+      ]
+    },
+    {
+      "id": "TF022",
+      "statement": "Time-of-day clocks are ideal for elapsed-time measurement.",
+      "answer": false,
+      "source_pages": [
+        310
+      ]
+    },
+    {
+      "id": "TF023",
+      "statement": "Monotonic clocks are suitable for timeouts.",
+      "answer": true,
+      "source_pages": [
+        310,
+        311
+      ]
+    },
+    {
+      "id": "TF024",
+      "statement": "Monotonic clocks from different machines can be directly compared.",
+      "answer": false,
+      "source_pages": [
+        311
+      ]
+    },
+    {
+      "id": "TF025",
+      "statement": "NTP can slew a monotonic clock rate.",
+      "answer": true,
+      "source_pages": [
+        311
+      ]
+    },
+    {
+      "id": "TF026",
+      "statement": "Hardware clocks do not drift.",
+      "answer": false,
+      "source_pages": [
+        311
+      ]
+    },
+    {
+      "id": "TF027",
+      "statement": "NTP can be wrong due to network delay or misconfiguration.",
+      "answer": true,
+      "source_pages": [
+        312
+      ]
+    },
+    {
+      "id": "TF028",
+      "statement": "Leap seconds have caused failures in real systems.",
+      "answer": true,
+      "source_pages": [
+        312
+      ]
+    },
+    {
+      "id": "TF029",
+      "statement": "End-user device clocks are always trustworthy.",
+      "answer": false,
+      "source_pages": [
+        312
+      ]
+    },
+    {
+      "id": "TF030",
+      "statement": "Clock-dependent systems should monitor clock offsets.",
+      "answer": true,
+      "source_pages": [
+        313
+      ]
+    },
+    {
+      "id": "TF031",
+      "statement": "Wall-clock timestamps always preserve causality.",
+      "answer": false,
+      "source_pages": [
+        313,
+        314
+      ]
+    },
+    {
+      "id": "TF032",
+      "statement": "LWW can discard a causally later write.",
+      "answer": true,
+      "source_pages": [
+        314
+      ]
+    },
+    {
+      "id": "TF033",
+      "statement": "Logical clocks measure calendar time.",
+      "answer": false,
+      "source_pages": [
+        315
+      ]
+    },
+    {
+      "id": "TF034",
+      "statement": "Logical clocks are useful for event ordering.",
+      "answer": true,
+      "source_pages": [
+        315
+      ]
+    },
+    {
+      "id": "TF035",
+      "statement": "Fine timestamp resolution guarantees fine timestamp accuracy.",
+      "answer": false,
+      "source_pages": [
+        315
+      ]
+    },
+    {
+      "id": "TF036",
+      "statement": "TrueTime exposes clock uncertainty explicitly.",
+      "answer": true,
+      "source_pages": [
+        316
+      ]
+    },
+    {
+      "id": "TF037",
+      "statement": "Spanner can use non-overlapping time intervals to infer definite order.",
+      "answer": true,
+      "source_pages": [
+        317
+      ]
+    },
+    {
+      "id": "TF038",
+      "statement": "Spanner waits out clock uncertainty for transaction ordering.",
+      "answer": true,
+      "source_pages": [
+        317
+      ]
+    },
+    {
+      "id": "TF039",
+      "statement": "Using a monotonic clock alone eliminates all lease-expiry race conditions.",
+      "answer": false,
+      "source_pages": [
+        318
+      ]
+    },
+    {
+      "id": "TF040",
+      "statement": "A process may pause between a lease check and a protected action.",
+      "answer": true,
+      "source_pages": [
+        318
+      ]
+    },
+    {
+      "id": "TF041",
+      "statement": "GC pauses can be very long.",
+      "answer": true,
+      "source_pages": [
+        318
+      ]
+    },
+    {
+      "id": "TF042",
+      "statement": "VMs can be suspended and resumed.",
+      "answer": true,
+      "source_pages": [
+        319
+      ]
+    },
+    {
+      "id": "TF043",
+      "statement": "Steal time refers to network packet loss.",
+      "answer": false,
+      "source_pages": [
+        319
+      ]
+    },
+    {
+      "id": "TF044",
+      "statement": "Swapping can cause long application pauses.",
+      "answer": true,
+      "source_pages": [
+        319
+      ]
+    },
+    {
+      "id": "TF045",
+      "statement": "A distributed process can safely assume continuous CPU execution.",
+      "answer": false,
+      "source_pages": [
+        320
+      ]
+    },
+    {
+      "id": "TF046",
+      "statement": "Hard real-time means low average latency only.",
+      "answer": false,
+      "source_pages": [
+        320,
+        321
+      ]
+    },
+    {
+      "id": "TF047",
+      "statement": "Hard real-time guarantees require whole-stack engineering.",
+      "answer": true,
+      "source_pages": [
+        320,
+        321
+      ]
+    },
+    {
+      "id": "TF048",
+      "statement": "Hard real-time systems may sacrifice throughput for predictability.",
+      "answer": true,
+      "source_pages": [
+        321
+      ]
+    },
+    {
+      "id": "TF049",
+      "statement": "GC pauses can sometimes be treated as planned node outages.",
+      "answer": true,
+      "source_pages": [
+        321
+      ]
+    },
+    {
+      "id": "TF050",
+      "statement": "A node has direct global knowledge of the entire distributed system.",
+      "answer": false,
+      "source_pages": [
+        322
+      ]
+    },
+    {
+      "id": "TF051",
+      "statement": "Majority quorums reduce reliance on any one node.",
+      "answer": true,
+      "source_pages": [
+        323
+      ]
+    },
+    {
+      "id": "TF052",
+      "statement": "Two conflicting absolute majorities can exist without overlap.",
+      "answer": false,
+      "source_pages": [
+        323
+      ]
+    },
+    {
+      "id": "TF053",
+      "statement": "A stale leader may continue operating after another leader is elected.",
+      "answer": true,
+      "source_pages": [
+        324
+      ]
+    },
+    {
+      "id": "TF054",
+      "statement": "A fencing token should monotonically increase.",
+      "answer": true,
+      "source_pages": [
+        325
+      ]
+    },
+    {
+      "id": "TF055",
+      "statement": "The client alone is sufficient to enforce fencing.",
+      "answer": false,
+      "source_pages": [
+        325
+      ]
+    },
+    {
+      "id": "TF056",
+      "statement": "The protected resource should reject stale fencing tokens.",
+      "answer": true,
+      "source_pages": [
+        325
+      ]
+    },
+    {
+      "id": "TF057",
+      "statement": "Byzantine faults mean arbitrary/deceptive behavior.",
+      "answer": true,
+      "source_pages": [
+        326
+      ]
+    },
+    {
+      "id": "TF058",
+      "statement": "This book generally assumes Byzantine behavior in every node.",
+      "answer": false,
+      "source_pages": [
+        326
+      ]
+    },
+    {
+      "id": "TF059",
+      "statement": "BFT is relevant where mutually untrusting parties must agree.",
+      "answer": true,
+      "source_pages": [
+        327
+      ]
+    },
+    {
+      "id": "TF060",
+      "statement": "Many BFT algorithms require more than two-thirds correct nodes.",
+      "answer": true,
+      "source_pages": [
+        327
+      ]
+    },
+    {
+      "id": "TF061",
+      "statement": "Deploying the same buggy software everywhere is automatically fixed by BFT.",
+      "answer": false,
+      "source_pages": [
+        327
+      ]
+    },
+    {
+      "id": "TF062",
+      "statement": "Application-level checksums can protect against some weak corruption.",
+      "answer": true,
+      "source_pages": [
+        328
+      ]
+    },
+    {
+      "id": "TF063",
+      "statement": "The synchronous model assumes bounded delays and pauses.",
+      "answer": true,
+      "source_pages": [
+        329
+      ]
+    },
+    {
+      "id": "TF064",
+      "statement": "Partial synchrony allows occasional timing-bound violations.",
+      "answer": true,
+      "source_pages": [
+        329
+      ]
+    },
+    {
+      "id": "TF065",
+      "statement": "The asynchronous model allows timeout-based reasoning.",
+      "answer": false,
+      "source_pages": [
+        329
+      ]
+    },
+    {
+      "id": "TF066",
+      "statement": "Crash-stop nodes can later recover.",
+      "answer": false,
+      "source_pages": [
+        329
+      ]
+    },
+    {
+      "id": "TF067",
+      "statement": "Crash-recovery assumes stable storage survives crashes.",
+      "answer": true,
+      "source_pages": [
+        329
+      ]
+    },
+    {
+      "id": "TF068",
+      "statement": "Partially synchronous + crash-recovery is described as useful for real systems.",
+      "answer": true,
+      "source_pages": [
+        330
+      ]
+    },
+    {
+      "id": "TF069",
+      "statement": "Fencing-token uniqueness is a safety property.",
+      "answer": true,
+      "source_pages": [
+        330
+      ]
+    },
+    {
+      "id": "TF070",
+      "statement": "Availability is a liveness property.",
+      "answer": true,
+      "source_pages": [
+        330
+      ]
+    },
+    {
+      "id": "TF071",
+      "statement": "Eventual consistency is a liveness property.",
+      "answer": true,
+      "source_pages": [
+        330
+      ]
+    },
+    {
+      "id": "TF072",
+      "statement": "A safety violation can be repaired so that it never happened.",
+      "answer": false,
+      "source_pages": [
+        331
+      ]
+    },
+    {
+      "id": "TF073",
+      "statement": "Liveness may be conditional on network recovery and enough surviving nodes.",
+      "answer": true,
+      "source_pages": [
+        331
+      ]
+    },
+    {
+      "id": "TF074",
+      "statement": "Formal system models exactly capture every real-world failure.",
+      "answer": false,
+      "source_pages": [
+        331,
+        332
+      ]
+    },
+    {
+      "id": "TF075",
+      "statement": "Theoretical analysis and empirical testing are both important.",
+      "answer": true,
+      "source_pages": [
+        332
+      ]
+    },
+    {
+      "id": "TF076",
+      "statement": "A degraded node may be harder to handle than a cleanly failed node.",
+      "answer": true,
+      "source_pages": [
+        333
+      ]
+    },
+    {
+      "id": "TF077",
+      "statement": "If a single machine suffices, avoiding distribution can be worthwhile.",
+      "answer": true,
+      "source_pages": [
+        333
+      ]
+    }
+  ],
+  "fill_in_the_blank": [
+    {
+      "id": "FIB001",
+      "prompt": "Some components failing while others work is a ______ failure.",
+      "answer": "partial",
+      "source_pages": [
+        297
+      ]
+    },
+    {
+      "id": "FIB002",
+      "prompt": "A missing network reply creates ______ about whether the request succeeded.",
+      "answer": "uncertainty",
+      "source_pages": [
+        300,
+        301
+      ]
+    },
+    {
+      "id": "FIB003",
+      "prompt": "A timeout is a failure ______, not proof.",
+      "answer": "suspicion",
+      "source_pages": [
+        301,
+        303
+      ]
+    },
+    {
+      "id": "FIB004",
+      "prompt": "Near capacity, long network ______ can build quickly.",
+      "answer": "queues",
+      "source_pages": [
+        305,
+        306
+      ]
+    },
+    {
+      "id": "FIB005",
+      "prompt": "A packet network with reserved bandwidth is ______ switched.",
+      "answer": "circuit",
+      "source_pages": [
+        306,
+        307
+      ]
+    },
+    {
+      "id": "FIB006",
+      "prompt": "IP/Ethernet are generally ______ switched.",
+      "answer": "packet",
+      "source_pages": [
+        307
+      ]
+    },
+    {
+      "id": "FIB007",
+      "prompt": "Elapsed time should usually use a ______ clock.",
+      "answer": "monotonic",
+      "source_pages": [
+        310
+      ]
+    },
+    {
+      "id": "FIB008",
+      "prompt": "Calendar time normally uses a time-of-______ clock.",
+      "answer": "day",
+      "source_pages": [
+        310
+      ]
+    },
+    {
+      "id": "FIB009",
+      "prompt": "NTP may ______ a monotonic clock by adjusting its rate.",
+      "answer": "slew",
+      "source_pages": [
+        311
+      ]
+    },
+    {
+      "id": "FIB010",
+      "prompt": "A clock oscillator's gradual error is clock ______.",
+      "answer": "drift",
+      "source_pages": [
+        311
+      ]
+    },
+    {
+      "id": "FIB011",
+      "prompt": "Last-write-______ can lose causally later data.",
+      "answer": "wins",
+      "source_pages": [
+        314
+      ]
+    },
+    {
+      "id": "FIB012",
+      "prompt": "Event-order counters are ______ clocks.",
+      "answer": "logical",
+      "source_pages": [
+        315
+      ]
+    },
+    {
+      "id": "FIB013",
+      "prompt": "TrueTime returns earliest and ______ possible time.",
+      "answer": "latest",
+      "source_pages": [
+        316
+      ]
+    },
+    {
+      "id": "FIB014",
+      "prompt": "A time-limited distributed lock is a ______.",
+      "answer": "lease",
+      "source_pages": [
+        317
+      ]
+    },
+    {
+      "id": "FIB015",
+      "prompt": "A long stop-the-world pause is often caused by garbage ______.",
+      "answer": "collection",
+      "source_pages": [
+        318
+      ]
+    },
+    {
+      "id": "FIB016",
+      "prompt": "CPU time consumed by another VM is ______ time.",
+      "answer": "steal",
+      "source_pages": [
+        319
+      ]
+    },
+    {
+      "id": "FIB017",
+      "prompt": "Excessive swapping with little useful work is ______.",
+      "answer": "thrashing",
+      "source_pages": [
+        319
+      ]
+    },
+    {
+      "id": "FIB018",
+      "prompt": "A deadline-guaranteed system is hard ______-time.",
+      "answer": "real",
+      "source_pages": [
+        320,
+        321
+      ]
+    },
+    {
+      "id": "FIB019",
+      "prompt": "More than half the nodes form a majority ______.",
+      "answer": "quorum",
+      "source_pages": [
+        323
+      ]
+    },
+    {
+      "id": "FIB020",
+      "prompt": "A monotonically increasing lease number is a fencing ______.",
+      "answer": "token",
+      "source_pages": [
+        325
+      ]
+    },
+    {
+      "id": "FIB021",
+      "prompt": "Arbitrary/deceptive node behavior is a ______ fault.",
+      "answer": "Byzantine",
+      "source_pages": [
+        326
+      ]
+    },
+    {
+      "id": "FIB022",
+      "prompt": "A model with known timing bounds is ______.",
+      "answer": "synchronous",
+      "source_pages": [
+        329
+      ]
+    },
+    {
+      "id": "FIB023",
+      "prompt": "A model with no timing assumptions is ______.",
+      "answer": "asynchronous",
+      "source_pages": [
+        329
+      ]
+    },
+    {
+      "id": "FIB024",
+      "prompt": "Crash and later restart with preserved disk is crash-______.",
+      "answer": "recovery",
+      "source_pages": [
+        329
+      ]
+    },
+    {
+      "id": "FIB025",
+      "prompt": "Nothing bad happens corresponds to ______.",
+      "answer": "safety",
+      "source_pages": [
+        330,
+        331
+      ]
+    },
+    {
+      "id": "FIB026",
+      "prompt": "Something good eventually happens corresponds to ______.",
+      "answer": "liveness",
+      "source_pages": [
+        330,
+        331
+      ]
+    }
+  ],
+  "ordering_exercises": [
+    {
+      "id": "ORD01",
+      "title": "Ambiguous request",
+      "items_scrambled": [
+        "Caller times out",
+        "Request is sent",
+        "Remote may process",
+        "Response may be lost/delayed",
+        "Caller remains uncertain"
+      ],
+      "correct_order": [
+        "Request is sent",
+        "Remote may process",
+        "Response may be lost/delayed",
+        "Caller times out",
+        "Caller remains uncertain"
+      ],
+      "source_pages": [
+        300,
+        301
+      ]
+    },
+    {
+      "id": "ORD02",
+      "title": "False failure cascade",
+      "items_scrambled": [
+        "Move load away",
+        "Node is slow",
+        "More nodes overload",
+        "Timeout fires",
+        "Node declared dead"
+      ],
+      "correct_order": [
+        "Node is slow",
+        "Timeout fires",
+        "Node declared dead",
+        "Move load away",
+        "More nodes overload"
+      ],
+      "source_pages": [
+        303
+      ]
+    },
+    {
+      "id": "ORD03",
+      "title": "Expired lease corruption",
+      "items_scrambled": [
+        "Old client resumes",
+        "Old client pauses",
+        "New client obtains lease",
+        "Old lease expires",
+        "Both can write without fencing"
+      ],
+      "correct_order": [
+        "Old client pauses",
+        "Old lease expires",
+        "New client obtains lease",
+        "Old client resumes",
+        "Both can write without fencing"
+      ],
+      "source_pages": [
+        324
+      ]
+    },
+    {
+      "id": "ORD04",
+      "title": "Fencing",
+      "items_scrambled": [
+        "Resource rejects token 33",
+        "Client 1 pauses with token 33",
+        "Client 2 gets token 34",
+        "Client 2 writes token 34",
+        "Client 1 resumes"
+      ],
+      "correct_order": [
+        "Client 1 pauses with token 33",
+        "Client 2 gets token 34",
+        "Client 2 writes token 34",
+        "Client 1 resumes",
+        "Resource rejects token 33"
+      ],
+      "source_pages": [
+        325
+      ]
+    },
+    {
+      "id": "ORD05",
+      "title": "Safety/liveness reasoning",
+      "items_scrambled": [
+        "State system model",
+        "Classify safety/liveness",
+        "Define desired properties",
+        "Prove properties under allowed faults",
+        "Test real implementation"
+      ],
+      "correct_order": [
+        "State system model",
+        "Define desired properties",
+        "Classify safety/liveness",
+        "Prove properties under allowed faults",
+        "Test real implementation"
+      ],
+      "source_pages": [
+        329,
+        330,
+        331,
+        332
+      ]
+    }
+  ],
+  "scenario_questions": [
+    {
+      "id": "SC001",
+      "difficulty": "medium",
+      "scenario": "A client sends a payment request and gets no response.",
+      "question": "Can it safely assume no charge occurred?",
+      "expected_answer": "No. The request may have been lost, delayed, processed with lost response, or the server may have failed/paused.",
+      "source_pages": [
+        300,
+        301
+      ]
+    },
+    {
+      "id": "SC002",
+      "difficulty": "medium",
+      "scenario": "A service uses a 100 ms failure timeout, but occasional GC/network spikes reach 500 ms.",
+      "question": "What risk follows?",
+      "expected_answer": "Healthy nodes may be falsely declared dead, causing unnecessary failover and duplicate work.",
+      "source_pages": [
+        303,
+        304
+      ]
+    },
+    {
+      "id": "SC003",
+      "difficulty": "medium",
+      "scenario": "Several overloaded nodes all begin declaring one another dead and redistributing work.",
+      "question": "What failure pattern is this?",
+      "expected_answer": "Cascading failure caused by false failure detection and added rebalance/failover load.",
+      "source_pages": [
+        303
+      ]
+    },
+    {
+      "id": "SC004",
+      "difficulty": "medium",
+      "scenario": "A latency-sensitive voice packet arrives 2 seconds late.",
+      "question": "Why might UDP have been preferable?",
+      "expected_answer": "The delayed audio is no longer useful; skipping it may be better than retransmitting it.",
+      "source_pages": [
+        305
+      ]
+    },
+    {
+      "id": "SC005",
+      "difficulty": "medium",
+      "scenario": "A service wants hard upper-bounded network latency and accepts low utilization.",
+      "question": "What network/resource philosophy matches?",
+      "expected_answer": "Static reservation/circuit-like resource allocation.",
+      "source_pages": [
+        306,
+        307,
+        308
+      ]
+    },
+    {
+      "id": "SC006",
+      "difficulty": "medium",
+      "scenario": "A timeout is measured with System.currentTimeMillis() and NTP resets the clock backward.",
+      "question": "What's wrong?",
+      "expected_answer": "Time-of-day clocks can jump; elapsed durations should use a monotonic clock.",
+      "source_pages": [
+        310,
+        311
+      ]
+    },
+    {
+      "id": "SC007",
+      "difficulty": "medium",
+      "scenario": "Two writes are causally ordered but the later one has an earlier wall-clock timestamp.",
+      "question": "What can LWW do?",
+      "expected_answer": "Discard the causally later write, causing silent data loss.",
+      "source_pages": [
+        313,
+        314
+      ]
+    },
+    {
+      "id": "SC008",
+      "difficulty": "medium",
+      "scenario": "A system needs event ordering but not actual timestamps.",
+      "question": "What should it prefer?",
+      "expected_answer": "Logical clocks/causality tracking rather than physical wall clocks.",
+      "source_pages": [
+        315
+      ]
+    },
+    {
+      "id": "SC009",
+      "difficulty": "hard",
+      "scenario": "A clock API reports 12:00:00.000001 with microsecond resolution, but synchronization error is ±100 ms.",
+      "question": "How precise is the real time knowledge?",
+      "expected_answer": "Only about the uncertainty interval; the microsecond digits are not meaningful accuracy.",
+      "source_pages": [
+        315,
+        316
+      ]
+    },
+    {
+      "id": "SC010",
+      "difficulty": "hard",
+      "scenario": "Two TrueTime intervals do not overlap.",
+      "question": "What can be concluded?",
+      "expected_answer": "Their temporal order is definite.",
+      "source_pages": [
+        317
+      ]
+    },
+    {
+      "id": "SC011",
+      "difficulty": "hard",
+      "scenario": "A leader checks a lease, pauses for 15 seconds, and resumes after another leader takes over.",
+      "question": "What is the core bug?",
+      "expected_answer": "The node's local execution continued from stale assumptions after its lease expired.",
+      "source_pages": [
+        318
+      ]
+    },
+    {
+      "id": "SC012",
+      "difficulty": "hard",
+      "scenario": "A process is suspended during VM live migration.",
+      "question": "What distributed-system assumption does this violate?",
+      "expected_answer": "Any assumption that execution progresses continuously or within a fixed time bound.",
+      "source_pages": [
+        319,
+        320
+      ]
+    },
+    {
+      "id": "SC013",
+      "difficulty": "hard",
+      "scenario": "A lock holder is paused, its lease expires, and a new holder writes to storage. Old holder resumes.",
+      "question": "How should storage protect itself?",
+      "expected_answer": "Require fencing tokens and reject the old holder's lower token.",
+      "source_pages": [
+        324,
+        325
+      ]
+    },
+    {
+      "id": "SC014",
+      "difficulty": "hard",
+      "scenario": "A node says 'I'm still leader' but a majority has already elected another leader.",
+      "question": "Whose decision governs?",
+      "expected_answer": "The quorum/majority decision; the stale node must step down.",
+      "source_pages": [
+        323,
+        324
+      ]
+    },
+    {
+      "id": "SC015",
+      "difficulty": "hard",
+      "scenario": "A malicious peer sends forged protocol messages.",
+      "question": "What fault class is this?",
+      "expected_answer": "Byzantine/arbitrary fault.",
+      "source_pages": [
+        326
+      ]
+    },
+    {
+      "id": "SC016",
+      "difficulty": "hard",
+      "scenario": "All nodes run the same buggy binary and the bug affects all of them.",
+      "question": "Would ordinary BFT replication necessarily save the system?",
+      "expected_answer": "No; common-mode software bugs can affect all replicas.",
+      "source_pages": [
+        327
+      ]
+    },
+    {
+      "id": "SC017",
+      "difficulty": "hard",
+      "scenario": "One NTP server reports a time hours away from the others.",
+      "question": "What pragmatic defense is described?",
+      "expected_answer": "Query multiple NTP servers and reject the outlier if a majority agree elsewhere.",
+      "source_pages": [
+        328
+      ]
+    },
+    {
+      "id": "SC018",
+      "difficulty": "hard",
+      "scenario": "An algorithm assumes network delay never exceeds 100 ms, but real delays occasionally reach 10 seconds.",
+      "question": "Which model was too strong?",
+      "expected_answer": "A synchronous timing assumption; partially synchronous is more realistic.",
+      "source_pages": [
+        329
+      ]
+    },
+    {
+      "id": "SC019",
+      "difficulty": "hard",
+      "scenario": "A node crashes, restarts, retains disk data, but loses memory state.",
+      "question": "Which node-failure model?",
+      "expected_answer": "Crash-recovery.",
+      "source_pages": [
+        329
+      ]
+    },
+    {
+      "id": "SC020",
+      "difficulty": "hard",
+      "scenario": "A fencing-token algorithm must never issue duplicate tokens, even during outages.",
+      "question": "What property type is this?",
+      "expected_answer": "Safety.",
+      "source_pages": [
+        330,
+        331
+      ]
+    },
+    {
+      "id": "SC021",
+      "difficulty": "hard",
+      "scenario": "A request should eventually get a response provided a majority survives and the network recovers.",
+      "question": "What property type?",
+      "expected_answer": "Liveness with conditions.",
+      "source_pages": [
+        330,
+        331
+      ]
+    },
+    {
+      "id": "SC022",
+      "difficulty": "hard",
+      "scenario": "A disk silently loses supposedly durable data after reboot.",
+      "question": "What does this demonstrate about system models?",
+      "expected_answer": "Reality can violate crash-recovery stable-storage assumptions; implementations must handle or at least detect assumption violations.",
+      "source_pages": [
+        331,
+        332
+      ]
+    },
+    {
+      "id": "SC023",
+      "difficulty": "hard",
+      "scenario": "A node still responds but at 1 Kb/s due to a driver bug.",
+      "question": "Why can it be difficult?",
+      "expected_answer": "It is limping rather than cleanly failed, making timeout/failure classification and load handling ambiguous.",
+      "source_pages": [
+        333
+      ]
+    }
+  ],
+  "short_answer_questions": [
+    {
+      "id": "SA001",
+      "question": "Why are distributed systems fundamentally different from single-machine programs?",
+      "model_answer": "They experience partial failures: independent machines/network paths may fail or slow down in different combinations, and remote state is only observable through unreliable messages.",
+      "source_pages": [
+        296,
+        297,
+        322
+      ]
+    },
+    {
+      "id": "SA002",
+      "question": "Why does a timeout not prove failure?",
+      "model_answer": "Asynchronous networks and processes can delay requests/responses arbitrarily; the request may even have completed before the response was lost.",
+      "source_pages": [
+        300,
+        301,
+        304
+      ]
+    },
+    {
+      "id": "SA003",
+      "question": "How should timeout values be chosen in practical systems?",
+      "model_answer": "By measuring real response-time distributions/jitter and trading failure-detection speed against false suspicions; adaptive detectors can help.",
+      "source_pages": [
+        303,
+        306
+      ]
+    },
+    {
+      "id": "SA004",
+      "question": "Why does high utilization increase latency variability?",
+      "model_answer": "Dynamic resource sharing creates queues; near saturation, small load increases can create long waiting times.",
+      "source_pages": [
+        304,
+        305,
+        306,
+        308
+      ]
+    },
+    {
+      "id": "SA005",
+      "question": "Compare circuit switching and packet switching.",
+      "model_answer": "Circuit switching reserves resources and can bound delay but wastes unused capacity; packet switching dynamically shares capacity for better utilization but introduces queueing and unbounded delay.",
+      "source_pages": [
+        306,
+        307,
+        308
+      ]
+    },
+    {
+      "id": "SA006",
+      "question": "Compare time-of-day and monotonic clocks.",
+      "model_answer": "Time-of-day clocks represent calendar time and may jump due to synchronization; monotonic clocks are for elapsed durations and should not be compared across machines.",
+      "source_pages": [
+        310,
+        311
+      ]
+    },
+    {
+      "id": "SA007",
+      "question": "Why is NTP not enough to establish causal ordering?",
+      "model_answer": "Clock drift, network delay, clock jumps, and synchronization error can make causally later events receive earlier timestamps.",
+      "source_pages": [
+        311,
+        312,
+        313,
+        314,
+        315
+      ]
+    },
+    {
+      "id": "SA008",
+      "question": "Why are logical clocks useful?",
+      "model_answer": "They capture relative event ordering/causality without pretending to measure physical time accurately.",
+      "source_pages": [
+        315
+      ]
+    },
+    {
+      "id": "SA009",
+      "question": "What does TrueTime add over ordinary clock APIs?",
+      "model_answer": "It exposes an explicit [earliest, latest] uncertainty interval that can be used to reason about definite non-overlapping event order.",
+      "source_pages": [
+        316,
+        317
+      ]
+    },
+    {
+      "id": "SA010",
+      "question": "Why are process pauses dangerous for distributed leases?",
+      "model_answer": "A node can be paused after checking a valid lease, resume after expiry and replacement, and act using stale authority.",
+      "source_pages": [
+        317,
+        318,
+        319,
+        320
+      ]
+    },
+    {
+      "id": "SA011",
+      "question": "Why are hard real-time guarantees unusual in server systems?",
+      "model_answer": "They require specialized scheduling, bounded execution, restricted tools/allocation, extensive testing, and lower utilization, making them expensive.",
+      "source_pages": [
+        320,
+        321
+      ]
+    },
+    {
+      "id": "SA012",
+      "question": "Why can't one node decide distributed truth by itself?",
+      "model_answer": "It only sees messages and cannot distinguish network faults, pauses, and crashes with certainty; distributed decisions often need quorums.",
+      "source_pages": [
+        322,
+        323
+      ]
+    },
+    {
+      "id": "SA013",
+      "question": "How do fencing tokens prevent stale lock holders from corrupting resources?",
+      "model_answer": "Each new lock grant gets a higher token; the protected resource records the largest token seen and rejects operations with older tokens.",
+      "source_pages": [
+        324,
+        325
+      ]
+    },
+    {
+      "id": "SA014",
+      "question": "What distinguishes Byzantine faults from ordinary crashes/pauses?",
+      "model_answer": "A Byzantine node can behave arbitrarily or deceptively, rather than merely failing to respond or having stale state.",
+      "source_pages": [
+        326,
+        327
+      ]
+    },
+    {
+      "id": "SA015",
+      "question": "Why is partial synchrony a useful model?",
+      "model_answer": "It reflects systems that behave within normal timing expectations most of the time while allowing occasional arbitrarily large delays and pauses.",
+      "source_pages": [
+        329,
+        330
+      ]
+    },
+    {
+      "id": "SA016",
+      "question": "Compare crash-stop and crash-recovery.",
+      "model_answer": "Crash-stop assumes a crashed node never returns; crash-recovery permits restart while assuming stable storage survives and memory does not.",
+      "source_pages": [
+        329
+      ]
+    },
+    {
+      "id": "SA017",
+      "question": "What is the difference between safety and liveness?",
+      "model_answer": "Safety says an irreversible bad event never occurs; liveness says a desired outcome eventually occurs, often subject to recovery/availability conditions.",
+      "source_pages": [
+        330,
+        331
+      ]
+    },
+    {
+      "id": "SA018",
+      "question": "Why do formal proofs not eliminate the need for testing?",
+      "model_answer": "Proofs depend on system-model assumptions that real hardware/software may violate; empirical testing exposes implementation and assumption failures.",
+      "source_pages": [
+        331,
+        332
+      ]
+    }
+  ],
+  "active_recall_prompts": [
+    {
+      "id": "AR001",
+      "prompt": "Explain partial failure without using the word 'failure' until the end.",
+      "target_points": [
+        "independent components",
+        "some work",
+        "some slow/stop",
+        "uncertainty",
+        "nondeterminism"
+      ],
+      "source_pages": [
+        296,
+        297
+      ]
+    },
+    {
+      "id": "AR002",
+      "prompt": "Enumerate every reason a request can time out without a response.",
+      "target_points": [
+        "request lost",
+        "request delayed",
+        "node failed",
+        "node paused",
+        "response lost",
+        "response delayed"
+      ],
+      "source_pages": [
+        300
+      ]
+    },
+    {
+      "id": "AR003",
+      "prompt": "Explain the short-timeout vs long-timeout tradeoff.",
+      "target_points": [
+        "detection speed",
+        "false positive",
+        "duplicate work",
+        "load transfer",
+        "cascade"
+      ],
+      "source_pages": [
+        303
+      ]
+    },
+    {
+      "id": "AR004",
+      "prompt": "List all major network queueing sources.",
+      "target_points": [
+        "switch",
+        "destination CPU",
+        "VM/hypervisor",
+        "sender/TCP",
+        "retransmit",
+        "noisy neighbor"
+      ],
+      "source_pages": [
+        304,
+        305,
+        306
+      ]
+    },
+    {
+      "id": "AR005",
+      "prompt": "Compare circuit and packet switching.",
+      "target_points": [
+        "reservation",
+        "bounded delay",
+        "bursty traffic",
+        "utilization",
+        "queueing"
+      ],
+      "source_pages": [
+        306,
+        307,
+        308
+      ]
+    },
+    {
+      "id": "AR006",
+      "prompt": "Explain time-of-day vs monotonic clocks.",
+      "target_points": [
+        "calendar",
+        "NTP",
+        "jumps",
+        "duration",
+        "cross-node comparison invalid"
+      ],
+      "source_pages": [
+        310,
+        311
+      ]
+    },
+    {
+      "id": "AR007",
+      "prompt": "List NTP/clock failure modes.",
+      "target_points": [
+        "drift",
+        "clock reset",
+        "firewall",
+        "network delay",
+        "bad server",
+        "leap seconds",
+        "VM pause",
+        "user-set clock"
+      ],
+      "source_pages": [
+        311,
+        312
+      ]
+    },
+    {
+      "id": "AR008",
+      "prompt": "Explain why physical timestamps cannot establish causality.",
+      "target_points": [
+        "clock skew",
+        "Figure 8-3",
+        "LWW loss",
+        "same timestamps",
+        "logical clocks"
+      ],
+      "source_pages": [
+        313,
+        314,
+        315
+      ]
+    },
+    {
+      "id": "AR009",
+      "prompt": "Explain TrueTime and commit wait.",
+      "target_points": [
+        "confidence interval",
+        "earliest/latest",
+        "non-overlap",
+        "causal order",
+        "wait uncertainty",
+        "GPS/atomic"
+      ],
+      "source_pages": [
+        316,
+        317
+      ]
+    },
+    {
+      "id": "AR010",
+      "prompt": "List process-pause causes.",
+      "target_points": [
+        "GC",
+        "VM suspend",
+        "OS scheduling",
+        "steal time",
+        "disk I/O",
+        "paging/thrashing",
+        "SIGSTOP"
+      ],
+      "source_pages": [
+        318,
+        319
+      ]
+    },
+    {
+      "id": "AR011",
+      "prompt": "Explain why monotonic time does not fully solve lease safety.",
+      "target_points": [
+        "check-action gap",
+        "process pause",
+        "lease expires",
+        "new owner",
+        "stale action"
+      ],
+      "source_pages": [
+        318
+      ]
+    },
+    {
+      "id": "AR012",
+      "prompt": "Explain quorum truth.",
+      "target_points": [
+        "one node uncertain",
+        "majority",
+        "3->1",
+        "5->2",
+        "no conflicting majorities"
+      ],
+      "source_pages": [
+        323
+      ]
+    },
+    {
+      "id": "AR013",
+      "prompt": "Reconstruct fencing-token safety.",
+      "target_points": [
+        "monotonic token",
+        "client includes token",
+        "resource records max",
+        "stale token rejected"
+      ],
+      "source_pages": [
+        324,
+        325
+      ]
+    },
+    {
+      "id": "AR014",
+      "prompt": "Compare ordinary and Byzantine faults.",
+      "target_points": [
+        "honest-but-faulty",
+        "arbitrary/deceptive",
+        "BFT use cases",
+        "cost",
+        "same-software limitation"
+      ],
+      "source_pages": [
+        326,
+        327,
+        328
+      ]
+    },
+    {
+      "id": "AR015",
+      "prompt": "Recite all timing and node system models.",
+      "target_points": [
+        "synchronous",
+        "partially synchronous",
+        "asynchronous",
+        "crash-stop",
+        "crash-recovery",
+        "Byzantine"
+      ],
+      "source_pages": [
+        329
+      ]
+    },
+    {
+      "id": "AR016",
+      "prompt": "Explain safety vs liveness using fencing tokens.",
+      "target_points": [
+        "uniqueness safety",
+        "monotonic safety",
+        "availability liveness",
+        "irreversible violation",
+        "eventually"
+      ],
+      "source_pages": [
+        330,
+        331
+      ]
+    },
+    {
+      "id": "AR017",
+      "prompt": "Explain system model vs reality.",
+      "target_points": [
+        "abstraction",
+        "stable storage assumption",
+        "amnesia",
+        "proof",
+        "testing"
+      ],
+      "source_pages": [
+        331,
+        332
+      ]
+    }
+  ],
+  "diagram_reconstruction_drills": [
+    {
+      "id": "DR01",
+      "name": "Ambiguous network timeout",
+      "task": "Redraw the three no-response possibilities: request lost, remote node unavailable, response lost.",
+      "source_pages": [
+        300
+      ]
+    },
+    {
+      "id": "DR02",
+      "name": "Network queueing",
+      "task": "Draw several senders targeting one switch output and show queue growth/drop/retransmit.",
+      "source_pages": [
+        304,
+        305
+      ]
+    },
+    {
+      "id": "DR03",
+      "name": "Circuit vs packet switching",
+      "task": "Draw reserved fixed slots versus dynamically shared packets and label bounded vs variable delay.",
+      "source_pages": [
+        306,
+        307,
+        308
+      ]
+    },
+    {
+      "id": "DR04",
+      "name": "Physical clock inversion",
+      "task": "Redraw Figure 8-3 where causally later x=2 gets timestamp 42.003 while earlier x=1 gets 42.004.",
+      "source_pages": [
+        313,
+        314
+      ]
+    },
+    {
+      "id": "DR05",
+      "name": "Clock confidence interval",
+      "task": "Draw two TrueTime intervals and distinguish overlapping (uncertain order) from non-overlapping (definite order).",
+      "source_pages": [
+        316,
+        317
+      ]
+    },
+    {
+      "id": "DR06",
+      "name": "Lease pause bug",
+      "task": "Draw old leader checking lease, pausing, lease expiring, new leader taking over, old leader resuming.",
+      "source_pages": [
+        317,
+        318
+      ]
+    },
+    {
+      "id": "DR07",
+      "name": "Quorum decision",
+      "task": "Draw 5 nodes, a 3-node majority, and show why two disjoint majorities are impossible.",
+      "source_pages": [
+        323
+      ]
+    },
+    {
+      "id": "DR08",
+      "name": "Broken distributed lock",
+      "task": "Redraw stale client resuming after lease expiration and colliding with new client's write.",
+      "source_pages": [
+        324
+      ]
+    },
+    {
+      "id": "DR09",
+      "name": "Fencing tokens",
+      "task": "Draw token 33, pause, token 34 accepted, then stale token 33 rejected by storage.",
+      "source_pages": [
+        325
+      ]
+    },
+    {
+      "id": "DR10",
+      "name": "System model matrix",
+      "task": "Create a 3x3 mental matrix of timing models and node-failure models with the chapter's assumptions.",
+      "source_pages": [
+        329,
+        330
+      ]
+    }
+  ],
+  "interview_style_questions": [
+    {
+      "id": "INT01",
+      "question": "Why are distributed systems harder than single-node systems?",
+      "strong_answer_outline": [
+        "partial failure",
+        "network uncertainty",
+        "no shared memory",
+        "clocks",
+        "process pauses",
+        "knowledge limits"
+      ],
+      "source_pages": [
+        296,
+        297,
+        300,
+        322
+      ]
+    },
+    {
+      "id": "INT02",
+      "question": "How do you design a failure detector?",
+      "strong_answer_outline": [
+        "timeouts are suspicion",
+        "latency distribution",
+        "false positives",
+        "adaptive timeout",
+        "Phi Accrual",
+        "cascading failure"
+      ],
+      "source_pages": [
+        303,
+        304,
+        306
+      ]
+    },
+    {
+      "id": "INT03",
+      "question": "Why can't a network timeout tell you whether a request executed?",
+      "strong_answer_outline": [
+        "request loss",
+        "request delay",
+        "node failure",
+        "pause",
+        "response loss",
+        "response delay"
+      ],
+      "source_pages": [
+        300,
+        301
+      ]
+    },
+    {
+      "id": "INT04",
+      "question": "Why do highly utilized systems have worse tail latency?",
+      "strong_answer_outline": [
+        "dynamic sharing",
+        "queueing",
+        "switch/CPU/VM queues",
+        "near saturation",
+        "noisy neighbors"
+      ],
+      "source_pages": [
+        304,
+        305,
+        306,
+        308
+      ]
+    },
+    {
+      "id": "INT05",
+      "question": "Which clock should you use for timeouts and why?",
+      "strong_answer_outline": [
+        "monotonic",
+        "elapsed time",
+        "wall clock jumps",
+        "no cross-node comparison"
+      ],
+      "source_pages": [
+        310,
+        311
+      ]
+    },
+    {
+      "id": "INT06",
+      "question": "Why is last-write-wins based on wall clocks dangerous?",
+      "strong_answer_outline": [
+        "clock skew",
+        "causal inversion",
+        "silent data loss",
+        "concurrent vs sequential ambiguity",
+        "logical clock"
+      ],
+      "source_pages": [
+        313,
+        314,
+        315
+      ]
+    },
+    {
+      "id": "INT07",
+      "question": "What problem does TrueTime solve?",
+      "strong_answer_outline": [
+        "clock uncertainty interval",
+        "global transaction ordering",
+        "non-overlap",
+        "commit wait",
+        "GPS/atomic clocks"
+      ],
+      "source_pages": [
+        316,
+        317
+      ]
+    },
+    {
+      "id": "INT08",
+      "question": "Why can leases fail even with monotonic clocks?",
+      "strong_answer_outline": [
+        "process pause",
+        "check-action gap",
+        "lease expiry",
+        "replacement leader",
+        "stale authority"
+      ],
+      "source_pages": [
+        317,
+        318,
+        319,
+        320
+      ]
+    },
+    {
+      "id": "INT09",
+      "question": "How do fencing tokens make distributed locks safer?",
+      "strong_answer_outline": [
+        "monotonic token",
+        "resource enforcement",
+        "highest token",
+        "reject stale writer",
+        "client check insufficient"
+      ],
+      "source_pages": [
+        324,
+        325
+      ]
+    },
+    {
+      "id": "INT10",
+      "question": "When do you need Byzantine fault tolerance?",
+      "strong_answer_outline": [
+        "arbitrary lying",
+        "untrusted parties",
+        "aerospace",
+        "cost/complexity",
+        "same-software limitation"
+      ],
+      "source_pages": [
+        326,
+        327,
+        328
+      ]
+    },
+    {
+      "id": "INT11",
+      "question": "What system model should you assume for an ordinary distributed service?",
+      "strong_answer_outline": [
+        "partially synchronous",
+        "crash-recovery",
+        "occasional arbitrary delay",
+        "stable storage assumption"
+      ],
+      "source_pages": [
+        329,
+        330
+      ]
+    },
+    {
+      "id": "INT12",
+      "question": "What are safety and liveness?",
+      "strong_answer_outline": [
+        "irreversible finite bad event",
+        "eventually good outcome",
+        "uniqueness/monotonic safety",
+        "availability liveness",
+        "conditional liveness"
+      ],
+      "source_pages": [
+        330,
+        331
+      ]
+    },
+    {
+      "id": "INT13",
+      "question": "Why is a proven distributed algorithm not automatically a correct production implementation?",
+      "strong_answer_outline": [
+        "system-model assumptions",
+        "disk corruption",
+        "firmware/misconfiguration",
+        "implementation bugs",
+        "empirical testing"
+      ],
+      "source_pages": [
+        331,
+        332
+      ]
+    }
+  ],
+  "common_confusions": [
+    {
+      "confusion": "Timeout means the remote node is dead.",
+      "correction": "Timeout only means no response arrived by the chosen deadline; the node/request/response may simply be delayed.",
+      "source_pages": [
+        301,
+        303,
+        304
+      ]
+    },
+    {
+      "confusion": "A successful TCP delivery proves the application completed the request.",
+      "correction": "The application may crash before processing; application-level acknowledgement is needed for stronger evidence.",
+      "source_pages": [
+        303
+      ]
+    },
+    {
+      "confusion": "Network partitions are the same as database partitions.",
+      "correction": "A network partition is a connectivity fault; a database partition/shard is intentional data placement.",
+      "source_pages": [
+        301
+      ]
+    },
+    {
+      "confusion": "UDP has no latency problems.",
+      "correction": "UDP avoids retransmission/flow-control delays but still experiences queueing and scheduling delays.",
+      "source_pages": [
+        305
+      ]
+    },
+    {
+      "confusion": "Monotonic clocks are globally comparable.",
+      "correction": "Their absolute values are arbitrary and differ across machines.",
+      "source_pages": [
+        311
+      ]
+    },
+    {
+      "confusion": "High timestamp resolution implies high clock accuracy.",
+      "correction": "Synchronization uncertainty can be orders of magnitude larger than the reported resolution.",
+      "source_pages": [
+        315,
+        316
+      ]
+    },
+    {
+      "confusion": "NTP makes wall-clock ordering safe.",
+      "correction": "Clock skew and network delay can still invert causally ordered events.",
+      "source_pages": [
+        313,
+        314,
+        315
+      ]
+    },
+    {
+      "confusion": "A valid lease checked moments ago guarantees authority now.",
+      "correction": "The process can pause after the check and resume after the lease expired.",
+      "source_pages": [
+        318
+      ]
+    },
+    {
+      "confusion": "Distributed locks are safe if clients check their own lease expiration.",
+      "correction": "A stale client can be wrong; the protected resource must enforce fencing tokens.",
+      "source_pages": [
+        324,
+        325
+      ]
+    },
+    {
+      "confusion": "A node knows whether it is alive, so others should trust it.",
+      "correction": "Its view can be stale relative to the quorum after network faults or process pauses.",
+      "source_pages": [
+        322,
+        323,
+        324
+      ]
+    },
+    {
+      "confusion": "Byzantine fault tolerance protects against any software bug automatically.",
+      "correction": "Common-mode bugs in identical software can affect all replicas simultaneously.",
+      "source_pages": [
+        327
+      ]
+    },
+    {
+      "confusion": "The asynchronous model means very slow clocks.",
+      "correction": "It makes no timing assumptions at all and cannot rely on clocks/timeouts.",
+      "source_pages": [
+        329
+      ]
+    },
+    {
+      "confusion": "Safety and liveness are the same kind of guarantee.",
+      "correction": "Safety forbids irreversible bad events; liveness promises eventual progress under stated conditions.",
+      "source_pages": [
+        330,
+        331
+      ]
+    },
+    {
+      "confusion": "A mathematical proof removes the need to test production systems.",
+      "correction": "Proof applies within a model; real systems may violate assumptions or contain implementation bugs.",
+      "source_pages": [
+        331,
+        332
+      ]
+    }
+  ],
+  "practice_problems": [
+    {
+      "id": "P01",
+      "type": "timeout",
+      "prompt": "Suppose a hypothetical system guarantees one-way network delay <=20 ms and processing <=10 ms. What deterministic response timeout follows from the chapter's 2d+r model?",
+      "solution": "2(20)+10 = 50 ms.",
+      "based_on_source_pages": [
+        304
+      ]
+    },
+    {
+      "id": "P02",
+      "type": "quorum",
+      "prompt": "How many failures can a 7-node cluster tolerate while retaining an absolute majority?",
+      "solution": "3 failures; 4 nodes remain, which is more than half of 7.",
+      "based_on_source_pages": [
+        323
+      ]
+    },
+    {
+      "id": "P03",
+      "type": "fencing",
+      "prompt": "Storage has processed fencing token 105. A paused client later sends token 103. What should storage do?",
+      "solution": "Reject the request because 103 is older than the highest accepted token 105.",
+      "based_on_source_pages": [
+        325
+      ]
+    },
+    {
+      "id": "P04",
+      "type": "clock_ordering",
+      "prompt": "A causally later write has timestamp 10.001 and an earlier write has 10.004. Which value would naive LWW choose?",
+      "solution": "The 10.004 write, incorrectly discarding the causally later update.",
+      "based_on_source_pages": [
+        313,
+        314
+      ]
+    },
+    {
+      "id": "P05",
+      "type": "clock_choice",
+      "prompt": "You need to measure HTTP request duration on one process. Wall clock or monotonic?",
+      "solution": "Monotonic clock, because elapsed-time measurement should not be affected by wall-clock jumps.",
+      "based_on_source_pages": [
+        310,
+        311
+      ]
+    },
+    {
+      "id": "P06",
+      "type": "truetime",
+      "prompt": "A=[10.0,10.5], B=[10.7,11.1]. Can you determine ordering?",
+      "solution": "Yes. The intervals do not overlap, so B definitely occurred after A.",
+      "based_on_source_pages": [
+        316,
+        317
+      ]
+    },
+    {
+      "id": "P07",
+      "type": "truetime",
+      "prompt": "A=[10.0,10.8], B=[10.6,11.0]. Can you definitely order A and B from these intervals alone?",
+      "solution": "No. The intervals overlap, so order is uncertain.",
+      "based_on_source_pages": [
+        316,
+        317
+      ]
+    },
+    {
+      "id": "P08",
+      "type": "system_model",
+      "prompt": "Your network is normally <50 ms but sometimes pauses for seconds. Which timing model best fits?",
+      "solution": "Partially synchronous.",
+      "based_on_source_pages": [
+        329
+      ]
+    },
+    {
+      "id": "P09",
+      "type": "property",
+      "prompt": "A token service must never issue the same token twice. Safety or liveness?",
+      "solution": "Safety.",
+      "based_on_source_pages": [
+        330,
+        331
+      ]
+    },
+    {
+      "id": "P10",
+      "type": "property",
+      "prompt": "A non-crashed requester eventually receives a token if a majority and network recover. Safety or liveness?",
+      "solution": "Liveness.",
+      "based_on_source_pages": [
+        330,
+        331
+      ]
+    },
+    {
+      "id": "P11",
+      "type": "pause",
+      "prompt": "A leader's lease has 5 seconds remaining, but the process can experience 20-second pauses. Is checking the lease once before a write sufficient?",
+      "solution": "No. The process can resume after expiry; the protected resource needs fencing or equivalent stale-writer rejection.",
+      "based_on_source_pages": [
+        318,
+        324,
+        325
+      ]
+    },
+    {
+      "id": "P12",
+      "type": "failure_detection",
+      "prompt": "A node responds slowly but never fully dies. Why may this be harder than crash-stop failure?",
+      "solution": "Timeouts and load-balancing logic face ambiguous, fluctuating behavior; the node may be repeatedly suspected/reinstated while consuming resources.",
+      "based_on_source_pages": [
+        333
+      ]
+    }
+  ],
+  "mastery_check": {
+    "beginner": [
+      "Can define partial failure and network uncertainty.",
+      "Can explain why timeout is not proof of failure.",
+      "Can distinguish wall-clock and monotonic time.",
+      "Can define quorum, fencing token, safety, and liveness."
+    ],
+    "intermediate": [
+      "Can reason about false failure detection and cascading failure.",
+      "Can explain network queueing and utilization/latency tradeoffs.",
+      "Can explain clock drift/NTP limitations and causal timestamp inversion.",
+      "Can explain process-pause lease bugs and fencing."
+    ],
+    "advanced": [
+      "Can choose an appropriate system model for a distributed service.",
+      "Can distinguish crash-stop, crash-recovery, and Byzantine assumptions.",
+      "Can reason about TrueTime uncertainty intervals.",
+      "Can formalize distributed correctness as safety and liveness properties.",
+      "Can identify where real implementations violate model assumptions."
+    ]
+  },
+  "final_review": {
+    "must_memorize": [
+      "Partial failure is the defining characteristic of distributed systems.",
+      "No response does not tell you whether a request was lost, delayed, processed, or whether its response was lost.",
+      "Timeouts create suspicion, not certainty.",
+      "False failure detection can cause duplicate work and cascading failure.",
+      "Queueing is the major source of variable network delay.",
+      "Circuit/static allocation favors bounded latency; packet/dynamic allocation favors utilization.",
+      "Use monotonic clocks for elapsed durations.",
+      "Wall clocks can jump and differ across nodes.",
+      "NTP reduces error but cannot remove uncertainty.",
+      "Wall-clock LWW can violate causality and silently lose writes.",
+      "Logical clocks are safer for ordering events.",
+      "Treat clock readings as uncertainty intervals.",
+      "TrueTime exposes [earliest, latest] and Spanner waits out uncertainty.",
+      "Processes may pause at any point due to GC, VM suspension, scheduling, disk I/O, swapping, or signals.",
+      "A paused node can resume after its lease expired and after another node took over.",
+      "Major distributed decisions require agreement/quorums rather than one node's self-assessment.",
+      "Fencing tokens must increase monotonically and be enforced by the protected resource.",
+      "Ordinary data systems generally assume non-Byzantine, honest-but-faulty nodes.",
+      "Synchronous = bounded timing; partially synchronous = usually bounded but occasionally arbitrary; asynchronous = no timing assumptions.",
+      "Crash-stop = never returns; crash-recovery = may return with stable storage; Byzantine = arbitrary behavior.",
+      "Safety must never be violated; liveness says progress eventually occurs under stated conditions.",
+      "System-model proofs are valuable but must be complemented by empirical testing."
+    ],
+    "memory_chain": "PARTIAL FAILURE -> ASYNC NETWORK -> AMBIGUOUS TIMEOUT -> QUEUES -> TCP/UDP -> CIRCUIT VS PACKET -> WALL VS MONOTONIC CLOCK -> NTP/DRIFT -> LWW CAUSALITY BUG -> LOGICAL CLOCK -> CLOCK UNCERTAINTY -> TRUETIME -> PROCESS PAUSE -> STALE LEASE -> QUORUM -> FENCING TOKEN -> BYZANTINE FAULT -> SYSTEM MODELS -> SAFETY/LIVENESS -> MODEL VS REALITY",
+    "one_sentence_takeaway": "Distributed-system correctness begins by accepting uncertainty: networks delay, clocks lie, processes pause, nodes disagree, and robust algorithms must make their assumptions and safety/liveness guarantees explicit."
+  }
+}

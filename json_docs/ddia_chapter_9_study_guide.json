@@ -1,0 +1,5030 @@
+{
+  "chapter": {
+    "number": 9,
+    "title": "Consistency and Consensus",
+    "book": "Designing Data-Intensive Applications",
+    "author": "Martin Kleppmann",
+    "pdf_pages": {
+      "start": 343,
+      "summary_end": 397
+    },
+    "book_pages": {
+      "start": 321,
+      "summary_end": 375
+    }
+  },
+  "summary": {
+    "overview": "Chapter 9 connects several core distributed-systems ideas: linearizability, causality, ordering, total order broadcast, distributed atomic commit, consensus, and coordination services. Linearizability makes replicated data appear like one atomic copy and provides a real-time recency guarantee, but it differs from transaction serializability and carries latency/availability costs. Causality is weaker: it imposes only a partial order and allows concurrent branches. Lamport timestamps provide a compact total order consistent with causality, but a timestamp order alone is not enough for online uniqueness because a node must also know the order is final. Total order broadcast gives reliable, identically ordered delivery and is closely equivalent to consensus and linearizable compare-and-set/increment-and-get. The chapter then explains distributed atomic commit through 2PC, including prepare promises, coordinator logging, in-doubt transactions, blocking, XA, and lock retention. Fault-tolerant consensus is defined by agreement, integrity, validity, and termination. Protocols such as VSR, Paxos, Raft, and Zab use epochs and overlapping quorums to provide ordered agreement as long as a majority can communicate. ZooKeeper and etcd package these guarantees into reusable coordination services.",
+    "sections": [
+      "Consistency Guarantees",
+      "Linearizability",
+      "Linearizability vs Serializability",
+      "Relying on Linearizability",
+      "Implementing Linearizable Systems",
+      "CAP and Linearizability Cost",
+      "Ordering and Causality",
+      "Sequence Numbers and Lamport Timestamps",
+      "Total Order Broadcast",
+      "Distributed Transactions and Consensus",
+      "Two-Phase Commit",
+      "Distributed Transactions in Practice",
+      "Fault-Tolerant Consensus",
+      "Epochs and Quorums",
+      "Consensus Limitations",
+      "Membership and Coordination Services"
+    ],
+    "source_pages": [
+      343,
+      344,
+      345,
+      346,
+      347,
+      348,
+      349,
+      350,
+      351,
+      352,
+      353,
+      354,
+      355,
+      356,
+      357,
+      358,
+      359,
+      360,
+      361,
+      362,
+      363,
+      364,
+      365,
+      366,
+      367,
+      368,
+      369,
+      370,
+      371,
+      372,
+      373,
+      374,
+      375,
+      376,
+      377,
+      378,
+      379,
+      380,
+      381,
+      382,
+      383,
+      384,
+      385,
+      386,
+      387,
+      388,
+      389,
+      390,
+      391,
+      392,
+      393,
+      394,
+      395,
+      396,
+      397
+    ]
+  },
+  "core_concepts": {
+    "eventual_consistency": {
+      "definition": "If writes stop and faults are repaired, replicas eventually converge.",
+      "weakness": "It gives no bound on when convergence occurs or what a read sees before convergence.",
+      "source_pages": [
+        344,
+        345
+      ]
+    },
+    "linearizability": {
+      "definition": "System behaves as if one copy of each object exists and each operation takes effect atomically at one instant between invocation and response.",
+      "type": "Recency guarantee.",
+      "rule": "After a completed write, a later read must see that value or a newer one.",
+      "concurrent_rule": "A read overlapping a write may return old or new; once a new value is observed, later reads cannot revert.",
+      "source_pages": [
+        346,
+        347,
+        348,
+        349,
+        350,
+        351
+      ]
+    },
+    "linearizability_vs_serializability": {
+      "serializability": "Isolation property over multi-object transactions; equivalent to some serial order that need not match real-time order.",
+      "linearizability": "Single-object/register real-time recency.",
+      "both": "Strict serializability / strong one-copy serializability.",
+      "ssi": "Serializable snapshot isolation is not necessarily linearizable because snapshots intentionally exclude newer writes.",
+      "source_pages": [
+        351
+      ]
+    },
+    "linearizability_use_cases": {
+      "items": [
+        "Distributed locks",
+        "Leader election",
+        "Hard uniqueness constraints",
+        "Hard seat/inventory/balance constraints",
+        "Cross-channel timing dependencies"
+      ],
+      "source_pages": [
+        352,
+        353,
+        354
+      ]
+    },
+    "replication_linearizability": {
+      "single_leader": "Potentially linearizable if reads use the true leader or synchronously updated replicas.",
+      "consensus": "Can safely implement linearizable storage.",
+      "multi_leader": "Generally not linearizable.",
+      "leaderless": "Safest assumption for Dynamo-style replication is not linearizable unless extra mechanisms are added.",
+      "source_pages": [
+        355,
+        356,
+        357
+      ]
+    },
+    "strict_quorum_caveat": {
+      "fact": "w+r>n does not by itself guarantee linearizability.",
+      "reason": "During a concurrent write, one reader can see new data and a later reader using a different quorum can still see old data.",
+      "cas": "Linearizable compare-and-set requires consensus.",
+      "source_pages": [
+        356,
+        357
+      ]
+    },
+    "cap": {
+      "misleading_slogan": "Consistency, Availability, Partition tolerance: pick 2.",
+      "better_framing": "When partitioned, choose between linearizability and total availability.",
+      "scope": "Formal CAP considers linearizability and network partitions, not all distributed-system tradeoffs.",
+      "chapter_view": "Historically influential but limited for practical design.",
+      "source_pages": [
+        358,
+        359,
+        360
+      ]
+    },
+    "linearizability_cost": {
+      "fact": "Linearizability is slow even without an actual network partition.",
+      "reason": "Operation latency is tied to uncertainty in network delays.",
+      "example": "Modern multicore memory itself may sacrifice linearizability for performance due to caches/store buffers.",
+      "source_pages": [
+        360
+      ]
+    },
+    "causality": {
+      "definition": "Cause/dependency must happen before effect.",
+      "order": "Partial order: causally related operations are ordered, concurrent operations are incomparable.",
+      "snapshot": "A causally consistent snapshot contains causal predecessors of observed effects.",
+      "source_pages": [
+        361,
+        362,
+        363
+      ]
+    },
+    "linearizability_vs_causality": {
+      "linearizable": "Total order over all operations.",
+      "causal": "Partial order; concurrent branches are allowed.",
+      "relationship": "Linearizability implies causality, but causality does not require linearizability.",
+      "benefit": "Causal consistency can avoid much of linearizability's latency/availability cost.",
+      "source_pages": [
+        363,
+        364
+      ]
+    },
+    "capturing_causality": {
+      "requirement": "Process causal predecessors before dependent operations.",
+      "metadata": "Track versions/data observed by clients; generalized version vectors can capture dependencies.",
+      "cost": "Explicitly tracking all dependencies across a database can be expensive.",
+      "source_pages": [
+        365
+      ]
+    },
+    "sequence_number_ordering": {
+      "single_leader": "A replication-log counter creates a causality-consistent total write order.",
+      "noncausal_methods": [
+        "Per-node odd/even or node-ID sequence spaces",
+        "Physical-clock timestamps",
+        "Preallocated sequence-number blocks"
+      ],
+      "problem": "These scalable methods may create unique increasing-looking IDs while violating causal order.",
+      "source_pages": [
+        365,
+        366,
+        367
+      ]
+    },
+    "lamport_timestamps": {
+      "format": "(counter, node ID)",
+      "rule": "Every node/client carries the maximum counter seen; receiving a greater counter advances the local counter.",
+      "guarantee": "Compact total ordering consistent with causality.",
+      "limitation": "Cannot determine whether two operations are concurrent or causally related.",
+      "version_vector_difference": "Version vectors can distinguish concurrency; Lamport timestamps cannot.",
+      "source_pages": [
+        367,
+        368,
+        369
+      ]
+    },
+    "timestamp_order_not_enough": {
+      "problem": "For online uniqueness, a node does not know whether an unseen concurrent operation with a lower timestamp exists.",
+      "lesson": "A total order is insufficient unless you know the order is finalized.",
+      "source_pages": [
+        369,
+        370
+      ]
+    },
+    "total_order_broadcast": {
+      "aliases": [
+        "Atomic broadcast",
+        "Total order multicast"
+      ],
+      "properties": {
+        "reliable_delivery": "If delivered to one node, eventually delivered to all.",
+        "total_order": "Every node delivers messages in the same order."
+      },
+      "finality": "Delivered order cannot be retroactively rearranged.",
+      "source_pages": [
+        370,
+        371
+      ]
+    },
+    "tob_uses": {
+      "items": [
+        "Database replication",
+        "State machine replication",
+        "Serializable deterministic transactions",
+        "Replicated log",
+        "Fencing tokens"
+      ],
+      "zookeeper": "zxid is an ordered transaction identifier that can act as a fencing token.",
+      "source_pages": [
+        371
+      ]
+    },
+    "linearizable_storage_from_tob": {
+      "cas": [
+        "Append tentative claim",
+        "Wait for own message to be delivered",
+        "First ordered claim wins"
+      ],
+      "read_problem": "Asynchronously materialized replicas can still serve stale reads.",
+      "linearizable_read_options": [
+        "Sequence the read through the log",
+        "Get latest log position and wait until caught up",
+        "Read synchronously updated replica"
+      ],
+      "source_pages": [
+        372,
+        373
+      ]
+    },
+    "tob_from_linearizable_register": {
+      "primitive": "Linearizable atomic increment-and-get or compare-and-set.",
+      "method": "Allocate a gap-free sequence number to each message, then deliver consecutively.",
+      "equivalence": "Total order broadcast, consensus, and sufficiently powerful linearizable registers are reducible to one another.",
+      "source_pages": [
+        373,
+        374
+      ]
+    },
+    "consensus": {
+      "informal": "Several nodes agree on one irrevocable decision.",
+      "examples": [
+        "Leader election",
+        "Atomic commit",
+        "Uniqueness decision",
+        "Lock/lease winner"
+      ],
+      "source_pages": [
+        374,
+        375
+      ]
+    },
+    "flp": {
+      "result": "No deterministic algorithm is guaranteed to reach consensus in the fully asynchronous crash-prone model.",
+      "practical_note": "Timeouts/failure suspicion or randomness move practical systems outside the theorem's assumptions.",
+      "source_pages": [
+        375
+      ]
+    },
+    "distributed_atomic_commit": {
+      "single_node": "Transaction data is durably written, then a commit record; the durable commit record is the decision point.",
+      "distributed_problem": "Independent commits can succeed on some participants and fail/abort on others.",
+      "rule": "No node may irrevocably commit until all participants can commit.",
+      "source_pages": [
+        376,
+        377
+      ]
+    },
+    "two_phase_commit": {
+      "purpose": "Atomic commit across multiple participants.",
+      "coordinator": "Transaction manager.",
+      "phase1": "Prepare/vote.",
+      "phase2": "Commit if all participants vote yes; otherwise abort.",
+      "source_pages": [
+        377,
+        378
+      ]
+    },
+    "two_pc_promises": {
+      "participant_yes": "Participant has made required data durable, checked constraints/conflicts, and promises it can commit later.",
+      "coordinator_decision": "After all votes, coordinator durably records commit/abort; this is the commit point.",
+      "retry": "After the final decision, coordinator retries final messages until participants learn the outcome.",
+      "source_pages": [
+        379,
+        380
+      ]
+    },
+    "two_pc_vs_two_pl": {
+      "2pc": "Distributed atomic commit.",
+      "2pl": "Serializable isolation via locking.",
+      "source_pages": [
+        378
+      ]
+    },
+    "coordinator_failure": {
+      "in_doubt": "Prepared participant that voted yes but does not know final outcome.",
+      "cannot_decide": "It cannot safely commit or abort by itself.",
+      "blocking": "Must wait for coordinator recovery; thus 2PC is blocking.",
+      "source_pages": [
+        380,
+        381
+      ]
+    },
+    "three_phase_commit": {
+      "goal": "Nonblocking atomic commit.",
+      "limitation": "Requires bounded timing/perfect failure detection assumptions that do not fit common asynchronous systems.",
+      "source_pages": [
+        381
+      ]
+    },
+    "distributed_transactions": {
+      "database_internal": "Participants run one DB technology and can use optimized internal protocols.",
+      "heterogeneous": "Different databases/message brokers participate through a common protocol.",
+      "source_pages": [
+        382
+      ]
+    },
+    "exactly_once_message_processing": {
+      "method": "Atomically commit message acknowledgement and DB side effects.",
+      "retry": "Abort rolls back both so message can be redelivered safely.",
+      "boundary": "Nontransactional side effects such as email can still duplicate.",
+      "source_pages": [
+        382,
+        383
+      ]
+    },
+    "xa": {
+      "name": "X/Open eXtended Architecture",
+      "purpose": "Standard API for 2PC across heterogeneous technologies.",
+      "not_network_protocol": true,
+      "java": "Commonly accessed through JTA with JDBC/JMS support.",
+      "source_pages": [
+        383,
+        384
+      ]
+    },
+    "in_doubt_locks": {
+      "fact": "Prepared transactions retain locks until commit/abort is known.",
+      "impact": "Coordinator outage or lost logs can block application work for long periods.",
+      "source_pages": [
+        384,
+        385
+      ]
+    },
+    "heuristic_decisions": {
+      "definition": "Participant unilaterally chooses commit/abort for an in-doubt transaction.",
+      "risk": "May violate atomicity.",
+      "use": "Emergency-only escape hatch.",
+      "source_pages": [
+        385
+      ]
+    },
+    "distributed_tx_limitations": {
+      "items": [
+        "Coordinator may be a single point of failure",
+        "Coordinator logs make application server stateful",
+        "XA is lowest-common-denominator",
+        "Cross-system deadlocks/SSI conflicts are hard",
+        "2PC requires all participants and amplifies failures"
+      ],
+      "source_pages": [
+        385,
+        386
+      ]
+    },
+    "consensus_properties": {
+      "uniform_agreement": "No two nodes decide differently.",
+      "integrity": "No node decides twice.",
+      "validity": "Decided value was proposed by some node.",
+      "termination": "Every non-crashed node eventually decides.",
+      "safety": [
+        "Uniform agreement",
+        "Integrity",
+        "Validity"
+      ],
+      "liveness": [
+        "Termination"
+      ],
+      "source_pages": [
+        387,
+        388
+      ]
+    },
+    "fault_tolerant_consensus": {
+      "progress": "Requires a majority to be functioning/reachable.",
+      "safety": "Safety usually remains intact even if majority loss stops progress.",
+      "algorithms": [
+        "Viewstamped Replication",
+        "Paxos",
+        "Raft",
+        "Zab"
+      ],
+      "source_pages": [
+        388,
+        389
+      ]
+    },
+    "consensus_as_tob": {
+      "idea": "Repeated consensus decisions determine the next message in a total-order log.",
+      "mapping": {
+        "agreement": "same messages/order",
+        "integrity": "no duplicates",
+        "validity": "no fabricated messages",
+        "termination": "messages eventually delivered"
+      },
+      "source_pages": [
+        388,
+        389
+      ]
+    },
+    "epochs_and_quorums": {
+      "names": {
+        "Paxos": "ballot",
+        "VSR": "view",
+        "Raft": "term"
+      },
+      "rule": "Leader is unique within an epoch; higher epoch supersedes lower.",
+      "two_votes": [
+        "Leader election",
+        "Leader proposal/decision"
+      ],
+      "overlap": "Quorums must overlap so latest leadership/decision knowledge carries forward.",
+      "source_pages": [
+        390
+      ]
+    },
+    "consensus_vs_2pc": {
+      "2pc": "Coordinator is not elected and every participant must vote yes.",
+      "consensus": "Leader is epoch-based/elected and usually only a majority is needed; recovery after leader change is part of the protocol.",
+      "source_pages": [
+        390
+      ]
+    },
+    "consensus_limits": {
+      "items": [
+        "Synchronous-voting latency",
+        "Majority requirement",
+        "Only majority network side progresses",
+        "Dynamic membership complexity",
+        "Timeout-driven false elections",
+        "Leader churn under bad links"
+      ],
+      "source_pages": [
+        391
+      ]
+    },
+    "zookeeper_etcd": {
+      "role": "Small consensus-backed coordination/configuration service.",
+      "features": [
+        "Linearizable atomic operations",
+        "Total ordering/fencing",
+        "Sessions and heartbeats",
+        "Ephemeral nodes",
+        "Change notifications/watches"
+      ],
+      "source_pages": [
+        392,
+        393
+      ]
+    },
+    "coordination_use_cases": {
+      "items": [
+        "Leader election",
+        "Primary selection",
+        "Partition/work assignment",
+        "Automatic takeover",
+        "Service discovery",
+        "Membership"
+      ],
+      "small_ensemble": "ZooKeeper commonly uses a small fixed voting group such as 3 or 5 nodes to coordinate many clients.",
+      "source_pages": [
+        393,
+        394,
+        395
+      ]
+    },
+    "consensus_equivalent_problems": {
+      "items": [
+        "Linearizable compare-and-set",
+        "Atomic transaction commit",
+        "Total order broadcast",
+        "Locks and leases",
+        "Membership/coordination",
+        "Uniqueness constraints"
+      ],
+      "leader_note": "A single leader centralizes these decisions, but fault-tolerant leadership changes still require consensus.",
+      "source_pages": [
+        395,
+        396,
+        397
+      ]
+    }
+  },
+  "flashcards": [
+    {
+      "id": "FC001",
+      "front": "What is eventual consistency?",
+      "back": "Replicas eventually converge if writes stop and faults are repaired.",
+      "source_pages": [
+        344,
+        345
+      ]
+    },
+    {
+      "id": "FC002",
+      "front": "Why is eventual consistency weak?",
+      "back": "It does not specify when convergence happens or what reads return before then.",
+      "source_pages": [
+        345
+      ]
+    },
+    {
+      "id": "FC003",
+      "front": "What is linearizability?",
+      "back": "Single-copy illusion with each operation taking effect atomically at one instant.",
+      "source_pages": [
+        346
+      ]
+    },
+    {
+      "id": "FC004",
+      "front": "What type of guarantee is linearizability?",
+      "back": "A recency guarantee.",
+      "source_pages": [
+        346
+      ]
+    },
+    {
+      "id": "FC005",
+      "front": "After a completed linearizable write, what must later reads see?",
+      "back": "That value or a newer one.",
+      "source_pages": [
+        346
+      ]
+    },
+    {
+      "id": "FC006",
+      "front": "Can a read overlapping a write return the old value?",
+      "back": "Yes.",
+      "source_pages": [
+        348
+      ]
+    },
+    {
+      "id": "FC007",
+      "front": "Can it return the new value?",
+      "back": "Yes.",
+      "source_pages": [
+        348
+      ]
+    },
+    {
+      "id": "FC008",
+      "front": "Can a later read revert after another read already saw the new value?",
+      "back": "No.",
+      "source_pages": [
+        349
+      ]
+    },
+    {
+      "id": "FC009",
+      "front": "What is a linearization point?",
+      "back": "The instant between invocation and response where an operation appears to take effect.",
+      "source_pages": [
+        349,
+        350
+      ]
+    },
+    {
+      "id": "FC010",
+      "front": "What is serializability?",
+      "back": "Transaction isolation equivalent to some serial order.",
+      "source_pages": [
+        351
+      ]
+    },
+    {
+      "id": "FC011",
+      "front": "Must serializable order match real-time order?",
+      "back": "No.",
+      "source_pages": [
+        351
+      ]
+    },
+    {
+      "id": "FC012",
+      "front": "Linearizability vs serializability?",
+      "back": "Linearizability is single-object recency; serializability is multi-object transaction isolation.",
+      "source_pages": [
+        351
+      ]
+    },
+    {
+      "id": "FC013",
+      "front": "What is strict serializability?",
+      "back": "Serializability plus linearizability.",
+      "source_pages": [
+        351
+      ]
+    },
+    {
+      "id": "FC014",
+      "front": "Is SSI automatically linearizable?",
+      "back": "No.",
+      "source_pages": [
+        351
+      ]
+    },
+    {
+      "id": "FC015",
+      "front": "Why do leader-election locks need linearizability?",
+      "back": "All nodes must agree on one leader/lock holder.",
+      "source_pages": [
+        352
+      ]
+    },
+    {
+      "id": "FC016",
+      "front": "What bad state occurs with two leaders?",
+      "back": "Split brain.",
+      "source_pages": [
+        352
+      ]
+    },
+    {
+      "id": "FC017",
+      "front": "What common constraint requires linearizability?",
+      "back": "Hard uniqueness.",
+      "source_pages": [
+        352,
+        353
+      ]
+    },
+    {
+      "id": "FC018",
+      "front": "Username claim resembles what atomic primitive?",
+      "back": "Compare-and-set.",
+      "source_pages": [
+        353
+      ]
+    },
+    {
+      "id": "FC019",
+      "front": "What is a cross-channel timing dependency?",
+      "back": "Two communication paths race and expose inconsistent freshness.",
+      "source_pages": [
+        353,
+        354
+      ]
+    },
+    {
+      "id": "FC020",
+      "front": "Photo-resizer example's channels?",
+      "back": "File storage and a message queue.",
+      "source_pages": [
+        353,
+        354
+      ]
+    },
+    {
+      "id": "FC021",
+      "front": "Can single-leader replication be linearizable?",
+      "back": "Potentially.",
+      "source_pages": [
+        355
+      ]
+    },
+    {
+      "id": "FC022",
+      "front": "Can consensus protocols implement linearizable storage?",
+      "back": "Yes.",
+      "source_pages": [
+        355
+      ]
+    },
+    {
+      "id": "FC023",
+      "front": "Is multi-leader replication generally linearizable?",
+      "back": "No.",
+      "source_pages": [
+        355
+      ]
+    },
+    {
+      "id": "FC024",
+      "front": "Should Dynamo-style leaderless storage be assumed linearizable?",
+      "back": "No.",
+      "source_pages": [
+        356,
+        357
+      ]
+    },
+    {
+      "id": "FC025",
+      "front": "Does w+r>n guarantee linearizability?",
+      "back": "No.",
+      "source_pages": [
+        356
+      ]
+    },
+    {
+      "id": "FC026",
+      "front": "Why not?",
+      "back": "A later reader can query another quorum and still see only old data during propagation.",
+      "source_pages": [
+        356
+      ]
+    },
+    {
+      "id": "FC027",
+      "front": "Can quorum techniques alone provide linearizable CAS?",
+      "back": "No; CAS requires consensus.",
+      "source_pages": [
+        357
+      ]
+    },
+    {
+      "id": "FC028",
+      "front": "During network partition, linearizability may require what?",
+      "back": "Some disconnected replicas become unavailable.",
+      "source_pages": [
+        358
+      ]
+    },
+    {
+      "id": "FC029",
+      "front": "Better CAP framing?",
+      "back": "Consistent or Available when Partitioned.",
+      "source_pages": [
+        359
+      ]
+    },
+    {
+      "id": "FC030",
+      "front": "Why is 'pick two' misleading?",
+      "back": "Network partitions are faults, not an optional system feature.",
+      "source_pages": [
+        359
+      ]
+    },
+    {
+      "id": "FC031",
+      "front": "What does formal CAP mean by consistency?",
+      "back": "Linearizability.",
+      "source_pages": [
+        359
+      ]
+    },
+    {
+      "id": "FC032",
+      "front": "Does CAP cover all distributed tradeoffs?",
+      "back": "No.",
+      "source_pages": [
+        359,
+        360
+      ]
+    },
+    {
+      "id": "FC033",
+      "front": "Why do many systems drop linearizability?",
+      "back": "Performance/latency.",
+      "source_pages": [
+        360
+      ]
+    },
+    {
+      "id": "FC034",
+      "front": "Why can multicore RAM be nonlinearizable?",
+      "back": "Per-core caches/store buffers update asynchronously.",
+      "source_pages": [
+        360
+      ]
+    },
+    {
+      "id": "FC035",
+      "front": "What is causality?",
+      "back": "Cause/dependency happens before effect.",
+      "source_pages": [
+        361,
+        362
+      ]
+    },
+    {
+      "id": "FC036",
+      "front": "What order does causality define?",
+      "back": "Partial order.",
+      "source_pages": [
+        363
+      ]
+    },
+    {
+      "id": "FC037",
+      "front": "What order does linearizability define?",
+      "back": "Total order.",
+      "source_pages": [
+        363
+      ]
+    },
+    {
+      "id": "FC038",
+      "front": "What does concurrent mean causally?",
+      "back": "Neither event happened before the other; they are incomparable.",
+      "source_pages": [
+        362,
+        363
+      ]
+    },
+    {
+      "id": "FC039",
+      "front": "Does linearizability imply causality?",
+      "back": "Yes.",
+      "source_pages": [
+        364
+      ]
+    },
+    {
+      "id": "FC040",
+      "front": "Does causality imply linearizability?",
+      "back": "No.",
+      "source_pages": [
+        364
+      ]
+    },
+    {
+      "id": "FC041",
+      "front": "Why choose causal consistency?",
+      "back": "It can preserve useful ordering with better latency/availability.",
+      "source_pages": [
+        364
+      ]
+    },
+    {
+      "id": "FC042",
+      "front": "What must a replica do before a dependent operation?",
+      "back": "Process all causal predecessors.",
+      "source_pages": [
+        365
+      ]
+    },
+    {
+      "id": "FC043",
+      "front": "How can dependency metadata be tracked?",
+      "back": "Versions/generalized version vectors and client read context.",
+      "source_pages": [
+        365
+      ]
+    },
+    {
+      "id": "FC044",
+      "front": "Why is explicit causal tracking expensive?",
+      "back": "Clients may read lots of data before writing, creating large dependency metadata.",
+      "source_pages": [
+        365
+      ]
+    },
+    {
+      "id": "FC045",
+      "front": "What does a single leader's log provide?",
+      "back": "Causality-consistent total order of writes.",
+      "source_pages": [
+        366
+      ]
+    },
+    {
+      "id": "FC046",
+      "front": "Three noncausal scalable sequence methods?",
+      "back": "Per-node spaces, physical timestamps, preallocated blocks.",
+      "source_pages": [
+        366,
+        367
+      ]
+    },
+    {
+      "id": "FC047",
+      "front": "Why can physical timestamps violate causality?",
+      "back": "Clock skew can give a later event a smaller timestamp.",
+      "source_pages": [
+        367
+      ]
+    },
+    {
+      "id": "FC048",
+      "front": "What is a Lamport timestamp?",
+      "back": "(counter, node ID).",
+      "source_pages": [
+        367,
+        368
+      ]
+    },
+    {
+      "id": "FC049",
+      "front": "How are equal Lamport counters ordered?",
+      "back": "By node ID.",
+      "source_pages": [
+        368
+      ]
+    },
+    {
+      "id": "FC050",
+      "front": "What counter information is propagated?",
+      "back": "Maximum counter seen.",
+      "source_pages": [
+        368
+      ]
+    },
+    {
+      "id": "FC051",
+      "front": "What if a node sees a higher counter?",
+      "back": "Advance local counter before issuing next operation.",
+      "source_pages": [
+        368
+      ]
+    },
+    {
+      "id": "FC052",
+      "front": "What does Lamport guarantee?",
+      "back": "Total order consistent with causality.",
+      "source_pages": [
+        368
+      ]
+    },
+    {
+      "id": "FC053",
+      "front": "Does Lamport represent wall-clock time?",
+      "back": "No.",
+      "source_pages": [
+        368
+      ]
+    },
+    {
+      "id": "FC054",
+      "front": "Can Lamport tell concurrency?",
+      "back": "No.",
+      "source_pages": [
+        368,
+        369
+      ]
+    },
+    {
+      "id": "FC055",
+      "front": "What can version vectors tell that Lamport cannot?",
+      "back": "Whether operations are concurrent or causally related.",
+      "source_pages": [
+        368,
+        369
+      ]
+    },
+    {
+      "id": "FC056",
+      "front": "Why is Lamport not enough for username uniqueness?",
+      "back": "An unseen lower-timestamp concurrent claim may still appear.",
+      "source_pages": [
+        369
+      ]
+    },
+    {
+      "id": "FC057",
+      "front": "What is missing from a timestamp order?",
+      "back": "Finality.",
+      "source_pages": [
+        369,
+        370
+      ]
+    },
+    {
+      "id": "FC058",
+      "front": "What is total order broadcast?",
+      "back": "Reliable, same-order delivery of messages to all nodes.",
+      "source_pages": [
+        370
+      ]
+    },
+    {
+      "id": "FC059",
+      "front": "Two TOB properties?",
+      "back": "Reliable delivery and totally ordered delivery.",
+      "source_pages": [
+        370
+      ]
+    },
+    {
+      "id": "FC060",
+      "front": "Another name for TOB?",
+      "back": "Atomic broadcast.",
+      "source_pages": [
+        370
+      ]
+    },
+    {
+      "id": "FC061",
+      "front": "What is state machine replication?",
+      "back": "All replicas process the same deterministic operations in the same order.",
+      "source_pages": [
+        371
+      ]
+    },
+    {
+      "id": "FC062",
+      "front": "Why is TOB stronger than timestamp ordering?",
+      "back": "Delivered positions are final and cannot be retroactively rearranged.",
+      "source_pages": [
+        371
+      ]
+    },
+    {
+      "id": "FC063",
+      "front": "TOB log sequence numbers can be used as what?",
+      "back": "Fencing tokens.",
+      "source_pages": [
+        371
+      ]
+    },
+    {
+      "id": "FC064",
+      "front": "ZooKeeper ordered ID?",
+      "back": "zxid.",
+      "source_pages": [
+        371
+      ]
+    },
+    {
+      "id": "FC065",
+      "front": "Is TOB itself a recency guarantee?",
+      "back": "No.",
+      "source_pages": [
+        372
+      ]
+    },
+    {
+      "id": "FC066",
+      "front": "How can TOB implement linearizable CAS?",
+      "back": "Append claim, wait for delivery, and let the first claim win.",
+      "source_pages": [
+        372
+      ]
+    },
+    {
+      "id": "FC067",
+      "front": "Why can reads still be stale?",
+      "back": "A replica materialized asynchronously from the log may lag.",
+      "source_pages": [
+        373
+      ]
+    },
+    {
+      "id": "FC068",
+      "front": "How can a read be sequenced linearly?",
+      "back": "Put the read through the total-order log or wait for a known latest log position.",
+      "source_pages": [
+        373
+      ]
+    },
+    {
+      "id": "FC069",
+      "front": "What primitive can implement TOB?",
+      "back": "Linearizable increment-and-get or compare-and-set.",
+      "source_pages": [
+        373,
+        374
+      ]
+    },
+    {
+      "id": "FC070",
+      "front": "Why do gap-free numbers matter?",
+      "back": "Receiving 6 after 4 proves message 5 is missing.",
+      "source_pages": [
+        373,
+        374
+      ]
+    },
+    {
+      "id": "FC071",
+      "front": "Consensus, TOB, and linearizable CAS are what relation?",
+      "back": "Equivalent/reducible problems.",
+      "source_pages": [
+        374
+      ]
+    },
+    {
+      "id": "FC072",
+      "front": "What is consensus?",
+      "back": "Getting nodes to agree on one decision.",
+      "source_pages": [
+        374
+      ]
+    },
+    {
+      "id": "FC073",
+      "front": "Two major consensus examples?",
+      "back": "Leader election and atomic commit.",
+      "source_pages": [
+        374,
+        375
+      ]
+    },
+    {
+      "id": "FC074",
+      "front": "What does FLP say?",
+      "back": "Deterministic consensus cannot be guaranteed to terminate in a fully asynchronous crash-prone model.",
+      "source_pages": [
+        375
+      ]
+    },
+    {
+      "id": "FC075",
+      "front": "Why can practical consensus exist?",
+      "back": "Protocols use timeouts/failure suspicion or randomness outside FLP assumptions.",
+      "source_pages": [
+        375
+      ]
+    },
+    {
+      "id": "FC076",
+      "front": "Single-node commit decision point?",
+      "back": "Durable commit record.",
+      "source_pages": [
+        376
+      ]
+    },
+    {
+      "id": "FC077",
+      "front": "Why is naive distributed commit unsafe?",
+      "back": "Some participants may commit while others fail or abort.",
+      "source_pages": [
+        376,
+        377
+      ]
+    },
+    {
+      "id": "FC078",
+      "front": "Why is a commit irrevocable?",
+      "back": "Other transactions may already depend on committed data.",
+      "source_pages": [
+        377
+      ]
+    },
+    {
+      "id": "FC079",
+      "front": "2PC stands for?",
+      "back": "Two-Phase Commit.",
+      "source_pages": [
+        377
+      ]
+    },
+    {
+      "id": "FC080",
+      "front": "What is the 2PC coordinator?",
+      "back": "Transaction manager.",
+      "source_pages": [
+        378
+      ]
+    },
+    {
+      "id": "FC081",
+      "front": "What is phase 1?",
+      "back": "Prepare/vote.",
+      "source_pages": [
+        378
+      ]
+    },
+    {
+      "id": "FC082",
+      "front": "What is phase 2?",
+      "back": "Commit if all yes, otherwise abort.",
+      "source_pages": [
+        378
+      ]
+    },
+    {
+      "id": "FC083",
+      "front": "2PC vs 2PL?",
+      "back": "2PC atomic commit; 2PL serializable isolation.",
+      "source_pages": [
+        378
+      ]
+    },
+    {
+      "id": "FC084",
+      "front": "What does yes mean in 2PC?",
+      "back": "Participant promises it can commit later.",
+      "source_pages": [
+        379
+      ]
+    },
+    {
+      "id": "FC085",
+      "front": "What must participant do before yes?",
+      "back": "Make required data durable and check constraints/conflicts.",
+      "source_pages": [
+        379
+      ]
+    },
+    {
+      "id": "FC086",
+      "front": "What is coordinator commit point?",
+      "back": "Durably recorded final decision.",
+      "source_pages": [
+        379
+      ]
+    },
+    {
+      "id": "FC087",
+      "front": "After final decision, how long are messages retried?",
+      "back": "Until participants learn the decision.",
+      "source_pages": [
+        379,
+        380
+      ]
+    },
+    {
+      "id": "FC088",
+      "front": "What is in doubt?",
+      "back": "Prepared participant does not know final outcome.",
+      "source_pages": [
+        380
+      ]
+    },
+    {
+      "id": "FC089",
+      "front": "Can in-doubt participant safely abort on timeout?",
+      "back": "No.",
+      "source_pages": [
+        380
+      ]
+    },
+    {
+      "id": "FC090",
+      "front": "Why is 2PC blocking?",
+      "back": "It may wait indefinitely for coordinator recovery.",
+      "source_pages": [
+        381
+      ]
+    },
+    {
+      "id": "FC091",
+      "front": "Why doesn't 3PC solve this generally?",
+      "back": "It needs bounded timing/perfect failure detection assumptions.",
+      "source_pages": [
+        381
+      ]
+    },
+    {
+      "id": "FC092",
+      "front": "Database-internal transaction?",
+      "back": "Distributed transaction within one DB technology.",
+      "source_pages": [
+        382
+      ]
+    },
+    {
+      "id": "FC093",
+      "front": "Heterogeneous transaction?",
+      "back": "Transaction across different technologies such as DB and broker.",
+      "source_pages": [
+        382
+      ]
+    },
+    {
+      "id": "FC094",
+      "front": "How can message processing be effectively exactly once?",
+      "back": "Atomically commit message acknowledgement and DB side effects.",
+      "source_pages": [
+        382,
+        383
+      ]
+    },
+    {
+      "id": "FC095",
+      "front": "What can break exactly-once if outside transaction?",
+      "back": "External side effect like sending email.",
+      "source_pages": [
+        383
+      ]
+    },
+    {
+      "id": "FC096",
+      "front": "XA stands for?",
+      "back": "X/Open eXtended Architecture.",
+      "source_pages": [
+        383
+      ]
+    },
+    {
+      "id": "FC097",
+      "front": "Is XA a network protocol?",
+      "back": "No.",
+      "source_pages": [
+        383
+      ]
+    },
+    {
+      "id": "FC098",
+      "front": "What does XA standardize?",
+      "back": "2PC coordination across heterogeneous systems.",
+      "source_pages": [
+        383,
+        384
+      ]
+    },
+    {
+      "id": "FC099",
+      "front": "Why do in-doubt transactions hurt?",
+      "back": "They keep locks and block other transactions.",
+      "source_pages": [
+        384
+      ]
+    },
+    {
+      "id": "FC100",
+      "front": "What is a heuristic decision?",
+      "back": "Emergency unilateral commit/abort by a participant.",
+      "source_pages": [
+        385
+      ]
+    },
+    {
+      "id": "FC101",
+      "front": "What can heuristic decisions break?",
+      "back": "Atomicity.",
+      "source_pages": [
+        385
+      ]
+    },
+    {
+      "id": "FC102",
+      "front": "Why can coordinator be a SPOF?",
+      "back": "Its failure leaves prepared participants blocked.",
+      "source_pages": [
+        385
+      ]
+    },
+    {
+      "id": "FC103",
+      "front": "What state makes embedded coordinator stateful?",
+      "back": "Durable transaction decision log.",
+      "source_pages": [
+        386
+      ]
+    },
+    {
+      "id": "FC104",
+      "front": "Why can 2PC amplify failure?",
+      "back": "Successful commit requires every participant.",
+      "source_pages": [
+        386
+      ]
+    },
+    {
+      "id": "FC105",
+      "front": "Consensus uniform agreement?",
+      "back": "No two nodes decide differently.",
+      "source_pages": [
+        387
+      ]
+    },
+    {
+      "id": "FC106",
+      "front": "Consensus integrity?",
+      "back": "No node decides twice.",
+      "source_pages": [
+        387
+      ]
+    },
+    {
+      "id": "FC107",
+      "front": "Consensus validity?",
+      "back": "Decided value was proposed.",
+      "source_pages": [
+        387
+      ]
+    },
+    {
+      "id": "FC108",
+      "front": "Consensus termination?",
+      "back": "Every non-crashed node eventually decides.",
+      "source_pages": [
+        387
+      ]
+    },
+    {
+      "id": "FC109",
+      "front": "Which is liveness?",
+      "back": "Termination.",
+      "source_pages": [
+        387
+      ]
+    },
+    {
+      "id": "FC110",
+      "front": "Which are safety?",
+      "back": "Agreement, integrity, validity.",
+      "source_pages": [
+        387,
+        388
+      ]
+    },
+    {
+      "id": "FC111",
+      "front": "Does 2PC satisfy termination after permanent coordinator failure?",
+      "back": "No.",
+      "source_pages": [
+        387
+      ]
+    },
+    {
+      "id": "FC112",
+      "front": "Consensus progress requires?",
+      "back": "A majority.",
+      "source_pages": [
+        388
+      ]
+    },
+    {
+      "id": "FC113",
+      "front": "Can consensus safety survive majority loss?",
+      "back": "Usually yes, while progress stops.",
+      "source_pages": [
+        388
+      ]
+    },
+    {
+      "id": "FC114",
+      "front": "Name four consensus algorithms.",
+      "back": "VSR, Paxos, Raft, Zab.",
+      "source_pages": [
+        388
+      ]
+    },
+    {
+      "id": "FC115",
+      "front": "What do practical consensus protocols usually implement?",
+      "back": "A sequence of decisions / total order broadcast.",
+      "source_pages": [
+        388,
+        389
+      ]
+    },
+    {
+      "id": "FC116",
+      "front": "What is Multi-Paxos?",
+      "back": "Optimized repeated Paxos for a sequence of values.",
+      "source_pages": [
+        389
+      ]
+    },
+    {
+      "id": "FC117",
+      "front": "Manual leader failover violates what?",
+      "back": "Termination/progress without human intervention.",
+      "source_pages": [
+        389
+      ]
+    },
+    {
+      "id": "FC118",
+      "front": "Why does automatic failover need consensus?",
+      "back": "All nodes must agree on exactly one replacement leader.",
+      "source_pages": [
+        389,
+        390
+      ]
+    },
+    {
+      "id": "FC119",
+      "front": "What is an epoch?",
+      "back": "Monotonically increasing leadership generation.",
+      "source_pages": [
+        390
+      ]
+    },
+    {
+      "id": "FC120",
+      "front": "Paxos epoch name?",
+      "back": "Ballot.",
+      "source_pages": [
+        390
+      ]
+    },
+    {
+      "id": "FC121",
+      "front": "Raft epoch name?",
+      "back": "Term.",
+      "source_pages": [
+        390
+      ]
+    },
+    {
+      "id": "FC122",
+      "front": "VSR epoch name?",
+      "back": "View.",
+      "source_pages": [
+        390
+      ]
+    },
+    {
+      "id": "FC123",
+      "front": "Which leader wins between epochs?",
+      "back": "Higher epoch.",
+      "source_pages": [
+        390
+      ]
+    },
+    {
+      "id": "FC124",
+      "front": "Why proposal quorum?",
+      "back": "Leader must prove it has not been superseded.",
+      "source_pages": [
+        390
+      ]
+    },
+    {
+      "id": "FC125",
+      "front": "Why must election/proposal quorums overlap?",
+      "back": "Latest leadership/decision knowledge must carry into later rounds.",
+      "source_pages": [
+        390
+      ]
+    },
+    {
+      "id": "FC126",
+      "front": "Consensus votes vs 2PC votes?",
+      "back": "Consensus generally majority; 2PC every participant.",
+      "source_pages": [
+        390
+      ]
+    },
+    {
+      "id": "FC127",
+      "front": "Three-node consensus tolerates?",
+      "back": "One failure.",
+      "source_pages": [
+        391
+      ]
+    },
+    {
+      "id": "FC128",
+      "front": "Five-node consensus tolerates?",
+      "back": "Two failures.",
+      "source_pages": [
+        391
+      ]
+    },
+    {
+      "id": "FC129",
+      "front": "Which partition side progresses?",
+      "back": "Majority side.",
+      "source_pages": [
+        391
+      ]
+    },
+    {
+      "id": "FC130",
+      "front": "Why can false failure detection hurt consensus?",
+      "back": "Frequent leader elections destroy performance.",
+      "source_pages": [
+        391
+      ]
+    },
+    {
+      "id": "FC131",
+      "front": "What is ZooKeeper for?",
+      "back": "Small consensus-backed coordination/configuration state.",
+      "source_pages": [
+        392
+      ]
+    },
+    {
+      "id": "FC132",
+      "front": "Should ZooKeeper hold high-volume application data?",
+      "back": "No.",
+      "source_pages": [
+        392
+      ]
+    },
+    {
+      "id": "FC133",
+      "front": "ZooKeeper atomic operation helps implement?",
+      "back": "Locks/leader election.",
+      "source_pages": [
+        392
+      ]
+    },
+    {
+      "id": "FC134",
+      "front": "ZooKeeper fencing IDs?",
+      "back": "zxid/cversion.",
+      "source_pages": [
+        392
+      ]
+    },
+    {
+      "id": "FC135",
+      "front": "How are failed clients detected?",
+      "back": "Sessions, heartbeats, timeout.",
+      "source_pages": [
+        393
+      ]
+    },
+    {
+      "id": "FC136",
+      "front": "What are ephemeral nodes?",
+      "back": "Session-owned records removed when session dies.",
+      "source_pages": [
+        393
+      ]
+    },
+    {
+      "id": "FC137",
+      "front": "What are watches?",
+      "back": "Change notifications.",
+      "source_pages": [
+        393
+      ]
+    },
+    {
+      "id": "FC138",
+      "front": "ZooKeeper coordination examples?",
+      "back": "Leader election, partition assignment, failure takeover.",
+      "source_pages": [
+        393
+      ]
+    },
+    {
+      "id": "FC139",
+      "front": "Why small 3/5 node ensemble?",
+      "back": "Efficient consensus for many clients.",
+      "source_pages": [
+        394
+      ]
+    },
+    {
+      "id": "FC140",
+      "front": "Does service discovery always need consensus?",
+      "back": "No; stale DNS-style results may be acceptable.",
+      "source_pages": [
+        394
+      ]
+    },
+    {
+      "id": "FC141",
+      "front": "What does membership service provide?",
+      "back": "Agreement on which nodes count as current members.",
+      "source_pages": [
+        395
+      ]
+    },
+    {
+      "id": "FC142",
+      "front": "Can membership consensus misclassify a live node?",
+      "back": "Yes, but the group agrees on the classification.",
+      "source_pages": [
+        395
+      ]
+    },
+    {
+      "id": "FC143",
+      "front": "List consensus-equivalent problems.",
+      "back": "CAS, atomic commit, TOB, locks/leases, membership, uniqueness.",
+      "source_pages": [
+        395,
+        396
+      ]
+    },
+    {
+      "id": "FC144",
+      "front": "Does having one leader eliminate consensus?",
+      "back": "No; fault-tolerant leadership change still needs it.",
+      "source_pages": [
+        396,
+        397
+      ]
+    }
+  ],
+  "multiple_choice_questions": [
+    {
+      "id": "MCQ001",
+      "difficulty": "medium",
+      "question": "Linearizability is a?",
+      "choices": {
+        "A": "Recency guarantee",
+        "B": "Transaction isolation only",
+        "C": "Durability model",
+        "D": "Partition scheme"
+      },
+      "answer": "A",
+      "source_pages": [
+        346
+      ]
+    },
+    {
+      "id": "MCQ002",
+      "difficulty": "medium",
+      "question": "After a completed write, a later linearizable read must see?",
+      "choices": {
+        "A": "That value or newer",
+        "B": "Any replica value",
+        "C": "Only older value",
+        "D": "Nothing"
+      },
+      "answer": "A",
+      "source_pages": [
+        346
+      ]
+    },
+    {
+      "id": "MCQ003",
+      "difficulty": "medium",
+      "question": "A read concurrent with a write may see?",
+      "choices": {
+        "A": "Old or new",
+        "B": "Only old",
+        "C": "Only new",
+        "D": "Always error"
+      },
+      "answer": "A",
+      "source_pages": [
+        348
+      ]
+    },
+    {
+      "id": "MCQ004",
+      "difficulty": "medium",
+      "question": "Strict serializability combines?",
+      "choices": {
+        "A": "Serializability + linearizability",
+        "B": "2PC + 2PL",
+        "C": "CAP + causal consistency",
+        "D": "MVCC + LWW"
+      },
+      "answer": "A",
+      "source_pages": [
+        351
+      ]
+    },
+    {
+      "id": "MCQ005",
+      "difficulty": "medium",
+      "question": "Which needs a linearizable primitive?",
+      "choices": {
+        "A": "Leader election lock",
+        "B": "Eventually consistent cache",
+        "C": "Batch sort",
+        "D": "Compression"
+      },
+      "answer": "A",
+      "source_pages": [
+        352
+      ]
+    },
+    {
+      "id": "MCQ006",
+      "difficulty": "medium",
+      "question": "Hard username uniqueness resembles?",
+      "choices": {
+        "A": "Compare-and-set",
+        "B": "LWW",
+        "C": "Read repair",
+        "D": "Snapshot read"
+      },
+      "answer": "A",
+      "source_pages": [
+        353
+      ]
+    },
+    {
+      "id": "MCQ007",
+      "difficulty": "medium",
+      "question": "Multi-leader replication is generally?",
+      "choices": {
+        "A": "Not linearizable",
+        "B": "Always linearizable",
+        "C": "Strictly serializable",
+        "D": "Consensus-based"
+      },
+      "answer": "A",
+      "source_pages": [
+        355
+      ]
+    },
+    {
+      "id": "MCQ008",
+      "difficulty": "medium",
+      "question": "Does w+r>n guarantee linearizability?",
+      "choices": {
+        "A": "No",
+        "B": "Yes",
+        "C": "Only with n=3",
+        "D": "Only with LWW"
+      },
+      "answer": "A",
+      "source_pages": [
+        356
+      ]
+    },
+    {
+      "id": "MCQ009",
+      "difficulty": "medium",
+      "question": "Linearizable CAS generally requires?",
+      "choices": {
+        "A": "Consensus",
+        "B": "Only quorum reads",
+        "C": "Only read repair",
+        "D": "Only timestamps"
+      },
+      "answer": "A",
+      "source_pages": [
+        357
+      ]
+    },
+    {
+      "id": "MCQ010",
+      "difficulty": "medium",
+      "question": "During a network partition, preserving linearizability can require?",
+      "choices": {
+        "A": "Unavailability on some replicas",
+        "B": "Independent writes everywhere",
+        "C": "No coordination",
+        "D": "LWW"
+      },
+      "answer": "A",
+      "source_pages": [
+        358
+      ]
+    },
+    {
+      "id": "MCQ011",
+      "difficulty": "medium",
+      "question": "Best CAP phrasing here?",
+      "choices": {
+        "A": "Consistent or Available when Partitioned",
+        "B": "Pick two forever",
+        "C": "Partition tolerance is optional",
+        "D": "CAP covers all tradeoffs"
+      },
+      "answer": "A",
+      "source_pages": [
+        359
+      ]
+    },
+    {
+      "id": "MCQ012",
+      "difficulty": "medium",
+      "question": "Formal CAP's consistency model is?",
+      "choices": {
+        "A": "Linearizability",
+        "B": "Serializability",
+        "C": "Eventual consistency",
+        "D": "Read committed"
+      },
+      "answer": "A",
+      "source_pages": [
+        359
+      ]
+    },
+    {
+      "id": "MCQ013",
+      "difficulty": "medium",
+      "question": "Causality is a?",
+      "choices": {
+        "A": "Partial order",
+        "B": "Total order",
+        "C": "No order",
+        "D": "Physical clock"
+      },
+      "answer": "A",
+      "source_pages": [
+        363
+      ]
+    },
+    {
+      "id": "MCQ014",
+      "difficulty": "medium",
+      "question": "Linearizability is a?",
+      "choices": {
+        "A": "Total order",
+        "B": "Partial order",
+        "C": "Vector order",
+        "D": "No order"
+      },
+      "answer": "A",
+      "source_pages": [
+        363
+      ]
+    },
+    {
+      "id": "MCQ015",
+      "difficulty": "medium",
+      "question": "Linearizability compared with causality is?",
+      "choices": {
+        "A": "Stronger",
+        "B": "Weaker",
+        "C": "Identical",
+        "D": "Unrelated"
+      },
+      "answer": "A",
+      "source_pages": [
+        364
+      ]
+    },
+    {
+      "id": "MCQ016",
+      "difficulty": "medium",
+      "question": "Lamport timestamp format?",
+      "choices": {
+        "A": "Counter + node ID",
+        "B": "Wall clock + UUID",
+        "C": "Vector only",
+        "D": "Term + quorum"
+      },
+      "answer": "A",
+      "source_pages": [
+        367,
+        368
+      ]
+    },
+    {
+      "id": "MCQ017",
+      "difficulty": "medium",
+      "question": "Lamport timestamps preserve?",
+      "choices": {
+        "A": "Causal order in a total ordering",
+        "B": "Physical time",
+        "C": "Concurrency distinction",
+        "D": "Wall-clock accuracy"
+      },
+      "answer": "A",
+      "source_pages": [
+        368
+      ]
+    },
+    {
+      "id": "MCQ018",
+      "difficulty": "medium",
+      "question": "Can Lamport tell concurrency?",
+      "choices": {
+        "A": "No",
+        "B": "Yes",
+        "C": "Only with NTP",
+        "D": "Only with one node"
+      },
+      "answer": "A",
+      "source_pages": [
+        368,
+        369
+      ]
+    },
+    {
+      "id": "MCQ019",
+      "difficulty": "medium",
+      "question": "Version vectors can tell?",
+      "choices": {
+        "A": "Concurrency vs causality",
+        "B": "Physical time",
+        "C": "Linearization point",
+        "D": "CAP availability"
+      },
+      "answer": "A",
+      "source_pages": [
+        368,
+        369
+      ]
+    },
+    {
+      "id": "MCQ020",
+      "difficulty": "medium",
+      "question": "Why is timestamp order insufficient for uniqueness?",
+      "choices": {
+        "A": "Order may not yet be final",
+        "B": "Timestamps aren't comparable",
+        "C": "No node IDs",
+        "D": "No writes"
+      },
+      "answer": "A",
+      "source_pages": [
+        369
+      ]
+    },
+    {
+      "id": "MCQ021",
+      "difficulty": "medium",
+      "question": "TOB requires?",
+      "choices": {
+        "A": "Reliable delivery + same order",
+        "B": "Immediate delivery",
+        "C": "Fresh reads",
+        "D": "No failures"
+      },
+      "answer": "A",
+      "source_pages": [
+        370
+      ]
+    },
+    {
+      "id": "MCQ022",
+      "difficulty": "medium",
+      "question": "TOB is also called?",
+      "choices": {
+        "A": "Atomic broadcast",
+        "B": "MVCC",
+        "C": "Read repair",
+        "D": "2PL"
+      },
+      "answer": "A",
+      "source_pages": [
+        370
+      ]
+    },
+    {
+      "id": "MCQ023",
+      "difficulty": "medium",
+      "question": "State machine replication means?",
+      "choices": {
+        "A": "Same operations in same order",
+        "B": "Different log per replica",
+        "C": "LWW",
+        "D": "Only one replica"
+      },
+      "answer": "A",
+      "source_pages": [
+        371
+      ]
+    },
+    {
+      "id": "MCQ024",
+      "difficulty": "medium",
+      "question": "TOB sequence numbers can become?",
+      "choices": {
+        "A": "Fencing tokens",
+        "B": "Wall clocks",
+        "C": "Quorum sizes",
+        "D": "Read timestamps"
+      },
+      "answer": "A",
+      "source_pages": [
+        371
+      ]
+    },
+    {
+      "id": "MCQ025",
+      "difficulty": "medium",
+      "question": "TOB alone guarantees linearizable reads?",
+      "choices": {
+        "A": "No",
+        "B": "Yes",
+        "C": "Only in every follower",
+        "D": "Only without faults"
+      },
+      "answer": "A",
+      "source_pages": [
+        372,
+        373
+      ]
+    },
+    {
+      "id": "MCQ026",
+      "difficulty": "medium",
+      "question": "Linearizable increment-and-get can implement?",
+      "choices": {
+        "A": "TOB",
+        "B": "Only eventual consistency",
+        "C": "2PL",
+        "D": "Snapshot isolation"
+      },
+      "answer": "A",
+      "source_pages": [
+        373,
+        374
+      ]
+    },
+    {
+      "id": "MCQ027",
+      "difficulty": "medium",
+      "question": "Consensus is equivalent to?",
+      "choices": {
+        "A": "TOB and linearizable CAS",
+        "B": "Only 2PC",
+        "C": "Only leader election",
+        "D": "Only hashing"
+      },
+      "answer": "A",
+      "source_pages": [
+        374
+      ]
+    },
+    {
+      "id": "MCQ028",
+      "difficulty": "medium",
+      "question": "FLP applies to?",
+      "choices": {
+        "A": "Fully asynchronous deterministic consensus with crashes",
+        "B": "All practical systems",
+        "C": "Synchronous networks",
+        "D": "No-failure systems"
+      },
+      "answer": "A",
+      "source_pages": [
+        375
+      ]
+    },
+    {
+      "id": "MCQ029",
+      "difficulty": "medium",
+      "question": "Why is practical consensus possible?",
+      "choices": {
+        "A": "Timeouts/failure suspicion or randomness",
+        "B": "FLP is invalid",
+        "C": "Networks never delay",
+        "D": "Nodes never crash"
+      },
+      "answer": "A",
+      "source_pages": [
+        375
+      ]
+    },
+    {
+      "id": "MCQ030",
+      "difficulty": "medium",
+      "question": "2PC phase 1?",
+      "choices": {
+        "A": "Prepare",
+        "B": "Commit",
+        "C": "Abort only",
+        "D": "Leader election"
+      },
+      "answer": "A",
+      "source_pages": [
+        378
+      ]
+    },
+    {
+      "id": "MCQ031",
+      "difficulty": "medium",
+      "question": "2PC phase 2?",
+      "choices": {
+        "A": "Commit/abort",
+        "B": "Prepare",
+        "C": "Snapshot",
+        "D": "Read repair"
+      },
+      "answer": "A",
+      "source_pages": [
+        378
+      ]
+    },
+    {
+      "id": "MCQ032",
+      "difficulty": "medium",
+      "question": "2PC and 2PL are?",
+      "choices": {
+        "A": "Different",
+        "B": "Same",
+        "C": "Both commit protocols",
+        "D": "Both leader elections"
+      },
+      "answer": "A",
+      "source_pages": [
+        378
+      ]
+    },
+    {
+      "id": "MCQ033",
+      "difficulty": "medium",
+      "question": "Participant yes means?",
+      "choices": {
+        "A": "Promise it can commit later",
+        "B": "It may still abort freely",
+        "C": "Global commit already done",
+        "D": "Release locks"
+      },
+      "answer": "A",
+      "source_pages": [
+        379
+      ]
+    },
+    {
+      "id": "MCQ034",
+      "difficulty": "medium",
+      "question": "Coordinator commit point?",
+      "choices": {
+        "A": "Durable final decision log entry",
+        "B": "Prepare send",
+        "C": "First vote",
+        "D": "Client ack"
+      },
+      "answer": "A",
+      "source_pages": [
+        379
+      ]
+    },
+    {
+      "id": "MCQ035",
+      "difficulty": "medium",
+      "question": "In-doubt participant can timeout and abort?",
+      "choices": {
+        "A": "No",
+        "B": "Yes always",
+        "C": "Only majority",
+        "D": "Only if lock released"
+      },
+      "answer": "A",
+      "source_pages": [
+        380
+      ]
+    },
+    {
+      "id": "MCQ036",
+      "difficulty": "medium",
+      "question": "Why is 2PC blocking?",
+      "choices": {
+        "A": "Coordinator failure can halt prepared participants",
+        "B": "No disk logging",
+        "C": "No locks",
+        "D": "No network"
+      },
+      "answer": "A",
+      "source_pages": [
+        381
+      ]
+    },
+    {
+      "id": "MCQ037",
+      "difficulty": "medium",
+      "question": "3PC relies on?",
+      "choices": {
+        "A": "Bounded timing/perfect failure detection",
+        "B": "No clocks",
+        "C": "One participant",
+        "D": "LWW"
+      },
+      "answer": "A",
+      "source_pages": [
+        381
+      ]
+    },
+    {
+      "id": "MCQ038",
+      "difficulty": "medium",
+      "question": "Exactly-once processing can use?",
+      "choices": {
+        "A": "Atomic broker ack + DB effects",
+        "B": "LWW",
+        "C": "Random retry",
+        "D": "Read repair"
+      },
+      "answer": "A",
+      "source_pages": [
+        382,
+        383
+      ]
+    },
+    {
+      "id": "MCQ039",
+      "difficulty": "medium",
+      "question": "XA is?",
+      "choices": {
+        "A": "Standard heterogeneous 2PC interface",
+        "B": "Consensus algorithm",
+        "C": "Lock protocol",
+        "D": "Replication model"
+      },
+      "answer": "A",
+      "source_pages": [
+        383
+      ]
+    },
+    {
+      "id": "MCQ040",
+      "difficulty": "medium",
+      "question": "In-doubt transactions hold?",
+      "choices": {
+        "A": "Locks",
+        "B": "No resources",
+        "C": "Only caches",
+        "D": "Only messages"
+      },
+      "answer": "A",
+      "source_pages": [
+        384
+      ]
+    },
+    {
+      "id": "MCQ041",
+      "difficulty": "medium",
+      "question": "Heuristic decision may break?",
+      "choices": {
+        "A": "Atomicity",
+        "B": "Durability only",
+        "C": "Partitioning",
+        "D": "Compression"
+      },
+      "answer": "A",
+      "source_pages": [
+        385
+      ]
+    },
+    {
+      "id": "MCQ042",
+      "difficulty": "medium",
+      "question": "2PC tends to amplify failures because?",
+      "choices": {
+        "A": "Every participant is required",
+        "B": "Only majority required",
+        "C": "No coordinator",
+        "D": "No locks"
+      },
+      "answer": "A",
+      "source_pages": [
+        386
+      ]
+    },
+    {
+      "id": "MCQ043",
+      "difficulty": "medium",
+      "question": "Consensus agreement means?",
+      "choices": {
+        "A": "No two nodes decide differently",
+        "B": "No node decides twice",
+        "C": "Value proposed",
+        "D": "Eventually decide"
+      },
+      "answer": "A",
+      "source_pages": [
+        387
+      ]
+    },
+    {
+      "id": "MCQ044",
+      "difficulty": "medium",
+      "question": "Consensus integrity means?",
+      "choices": {
+        "A": "No node decides twice",
+        "B": "No two differ",
+        "C": "Value proposed",
+        "D": "Eventually decide"
+      },
+      "answer": "A",
+      "source_pages": [
+        387
+      ]
+    },
+    {
+      "id": "MCQ045",
+      "difficulty": "medium",
+      "question": "Consensus validity means?",
+      "choices": {
+        "A": "Decision was proposed",
+        "B": "No two differ",
+        "C": "No node decides twice",
+        "D": "Eventually decide"
+      },
+      "answer": "A",
+      "source_pages": [
+        387
+      ]
+    },
+    {
+      "id": "MCQ046",
+      "difficulty": "medium",
+      "question": "Consensus termination means?",
+      "choices": {
+        "A": "Every non-crashed node eventually decides",
+        "B": "No two differ",
+        "C": "No duplicates",
+        "D": "Only proposed values"
+      },
+      "answer": "A",
+      "source_pages": [
+        387
+      ]
+    },
+    {
+      "id": "MCQ047",
+      "difficulty": "medium",
+      "question": "Which is liveness?",
+      "choices": {
+        "A": "Termination",
+        "B": "Agreement",
+        "C": "Integrity",
+        "D": "Validity"
+      },
+      "answer": "A",
+      "source_pages": [
+        387
+      ]
+    },
+    {
+      "id": "MCQ048",
+      "difficulty": "medium",
+      "question": "Consensus progress normally requires?",
+      "choices": {
+        "A": "Majority",
+        "B": "All nodes",
+        "C": "One node",
+        "D": "Two-thirds always"
+      },
+      "answer": "A",
+      "source_pages": [
+        388
+      ]
+    },
+    {
+      "id": "MCQ049",
+      "difficulty": "hard",
+      "question": "Which is a consensus algorithm?",
+      "choices": {
+        "A": "Raft",
+        "B": "MapReduce",
+        "C": "B-tree",
+        "D": "MVCC"
+      },
+      "answer": "A",
+      "source_pages": [
+        388
+      ]
+    },
+    {
+      "id": "MCQ050",
+      "difficulty": "hard",
+      "question": "Practical consensus often implements?",
+      "choices": {
+        "A": "Total order broadcast",
+        "B": "One decision only",
+        "C": "Only read repair",
+        "D": "Only snapshot isolation"
+      },
+      "answer": "A",
+      "source_pages": [
+        388,
+        389
+      ]
+    },
+    {
+      "id": "MCQ051",
+      "difficulty": "hard",
+      "question": "Automatic leader election requires?",
+      "choices": {
+        "A": "Consensus",
+        "B": "Only DNS",
+        "C": "Only wall clocks",
+        "D": "Only LWW"
+      },
+      "answer": "A",
+      "source_pages": [
+        389,
+        390
+      ]
+    },
+    {
+      "id": "MCQ052",
+      "difficulty": "hard",
+      "question": "Raft epoch name?",
+      "choices": {
+        "A": "Term",
+        "B": "Ballot",
+        "C": "View",
+        "D": "zxid"
+      },
+      "answer": "A",
+      "source_pages": [
+        390
+      ]
+    },
+    {
+      "id": "MCQ053",
+      "difficulty": "hard",
+      "question": "Paxos epoch name?",
+      "choices": {
+        "A": "Ballot",
+        "B": "Term",
+        "C": "View",
+        "D": "Session"
+      },
+      "answer": "A",
+      "source_pages": [
+        390
+      ]
+    },
+    {
+      "id": "MCQ054",
+      "difficulty": "hard",
+      "question": "Why must quorums overlap?",
+      "choices": {
+        "A": "Carry latest leadership/decision knowledge",
+        "B": "Reduce storage",
+        "C": "Avoid messages",
+        "D": "Synchronize clocks"
+      },
+      "answer": "A",
+      "source_pages": [
+        390
+      ]
+    },
+    {
+      "id": "MCQ055",
+      "difficulty": "hard",
+      "question": "2PC requires yes from?",
+      "choices": {
+        "A": "Every participant",
+        "B": "Majority",
+        "C": "One node",
+        "D": "Two-thirds"
+      },
+      "answer": "A",
+      "source_pages": [
+        390
+      ]
+    },
+    {
+      "id": "MCQ056",
+      "difficulty": "hard",
+      "question": "Consensus usually requires?",
+      "choices": {
+        "A": "Majority",
+        "B": "Every participant",
+        "C": "One node",
+        "D": "No votes"
+      },
+      "answer": "A",
+      "source_pages": [
+        390
+      ]
+    },
+    {
+      "id": "MCQ057",
+      "difficulty": "hard",
+      "question": "3-node consensus tolerates?",
+      "choices": {
+        "A": "1 failure",
+        "B": "2",
+        "C": "0",
+        "D": "3"
+      },
+      "answer": "A",
+      "source_pages": [
+        391
+      ]
+    },
+    {
+      "id": "MCQ058",
+      "difficulty": "hard",
+      "question": "5-node consensus tolerates?",
+      "choices": {
+        "A": "2 failures",
+        "B": "3",
+        "C": "1 only",
+        "D": "5"
+      },
+      "answer": "A",
+      "source_pages": [
+        391
+      ]
+    },
+    {
+      "id": "MCQ059",
+      "difficulty": "hard",
+      "question": "Network split progress occurs on?",
+      "choices": {
+        "A": "Majority side",
+        "B": "Minority side",
+        "C": "Both always",
+        "D": "Neither always"
+      },
+      "answer": "A",
+      "source_pages": [
+        391
+      ]
+    },
+    {
+      "id": "MCQ060",
+      "difficulty": "hard",
+      "question": "ZooKeeper is intended for?",
+      "choices": {
+        "A": "Small coordination state",
+        "B": "All app data",
+        "C": "Blob storage",
+        "D": "Analytics warehouse"
+      },
+      "answer": "A",
+      "source_pages": [
+        392
+      ]
+    },
+    {
+      "id": "MCQ061",
+      "difficulty": "hard",
+      "question": "ZooKeeper fencing uses?",
+      "choices": {
+        "A": "zxid/cversion",
+        "B": "Wall clock only",
+        "C": "Random UUID only",
+        "D": "DNS TTL"
+      },
+      "answer": "A",
+      "source_pages": [
+        392
+      ]
+    },
+    {
+      "id": "MCQ062",
+      "difficulty": "hard",
+      "question": "Ephemeral nodes are removed when?",
+      "choices": {
+        "A": "Session expires",
+        "B": "Any read",
+        "C": "Any write",
+        "D": "Leader changes"
+      },
+      "answer": "A",
+      "source_pages": [
+        393
+      ]
+    },
+    {
+      "id": "MCQ063",
+      "difficulty": "hard",
+      "question": "ZooKeeper watches reduce?",
+      "choices": {
+        "A": "Polling",
+        "B": "Ordering",
+        "C": "Consensus",
+        "D": "Durability"
+      },
+      "answer": "A",
+      "source_pages": [
+        393
+      ]
+    },
+    {
+      "id": "MCQ064",
+      "difficulty": "hard",
+      "question": "Does service discovery always require consensus?",
+      "choices": {
+        "A": "No",
+        "B": "Yes",
+        "C": "Only DNS",
+        "D": "Only ZooKeeper"
+      },
+      "answer": "A",
+      "source_pages": [
+        394
+      ]
+    },
+    {
+      "id": "MCQ065",
+      "difficulty": "hard",
+      "question": "Membership service provides?",
+      "choices": {
+        "A": "Agreed cluster membership",
+        "B": "Perfect failure detector",
+        "C": "Clock synchronization",
+        "D": "Partitioning"
+      },
+      "answer": "A",
+      "source_pages": [
+        395
+      ]
+    },
+    {
+      "id": "MCQ066",
+      "difficulty": "hard",
+      "question": "Which is reducible to consensus?",
+      "choices": {
+        "A": "Uniqueness constraint",
+        "B": "Image resize",
+        "C": "Compression",
+        "D": "Sorting"
+      },
+      "answer": "A",
+      "source_pages": [
+        395,
+        396
+      ]
+    },
+    {
+      "id": "MCQ067",
+      "difficulty": "hard",
+      "question": "Does one leader remove need for consensus forever?",
+      "choices": {
+        "A": "No",
+        "B": "Yes",
+        "C": "Only with async replication",
+        "D": "Only with snapshots"
+      },
+      "answer": "A",
+      "source_pages": [
+        396,
+        397
+      ]
+    }
+  ],
+  "mix_and_match": [
+    {
+      "id": "MM01",
+      "title": "Consistency models",
+      "left": {
+        "A": "Eventual",
+        "B": "Linearizable",
+        "C": "Serializable",
+        "D": "Causal",
+        "E": "Strict serializable"
+      },
+      "right": {
+        "1": "Eventually converges",
+        "2": "Single-copy recency",
+        "3": "Transactions like serial order",
+        "4": "Happens-before partial order",
+        "5": "Serializable plus real-time ordering"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        344,
+        346,
+        351,
+        363,
+        364
+      ]
+    },
+    {
+      "id": "MM02",
+      "title": "Ordering",
+      "left": {
+        "A": "Physical timestamp",
+        "B": "Lamport",
+        "C": "Version vector",
+        "D": "TOB",
+        "E": "Leader log"
+      },
+      "right": {
+        "1": "May violate causality",
+        "2": "Total causal-consistent order",
+        "3": "Detects concurrency",
+        "4": "Final same delivery order",
+        "5": "Single sequencer write order"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        366,
+        367,
+        368,
+        369,
+        370,
+        371
+      ]
+    },
+    {
+      "id": "MM03",
+      "title": "2PC",
+      "left": {
+        "A": "Coordinator",
+        "B": "Prepare",
+        "C": "Yes vote",
+        "D": "In doubt",
+        "E": "Commit point"
+      },
+      "right": {
+        "1": "Transaction manager",
+        "2": "Phase-1 request",
+        "3": "Promise to commit later",
+        "4": "Unknown final outcome",
+        "5": "Durable coordinator decision"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        378,
+        379,
+        380,
+        381
+      ]
+    },
+    {
+      "id": "MM04",
+      "title": "Consensus properties",
+      "left": {
+        "A": "Agreement",
+        "B": "Integrity",
+        "C": "Validity",
+        "D": "Termination",
+        "E": "Quorum"
+      },
+      "right": {
+        "1": "No conflicting decisions",
+        "2": "No second decision",
+        "3": "Decision was proposed",
+        "4": "Eventually decide",
+        "5": "Overlapping voters"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        387,
+        388,
+        390
+      ]
+    },
+    {
+      "id": "MM05",
+      "title": "Consensus terminology",
+      "left": {
+        "A": "Paxos",
+        "B": "Raft",
+        "C": "VSR",
+        "D": "Zab",
+        "E": "Multi-Paxos"
+      },
+      "right": {
+        "1": "Ballot",
+        "2": "Term",
+        "3": "View",
+        "4": "ZooKeeper consensus family",
+        "5": "Repeated optimized Paxos"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        388,
+        389,
+        390
+      ]
+    }
+  ],
+  "true_false": [
+    {
+      "id": "TF001",
+      "statement": "Eventual consistency gives a fixed convergence deadline.",
+      "answer": false,
+      "source_pages": [
+        344,
+        345
+      ]
+    },
+    {
+      "id": "TF002",
+      "statement": "Linearizability is a recency guarantee.",
+      "answer": true,
+      "source_pages": [
+        346
+      ]
+    },
+    {
+      "id": "TF003",
+      "statement": "Linearizability and serializability are the same.",
+      "answer": false,
+      "source_pages": [
+        351
+      ]
+    },
+    {
+      "id": "TF004",
+      "statement": "Strict serializability combines both.",
+      "answer": true,
+      "source_pages": [
+        351
+      ]
+    },
+    {
+      "id": "TF005",
+      "statement": "SSI snapshots are always linearizable.",
+      "answer": false,
+      "source_pages": [
+        351
+      ]
+    },
+    {
+      "id": "TF006",
+      "statement": "Leader-election locks need linearizable semantics.",
+      "answer": true,
+      "source_pages": [
+        352
+      ]
+    },
+    {
+      "id": "TF007",
+      "statement": "Hard uniqueness often requires linearizability.",
+      "answer": true,
+      "source_pages": [
+        352,
+        353
+      ]
+    },
+    {
+      "id": "TF008",
+      "statement": "Single-leader replication is always linearizable.",
+      "answer": false,
+      "source_pages": [
+        355
+      ]
+    },
+    {
+      "id": "TF009",
+      "statement": "Multi-leader replication is generally linearizable.",
+      "answer": false,
+      "source_pages": [
+        355
+      ]
+    },
+    {
+      "id": "TF010",
+      "statement": "w+r>n guarantees linearizability.",
+      "answer": false,
+      "source_pages": [
+        356
+      ]
+    },
+    {
+      "id": "TF011",
+      "statement": "Linearizable CAS requires consensus.",
+      "answer": true,
+      "source_pages": [
+        357
+      ]
+    },
+    {
+      "id": "TF012",
+      "statement": "Network partitions can force a linearizable replica to become unavailable.",
+      "answer": true,
+      "source_pages": [
+        358
+      ]
+    },
+    {
+      "id": "TF013",
+      "statement": "Partition tolerance is optional in the same way as consistency.",
+      "answer": false,
+      "source_pages": [
+        359
+      ]
+    },
+    {
+      "id": "TF014",
+      "statement": "The chapter recommends CAP's pick-two slogan.",
+      "answer": false,
+      "source_pages": [
+        359
+      ]
+    },
+    {
+      "id": "TF015",
+      "statement": "CAP is narrow in scope.",
+      "answer": true,
+      "source_pages": [
+        359,
+        360
+      ]
+    },
+    {
+      "id": "TF016",
+      "statement": "Systems may relax linearizability for performance.",
+      "answer": true,
+      "source_pages": [
+        360
+      ]
+    },
+    {
+      "id": "TF017",
+      "statement": "Causality is a total order.",
+      "answer": false,
+      "source_pages": [
+        363
+      ]
+    },
+    {
+      "id": "TF018",
+      "statement": "Linearizability is a total order.",
+      "answer": true,
+      "source_pages": [
+        363
+      ]
+    },
+    {
+      "id": "TF019",
+      "statement": "Concurrent events are incomparable causally.",
+      "answer": true,
+      "source_pages": [
+        363
+      ]
+    },
+    {
+      "id": "TF020",
+      "statement": "Linearizability implies causality.",
+      "answer": true,
+      "source_pages": [
+        364
+      ]
+    },
+    {
+      "id": "TF021",
+      "statement": "Causal consistency implies linearizability.",
+      "answer": false,
+      "source_pages": [
+        364
+      ]
+    },
+    {
+      "id": "TF022",
+      "statement": "Lamport timestamps use physical clock time.",
+      "answer": false,
+      "source_pages": [
+        368
+      ]
+    },
+    {
+      "id": "TF023",
+      "statement": "Lamport timestamps preserve causal ordering.",
+      "answer": true,
+      "source_pages": [
+        368
+      ]
+    },
+    {
+      "id": "TF024",
+      "statement": "Lamport timestamps detect concurrency.",
+      "answer": false,
+      "source_pages": [
+        368,
+        369
+      ]
+    },
+    {
+      "id": "TF025",
+      "statement": "Version vectors can detect concurrency.",
+      "answer": true,
+      "source_pages": [
+        368,
+        369
+      ]
+    },
+    {
+      "id": "TF026",
+      "statement": "A timestamp total order is enough for immediate uniqueness decisions.",
+      "answer": false,
+      "source_pages": [
+        369,
+        370
+      ]
+    },
+    {
+      "id": "TF027",
+      "statement": "TOB requires reliable delivery.",
+      "answer": true,
+      "source_pages": [
+        370
+      ]
+    },
+    {
+      "id": "TF028",
+      "statement": "TOB requires same message order at every node.",
+      "answer": true,
+      "source_pages": [
+        370
+      ]
+    },
+    {
+      "id": "TF029",
+      "statement": "TOB order can be retroactively rearranged.",
+      "answer": false,
+      "source_pages": [
+        371
+      ]
+    },
+    {
+      "id": "TF030",
+      "statement": "TOB can implement state-machine replication.",
+      "answer": true,
+      "source_pages": [
+        371
+      ]
+    },
+    {
+      "id": "TF031",
+      "statement": "TOB alone guarantees fresh reads from lagging replicas.",
+      "answer": false,
+      "source_pages": [
+        372,
+        373
+      ]
+    },
+    {
+      "id": "TF032",
+      "statement": "Linearizable increment-and-get can implement TOB.",
+      "answer": true,
+      "source_pages": [
+        373,
+        374
+      ]
+    },
+    {
+      "id": "TF033",
+      "statement": "Consensus and TOB are closely equivalent.",
+      "answer": true,
+      "source_pages": [
+        374
+      ]
+    },
+    {
+      "id": "TF034",
+      "statement": "FLP says every real consensus system is impossible.",
+      "answer": false,
+      "source_pages": [
+        375
+      ]
+    },
+    {
+      "id": "TF035",
+      "statement": "FLP assumes a fully asynchronous deterministic model.",
+      "answer": true,
+      "source_pages": [
+        375
+      ]
+    },
+    {
+      "id": "TF036",
+      "statement": "Independent commit requests across participants guarantee atomicity.",
+      "answer": false,
+      "source_pages": [
+        376,
+        377
+      ]
+    },
+    {
+      "id": "TF037",
+      "statement": "2PC is for distributed atomic commit.",
+      "answer": true,
+      "source_pages": [
+        377
+      ]
+    },
+    {
+      "id": "TF038",
+      "statement": "2PC and 2PL are the same.",
+      "answer": false,
+      "source_pages": [
+        378
+      ]
+    },
+    {
+      "id": "TF039",
+      "statement": "A 2PC yes vote is a promise to commit later if asked.",
+      "answer": true,
+      "source_pages": [
+        379
+      ]
+    },
+    {
+      "id": "TF040",
+      "statement": "Participant may freely abort after voting yes.",
+      "answer": false,
+      "source_pages": [
+        379,
+        380
+      ]
+    },
+    {
+      "id": "TF041",
+      "statement": "Coordinator's durable final decision is irrevocable.",
+      "answer": true,
+      "source_pages": [
+        379,
+        380
+      ]
+    },
+    {
+      "id": "TF042",
+      "statement": "Prepared participant may be in doubt after coordinator crash.",
+      "answer": true,
+      "source_pages": [
+        380
+      ]
+    },
+    {
+      "id": "TF043",
+      "statement": "Timeout lets in-doubt participant safely abort.",
+      "answer": false,
+      "source_pages": [
+        380
+      ]
+    },
+    {
+      "id": "TF044",
+      "statement": "2PC is blocking.",
+      "answer": true,
+      "source_pages": [
+        381
+      ]
+    },
+    {
+      "id": "TF045",
+      "statement": "3PC assumes stronger timing/failure-detection guarantees.",
+      "answer": true,
+      "source_pages": [
+        381
+      ]
+    },
+    {
+      "id": "TF046",
+      "statement": "Database-internal and heterogeneous transactions are identical.",
+      "answer": false,
+      "source_pages": [
+        382
+      ]
+    },
+    {
+      "id": "TF047",
+      "statement": "Atomic broker ack plus DB effects can support effectively exactly-once processing.",
+      "answer": true,
+      "source_pages": [
+        382,
+        383
+      ]
+    },
+    {
+      "id": "TF048",
+      "statement": "External email automatically rolls back with a DB transaction.",
+      "answer": false,
+      "source_pages": [
+        383
+      ]
+    },
+    {
+      "id": "TF049",
+      "statement": "XA is a network protocol.",
+      "answer": false,
+      "source_pages": [
+        383
+      ]
+    },
+    {
+      "id": "TF050",
+      "statement": "XA standardizes heterogeneous 2PC.",
+      "answer": true,
+      "source_pages": [
+        383
+      ]
+    },
+    {
+      "id": "TF051",
+      "statement": "In-doubt 2PC transactions retain locks.",
+      "answer": true,
+      "source_pages": [
+        384
+      ]
+    },
+    {
+      "id": "TF052",
+      "statement": "Heuristic decisions can violate atomicity.",
+      "answer": true,
+      "source_pages": [
+        385
+      ]
+    },
+    {
+      "id": "TF053",
+      "statement": "Coordinator logs can become critical durable state.",
+      "answer": true,
+      "source_pages": [
+        386
+      ]
+    },
+    {
+      "id": "TF054",
+      "statement": "2PC can amplify participant failures.",
+      "answer": true,
+      "source_pages": [
+        386
+      ]
+    },
+    {
+      "id": "TF055",
+      "statement": "Consensus agreement is safety.",
+      "answer": true,
+      "source_pages": [
+        387,
+        388
+      ]
+    },
+    {
+      "id": "TF056",
+      "statement": "Consensus termination is liveness.",
+      "answer": true,
+      "source_pages": [
+        387
+      ]
+    },
+    {
+      "id": "TF057",
+      "statement": "Consensus requires a majority for progress.",
+      "answer": true,
+      "source_pages": [
+        388
+      ]
+    },
+    {
+      "id": "TF058",
+      "statement": "Consensus safety generally survives even when progress stops.",
+      "answer": true,
+      "source_pages": [
+        388
+      ]
+    },
+    {
+      "id": "TF059",
+      "statement": "Paxos, Raft, VSR, and Zab are consensus algorithms.",
+      "answer": true,
+      "source_pages": [
+        388
+      ]
+    },
+    {
+      "id": "TF060",
+      "statement": "Total order broadcast can be viewed as repeated consensus.",
+      "answer": true,
+      "source_pages": [
+        388,
+        389
+      ]
+    },
+    {
+      "id": "TF061",
+      "statement": "Manual failover satisfies automatic termination.",
+      "answer": false,
+      "source_pages": [
+        389
+      ]
+    },
+    {
+      "id": "TF062",
+      "statement": "Automatic leader election needs consensus.",
+      "answer": true,
+      "source_pages": [
+        389,
+        390
+      ]
+    },
+    {
+      "id": "TF063",
+      "statement": "Epoch numbers increase across elections.",
+      "answer": true,
+      "source_pages": [
+        390
+      ]
+    },
+    {
+      "id": "TF064",
+      "statement": "Higher epoch supersedes lower epoch.",
+      "answer": true,
+      "source_pages": [
+        390
+      ]
+    },
+    {
+      "id": "TF065",
+      "statement": "Election and proposal quorums must overlap.",
+      "answer": true,
+      "source_pages": [
+        390
+      ]
+    },
+    {
+      "id": "TF066",
+      "statement": "2PC needs only a majority yes.",
+      "answer": false,
+      "source_pages": [
+        390
+      ]
+    },
+    {
+      "id": "TF067",
+      "statement": "Consensus generally needs a majority.",
+      "answer": true,
+      "source_pages": [
+        390
+      ]
+    },
+    {
+      "id": "TF068",
+      "statement": "Only the majority side of a split can make consensus progress.",
+      "answer": true,
+      "source_pages": [
+        391
+      ]
+    },
+    {
+      "id": "TF069",
+      "statement": "Frequent false suspicions can cause leader churn.",
+      "answer": true,
+      "source_pages": [
+        391
+      ]
+    },
+    {
+      "id": "TF070",
+      "statement": "ZooKeeper is a general high-volume application database.",
+      "answer": false,
+      "source_pages": [
+        392
+      ]
+    },
+    {
+      "id": "TF071",
+      "statement": "ZooKeeper provides linearizable atomic operations.",
+      "answer": true,
+      "source_pages": [
+        392
+      ]
+    },
+    {
+      "id": "TF072",
+      "statement": "ZooKeeper sessions use heartbeats/timeouts.",
+      "answer": true,
+      "source_pages": [
+        393
+      ]
+    },
+    {
+      "id": "TF073",
+      "statement": "Ephemeral nodes can vanish after session timeout.",
+      "answer": true,
+      "source_pages": [
+        393
+      ]
+    },
+    {
+      "id": "TF074",
+      "statement": "ZooKeeper watches reduce polling.",
+      "answer": true,
+      "source_pages": [
+        393
+      ]
+    },
+    {
+      "id": "TF075",
+      "statement": "Service discovery always needs consensus.",
+      "answer": false,
+      "source_pages": [
+        394
+      ]
+    },
+    {
+      "id": "TF076",
+      "statement": "Membership consensus is a perfect failure detector.",
+      "answer": false,
+      "source_pages": [
+        395
+      ]
+    },
+    {
+      "id": "TF077",
+      "statement": "Uniqueness constraints can reduce to consensus.",
+      "answer": true,
+      "source_pages": [
+        395,
+        396
+      ]
+    },
+    {
+      "id": "TF078",
+      "statement": "Using a leader eliminates consensus from failover.",
+      "answer": false,
+      "source_pages": [
+        396,
+        397
+      ]
+    }
+  ],
+  "fill_in_the_blank": [
+    {
+      "id": "FIB001",
+      "prompt": "Linearizability is a ______ guarantee.",
+      "answer": "recency",
+      "source_pages": [
+        346
+      ]
+    },
+    {
+      "id": "FIB002",
+      "prompt": "An individual read/write object is a ______.",
+      "answer": "register",
+      "source_pages": [
+        347
+      ]
+    },
+    {
+      "id": "FIB003",
+      "prompt": "The atomic point inside an operation interval is the ______ point.",
+      "answer": "linearization",
+      "source_pages": [
+        349
+      ]
+    },
+    {
+      "id": "FIB004",
+      "prompt": "Serializability plus linearizability is strict ______.",
+      "answer": "serializability",
+      "source_pages": [
+        351
+      ]
+    },
+    {
+      "id": "FIB005",
+      "prompt": "Two simultaneous leaders create ______ brain.",
+      "answer": "split",
+      "source_pages": [
+        352
+      ]
+    },
+    {
+      "id": "FIB006",
+      "prompt": "Causality defines a ______ order.",
+      "answer": "partial",
+      "source_pages": [
+        363
+      ]
+    },
+    {
+      "id": "FIB007",
+      "prompt": "Linearizability defines a ______ order.",
+      "answer": "total",
+      "source_pages": [
+        363
+      ]
+    },
+    {
+      "id": "FIB008",
+      "prompt": "A logical pair of counter and node ID is a ______ timestamp.",
+      "answer": "Lamport",
+      "source_pages": [
+        367,
+        368
+      ]
+    },
+    {
+      "id": "FIB009",
+      "prompt": "Version ______ distinguish concurrency.",
+      "answer": "vectors",
+      "source_pages": [
+        368,
+        369
+      ]
+    },
+    {
+      "id": "FIB010",
+      "prompt": "Atomic broadcast is another name for total order ______.",
+      "answer": "broadcast",
+      "source_pages": [
+        370
+      ]
+    },
+    {
+      "id": "FIB011",
+      "prompt": "ZooKeeper's ordered transaction ID is ______.",
+      "answer": "zxid",
+      "source_pages": [
+        371
+      ]
+    },
+    {
+      "id": "FIB012",
+      "prompt": "Consensus means nodes ______ on a decision.",
+      "answer": "agree",
+      "source_pages": [
+        374
+      ]
+    },
+    {
+      "id": "FIB013",
+      "prompt": "2PC = two-phase ______.",
+      "answer": "commit",
+      "source_pages": [
+        377
+      ]
+    },
+    {
+      "id": "FIB014",
+      "prompt": "2PL = two-phase ______.",
+      "answer": "locking",
+      "source_pages": [
+        378
+      ]
+    },
+    {
+      "id": "FIB015",
+      "prompt": "The 2PC transaction manager is the ______.",
+      "answer": "coordinator",
+      "source_pages": [
+        378
+      ]
+    },
+    {
+      "id": "FIB016",
+      "prompt": "Phase 1 is the ______ phase.",
+      "answer": "prepare",
+      "source_pages": [
+        378
+      ]
+    },
+    {
+      "id": "FIB017",
+      "prompt": "Prepared but undecided participants are in ______.",
+      "answer": "doubt",
+      "source_pages": [
+        380
+      ]
+    },
+    {
+      "id": "FIB018",
+      "prompt": "2PC is a ______ protocol after coordinator failure.",
+      "answer": "blocking",
+      "source_pages": [
+        381
+      ]
+    },
+    {
+      "id": "FIB019",
+      "prompt": "XA = X/Open eXtended ______.",
+      "answer": "Architecture",
+      "source_pages": [
+        383
+      ]
+    },
+    {
+      "id": "FIB020",
+      "prompt": "A unilateral emergency outcome is a ______ decision.",
+      "answer": "heuristic",
+      "source_pages": [
+        385
+      ]
+    },
+    {
+      "id": "FIB021",
+      "prompt": "No two consensus nodes decide differently = uniform ______.",
+      "answer": "agreement",
+      "source_pages": [
+        387
+      ]
+    },
+    {
+      "id": "FIB022",
+      "prompt": "Every non-crashed node eventually decides = ______.",
+      "answer": "termination",
+      "source_pages": [
+        387
+      ]
+    },
+    {
+      "id": "FIB023",
+      "prompt": "Raft's leadership epoch is a ______.",
+      "answer": "term",
+      "source_pages": [
+        390
+      ]
+    },
+    {
+      "id": "FIB024",
+      "prompt": "Paxos uses a ______ number.",
+      "answer": "ballot",
+      "source_pages": [
+        390
+      ]
+    },
+    {
+      "id": "FIB025",
+      "prompt": "VSR uses a ______ number.",
+      "answer": "view",
+      "source_pages": [
+        390
+      ]
+    },
+    {
+      "id": "FIB026",
+      "prompt": "Consensus quorums must ______.",
+      "answer": "overlap",
+      "source_pages": [
+        390
+      ]
+    },
+    {
+      "id": "FIB027",
+      "prompt": "ZooKeeper's session-owned temporary records are ______ nodes.",
+      "answer": "ephemeral",
+      "source_pages": [
+        393
+      ]
+    }
+  ],
+  "ordering_exercises": [
+    {
+      "id": "ORD01",
+      "title": "Linearizable observation",
+      "items_scrambled": [
+        "Later read must stay new",
+        "Write begins",
+        "Read sees new",
+        "Write completes"
+      ],
+      "correct_order": [
+        "Write begins",
+        "Read sees new",
+        "Later read must stay new",
+        "Write completes"
+      ],
+      "source_pages": [
+        348,
+        349
+      ]
+    },
+    {
+      "id": "ORD02",
+      "title": "Lamport propagation",
+      "items_scrambled": [
+        "Next op gets larger counter",
+        "Receive larger max",
+        "Advance local counter",
+        "Sender propagates max"
+      ],
+      "correct_order": [
+        "Sender propagates max",
+        "Receive larger max",
+        "Advance local counter",
+        "Next op gets larger counter"
+      ],
+      "source_pages": [
+        368
+      ]
+    },
+    {
+      "id": "ORD03",
+      "title": "TOB username claim",
+      "items_scrambled": [
+        "Acknowledge winner",
+        "Append claim",
+        "Inspect ordered claims",
+        "Wait for own delivery"
+      ],
+      "correct_order": [
+        "Append claim",
+        "Wait for own delivery",
+        "Inspect ordered claims",
+        "Acknowledge winner"
+      ],
+      "source_pages": [
+        372
+      ]
+    },
+    {
+      "id": "ORD04",
+      "title": "Successful 2PC",
+      "items_scrambled": [
+        "Persist final decision",
+        "Prepare",
+        "Local transaction work",
+        "All yes votes",
+        "Send commit"
+      ],
+      "correct_order": [
+        "Local transaction work",
+        "Prepare",
+        "All yes votes",
+        "Persist final decision",
+        "Send commit"
+      ],
+      "source_pages": [
+        378,
+        379,
+        380
+      ]
+    },
+    {
+      "id": "ORD05",
+      "title": "Consensus epoch",
+      "items_scrambled": [
+        "Proposal quorum votes",
+        "Higher epoch elected",
+        "Old leader superseded",
+        "New leader proposes",
+        "Decision safe"
+      ],
+      "correct_order": [
+        "Higher epoch elected",
+        "Old leader superseded",
+        "New leader proposes",
+        "Proposal quorum votes",
+        "Decision safe"
+      ],
+      "source_pages": [
+        390
+      ]
+    }
+  ],
+  "scenario_questions": [
+    {
+      "id": "SC001",
+      "scenario": "Alice sees a new score; Bob later reads an older score.",
+      "question": "What was violated?",
+      "expected_answer": "Linearizability.",
+      "source_pages": [
+        346,
+        347
+      ]
+    },
+    {
+      "id": "SC002",
+      "scenario": "A read overlaps a write and returns the old value.",
+      "question": "Violation?",
+      "expected_answer": "Not necessarily; concurrent reads may return old or new.",
+      "source_pages": [
+        348
+      ]
+    },
+    {
+      "id": "SC003",
+      "scenario": "One read sees the new value and a later read sees old.",
+      "question": "Violation?",
+      "expected_answer": "Yes; linearizability forbids moving backward.",
+      "source_pages": [
+        349
+      ]
+    },
+    {
+      "id": "SC004",
+      "scenario": "Two nodes both become leader.",
+      "question": "What failed?",
+      "expected_answer": "Linearizable/consensus-backed leader election; split brain occurred.",
+      "source_pages": [
+        352
+      ]
+    },
+    {
+      "id": "SC005",
+      "scenario": "Two users concurrently claim the same username and both succeed.",
+      "question": "What guarantee is needed?",
+      "expected_answer": "Hard uniqueness requires linearizable/consensus-backed decision-making.",
+      "source_pages": [
+        352,
+        353
+      ]
+    },
+    {
+      "id": "SC006",
+      "scenario": "A queue delivers a resize instruction before storage exposes the uploaded image.",
+      "question": "What pattern?",
+      "expected_answer": "Cross-channel timing dependency.",
+      "source_pages": [
+        353,
+        354
+      ]
+    },
+    {
+      "id": "SC007",
+      "scenario": "Reader A sees new value from one strict quorum; later B sees old from another.",
+      "question": "Why possible?",
+      "expected_answer": "w+r>n alone does not ensure linearizability during concurrent propagation.",
+      "source_pages": [
+        356
+      ]
+    },
+    {
+      "id": "SC008",
+      "scenario": "Two datacenters are disconnected but both must accept local writes.",
+      "question": "What must be relaxed?",
+      "expected_answer": "Linearizability if both sides stay available.",
+      "source_pages": [
+        358,
+        359
+      ]
+    },
+    {
+      "id": "SC009",
+      "scenario": "Two concurrent causal-independent writes occur.",
+      "question": "How can causal consistency order them?",
+      "expected_answer": "Either order; they are incomparable.",
+      "source_pages": [
+        363
+      ]
+    },
+    {
+      "id": "SC010",
+      "scenario": "Node counter=4 receives Lamport max=9.",
+      "question": "Next operation?",
+      "expected_answer": "Advance to 9 then issue counter above 9, typically 10.",
+      "source_pages": [
+        368
+      ]
+    },
+    {
+      "id": "SC011",
+      "scenario": "Node wants to accept username based only on local Lamport order.",
+      "question": "Why unsafe?",
+      "expected_answer": "An unseen earlier concurrent claim may exist; order is not finalized.",
+      "source_pages": [
+        369
+      ]
+    },
+    {
+      "id": "SC012",
+      "scenario": "Replica has delivered messages 1-4 and receives 6 from gap-free sequence.",
+      "question": "What now?",
+      "expected_answer": "Wait for 5 before delivering 6.",
+      "source_pages": [
+        373,
+        374
+      ]
+    },
+    {
+      "id": "SC013",
+      "scenario": "Three shards get independent commit requests; one rejects.",
+      "question": "What fails?",
+      "expected_answer": "Atomicity; distributed commit needs coordination.",
+      "source_pages": [
+        376,
+        377
+      ]
+    },
+    {
+      "id": "SC014",
+      "scenario": "2PC participant voted yes and coordinator crashes.",
+      "question": "Can it abort?",
+      "expected_answer": "No; it is in doubt and must wait.",
+      "source_pages": [
+        380,
+        381
+      ]
+    },
+    {
+      "id": "SC015",
+      "scenario": "Coordinator is down 20 minutes after prepare.",
+      "question": "Operational effect?",
+      "expected_answer": "Prepared participants retain locks, blocking other work.",
+      "source_pages": [
+        384
+      ]
+    },
+    {
+      "id": "SC016",
+      "scenario": "Operator forces one in-doubt participant to abort.",
+      "question": "What risk?",
+      "expected_answer": "Heuristic decision may break atomicity.",
+      "source_pages": [
+        385
+      ]
+    },
+    {
+      "id": "SC017",
+      "scenario": "Broker ack and DB write commit together.",
+      "question": "Benefit?",
+      "expected_answer": "Effectively exactly-once processing across those transactional effects.",
+      "source_pages": [
+        382,
+        383
+      ]
+    },
+    {
+      "id": "SC018",
+      "scenario": "5-node consensus group loses 2 nodes.",
+      "question": "Can it progress?",
+      "expected_answer": "Yes, 3 remain as a majority.",
+      "source_pages": [
+        388,
+        391
+      ]
+    },
+    {
+      "id": "SC019",
+      "scenario": "5-node group loses 3 nodes.",
+      "question": "Can it progress?",
+      "expected_answer": "No majority; progress stops though safety should hold.",
+      "source_pages": [
+        388,
+        391
+      ]
+    },
+    {
+      "id": "SC020",
+      "scenario": "Term-8 leader returns after term-9 leader was elected.",
+      "question": "Who wins?",
+      "expected_answer": "Term-9 leader.",
+      "source_pages": [
+        390
+      ]
+    },
+    {
+      "id": "SC021",
+      "scenario": "Consensus group repeatedly suspects leader due to flaky link.",
+      "question": "What happens?",
+      "expected_answer": "Leader churn can destroy performance/progress while safety remains.",
+      "source_pages": [
+        391
+      ]
+    },
+    {
+      "id": "SC022",
+      "scenario": "Thousands of workers need partition ownership coordination.",
+      "question": "Architecture?",
+      "expected_answer": "Use a small ZooKeeper/etcd ensemble rather than all workers voting.",
+      "source_pages": [
+        393,
+        394
+      ]
+    },
+    {
+      "id": "SC023",
+      "scenario": "Service discovery returns slightly stale but usable endpoint.",
+      "question": "Does it necessarily need consensus?",
+      "expected_answer": "No; stale discovery can be acceptable.",
+      "source_pages": [
+        394
+      ]
+    }
+  ],
+  "short_answer_questions": [
+    {
+      "id": "SA001",
+      "question": "Linearizability vs serializability?",
+      "model_answer": "Linearizability is real-time single-object recency; serializability is multi-object transaction isolation in some serial order.",
+      "source_pages": [
+        351
+      ]
+    },
+    {
+      "id": "SA002",
+      "question": "Why do hard uniqueness constraints need stronger coordination?",
+      "model_answer": "Before accepting a claim, the system must know no competing claim can precede it.",
+      "source_pages": [
+        352,
+        353,
+        369,
+        370
+      ]
+    },
+    {
+      "id": "SA003",
+      "question": "What is the strict quorum trap?",
+      "model_answer": "Quorum overlap alone does not ensure that later readers cannot see older values during a concurrent write.",
+      "source_pages": [
+        356,
+        357
+      ]
+    },
+    {
+      "id": "SA004",
+      "question": "Explain CAP correctly.",
+      "model_answer": "During a network partition, full linearizability and total availability cannot both be provided on all sides; partition itself is not optional.",
+      "source_pages": [
+        358,
+        359
+      ]
+    },
+    {
+      "id": "SA005",
+      "question": "Causal vs linearizable consistency?",
+      "model_answer": "Causality orders dependencies and permits concurrency; linearizability totally orders all operations and is stronger.",
+      "source_pages": [
+        363,
+        364
+      ]
+    },
+    {
+      "id": "SA006",
+      "question": "How do Lamport timestamps preserve causality?",
+      "model_answer": "Max-seen counters are propagated so causal dependencies always increase the timestamp.",
+      "source_pages": [
+        367,
+        368
+      ]
+    },
+    {
+      "id": "SA007",
+      "question": "Why can't Lamport timestamps enforce online uniqueness alone?",
+      "model_answer": "They provide an order but not finality; unseen earlier operations may still appear.",
+      "source_pages": [
+        369,
+        370
+      ]
+    },
+    {
+      "id": "SA008",
+      "question": "What does TOB provide?",
+      "model_answer": "Reliable identical message delivery order with final positions.",
+      "source_pages": [
+        370,
+        371
+      ]
+    },
+    {
+      "id": "SA009",
+      "question": "How are TOB and consensus related?",
+      "model_answer": "Repeated consensus decides successive log entries, and powerful linearizable registers can be transformed into TOB and vice versa.",
+      "source_pages": [
+        373,
+        374,
+        388,
+        389
+      ]
+    },
+    {
+      "id": "SA010",
+      "question": "Explain FLP accurately.",
+      "model_answer": "It rules out guaranteed termination for deterministic consensus in a fully asynchronous crash-prone model, not practical protocols with timeouts/randomness.",
+      "source_pages": [
+        375
+      ]
+    },
+    {
+      "id": "SA011",
+      "question": "Why is 2PC atomic?",
+      "model_answer": "Participants promise commitability before the coordinator records an irrevocable final decision, which is then enforced everywhere.",
+      "source_pages": [
+        379,
+        380
+      ]
+    },
+    {
+      "id": "SA012",
+      "question": "Why is 2PC blocking?",
+      "model_answer": "After yes, participants cannot decide alone if the coordinator disappears.",
+      "source_pages": [
+        380,
+        381
+      ]
+    },
+    {
+      "id": "SA013",
+      "question": "Why are in-doubt transactions dangerous?",
+      "model_answer": "They retain locks and can make large parts of an application unavailable.",
+      "source_pages": [
+        384,
+        385
+      ]
+    },
+    {
+      "id": "SA014",
+      "question": "What is XA?",
+      "model_answer": "A standardized interface for 2PC across heterogeneous databases/message brokers.",
+      "source_pages": [
+        383,
+        384
+      ]
+    },
+    {
+      "id": "SA015",
+      "question": "What are the consensus properties?",
+      "model_answer": "Agreement, integrity, validity, termination.",
+      "source_pages": [
+        387
+      ]
+    },
+    {
+      "id": "SA016",
+      "question": "Safety vs liveness in consensus?",
+      "model_answer": "Agreement/integrity/validity are safety; termination is liveness and requires a reachable majority for progress.",
+      "source_pages": [
+        387,
+        388
+      ]
+    },
+    {
+      "id": "SA017",
+      "question": "How do epochs/quorums prevent stale leaders?",
+      "model_answer": "Higher epochs supersede lower ones and overlapping quorums ensure latest leadership/state knowledge carries into decisions.",
+      "source_pages": [
+        390
+      ]
+    },
+    {
+      "id": "SA018",
+      "question": "Consensus vs 2PC?",
+      "model_answer": "Consensus elects epoch-scoped leaders and normally needs a majority; 2PC has an unelected coordinator and needs every participant.",
+      "source_pages": [
+        390
+      ]
+    },
+    {
+      "id": "SA019",
+      "question": "Why isn't consensus free?",
+      "model_answer": "Voting adds synchronous latency, majority dependence, membership complexity, and leader-election instability under bad networks.",
+      "source_pages": [
+        391
+      ]
+    },
+    {
+      "id": "SA020",
+      "question": "Why use ZooKeeper/etcd?",
+      "model_answer": "They outsource consensus-backed atomic operations, ordering/fencing, failure detection, watches, leader election, and membership.",
+      "source_pages": [
+        392,
+        393,
+        394,
+        395
+      ]
+    }
+  ],
+  "active_recall_prompts": [
+    {
+      "id": "AR001",
+      "prompt": "Explain linearizability from a timeline.",
+      "target_points": [
+        "operation interval",
+        "linearization point",
+        "real-time precedence",
+        "concurrent overlap",
+        "no backward reads"
+      ],
+      "source_pages": [
+        346,
+        348,
+        349,
+        350
+      ]
+    },
+    {
+      "id": "AR002",
+      "prompt": "Contrast linearizability, serializability, strict serializability.",
+      "target_points": [
+        "recency",
+        "transaction isolation",
+        "real time",
+        "combined model"
+      ],
+      "source_pages": [
+        351
+      ]
+    },
+    {
+      "id": "AR003",
+      "prompt": "List linearizability use cases.",
+      "target_points": [
+        "locks",
+        "leader election",
+        "uniqueness",
+        "hard constraints",
+        "cross-channel"
+      ],
+      "source_pages": [
+        352,
+        353,
+        354
+      ]
+    },
+    {
+      "id": "AR004",
+      "prompt": "Explain CAP without 'pick two'.",
+      "target_points": [
+        "partition fault",
+        "healthy network both possible",
+        "during partition linearizable vs available",
+        "narrow scope"
+      ],
+      "source_pages": [
+        358,
+        359,
+        360
+      ]
+    },
+    {
+      "id": "AR005",
+      "prompt": "Explain causal partial order.",
+      "target_points": [
+        "happens-before",
+        "concurrent incomparable",
+        "branches",
+        "linearizability total order"
+      ],
+      "source_pages": [
+        361,
+        362,
+        363,
+        364
+      ]
+    },
+    {
+      "id": "AR006",
+      "prompt": "Compare sequence-number strategies.",
+      "target_points": [
+        "single leader causal",
+        "per-node no",
+        "physical time no",
+        "blocks no",
+        "Lamport yes"
+      ],
+      "source_pages": [
+        365,
+        366,
+        367,
+        368
+      ]
+    },
+    {
+      "id": "AR007",
+      "prompt": "Explain Lamport vs version vector.",
+      "target_points": [
+        "counter/node ID",
+        "max propagation",
+        "total order",
+        "cannot detect concurrency",
+        "version vectors can"
+      ],
+      "source_pages": [
+        367,
+        368,
+        369
+      ]
+    },
+    {
+      "id": "AR008",
+      "prompt": "Explain why order finality matters.",
+      "target_points": [
+        "uniqueness",
+        "unseen operations",
+        "timestamp not enough",
+        "TOB"
+      ],
+      "source_pages": [
+        369,
+        370
+      ]
+    },
+    {
+      "id": "AR009",
+      "prompt": "Recite TOB properties/uses.",
+      "target_points": [
+        "reliable delivery",
+        "same order",
+        "finality",
+        "replication",
+        "state machine",
+        "fencing"
+      ],
+      "source_pages": [
+        370,
+        371
+      ]
+    },
+    {
+      "id": "AR010",
+      "prompt": "Explain TOB <-> linearizable register.",
+      "target_points": [
+        "CAS from log",
+        "read synchronization",
+        "increment-and-get",
+        "gap-free sequence",
+        "consensus"
+      ],
+      "source_pages": [
+        372,
+        373,
+        374
+      ]
+    },
+    {
+      "id": "AR011",
+      "prompt": "Walk through 2PC.",
+      "target_points": [
+        "txid",
+        "local work",
+        "prepare",
+        "yes promise",
+        "durable coordinator decision",
+        "retry final"
+      ],
+      "source_pages": [
+        378,
+        379,
+        380
+      ]
+    },
+    {
+      "id": "AR012",
+      "prompt": "Explain 2PC failure.",
+      "target_points": [
+        "coordinator crash",
+        "in doubt",
+        "cannot abort",
+        "locks",
+        "blocking"
+      ],
+      "source_pages": [
+        380,
+        381,
+        384
+      ]
+    },
+    {
+      "id": "AR013",
+      "prompt": "Recite consensus properties.",
+      "target_points": [
+        "agreement",
+        "integrity",
+        "validity",
+        "termination",
+        "safety/liveness"
+      ],
+      "source_pages": [
+        387,
+        388
+      ]
+    },
+    {
+      "id": "AR014",
+      "prompt": "Explain repeated consensus as TOB.",
+      "target_points": [
+        "one decision per log slot",
+        "same order",
+        "no duplicate",
+        "valid proposal",
+        "eventual delivery"
+      ],
+      "source_pages": [
+        388,
+        389
+      ]
+    },
+    {
+      "id": "AR015",
+      "prompt": "Explain epochs/quorum overlap.",
+      "target_points": [
+        "term/ballot/view",
+        "higher wins",
+        "election quorum",
+        "proposal quorum",
+        "overlap"
+      ],
+      "source_pages": [
+        390
+      ]
+    },
+    {
+      "id": "AR016",
+      "prompt": "List consensus limitations.",
+      "target_points": [
+        "synchronous latency",
+        "majority",
+        "membership",
+        "timeouts",
+        "leader churn"
+      ],
+      "source_pages": [
+        391
+      ]
+    },
+    {
+      "id": "AR017",
+      "prompt": "Explain ZooKeeper toolkit.",
+      "target_points": [
+        "linearizable atomics",
+        "zxid/cversion",
+        "sessions",
+        "ephemeral",
+        "watches",
+        "leader election",
+        "partition assignment"
+      ],
+      "source_pages": [
+        392,
+        393,
+        394
+      ]
+    }
+  ],
+  "diagram_reconstruction_drills": [
+    {
+      "id": "DR01",
+      "name": "Linearizable score read",
+      "task": "Draw Alice reading new score and Bob's later stale read; mark why it violates real-time recency.",
+      "source_pages": [
+        346,
+        347
+      ]
+    },
+    {
+      "id": "DR02",
+      "name": "Concurrent write/read",
+      "task": "Draw reads before/during/after a write and label allowed results.",
+      "source_pages": [
+        347,
+        348,
+        349
+      ]
+    },
+    {
+      "id": "DR03",
+      "name": "Cross-channel resize",
+      "task": "Draw file storage + message queue and show queue delivery overtaking storage replication.",
+      "source_pages": [
+        353,
+        354
+      ]
+    },
+    {
+      "id": "DR04",
+      "name": "Strict quorum anomaly",
+      "task": "Draw n=3,w=3,r=2 where A sees 1 and later B sees 0.",
+      "source_pages": [
+        356
+      ]
+    },
+    {
+      "id": "DR05",
+      "name": "Causal history",
+      "task": "Draw happens-before arrows with two concurrent branches and merge.",
+      "source_pages": [
+        362,
+        363,
+        364
+      ]
+    },
+    {
+      "id": "DR06",
+      "name": "Lamport clocks",
+      "task": "Draw two node counters and max-seen propagation forcing a counter jump.",
+      "source_pages": [
+        367,
+        368
+      ]
+    },
+    {
+      "id": "DR07",
+      "name": "TOB log",
+      "task": "Draw identical numbered logs on several nodes; show message 6 waiting for missing 5.",
+      "source_pages": [
+        370,
+        371,
+        373,
+        374
+      ]
+    },
+    {
+      "id": "DR08",
+      "name": "Successful 2PC",
+      "task": "Draw coordinator, two participants, prepare, yes, durable decision, commit.",
+      "source_pages": [
+        378,
+        379
+      ]
+    },
+    {
+      "id": "DR09",
+      "name": "2PC coordinator crash",
+      "task": "Draw a participant stuck in doubt after yes vote and coordinator crash.",
+      "source_pages": [
+        380,
+        381
+      ]
+    },
+    {
+      "id": "DR10",
+      "name": "Consensus epochs",
+      "task": "Draw term/epoch change, stale old leader, election quorum, proposal quorum, and overlap.",
+      "source_pages": [
+        390
+      ]
+    },
+    {
+      "id": "DR11",
+      "name": "ZooKeeper coordination",
+      "task": "Draw small ensemble serving many clients with sessions, ephemeral nodes, watches, and leader election.",
+      "source_pages": [
+        392,
+        393,
+        394
+      ]
+    }
+  ],
+  "interview_style_questions": [
+    {
+      "id": "INT01",
+      "question": "Linearizability vs serializability?",
+      "strong_answer_outline": [
+        "single object recency",
+        "real time",
+        "transactions",
+        "serial order",
+        "strict serializability"
+      ],
+      "source_pages": [
+        351
+      ]
+    },
+    {
+      "id": "INT02",
+      "question": "When is linearizability necessary?",
+      "strong_answer_outline": [
+        "locks",
+        "leader election",
+        "hard uniqueness",
+        "cross-channel timing"
+      ],
+      "source_pages": [
+        352,
+        353,
+        354
+      ]
+    },
+    {
+      "id": "INT03",
+      "question": "Do quorum reads/writes guarantee linearizability?",
+      "strong_answer_outline": [
+        "w+r>n not sufficient",
+        "later stale read",
+        "read repair",
+        "CAS needs consensus"
+      ],
+      "source_pages": [
+        356,
+        357
+      ]
+    },
+    {
+      "id": "INT04",
+      "question": "Explain CAP correctly.",
+      "strong_answer_outline": [
+        "partition as fault",
+        "during partition linearizable vs available",
+        "narrow scope",
+        "not pick-two forever"
+      ],
+      "source_pages": [
+        358,
+        359,
+        360
+      ]
+    },
+    {
+      "id": "INT05",
+      "question": "Causal consistency vs linearizability?",
+      "strong_answer_outline": [
+        "partial vs total order",
+        "concurrency",
+        "linearizability implies causal",
+        "latency/availability"
+      ],
+      "source_pages": [
+        363,
+        364
+      ]
+    },
+    {
+      "id": "INT06",
+      "question": "How do Lamport timestamps work?",
+      "strong_answer_outline": [
+        "counter,node ID",
+        "max propagation",
+        "causal total order",
+        "no concurrency detection"
+      ],
+      "source_pages": [
+        367,
+        368,
+        369
+      ]
+    },
+    {
+      "id": "INT07",
+      "question": "Why isn't timestamp ordering enough for uniqueness?",
+      "strong_answer_outline": [
+        "unseen claim",
+        "order finality",
+        "fault tolerance",
+        "TOB"
+      ],
+      "source_pages": [
+        369,
+        370
+      ]
+    },
+    {
+      "id": "INT08",
+      "question": "What is total order broadcast?",
+      "strong_answer_outline": [
+        "reliable delivery",
+        "same order",
+        "finality",
+        "replicated log",
+        "state machine"
+      ],
+      "source_pages": [
+        370,
+        371
+      ]
+    },
+    {
+      "id": "INT09",
+      "question": "Explain 2PC and its failure mode.",
+      "strong_answer_outline": [
+        "prepare",
+        "promise",
+        "coordinator durable decision",
+        "in doubt",
+        "blocking",
+        "locks"
+      ],
+      "source_pages": [
+        378,
+        379,
+        380,
+        381,
+        384
+      ]
+    },
+    {
+      "id": "INT10",
+      "question": "What does FLP actually say?",
+      "strong_answer_outline": [
+        "deterministic",
+        "asynchronous",
+        "crash",
+        "no guaranteed termination",
+        "timeouts/randomness"
+      ],
+      "source_pages": [
+        375
+      ]
+    },
+    {
+      "id": "INT11",
+      "question": "State the consensus properties.",
+      "strong_answer_outline": [
+        "agreement",
+        "integrity",
+        "validity",
+        "termination",
+        "safety/liveness"
+      ],
+      "source_pages": [
+        387,
+        388
+      ]
+    },
+    {
+      "id": "INT12",
+      "question": "How do Raft/Paxos-style epochs and quorums prevent stale leaders?",
+      "strong_answer_outline": [
+        "term/ballot/view",
+        "higher epoch",
+        "election quorum",
+        "proposal quorum",
+        "overlap"
+      ],
+      "source_pages": [
+        390
+      ]
+    },
+    {
+      "id": "INT13",
+      "question": "Consensus vs 2PC?",
+      "strong_answer_outline": [
+        "elected leader",
+        "majority",
+        "2PC every participant",
+        "blocking coordinator",
+        "recovery"
+      ],
+      "source_pages": [
+        387,
+        390
+      ]
+    },
+    {
+      "id": "INT14",
+      "question": "Why use ZooKeeper/etcd?",
+      "strong_answer_outline": [
+        "outsourced consensus",
+        "linearizable atomics",
+        "fencing",
+        "sessions",
+        "watches",
+        "membership"
+      ],
+      "source_pages": [
+        392,
+        393,
+        394,
+        395
+      ]
+    }
+  ],
+  "practice_problems": [
+    {
+      "id": "P01",
+      "type": "linearizability",
+      "prompt": "A write completes, then a later read returns the previous value. Linearizable?",
+      "solution": "No.",
+      "based_on_source_pages": [
+        348,
+        349
+      ]
+    },
+    {
+      "id": "P02",
+      "type": "linearizability",
+      "prompt": "A read overlaps a write and returns old value. Linearizable?",
+      "solution": "Potentially yes; concurrent operations may be ordered either way.",
+      "based_on_source_pages": [
+        348
+      ]
+    },
+    {
+      "id": "P03",
+      "type": "lamport",
+      "prompt": "Local counter 7 receives max 12. What should next local operation use?",
+      "solution": "Advance to 12, then next operation gets >12, typically 13.",
+      "based_on_source_pages": [
+        368
+      ]
+    },
+    {
+      "id": "P04",
+      "type": "tob",
+      "prompt": "Gap-free log delivered 4 then receives 6. What must happen?",
+      "solution": "Wait for 5 before delivering 6.",
+      "based_on_source_pages": [
+        373,
+        374
+      ]
+    },
+    {
+      "id": "P05",
+      "type": "2pc",
+      "prompt": "Five participants: four yes, one no. Decision?",
+      "solution": "Abort; all must vote yes.",
+      "based_on_source_pages": [
+        378,
+        379
+      ]
+    },
+    {
+      "id": "P06",
+      "type": "2pc",
+      "prompt": "Participant voted yes and coordinator disappears. Can it abort after timeout?",
+      "solution": "No; it is in doubt.",
+      "based_on_source_pages": [
+        380,
+        381
+      ]
+    },
+    {
+      "id": "P07",
+      "type": "consensus",
+      "prompt": "7-node consensus group: smallest majority?",
+      "solution": "4.",
+      "based_on_source_pages": [
+        388,
+        390
+      ]
+    },
+    {
+      "id": "P08",
+      "type": "consensus",
+      "prompt": "7-node group loses 3 nodes. Can it progress?",
+      "solution": "Yes, 4 remain, which is a majority.",
+      "based_on_source_pages": [
+        388,
+        391
+      ]
+    },
+    {
+      "id": "P09",
+      "type": "epoch",
+      "prompt": "Term 9 leader returns after term 10 elected. Which leader is valid?",
+      "solution": "Term 10; higher epoch supersedes lower.",
+      "based_on_source_pages": [
+        390
+      ]
+    },
+    {
+      "id": "P10",
+      "type": "exactly_once",
+      "prompt": "Broker ack + DB write are atomic, email is not. What may duplicate on retry?",
+      "solution": "The email.",
+      "based_on_source_pages": [
+        382,
+        383
+      ]
+    },
+    {
+      "id": "P11",
+      "type": "cap",
+      "prompt": "Partitioned datacenters both accept independent writes. Can they maintain one linearizable history?",
+      "solution": "No; availability on both sides sacrifices linearizability during the fault.",
+      "based_on_source_pages": [
+        358,
+        359
+      ]
+    },
+    {
+      "id": "P12",
+      "type": "consensus_property",
+      "prompt": "Protocol never makes conflicting decisions but may wait forever after a failure. What fails?",
+      "solution": "Liveness/termination, while safety can still hold.",
+      "based_on_source_pages": [
+        387,
+        388
+      ]
+    }
+  ],
+  "mastery_check": {
+    "beginner": [
+      "Define linearizability, causal consistency, TOB, 2PC, and consensus.",
+      "Distinguish serializability from linearizability.",
+      "State consensus properties."
+    ],
+    "intermediate": [
+      "Analyze linearizable histories.",
+      "Explain Lamport clocks and their limits.",
+      "Walk through 2PC failures.",
+      "Explain quorum overlap and epochs.",
+      "Explain ZooKeeper primitives."
+    ],
+    "advanced": [
+      "Explain CAP without slogans.",
+      "Derive the conceptual TOB/consensus/linearizable-register equivalence.",
+      "Explain why 2PC is not fault-tolerant consensus.",
+      "Reason about safety vs liveness under majority loss."
+    ]
+  },
+  "final_review": {
+    "must_memorize": [
+      "Linearizability = single-copy atomic recency.",
+      "Serializability = transaction isolation; strict serializability combines both.",
+      "Hard locks/leader election/uniqueness often require linearizable decisions.",
+      "w+r>n alone does not guarantee linearizability.",
+      "During network partition, total availability and linearizability cannot both hold everywhere.",
+      "CAP's pick-two slogan is misleading and narrow.",
+      "Causality is a partial order; linearizability is a total order.",
+      "Linearizability implies causal consistency.",
+      "Lamport timestamp = (counter,node ID) with max-seen propagation.",
+      "Lamport timestamps preserve causal order but cannot detect concurrency.",
+      "Total ordering alone is insufficient unless the order is finalized.",
+      "TOB = reliable delivery + identical delivery order.",
+      "TOB underpins state-machine replication and fencing logs.",
+      "TOB, consensus, and linearizable CAS/increment-and-get are equivalent in power.",
+      "FLP is about deterministic consensus in a fully asynchronous crash-prone model.",
+      "2PC = prepare promises followed by an irrevocable coordinator decision.",
+      "A yes vote surrenders a participant's unilateral right to abort.",
+      "2PC is blocking after coordinator failure.",
+      "In-doubt participants keep locks.",
+      "XA standardizes heterogeneous 2PC but carries major operational costs.",
+      "Consensus: agreement, integrity, validity, termination.",
+      "First three are safety; termination is liveness.",
+      "Consensus needs a majority for progress.",
+      "Raft/Paxos/VSR/Zab use epochs and quorums.",
+      "Higher epoch supersedes stale leaders.",
+      "Election and proposal quorums must overlap.",
+      "Consensus normally needs a majority; 2PC needs every participant.",
+      "ZooKeeper/etcd outsource consensus-backed coordination."
+    ],
+    "memory_chain": "LINEARIZABILITY -> SERIALIZABILITY DIFFERENCE -> QUORUM CAVEAT -> CAP -> CAUSALITY -> LAMPORT -> FINAL ORDER -> TOB -> CONSENSUS -> FLP -> 2PC -> IN DOUBT -> XA -> CONSENSUS PROPERTIES -> EPOCHS/QUORUMS -> ZOOKEEPER",
+    "one_sentence_takeaway": "When a distributed system needs one irrevocable fault-tolerant decision about order, ownership, uniqueness, or commit, the problem tends to reduce to consensus."
+  }
+}

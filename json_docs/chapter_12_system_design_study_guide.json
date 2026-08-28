@@ -1,0 +1,4166 @@
+{
+  "chapter": {
+    "number": 12,
+    "title": "Design a Chat System",
+    "source": "System Design Interview: An Insider's Guide by Alex Xu",
+    "pdf_pages": {
+      "chapter_start": 178,
+      "chapter_end": 198,
+      "references_page": 199
+    },
+    "primary_goal": "Design a massive-scale chat system supporting low-latency one-on-one messaging, small group chat, online presence, multiple devices, push notifications, persistent chat history, and reliable real-time client/server communication."
+  },
+  "chapter_summary": {
+    "overview": "Chapter 12 designs a chat system similar to Facebook Messenger. The scope includes one-on-one chat, small groups of at most 100 people, online presence, multiple-device support, push notifications, text-only messages under 100,000 characters, 50 million daily active users, and chat history retained forever. The chapter first examines client/server communication and compares polling, long polling, and WebSocket, ultimately choosing persistent bidirectional WebSocket connections for real-time messaging while retaining ordinary HTTP for stateless features such as login and profiles. The high-level system is divided into stateless services, the stateful chat service, and third-party push notification integration. Chat servers handle real-time messaging, presence servers track online state, API servers handle ordinary requests, notification servers send push notifications, and key-value stores persist chat history. For storage, generic user/profile/friend data uses relational databases while chat history uses key-value storage because of scale, low-latency access, long-tail behavior, and proven usage by chat products. Message IDs must be unique and time-sortable. The deep dive covers service discovery with ZooKeeper, one-on-one delivery, multi-device synchronization with cur_max_message_id, small-group inbox-style fanout, presence updates through WebSockets and heartbeats, and publish-subscribe presence fanout.",
+    "focus_features": [
+      "Low-latency one-on-one chat",
+      "Small group chat",
+      "Online presence",
+      "Multiple device support",
+      "Push notifications",
+      "Persistent chat history"
+    ],
+    "selected_realtime_protocol": "WebSocket",
+    "selected_chat_history_storage": "Key-value store",
+    "source_pages": [
+      178,
+      179,
+      180,
+      181,
+      182,
+      183,
+      184,
+      185,
+      186,
+      187,
+      188,
+      189,
+      190,
+      191,
+      192,
+      193,
+      194,
+      195,
+      196,
+      197,
+      198
+    ]
+  },
+  "learning_objectives": [
+    {
+      "id": "LO01",
+      "objective": "Clarify the exact chat product scope before designing the system.",
+      "source_pages": [
+        178,
+        179
+      ]
+    },
+    {
+      "id": "LO02",
+      "objective": "State all functional, scale, message-size, encryption, and retention requirements.",
+      "source_pages": [
+        179
+      ]
+    },
+    {
+      "id": "LO03",
+      "objective": "Explain the three fundamental responsibilities of the chat service.",
+      "source_pages": [
+        180
+      ]
+    },
+    {
+      "id": "LO04",
+      "objective": "Explain why HTTP is acceptable for sending and why receiving is harder with client-initiated HTTP.",
+      "source_pages": [
+        180
+      ]
+    },
+    {
+      "id": "LO05",
+      "objective": "Compare polling, long polling, and WebSocket.",
+      "source_pages": [
+        180,
+        181,
+        182,
+        183
+      ]
+    },
+    {
+      "id": "LO06",
+      "objective": "Explain WebSocket establishment, bidirectionality, persistence, ports, and connection-management implications.",
+      "source_pages": [
+        183
+      ]
+    },
+    {
+      "id": "LO07",
+      "objective": "Separate stateless HTTP services from the stateful real-time chat service.",
+      "source_pages": [
+        184,
+        185
+      ]
+    },
+    {
+      "id": "LO08",
+      "objective": "Explain service discovery and its relationship with chat-server capacity.",
+      "source_pages": [
+        185,
+        190
+      ]
+    },
+    {
+      "id": "LO09",
+      "objective": "Explain the role of third-party push notification integration.",
+      "source_pages": [
+        185
+      ]
+    },
+    {
+      "id": "LO10",
+      "objective": "Explain why a single-server design is unacceptable despite rough memory feasibility.",
+      "source_pages": [
+        185
+      ]
+    },
+    {
+      "id": "LO11",
+      "objective": "Describe chat servers, presence servers, API servers, notification servers, and KV stores.",
+      "source_pages": [
+        186
+      ]
+    },
+    {
+      "id": "LO12",
+      "objective": "Distinguish generic user data from chat-history data and select suitable storage systems.",
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "id": "LO13",
+      "objective": "Explain the chat-history access pattern and why KV stores are recommended.",
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "id": "LO14",
+      "objective": "Reconstruct the one-on-one and group-chat message schemas.",
+      "source_pages": [
+        187,
+        188
+      ]
+    },
+    {
+      "id": "LO15",
+      "objective": "Explain the two requirements for message IDs and the three generation approaches discussed.",
+      "source_pages": [
+        189
+      ]
+    },
+    {
+      "id": "LO16",
+      "objective": "Explain service discovery with ZooKeeper and reconstruct the login-to-chat-server flow.",
+      "source_pages": [
+        190
+      ]
+    },
+    {
+      "id": "LO17",
+      "objective": "Reconstruct the complete one-on-one chat message flow.",
+      "source_pages": [
+        191
+      ]
+    },
+    {
+      "id": "LO18",
+      "objective": "Explain multi-device synchronization using cur_max_message_id.",
+      "source_pages": [
+        191,
+        192
+      ]
+    },
+    {
+      "id": "LO19",
+      "objective": "Explain small-group fanout using per-recipient message sync queues/inboxes.",
+      "source_pages": [
+        192,
+        193,
+        194
+      ]
+    },
+    {
+      "id": "LO20",
+      "objective": "Explain login, logout, and disconnect presence flows.",
+      "source_pages": [
+        194,
+        195
+      ]
+    },
+    {
+      "id": "LO21",
+      "objective": "Explain the heartbeat mechanism and why immediate offline marking is undesirable.",
+      "source_pages": [
+        195,
+        196
+      ]
+    },
+    {
+      "id": "LO22",
+      "objective": "Explain online-status fanout with publish-subscribe channels.",
+      "source_pages": [
+        196,
+        197
+      ]
+    },
+    {
+      "id": "LO23",
+      "objective": "Explain why presence fanout does not scale to extremely large groups and the alternative proposed.",
+      "source_pages": [
+        197
+      ]
+    },
+    {
+      "id": "LO24",
+      "objective": "Discuss media, encryption, client caching, geographic caching, chat-server failure, and message resend as extensions.",
+      "source_pages": [
+        198
+      ]
+    }
+  ],
+  "requirements_and_scope": {
+    "chat_types": [
+      "One-on-one chat",
+      "Group chat"
+    ],
+    "clients": [
+      "Mobile",
+      "Web"
+    ],
+    "scale": "50 million daily active users",
+    "group_member_limit": 100,
+    "required_features": [
+      "One-on-one chat",
+      "Group chat",
+      "Online indicator",
+      "Multiple-device support",
+      "Push notifications"
+    ],
+    "message_type": "Text only",
+    "message_size_limit": "Less than 100,000 characters",
+    "end_to_end_encryption": "Not required for the core design; may be discussed if time allows.",
+    "chat_history_retention": "Forever",
+    "latency_goal": "Low delivery latency for one-on-one chat",
+    "source_pages": [
+      179
+    ]
+  },
+  "chat_service_fundamental_operations": [
+    {
+      "operation": "Receive messages",
+      "detail": "Receive messages from clients.",
+      "source_pages": [
+        180
+      ]
+    },
+    {
+      "operation": "Route messages",
+      "detail": "Find the correct recipients and relay messages to them.",
+      "source_pages": [
+        180
+      ]
+    },
+    {
+      "operation": "Hold offline messages",
+      "detail": "If a recipient is offline, retain messages on the server until the recipient returns.",
+      "source_pages": [
+        180
+      ]
+    }
+  ],
+  "network_protocols": {
+    "http_sender_side": {
+      "assessment": "A fine option for sending messages.",
+      "reasoning": [
+        "Sending is client initiated, matching HTTP's normal request/response model.",
+        "HTTP keep-alive allows the client to maintain a persistent connection.",
+        "Keep-alive reduces the number of TCP handshakes."
+      ],
+      "chapter_example": "Facebook initially used HTTP to send messages.",
+      "source_pages": [
+        180
+      ]
+    },
+    "receiver_problem": {
+      "issue": "HTTP is client initiated, so asynchronous server-to-client delivery is not trivial.",
+      "techniques_considered": [
+        "Polling",
+        "Long polling",
+        "WebSocket"
+      ],
+      "source_pages": [
+        180
+      ]
+    },
+    "polling": {
+      "mechanism": "The client periodically asks the server whether new messages exist.",
+      "main_problem": "Depending on frequency, it can consume substantial server resources answering requests that usually return no new messages.",
+      "source_pages": [
+        180,
+        181
+      ]
+    },
+    "long_polling": {
+      "mechanism": "The client leaves a request open until a new message becomes available or a timeout occurs, then immediately opens another request.",
+      "drawbacks": [
+        "Sender and receiver may be connected to different stateless chat servers under round-robin load balancing.",
+        "The server has no good way to know whether the client is disconnected.",
+        "Inactive users still create periodic connections after timeout, which is inefficient."
+      ],
+      "source_pages": [
+        181,
+        182
+      ]
+    },
+    "websocket": {
+      "assessment": "The most common solution for asynchronous server-to-client updates.",
+      "properties": [
+        "Connection is initiated by the client.",
+        "Bidirectional.",
+        "Persistent.",
+        "Starts as HTTP and is upgraded through a defined handshake.",
+        "Allows the server to push updates to the client.",
+        "Generally works through firewalls because it uses port 80 or 443."
+      ],
+      "design_choice": "Use WebSocket for both sending and receiving. Because WebSocket is bidirectional, there is no strong technical reason to keep a separate sender-side HTTP path.",
+      "benefit": "Simplifies client and server implementation.",
+      "operational_requirement": "Persistent connections make efficient server-side connection management critical.",
+      "source_pages": [
+        182,
+        183
+      ]
+    }
+  },
+  "high_level_architecture": {
+    "categories": [
+      "Stateless services",
+      "Stateful services",
+      "Third-party integration"
+    ],
+    "stateless_services": {
+      "examples": [
+        "Service discovery",
+        "Authentication service",
+        "Group management",
+        "User profile"
+      ],
+      "protocol": "Traditional HTTP request/response",
+      "routing": "Sit behind a load balancer that routes based on request path.",
+      "implementation": "Can be monolithic services or microservices.",
+      "source_pages": [
+        184,
+        185
+      ]
+    },
+    "stateful_service": {
+      "service": "Chat service",
+      "why_stateful": "Each client maintains a persistent network connection to one chat server and normally stays with that server while it remains available.",
+      "coordination": "Service discovery coordinates with chat servers to avoid overloading them.",
+      "source_pages": [
+        185
+      ]
+    },
+    "third_party_integration": {
+      "service": "Push notification",
+      "importance": "Notifies users about new messages even when the chat app is not running.",
+      "source_pages": [
+        185
+      ]
+    },
+    "source_pages": [
+      184,
+      185
+    ]
+  },
+  "scalability": {
+    "rough_single_server_example": {
+      "concurrent_users": 1000000,
+      "memory_per_connection": "10 KB",
+      "chapter_memory_estimate": "About 10 GB",
+      "purpose": "Illustrates that memory alone may not force distribution, but this does not justify a single-server architecture."
+    },
+    "why_not_single_server": [
+      "A large-scale design should not depend on a single server.",
+      "Single point of failure is the biggest concern.",
+      "A single-server design can be used only as an initial conceptual starting point."
+    ],
+    "source_pages": [
+      185
+    ]
+  },
+  "adjusted_high_level_components": [
+    {
+      "component": "Chat servers",
+      "role": "Facilitate real-time message sending and receiving through persistent WebSocket connections.",
+      "source_pages": [
+        186
+      ]
+    },
+    {
+      "component": "Presence servers",
+      "role": "Manage online/offline status.",
+      "source_pages": [
+        186
+      ]
+    },
+    {
+      "component": "API servers",
+      "role": "Handle login, signup, profile changes, and other non-realtime API functionality.",
+      "source_pages": [
+        186
+      ]
+    },
+    {
+      "component": "Notification servers",
+      "role": "Send push notifications.",
+      "source_pages": [
+        186
+      ]
+    },
+    {
+      "component": "Key-value stores",
+      "role": "Persist chat history so users can retrieve prior messages after coming back online.",
+      "source_pages": [
+        186
+      ]
+    }
+  ],
+  "storage_design": {
+    "generic_data": {
+      "examples": [
+        "User profile",
+        "Settings",
+        "Friends list"
+      ],
+      "storage": "Robust and reliable relational databases",
+      "scaling_techniques": [
+        "Replication",
+        "Sharding"
+      ],
+      "source_pages": [
+        187
+      ]
+    },
+    "chat_history": {
+      "characteristics": [
+        "Enormous total volume.",
+        "The chapter cites Facebook Messenger and WhatsApp processing 60 billion messages per day.",
+        "Recent chats are accessed most frequently.",
+        "Older data still needs random-access support for search, mentions, and jumping to specific messages.",
+        "Read/write ratio is about 1:1 for one-on-one chat."
+      ],
+      "recommended_storage": "Key-value store",
+      "reasons": [
+        "Easy horizontal scaling.",
+        "Very low access latency.",
+        "Relational databases handle the long tail poorly; large indexes make random access expensive.",
+        "Proven chat products use KV stores."
+      ],
+      "examples": [
+        "Facebook Messenger uses HBase.",
+        "Discord uses Cassandra."
+      ],
+      "source_pages": [
+        187
+      ]
+    }
+  },
+  "data_models": {
+    "one_on_one_message": {
+      "table": "message",
+      "primary_key": "message_id",
+      "fields": [
+        {
+          "name": "message_id",
+          "type": "bigint",
+          "role": "Primary key; also used for message ordering."
+        },
+        {
+          "name": "message_from",
+          "type": "bigint"
+        },
+        {
+          "name": "message_to",
+          "type": "bigint"
+        },
+        {
+          "name": "content",
+          "type": "text"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp"
+        }
+      ],
+      "ordering_note": "Do not rely on created_at alone because two messages can be created at the same time.",
+      "source_pages": [
+        187,
+        188
+      ]
+    },
+    "group_message": {
+      "table": "group_message",
+      "composite_primary_key": [
+        "channel_id",
+        "message_id"
+      ],
+      "partition_key": "channel_id",
+      "fields": [
+        {
+          "name": "channel_id",
+          "type": "bigint"
+        },
+        {
+          "name": "message_id",
+          "type": "bigint"
+        },
+        {
+          "name": "user_id",
+          "type": "bigint"
+        },
+        {
+          "name": "content",
+          "type": "text"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp"
+        }
+      ],
+      "channel_note": "Channel and group mean the same thing in this chapter.",
+      "partition_reason": "All queries in group chat operate within a channel.",
+      "source_pages": [
+        188
+      ]
+    }
+  },
+  "message_id_design": {
+    "requirements": [
+      "IDs must be unique.",
+      "IDs should be sortable by time; newer rows have higher IDs than older rows."
+    ],
+    "approaches": [
+      {
+        "approach": "MySQL auto_increment",
+        "limitation": "NoSQL databases usually do not provide this feature.",
+        "source_pages": [
+          189
+        ]
+      },
+      {
+        "approach": "Global 64-bit sequence generator",
+        "example": "Snowflake",
+        "reference": "Chapter 7",
+        "source_pages": [
+          189
+        ]
+      },
+      {
+        "approach": "Local sequence generator",
+        "uniqueness_scope": "Unique only within a one-on-one or group channel.",
+        "why_it_works": "Maintaining message sequence within a conversation/channel is sufficient.",
+        "advantage": "Easier to implement than a global ID generator.",
+        "source_pages": [
+          189
+        ]
+      }
+    ]
+  },
+  "service_discovery": {
+    "primary_role": "Recommend the best chat server for a client based on criteria such as geographic location and server capacity.",
+    "chapter_solution": "Apache ZooKeeper",
+    "zookeeper_role": [
+      "Registers available chat servers.",
+      "Selects the best chat server using predefined criteria."
+    ],
+    "login_flow": [
+      "User A attempts to log in.",
+      "Load balancer sends the login request to API servers.",
+      "After authentication, service discovery selects the best chat server.",
+      "The selected server information is returned to User A.",
+      "User A establishes a WebSocket connection to that chat server."
+    ],
+    "example_selected_server": "Chat server 2",
+    "source_pages": [
+      190
+    ]
+  },
+  "one_on_one_message_flow": {
+    "steps": [
+      {
+        "step": 1,
+        "action": "User A sends a chat message to Chat Server 1.",
+        "source_pages": [
+          191
+        ]
+      },
+      {
+        "step": 2,
+        "action": "Chat Server 1 obtains a message ID from the ID generator.",
+        "source_pages": [
+          191
+        ]
+      },
+      {
+        "step": 3,
+        "action": "Chat Server 1 sends the message to the message sync queue.",
+        "source_pages": [
+          191
+        ]
+      },
+      {
+        "step": 4,
+        "action": "The message is stored in the key-value store.",
+        "source_pages": [
+          191
+        ]
+      },
+      {
+        "step": "5a",
+        "action": "If User B is online, the message is forwarded to Chat Server 2, where User B is connected.",
+        "source_pages": [
+          191
+        ]
+      },
+      {
+        "step": "5b",
+        "action": "If User B is offline, push-notification servers send a push notification.",
+        "source_pages": [
+          191
+        ]
+      },
+      {
+        "step": 6,
+        "action": "Chat Server 2 forwards the message to User B over User B's persistent WebSocket connection.",
+        "source_pages": [
+          191
+        ]
+      }
+    ]
+  },
+  "multi_device_synchronization": {
+    "example_devices": [
+      "Phone",
+      "Laptop"
+    ],
+    "connection_model": "Each device maintains its own WebSocket connection; the example shows both connected to Chat Server 1.",
+    "device_variable": "cur_max_message_id",
+    "variable_meaning": "Latest message ID already known on that device.",
+    "new_message_conditions": [
+      "recipient_id equals the currently logged-in user's ID.",
+      "message_id in the KV store is greater than that device's cur_max_message_id."
+    ],
+    "why_it_works": "Each device tracks its own progress, so it can independently fetch only newer messages from the KV store.",
+    "source_pages": [
+      191,
+      192
+    ]
+  },
+  "small_group_chat": {
+    "sender_example": "User A",
+    "group_members": [
+      "User A",
+      "User B",
+      "User C"
+    ],
+    "fanout_model": "Copy a new group message into each recipient's message sync queue/inbox.",
+    "example": "A message from User A is copied once into User B's queue and once into User C's queue.",
+    "why_good_for_small_groups": [
+      "Each client checks only its own inbox for new messages.",
+      "When the group is small, per-recipient message copies are not too expensive."
+    ],
+    "chapter_product_example": "WeChat uses a similar approach and caps groups at 500 members.",
+    "large_group_limitation": "For large groups, storing a separate message copy in every recipient inbox is not acceptable.",
+    "recipient_view": "Each recipient's inbox contains messages arriving from multiple senders.",
+    "source_pages": [
+      192,
+      193,
+      194
+    ]
+  },
+  "online_presence": {
+    "responsible_component": "Presence servers",
+    "client_protocol": "WebSocket",
+    "login": {
+      "behavior": [
+        "After the real-time WebSocket connection is established, save online status in the KV store.",
+        "Save last_active_at timestamp.",
+        "Presence indicator becomes online."
+      ],
+      "source_pages": [
+        194
+      ]
+    },
+    "logout": {
+      "behavior": [
+        "Change online status to offline in the KV store.",
+        "Presence indicator becomes offline."
+      ],
+      "source_pages": [
+        195
+      ]
+    },
+    "disconnect_problem": {
+      "naive_approach": "Immediately mark offline on disconnect and online again when the connection returns.",
+      "why_bad": "Users frequently experience brief disconnect/reconnect cycles, such as while passing through a tunnel, which would make presence flicker and degrade user experience.",
+      "source_pages": [
+        195
+      ]
+    },
+    "heartbeat_solution": {
+      "mechanism": "An online client periodically sends heartbeat events to presence servers.",
+      "rule": "If a heartbeat arrives within a chosen threshold x seconds, consider the user online; otherwise mark the user offline.",
+      "chapter_example": {
+        "heartbeat_interval": "5 seconds",
+        "offline_threshold_x": "30 seconds",
+        "note": "The 30-second threshold is explicitly described as arbitrary for demonstration."
+      },
+      "source_pages": [
+        195,
+        196
+      ]
+    }
+  },
+  "online_status_fanout": {
+    "model": "Publish-subscribe",
+    "small_group_design": "Each friend pair maintains a channel. A user's status change is published to channels corresponding to friends who subscribe to those channels.",
+    "example_channels": [
+      "A-B",
+      "A-C",
+      "A-D"
+    ],
+    "delivery_protocol": "Real-time WebSocket",
+    "large_group_problem": "For a 100,000-member group, one status change could generate 100,000 events.",
+    "large_group_alternative": "Fetch online status only when a user enters the group or manually refreshes the friend list.",
+    "source_pages": [
+      196,
+      197
+    ]
+  },
+  "wrap_up_extensions": [
+    {
+      "topic": "Media files",
+      "details": [
+        "Photos and videos are much larger than text.",
+        "Compression, cloud storage, and thumbnails are useful discussion topics."
+      ],
+      "source_pages": [
+        198
+      ]
+    },
+    {
+      "topic": "End-to-end encryption",
+      "details": "WhatsApp is cited as supporting end-to-end encryption where only sender and recipient can read messages.",
+      "source_pages": [
+        198
+      ]
+    },
+    {
+      "topic": "Client-side message caching",
+      "benefit": "Reduces data transfer between client and server.",
+      "source_pages": [
+        198
+      ]
+    },
+    {
+      "topic": "Improved load time",
+      "example": "Slack built a geographically distributed network to cache users' data and channels.",
+      "source_pages": [
+        198
+      ]
+    },
+    {
+      "topic": "Chat server failure",
+      "behavior": "If a chat server goes offline, service discovery provides a new chat server and clients establish new connections.",
+      "source_pages": [
+        198
+      ]
+    },
+    {
+      "topic": "Message resend",
+      "techniques": [
+        "Retry",
+        "Queueing"
+      ],
+      "source_pages": [
+        198
+      ]
+    }
+  ],
+  "key_concepts": [
+    {
+      "term": "Polling",
+      "definition": "Client periodically asks whether new messages are available.",
+      "source_pages": [
+        180,
+        181
+      ]
+    },
+    {
+      "term": "Long Polling",
+      "definition": "Client keeps a request open until a message arrives or timeout occurs, then repeats.",
+      "source_pages": [
+        181,
+        182
+      ]
+    },
+    {
+      "term": "WebSocket",
+      "definition": "Client-initiated, persistent, bidirectional connection upgraded from HTTP and used for real-time messaging.",
+      "source_pages": [
+        182,
+        183
+      ]
+    },
+    {
+      "term": "Stateless Service",
+      "definition": "Traditional request/response service such as login, signup, or user profile management.",
+      "source_pages": [
+        184,
+        185
+      ]
+    },
+    {
+      "term": "Stateful Chat Service",
+      "definition": "Real-time service in which clients maintain persistent connections to specific chat servers.",
+      "source_pages": [
+        185
+      ]
+    },
+    {
+      "term": "Service Discovery",
+      "definition": "Selects an appropriate chat server based on location, capacity, and other criteria.",
+      "source_pages": [
+        185,
+        190
+      ]
+    },
+    {
+      "term": "ZooKeeper",
+      "definition": "The chapter's example service-discovery technology for registering and selecting chat servers.",
+      "source_pages": [
+        190
+      ]
+    },
+    {
+      "term": "Message Sync Queue",
+      "definition": "Queue used in message delivery and, for small group chat, conceptually an inbox per recipient.",
+      "source_pages": [
+        191,
+        193
+      ]
+    },
+    {
+      "term": "cur_max_message_id",
+      "definition": "Per-device marker for the latest message already synchronized to that device.",
+      "source_pages": [
+        192
+      ]
+    },
+    {
+      "term": "Channel ID",
+      "definition": "Group/conversation identifier and partition key in the group-message model.",
+      "source_pages": [
+        188
+      ]
+    },
+    {
+      "term": "Presence Server",
+      "definition": "Service that tracks online/offline state and communicates in real time with clients.",
+      "source_pages": [
+        186,
+        194
+      ]
+    },
+    {
+      "term": "Heartbeat",
+      "definition": "Periodic client event used to distinguish temporary network interruption from true offline state.",
+      "source_pages": [
+        195,
+        196
+      ]
+    },
+    {
+      "term": "Publish-Subscribe",
+      "definition": "Model used to distribute online-status changes to subscribed friends.",
+      "source_pages": [
+        196
+      ]
+    },
+    {
+      "term": "KV Store",
+      "definition": "Storage chosen for chat history because of horizontal scaling and low-latency access.",
+      "source_pages": [
+        186,
+        187
+      ]
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "FC01",
+      "front": "What two chat types must the system support?",
+      "back": "One-on-one chat and group chat.",
+      "source_pages": [
+        179
+      ]
+    },
+    {
+      "id": "FC02",
+      "front": "What client platforms are supported?",
+      "back": "Mobile and web.",
+      "source_pages": [
+        179
+      ]
+    },
+    {
+      "id": "FC03",
+      "front": "What scale is assumed?",
+      "back": "50 million daily active users.",
+      "source_pages": [
+        179
+      ]
+    },
+    {
+      "id": "FC04",
+      "front": "What is the group-size limit?",
+      "back": "100 people.",
+      "source_pages": [
+        179
+      ]
+    },
+    {
+      "id": "FC05",
+      "front": "What message type is supported in the core design?",
+      "back": "Text only.",
+      "source_pages": [
+        179
+      ]
+    },
+    {
+      "id": "FC06",
+      "front": "What is the text message size limit?",
+      "back": "Less than 100,000 characters.",
+      "source_pages": [
+        179
+      ]
+    },
+    {
+      "id": "FC07",
+      "front": "Is end-to-end encryption required in the core scope?",
+      "back": "No, but it may be discussed if time allows.",
+      "source_pages": [
+        179
+      ]
+    },
+    {
+      "id": "FC08",
+      "front": "How long is chat history stored?",
+      "back": "Forever.",
+      "source_pages": [
+        179
+      ]
+    },
+    {
+      "id": "FC09",
+      "front": "What five focus features are listed?",
+      "back": "Low-latency 1:1 chat, small groups, online presence, multiple-device support, and push notifications.",
+      "source_pages": [
+        179
+      ]
+    },
+    {
+      "id": "FC10",
+      "front": "Do chat clients communicate directly with each other?",
+      "back": "No. Each client connects through the chat service.",
+      "source_pages": [
+        180
+      ]
+    },
+    {
+      "id": "FC11",
+      "front": "What are the chat service's three fundamental operations?",
+      "back": "Receive messages, route them to recipients, and hold messages for offline recipients.",
+      "source_pages": [
+        180
+      ]
+    },
+    {
+      "id": "FC12",
+      "front": "Why is HTTP acceptable for the sender side?",
+      "back": "Sending is client initiated, matching normal HTTP request/response.",
+      "source_pages": [
+        180
+      ]
+    },
+    {
+      "id": "FC13",
+      "front": "What HTTP feature reduces repeated TCP handshakes?",
+      "back": "Keep-alive.",
+      "source_pages": [
+        180
+      ]
+    },
+    {
+      "id": "FC14",
+      "front": "Why is the receiver side harder with HTTP?",
+      "back": "HTTP is client initiated, making server-initiated asynchronous delivery nontrivial.",
+      "source_pages": [
+        180
+      ]
+    },
+    {
+      "id": "FC15",
+      "front": "What three receiver techniques are considered?",
+      "back": "Polling, long polling, and WebSocket.",
+      "source_pages": [
+        180
+      ]
+    },
+    {
+      "id": "FC16",
+      "front": "How does polling work?",
+      "back": "The client periodically asks whether new messages are available.",
+      "source_pages": [
+        180,
+        181
+      ]
+    },
+    {
+      "id": "FC17",
+      "front": "Why is polling costly?",
+      "back": "Many requests consume server resources even though the answer is usually no.",
+      "source_pages": [
+        180
+      ]
+    },
+    {
+      "id": "FC18",
+      "front": "How does long polling work?",
+      "back": "Keep the request open until a message arrives or timeout occurs, then immediately reconnect.",
+      "source_pages": [
+        181,
+        182
+      ]
+    },
+    {
+      "id": "FC19",
+      "front": "What load-balancing issue affects long polling?",
+      "back": "Sender and receiver may connect to different stateless servers under round robin.",
+      "source_pages": [
+        182
+      ]
+    },
+    {
+      "id": "FC20",
+      "front": "What disconnect problem exists with long polling?",
+      "back": "The server has no good way to know whether the client disconnected.",
+      "source_pages": [
+        182
+      ]
+    },
+    {
+      "id": "FC21",
+      "front": "Why is long polling inefficient for low-activity users?",
+      "back": "Timeouts still force periodic reconnections even when they rarely chat.",
+      "source_pages": [
+        182
+      ]
+    },
+    {
+      "id": "FC22",
+      "front": "What protocol does the chapter select for real-time chat?",
+      "back": "WebSocket.",
+      "source_pages": [
+        182,
+        183
+      ]
+    },
+    {
+      "id": "FC23",
+      "front": "Who initiates a WebSocket connection?",
+      "back": "The client.",
+      "source_pages": [
+        183
+      ]
+    },
+    {
+      "id": "FC24",
+      "front": "Is WebSocket bidirectional?",
+      "back": "Yes.",
+      "source_pages": [
+        183
+      ]
+    },
+    {
+      "id": "FC25",
+      "front": "Is a WebSocket connection persistent?",
+      "back": "Yes.",
+      "source_pages": [
+        183
+      ]
+    },
+    {
+      "id": "FC26",
+      "front": "How does WebSocket begin?",
+      "back": "As an HTTP connection that is upgraded through a handshake.",
+      "source_pages": [
+        183
+      ]
+    },
+    {
+      "id": "FC27",
+      "front": "What ports commonly allow WebSocket through firewalls?",
+      "back": "80 and 443.",
+      "source_pages": [
+        183
+      ]
+    },
+    {
+      "id": "FC28",
+      "front": "Why use WebSocket for both sending and receiving?",
+      "back": "It is bidirectional and simplifies client/server design.",
+      "source_pages": [
+        183
+      ]
+    },
+    {
+      "id": "FC29",
+      "front": "What operational concern comes with persistent WebSockets?",
+      "back": "Efficient server-side connection management.",
+      "source_pages": [
+        183
+      ]
+    },
+    {
+      "id": "FC30",
+      "front": "What three high-level service categories are used?",
+      "back": "Stateless services, stateful services, and third-party integration.",
+      "source_pages": [
+        184
+      ]
+    },
+    {
+      "id": "FC31",
+      "front": "Name examples of stateless chat-app services.",
+      "back": "Service discovery, authentication, group management, and user profile services.",
+      "source_pages": [
+        184,
+        185
+      ]
+    },
+    {
+      "id": "FC32",
+      "front": "What protocol do ordinary stateless features use?",
+      "back": "Traditional HTTP request/response.",
+      "source_pages": [
+        184
+      ]
+    },
+    {
+      "id": "FC33",
+      "front": "What is the only stateful service in the chapter's classification?",
+      "back": "The chat service.",
+      "source_pages": [
+        185
+      ]
+    },
+    {
+      "id": "FC34",
+      "front": "Why is chat service stateful?",
+      "back": "Clients maintain persistent network connections to specific chat servers.",
+      "source_pages": [
+        185
+      ]
+    },
+    {
+      "id": "FC35",
+      "front": "What does service discovery provide to clients?",
+      "back": "A list/recommendation of chat-server hostnames to connect to.",
+      "source_pages": [
+        185
+      ]
+    },
+    {
+      "id": "FC36",
+      "front": "What third-party integration is most important?",
+      "back": "Push notifications.",
+      "source_pages": [
+        185
+      ]
+    },
+    {
+      "id": "FC37",
+      "front": "What rough connection-memory example is given?",
+      "back": "1 million connections at ~10 KB each uses about 10 GB.",
+      "source_pages": [
+        185
+      ]
+    },
+    {
+      "id": "FC38",
+      "front": "Why is one-server architecture still unacceptable?",
+      "back": "A single point of failure is a major deal breaker at this scale.",
+      "source_pages": [
+        185
+      ]
+    },
+    {
+      "id": "FC39",
+      "front": "What do chat servers do?",
+      "back": "Facilitate real-time message sending and receiving.",
+      "source_pages": [
+        186
+      ]
+    },
+    {
+      "id": "FC40",
+      "front": "What do presence servers do?",
+      "back": "Manage online/offline status.",
+      "source_pages": [
+        186
+      ]
+    },
+    {
+      "id": "FC41",
+      "front": "What do API servers handle?",
+      "back": "Login, signup, profile changes, and other non-real-time functionality.",
+      "source_pages": [
+        186
+      ]
+    },
+    {
+      "id": "FC42",
+      "front": "What do notification servers do?",
+      "back": "Send push notifications.",
+      "source_pages": [
+        186
+      ]
+    },
+    {
+      "id": "FC43",
+      "front": "What stores chat history?",
+      "back": "A key-value store.",
+      "source_pages": [
+        186
+      ]
+    },
+    {
+      "id": "FC44",
+      "front": "Where is generic data such as profiles and friend lists stored?",
+      "back": "Relational databases.",
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "id": "FC45",
+      "front": "What techniques scale generic relational data?",
+      "back": "Replication and sharding.",
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "id": "FC46",
+      "front": "What volume statistic is cited for Messenger and WhatsApp?",
+      "back": "60 billion messages per day.",
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "id": "FC47",
+      "front": "Which chat data is read most often?",
+      "back": "Recent chat history.",
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "id": "FC48",
+      "front": "What older-message access patterns must still be supported?",
+      "back": "Search, mentions, and jumping to specific messages.",
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "id": "FC49",
+      "front": "What read/write ratio is stated for one-on-one chat?",
+      "back": "About 1:1.",
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "id": "FC50",
+      "front": "Why choose a KV store for chat history?",
+      "back": "Horizontal scaling, low latency, better long-tail access characteristics, and proven industry use.",
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "id": "FC51",
+      "front": "What does Facebook Messenger use according to the chapter?",
+      "back": "HBase.",
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "id": "FC52",
+      "front": "What does Discord use according to the chapter?",
+      "back": "Cassandra.",
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "id": "FC53",
+      "front": "What is the one-on-one message table primary key?",
+      "back": "message_id.",
+      "source_pages": [
+        187,
+        188
+      ]
+    },
+    {
+      "id": "FC54",
+      "front": "Why not order solely by created_at?",
+      "back": "Two messages can be created at the same time.",
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "id": "FC55",
+      "front": "What fields are in the one-on-one message table?",
+      "back": "message_id, message_from, message_to, content, created_at.",
+      "source_pages": [
+        188
+      ]
+    },
+    {
+      "id": "FC56",
+      "front": "What is the group-message composite primary key?",
+      "back": "(channel_id, message_id).",
+      "source_pages": [
+        188
+      ]
+    },
+    {
+      "id": "FC57",
+      "front": "What is the group-message partition key?",
+      "back": "channel_id.",
+      "source_pages": [
+        188
+      ]
+    },
+    {
+      "id": "FC58",
+      "front": "Why is channel_id the partition key?",
+      "back": "All group-chat queries operate within a channel.",
+      "source_pages": [
+        188
+      ]
+    },
+    {
+      "id": "FC59",
+      "front": "What two properties must message_id satisfy?",
+      "back": "Unique and sortable by time.",
+      "source_pages": [
+        189
+      ]
+    },
+    {
+      "id": "FC60",
+      "front": "Why isn't MySQL auto_increment a universal answer?",
+      "back": "NoSQL databases usually do not provide it.",
+      "source_pages": [
+        189
+      ]
+    },
+    {
+      "id": "FC61",
+      "front": "What global message-ID approach is discussed?",
+      "back": "A global 64-bit sequence generator such as Snowflake.",
+      "source_pages": [
+        189
+      ]
+    },
+    {
+      "id": "FC62",
+      "front": "What is a local sequence generator?",
+      "back": "IDs are unique only within one conversation/group channel.",
+      "source_pages": [
+        189
+      ]
+    },
+    {
+      "id": "FC63",
+      "front": "Why are local IDs sufficient?",
+      "back": "Message ordering only needs to be maintained within each conversation/channel.",
+      "source_pages": [
+        189
+      ]
+    },
+    {
+      "id": "FC64",
+      "front": "What is service discovery's main job?",
+      "back": "Choose the best chat server using criteria like geography and capacity.",
+      "source_pages": [
+        190
+      ]
+    },
+    {
+      "id": "FC65",
+      "front": "What service-discovery technology is named?",
+      "back": "Apache ZooKeeper.",
+      "source_pages": [
+        190
+      ]
+    },
+    {
+      "id": "FC66",
+      "front": "When does the client open its WebSocket to a selected chat server?",
+      "back": "After login/authentication and service discovery return the selected server.",
+      "source_pages": [
+        190
+      ]
+    },
+    {
+      "id": "FC67",
+      "front": "What is step 1 of 1:1 message flow?",
+      "back": "User A sends a message to Chat Server 1.",
+      "source_pages": [
+        191
+      ]
+    },
+    {
+      "id": "FC68",
+      "front": "What does Chat Server 1 obtain before queueing the message?",
+      "back": "A message ID.",
+      "source_pages": [
+        191
+      ]
+    },
+    {
+      "id": "FC69",
+      "front": "Where is the message sent after ID assignment?",
+      "back": "The message sync queue.",
+      "source_pages": [
+        191
+      ]
+    },
+    {
+      "id": "FC70",
+      "front": "Where is the message persisted?",
+      "back": "The key-value store.",
+      "source_pages": [
+        191
+      ]
+    },
+    {
+      "id": "FC71",
+      "front": "What happens if recipient User B is online?",
+      "back": "The message is forwarded to the chat server holding User B's WebSocket.",
+      "source_pages": [
+        191
+      ]
+    },
+    {
+      "id": "FC72",
+      "front": "What happens if User B is offline?",
+      "back": "Push-notification servers send a push notification.",
+      "source_pages": [
+        191
+      ]
+    },
+    {
+      "id": "FC73",
+      "front": "What is cur_max_message_id?",
+      "back": "The highest message ID already synchronized to a particular device.",
+      "source_pages": [
+        192
+      ]
+    },
+    {
+      "id": "FC74",
+      "front": "What two conditions define a new message for a device?",
+      "back": "Recipient ID equals the logged-in user and message ID is greater than cur_max_message_id.",
+      "source_pages": [
+        192
+      ]
+    },
+    {
+      "id": "FC75",
+      "front": "Why can each device synchronize independently?",
+      "back": "Each device maintains its own cur_max_message_id.",
+      "source_pages": [
+        192
+      ]
+    },
+    {
+      "id": "FC76",
+      "front": "How are small-group messages distributed?",
+      "back": "Copy the message into each recipient's message sync queue/inbox.",
+      "source_pages": [
+        193
+      ]
+    },
+    {
+      "id": "FC77",
+      "front": "Why is per-recipient copying attractive for small groups?",
+      "back": "Each client checks one inbox and the copy cost is manageable at small group size.",
+      "source_pages": [
+        193
+      ]
+    },
+    {
+      "id": "FC78",
+      "front": "Why does this model not scale to huge groups?",
+      "back": "A message copy for every member becomes too expensive.",
+      "source_pages": [
+        193
+      ]
+    },
+    {
+      "id": "FC79",
+      "front": "What product/group cap is cited in the group-chat discussion?",
+      "back": "WeChat, 500 members.",
+      "source_pages": [
+        193
+      ]
+    },
+    {
+      "id": "FC80",
+      "front": "What fields are stored when a user becomes online?",
+      "back": "Online status and last_active_at timestamp.",
+      "source_pages": [
+        194
+      ]
+    },
+    {
+      "id": "FC81",
+      "front": "What happens on logout?",
+      "back": "Online status is changed to offline in the KV store.",
+      "source_pages": [
+        195
+      ]
+    },
+    {
+      "id": "FC82",
+      "front": "Why not mark a user offline immediately on every disconnect?",
+      "back": "Brief network interruptions would cause presence to flicker frequently.",
+      "source_pages": [
+        195
+      ]
+    },
+    {
+      "id": "FC83",
+      "front": "What solves transient-disconnect presence problems?",
+      "back": "A heartbeat mechanism.",
+      "source_pages": [
+        195
+      ]
+    },
+    {
+      "id": "FC84",
+      "front": "What heartbeat interval is shown in the example?",
+      "back": "Every 5 seconds.",
+      "source_pages": [
+        195,
+        196
+      ]
+    },
+    {
+      "id": "FC85",
+      "front": "What offline threshold x is shown?",
+      "back": "30 seconds, chosen arbitrarily for the example.",
+      "source_pages": [
+        195,
+        196
+      ]
+    },
+    {
+      "id": "FC86",
+      "front": "What model distributes online-status changes?",
+      "back": "Publish-subscribe.",
+      "source_pages": [
+        196
+      ]
+    },
+    {
+      "id": "FC87",
+      "front": "How are small friend-status subscriptions modeled?",
+      "back": "Each friend pair maintains a channel such as A-B, A-C, A-D.",
+      "source_pages": [
+        196
+      ]
+    },
+    {
+      "id": "FC88",
+      "front": "Why is presence fanout expensive for a 100,000-member group?",
+      "back": "One status change can create 100,000 events.",
+      "source_pages": [
+        197
+      ]
+    },
+    {
+      "id": "FC89",
+      "front": "What alternative is suggested for large groups?",
+      "back": "Fetch presence when entering the group or manually refreshing the friend list.",
+      "source_pages": [
+        197
+      ]
+    },
+    {
+      "id": "FC90",
+      "front": "What techniques are suggested for message resend?",
+      "back": "Retry and queueing.",
+      "source_pages": [
+        198
+      ]
+    }
+  ],
+  "multiple_choice_questions": [
+    {
+      "id": "MCQ01",
+      "difficulty": "easy",
+      "question": "What scale does the design target?",
+      "choices": {
+        "A": "5M DAU",
+        "B": "50M DAU",
+        "C": "500M DAU",
+        "D": "1B DAU"
+      },
+      "answer": "B",
+      "source_pages": [
+        179
+      ]
+    },
+    {
+      "id": "MCQ02",
+      "difficulty": "easy",
+      "question": "What is the maximum group size?",
+      "choices": {
+        "A": "50",
+        "B": "100",
+        "C": "500",
+        "D": "1000"
+      },
+      "answer": "B",
+      "source_pages": [
+        179
+      ]
+    },
+    {
+      "id": "MCQ03",
+      "difficulty": "medium",
+      "question": "What message type is in core scope?",
+      "choices": {
+        "A": "Text only",
+        "B": "Video only",
+        "C": "Voice only",
+        "D": "All media"
+      },
+      "answer": "A",
+      "source_pages": [
+        179
+      ]
+    },
+    {
+      "id": "MCQ04",
+      "difficulty": "medium",
+      "question": "What is the text-length limit?",
+      "choices": {
+        "A": "<1,000 chars",
+        "B": "<10,000 chars",
+        "C": "<100,000 chars",
+        "D": "Unlimited"
+      },
+      "answer": "C",
+      "source_pages": [
+        179
+      ]
+    },
+    {
+      "id": "MCQ05",
+      "difficulty": "medium",
+      "question": "How long is history retained?",
+      "choices": {
+        "A": "30 days",
+        "B": "1 year",
+        "C": "5 years",
+        "D": "Forever"
+      },
+      "answer": "D",
+      "source_pages": [
+        179
+      ]
+    },
+    {
+      "id": "MCQ06",
+      "difficulty": "medium",
+      "question": "Which is NOT a fundamental chat-service operation?",
+      "choices": {
+        "A": "Receive messages",
+        "B": "Route messages",
+        "C": "Hold offline messages",
+        "D": "Render video thumbnails"
+      },
+      "answer": "D",
+      "source_pages": [
+        180
+      ]
+    },
+    {
+      "id": "MCQ07",
+      "difficulty": "medium",
+      "question": "Why is sender-side HTTP acceptable?",
+      "choices": {
+        "A": "Sending is client initiated",
+        "B": "HTTP is bidirectional",
+        "C": "HTTP has no TCP",
+        "D": "HTTP guarantees presence"
+      },
+      "answer": "A",
+      "source_pages": [
+        180
+      ]
+    },
+    {
+      "id": "MCQ08",
+      "difficulty": "medium",
+      "question": "What reduces repeated TCP handshakes with HTTP?",
+      "choices": {
+        "A": "Keep-alive",
+        "B": "Polling",
+        "C": "Sharding",
+        "D": "ZooKeeper"
+      },
+      "answer": "A",
+      "source_pages": [
+        180
+      ]
+    },
+    {
+      "id": "MCQ09",
+      "difficulty": "hard",
+      "question": "What makes HTTP awkward for receiver-side delivery?",
+      "choices": {
+        "A": "It is client initiated",
+        "B": "It has no URLs",
+        "C": "It cannot carry text",
+        "D": "It uses TCP"
+      },
+      "answer": "A",
+      "source_pages": [
+        180
+      ]
+    },
+    {
+      "id": "MCQ10",
+      "difficulty": "medium",
+      "question": "How does polling work?",
+      "choices": {
+        "A": "Client repeatedly asks for updates",
+        "B": "Server pushes continuously",
+        "C": "Client never connects",
+        "D": "Database broadcasts directly"
+      },
+      "answer": "A",
+      "source_pages": [
+        180,
+        181
+      ]
+    },
+    {
+      "id": "MCQ11",
+      "difficulty": "hard",
+      "question": "Why is polling inefficient?",
+      "choices": {
+        "A": "Most checks may return no new message",
+        "B": "It needs a graph DB",
+        "C": "It cannot use HTTP",
+        "D": "It requires video"
+      },
+      "answer": "A",
+      "source_pages": [
+        180
+      ]
+    },
+    {
+      "id": "MCQ12",
+      "difficulty": "medium",
+      "question": "What causes a long-poll request to complete?",
+      "choices": {
+        "A": "New message or timeout",
+        "B": "Only logout",
+        "C": "Only server restart",
+        "D": "Only DNS change"
+      },
+      "answer": "A",
+      "source_pages": [
+        182
+      ]
+    },
+    {
+      "id": "MCQ13",
+      "difficulty": "hard",
+      "question": "What load-balancing problem affects long polling?",
+      "choices": {
+        "A": "Message and recipient connection may be on different servers",
+        "B": "All clients use one server",
+        "C": "No TCP exists",
+        "D": "Only one user can connect"
+      },
+      "answer": "A",
+      "source_pages": [
+        182
+      ]
+    },
+    {
+      "id": "MCQ14",
+      "difficulty": "medium",
+      "question": "Which protocol is ultimately selected?",
+      "choices": {
+        "A": "Polling",
+        "B": "Long polling",
+        "C": "WebSocket",
+        "D": "FTP"
+      },
+      "answer": "C",
+      "source_pages": [
+        182,
+        183
+      ]
+    },
+    {
+      "id": "MCQ15",
+      "difficulty": "medium",
+      "question": "Who initiates WebSocket?",
+      "choices": {
+        "A": "Client",
+        "B": "Database",
+        "C": "CDN",
+        "D": "Presence queue"
+      },
+      "answer": "A",
+      "source_pages": [
+        183
+      ]
+    },
+    {
+      "id": "MCQ16",
+      "difficulty": "medium",
+      "question": "Which describes WebSocket?",
+      "choices": {
+        "A": "Bidirectional and persistent",
+        "B": "Unidirectional and stateless",
+        "C": "Polling only",
+        "D": "Database-only"
+      },
+      "answer": "A",
+      "source_pages": [
+        183
+      ]
+    },
+    {
+      "id": "MCQ17",
+      "difficulty": "hard",
+      "question": "How does WebSocket begin?",
+      "choices": {
+        "A": "HTTP connection upgraded via handshake",
+        "B": "Direct database transaction",
+        "C": "DNS-only request",
+        "D": "Long-poll timeout"
+      },
+      "answer": "A",
+      "source_pages": [
+        183
+      ]
+    },
+    {
+      "id": "MCQ18",
+      "difficulty": "medium",
+      "question": "What ports commonly let WebSocket pass firewalls?",
+      "choices": {
+        "A": "21/22",
+        "B": "25/53",
+        "C": "80/443",
+        "D": "3306/5432"
+      },
+      "answer": "C",
+      "source_pages": [
+        183
+      ]
+    },
+    {
+      "id": "MCQ19",
+      "difficulty": "hard",
+      "question": "Why use WebSocket on both sender and receiver?",
+      "choices": {
+        "A": "Bidirectionality simplifies design",
+        "B": "It guarantees exactly-once delivery",
+        "C": "It removes storage",
+        "D": "It eliminates service discovery"
+      },
+      "answer": "A",
+      "source_pages": [
+        183
+      ]
+    },
+    {
+      "id": "MCQ20",
+      "difficulty": "medium",
+      "question": "What three architecture categories are used?",
+      "choices": {
+        "A": "Stateless, stateful, third-party",
+        "B": "SQL, NoSQL, CDN",
+        "C": "Read, write, delete",
+        "D": "Push, pull, hybrid"
+      },
+      "answer": "A",
+      "source_pages": [
+        184
+      ]
+    },
+    {
+      "id": "MCQ21",
+      "difficulty": "medium",
+      "question": "Which feature belongs to stateless services?",
+      "choices": {
+        "A": "User profile",
+        "B": "Persistent chat connection",
+        "C": "Presence heartbeat socket only",
+        "D": "Message inbox only"
+      },
+      "answer": "A",
+      "source_pages": [
+        184,
+        185
+      ]
+    },
+    {
+      "id": "MCQ22",
+      "difficulty": "hard",
+      "question": "Why is chat service stateful?",
+      "choices": {
+        "A": "Clients keep persistent connections to specific chat servers",
+        "B": "It stores profiles in SQL",
+        "C": "It only uses GET requests",
+        "D": "It sends email"
+      },
+      "answer": "A",
+      "source_pages": [
+        185
+      ]
+    },
+    {
+      "id": "MCQ23",
+      "difficulty": "medium",
+      "question": "What is the key third-party integration?",
+      "choices": {
+        "A": "Push notification",
+        "B": "Search autocomplete",
+        "C": "Video transcoding",
+        "D": "Payment gateway"
+      },
+      "answer": "A",
+      "source_pages": [
+        185
+      ]
+    },
+    {
+      "id": "MCQ24",
+      "difficulty": "hard",
+      "question": "What is the rough memory estimate for 1M connections at 10KB each?",
+      "choices": {
+        "A": "1GB",
+        "B": "10GB",
+        "C": "100GB",
+        "D": "1TB"
+      },
+      "answer": "B",
+      "source_pages": [
+        185
+      ]
+    },
+    {
+      "id": "MCQ25",
+      "difficulty": "hard",
+      "question": "Why reject one-server architecture anyway?",
+      "choices": {
+        "A": "Single point of failure",
+        "B": "10GB cannot exist",
+        "C": "WebSocket forbids it",
+        "D": "No database works"
+      },
+      "answer": "A",
+      "source_pages": [
+        185
+      ]
+    },
+    {
+      "id": "MCQ26",
+      "difficulty": "medium",
+      "question": "Which component tracks online/offline state?",
+      "choices": {
+        "A": "Presence servers",
+        "B": "API servers",
+        "C": "Notification servers",
+        "D": "Relational DB only"
+      },
+      "answer": "A",
+      "source_pages": [
+        186
+      ]
+    },
+    {
+      "id": "MCQ27",
+      "difficulty": "medium",
+      "question": "Which component stores chat history?",
+      "choices": {
+        "A": "KV store",
+        "B": "Load balancer",
+        "C": "Push server",
+        "D": "DNS"
+      },
+      "answer": "A",
+      "source_pages": [
+        186
+      ]
+    },
+    {
+      "id": "MCQ28",
+      "difficulty": "medium",
+      "question": "Where does generic user/profile data go?",
+      "choices": {
+        "A": "Relational DB",
+        "B": "Only KV chat history store",
+        "C": "Message sync queue",
+        "D": "WebSocket"
+      },
+      "answer": "A",
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "id": "MCQ29",
+      "difficulty": "hard",
+      "question": "What read/write ratio is stated for 1:1 chat?",
+      "choices": {
+        "A": "10:1",
+        "B": "1:10",
+        "C": "1:1",
+        "D": "100:1"
+      },
+      "answer": "C",
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "id": "MCQ30",
+      "difficulty": "hard",
+      "question": "Why are KV stores recommended for history?",
+      "choices": {
+        "A": "Horizontal scale and low-latency random access",
+        "B": "They provide SQL joins",
+        "C": "They eliminate IDs",
+        "D": "They require no persistence"
+      },
+      "answer": "A",
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "id": "MCQ31",
+      "difficulty": "medium",
+      "question": "Which storage does Messenger use according to the chapter?",
+      "choices": {
+        "A": "HBase",
+        "B": "MySQL only",
+        "C": "Redis only",
+        "D": "MongoDB"
+      },
+      "answer": "A",
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "id": "MCQ32",
+      "difficulty": "medium",
+      "question": "Which storage does Discord use according to the chapter?",
+      "choices": {
+        "A": "Cassandra",
+        "B": "HBase",
+        "C": "PostgreSQL only",
+        "D": "SQLite"
+      },
+      "answer": "A",
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "id": "MCQ33",
+      "difficulty": "medium",
+      "question": "What is the one-on-one message-table primary key?",
+      "choices": {
+        "A": "message_id",
+        "B": "created_at",
+        "C": "message_to",
+        "D": "content"
+      },
+      "answer": "A",
+      "source_pages": [
+        187,
+        188
+      ]
+    },
+    {
+      "id": "MCQ34",
+      "difficulty": "hard",
+      "question": "Why not rely on created_at for ordering?",
+      "choices": {
+        "A": "Two messages can share the same timestamp",
+        "B": "created_at is never stored",
+        "C": "Timestamps are strings",
+        "D": "NoSQL forbids timestamps"
+      },
+      "answer": "A",
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "id": "MCQ35",
+      "difficulty": "medium",
+      "question": "What is the group-message composite primary key?",
+      "choices": {
+        "A": "(channel_id,message_id)",
+        "B": "(user_id,content)",
+        "C": "(created_at,user_id)",
+        "D": "(message_from,message_to)"
+      },
+      "answer": "A",
+      "source_pages": [
+        188
+      ]
+    },
+    {
+      "id": "MCQ36",
+      "difficulty": "hard",
+      "question": "Why is channel_id the partition key?",
+      "choices": {
+        "A": "Group-chat queries operate within a channel",
+        "B": "It is globally increasing",
+        "C": "It stores text",
+        "D": "It is a timestamp"
+      },
+      "answer": "A",
+      "source_pages": [
+        188
+      ]
+    },
+    {
+      "id": "MCQ37",
+      "difficulty": "medium",
+      "question": "What two requirements apply to message IDs?",
+      "choices": {
+        "A": "Unique and time-sortable",
+        "B": "Random and textual",
+        "C": "Exactly 32-bit and signed",
+        "D": "Global only"
+      },
+      "answer": "A",
+      "source_pages": [
+        189
+      ]
+    },
+    {
+      "id": "MCQ38",
+      "difficulty": "hard",
+      "question": "Why can local sequence IDs work?",
+      "choices": {
+        "A": "Ordering only needs to be maintained within a conversation",
+        "B": "No uniqueness is needed",
+        "C": "created_at becomes unique",
+        "D": "They are always UUIDs"
+      },
+      "answer": "A",
+      "source_pages": [
+        189
+      ]
+    },
+    {
+      "id": "MCQ39",
+      "difficulty": "medium",
+      "question": "Which service-discovery implementation is named?",
+      "choices": {
+        "A": "ZooKeeper",
+        "B": "APNS",
+        "C": "HBase",
+        "D": "FCM"
+      },
+      "answer": "A",
+      "source_pages": [
+        190
+      ]
+    },
+    {
+      "id": "MCQ40",
+      "difficulty": "hard",
+      "question": "What criteria may service discovery use?",
+      "choices": {
+        "A": "Geography and server capacity",
+        "B": "Message text color",
+        "C": "User's profile picture",
+        "D": "Only timestamp"
+      },
+      "answer": "A",
+      "source_pages": [
+        190
+      ]
+    },
+    {
+      "id": "MCQ41",
+      "difficulty": "medium",
+      "question": "What happens after service discovery chooses a server?",
+      "choices": {
+        "A": "Client opens WebSocket to it",
+        "B": "Client opens SQL session",
+        "C": "Client sends directly to peer",
+        "D": "Client stops connecting"
+      },
+      "answer": "A",
+      "source_pages": [
+        190
+      ]
+    },
+    {
+      "id": "MCQ42",
+      "difficulty": "medium",
+      "question": "What does Chat Server 1 obtain before enqueueing a message?",
+      "choices": {
+        "A": "Message ID",
+        "B": "New device token",
+        "C": "Friend graph",
+        "D": "Heartbeat count"
+      },
+      "answer": "A",
+      "source_pages": [
+        191
+      ]
+    },
+    {
+      "id": "MCQ43",
+      "difficulty": "medium",
+      "question": "Where is a message persisted in the 1:1 flow?",
+      "choices": {
+        "A": "KV store",
+        "B": "Presence server",
+        "C": "Load balancer",
+        "D": "ZooKeeper"
+      },
+      "answer": "A",
+      "source_pages": [
+        191
+      ]
+    },
+    {
+      "id": "MCQ44",
+      "difficulty": "hard",
+      "question": "What happens when the recipient is offline?",
+      "choices": {
+        "A": "Push notification is sent",
+        "B": "Message is discarded",
+        "C": "Sender reconnects",
+        "D": "Presence is ignored"
+      },
+      "answer": "A",
+      "source_pages": [
+        191
+      ]
+    },
+    {
+      "id": "MCQ45",
+      "difficulty": "medium",
+      "question": "What does cur_max_message_id represent?",
+      "choices": {
+        "A": "Latest synchronized message ID on a device",
+        "B": "Largest group size",
+        "C": "Chat-server ID",
+        "D": "Number of connections"
+      },
+      "answer": "A",
+      "source_pages": [
+        192
+      ]
+    },
+    {
+      "id": "MCQ46",
+      "difficulty": "hard",
+      "question": "What makes a KV message new for a device?",
+      "choices": {
+        "A": "Correct recipient and ID > cur_max_message_id",
+        "B": "created_at is today",
+        "C": "Content is unreadable",
+        "D": "Sender is online"
+      },
+      "answer": "A",
+      "source_pages": [
+        192
+      ]
+    },
+    {
+      "id": "MCQ47",
+      "difficulty": "hard",
+      "question": "How is a small-group message distributed?",
+      "choices": {
+        "A": "Copy to each recipient inbox/sync queue",
+        "B": "One global queue only with no copies",
+        "C": "Direct peer-to-peer only",
+        "D": "Store only on sender device"
+      },
+      "answer": "A",
+      "source_pages": [
+        193
+      ]
+    },
+    {
+      "id": "MCQ48",
+      "difficulty": "hard",
+      "question": "Why is per-recipient copying acceptable for small groups?",
+      "choices": {
+        "A": "Inbox sync is simple and copy count is manageable",
+        "B": "Messages are not stored",
+        "C": "Groups have no recipients",
+        "D": "Each group uses SQL join"
+      },
+      "answer": "A",
+      "source_pages": [
+        193
+      ]
+    },
+    {
+      "id": "MCQ49",
+      "difficulty": "hard",
+      "question": "What is the large-group weakness of per-recipient copying?",
+      "choices": {
+        "A": "Too many message copies",
+        "B": "No ordering",
+        "C": "No device support",
+        "D": "Cannot send text"
+      },
+      "answer": "A",
+      "source_pages": [
+        193
+      ]
+    },
+    {
+      "id": "MCQ50",
+      "difficulty": "medium",
+      "question": "What is stored on presence login?",
+      "choices": {
+        "A": "Online status and last_active_at",
+        "B": "Only message text",
+        "C": "Only group size",
+        "D": "Only device model"
+      },
+      "answer": "A",
+      "source_pages": [
+        194
+      ]
+    },
+    {
+      "id": "MCQ51",
+      "difficulty": "hard",
+      "question": "Why not mark offline instantly on every disconnect?",
+      "choices": {
+        "A": "Transient network changes would cause presence flicker",
+        "B": "KV stores cannot update",
+        "C": "WebSocket never disconnects",
+        "D": "Logout is impossible"
+      },
+      "answer": "A",
+      "source_pages": [
+        195
+      ]
+    },
+    {
+      "id": "MCQ52",
+      "difficulty": "medium",
+      "question": "What mechanism smooths transient disconnects?",
+      "choices": {
+        "A": "Heartbeat",
+        "B": "Polling history",
+        "C": "Snowflake",
+        "D": "Sharding"
+      },
+      "answer": "A",
+      "source_pages": [
+        195,
+        196
+      ]
+    },
+    {
+      "id": "MCQ53",
+      "difficulty": "medium",
+      "question": "What heartbeat interval is shown?",
+      "choices": {
+        "A": "1s",
+        "B": "5s",
+        "C": "30s",
+        "D": "60s"
+      },
+      "answer": "B",
+      "source_pages": [
+        195,
+        196
+      ]
+    },
+    {
+      "id": "MCQ54",
+      "difficulty": "medium",
+      "question": "What example offline threshold x is shown?",
+      "choices": {
+        "A": "5s",
+        "B": "10s",
+        "C": "30s",
+        "D": "5m"
+      },
+      "answer": "C",
+      "source_pages": [
+        195,
+        196
+      ]
+    },
+    {
+      "id": "MCQ55",
+      "difficulty": "hard",
+      "question": "What model distributes small-group presence changes?",
+      "choices": {
+        "A": "Publish-subscribe",
+        "B": "Batch ETL",
+        "C": "MapReduce",
+        "D": "Polling-only"
+      },
+      "answer": "A",
+      "source_pages": [
+        196
+      ]
+    },
+    {
+      "id": "MCQ56",
+      "difficulty": "hard",
+      "question": "Why does presence pub-sub struggle with 100,000-member groups?",
+      "choices": {
+        "A": "One status change may create 100,000 events",
+        "B": "WebSocket supports only 100 users",
+        "C": "KV stores fail",
+        "D": "No channels exist"
+      },
+      "answer": "A",
+      "source_pages": [
+        197
+      ]
+    },
+    {
+      "id": "MCQ57",
+      "difficulty": "hard",
+      "question": "What alternative is suggested for huge-group presence?",
+      "choices": {
+        "A": "Fetch status on group entry or manual refresh",
+        "B": "Publish to every member continuously",
+        "C": "Disable presence globally",
+        "D": "Use created_at ordering"
+      },
+      "answer": "A",
+      "source_pages": [
+        197
+      ]
+    },
+    {
+      "id": "MCQ58",
+      "difficulty": "medium",
+      "question": "What helps recover from a chat-server failure?",
+      "choices": {
+        "A": "Service discovery assigns a new server",
+        "B": "Delete the account",
+        "C": "Disable WebSocket",
+        "D": "Remove the KV store"
+      },
+      "answer": "A",
+      "source_pages": [
+        198
+      ]
+    },
+    {
+      "id": "MCQ59",
+      "difficulty": "medium",
+      "question": "What message-resend techniques are named?",
+      "choices": {
+        "A": "Retry and queueing",
+        "B": "Only compression",
+        "C": "Only sharding",
+        "D": "Only encryption"
+      },
+      "answer": "A",
+      "source_pages": [
+        198
+      ]
+    }
+  ],
+  "mix_and_match": [
+    {
+      "id": "MM01",
+      "title": "Protocol to Behavior",
+      "left": {
+        "A": "Polling",
+        "B": "Long polling",
+        "C": "WebSocket",
+        "D": "HTTP keep-alive"
+      },
+      "right": {
+        "1": "Client repeatedly asks at fixed intervals",
+        "2": "Request waits for message or timeout",
+        "3": "Persistent bidirectional connection",
+        "4": "Reduces repeated TCP handshakes"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4"
+      },
+      "source_pages": [
+        180,
+        181,
+        182,
+        183
+      ]
+    },
+    {
+      "id": "MM02",
+      "title": "Component to Responsibility",
+      "left": {
+        "A": "Chat server",
+        "B": "Presence server",
+        "C": "API server",
+        "D": "Notification server",
+        "E": "KV store",
+        "F": "Service discovery"
+      },
+      "right": {
+        "1": "Select best chat server",
+        "2": "Real-time message delivery",
+        "3": "Push notifications",
+        "4": "Login/signup/profile APIs",
+        "5": "Online/offline state",
+        "6": "Chat-history persistence"
+      },
+      "answer_key": {
+        "A": "2",
+        "B": "5",
+        "C": "4",
+        "D": "3",
+        "E": "6",
+        "F": "1"
+      },
+      "source_pages": [
+        185,
+        186,
+        190
+      ]
+    },
+    {
+      "id": "MM03",
+      "title": "Data to Storage",
+      "left": {
+        "A": "User profile",
+        "B": "Friends list",
+        "C": "Chat history",
+        "D": "Presence state"
+      },
+      "right": {
+        "1": "Relational DB",
+        "2": "Relational DB",
+        "3": "Key-value store",
+        "4": "Key-value store"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4"
+      },
+      "source_pages": [
+        187,
+        194,
+        195
+      ]
+    },
+    {
+      "id": "MM04",
+      "title": "Message Identifier Concept",
+      "left": {
+        "A": "message_id",
+        "B": "channel_id",
+        "C": "cur_max_message_id",
+        "D": "created_at"
+      },
+      "right": {
+        "1": "Group partition key",
+        "2": "Per-device synchronization cursor",
+        "3": "Sequence/order identity",
+        "4": "Timestamp insufficient by itself for unique ordering"
+      },
+      "answer_key": {
+        "A": "3",
+        "B": "1",
+        "C": "2",
+        "D": "4"
+      },
+      "source_pages": [
+        187,
+        188,
+        189,
+        192
+      ]
+    },
+    {
+      "id": "MM05",
+      "title": "Presence Event to Action",
+      "left": {
+        "A": "Login",
+        "B": "Logout",
+        "C": "Brief disconnect",
+        "D": "Status change to friends",
+        "E": "Huge group presence"
+      },
+      "right": {
+        "1": "Publish to friend-pair channels",
+        "2": "Mark offline in KV",
+        "3": "Save online + last_active_at",
+        "4": "Use heartbeat grace period",
+        "5": "Fetch on group entry/refresh"
+      },
+      "answer_key": {
+        "A": "3",
+        "B": "2",
+        "C": "4",
+        "D": "1",
+        "E": "5"
+      },
+      "source_pages": [
+        194,
+        195,
+        196,
+        197
+      ]
+    }
+  ],
+  "true_false": [
+    {
+      "id": "TF01",
+      "statement": "The core design supports both one-on-one and group chat.",
+      "answer": true,
+      "source_pages": [
+        179
+      ]
+    },
+    {
+      "id": "TF02",
+      "statement": "The group limit is 500 in the design requirements.",
+      "answer": false,
+      "explanation": "The requirement is 100; 500 appears later as a WeChat example.",
+      "source_pages": [
+        179,
+        193
+      ]
+    },
+    {
+      "id": "TF03",
+      "statement": "The core design supports text messages only.",
+      "answer": true,
+      "source_pages": [
+        179
+      ]
+    },
+    {
+      "id": "TF04",
+      "statement": "End-to-end encryption is required from the start.",
+      "answer": false,
+      "source_pages": [
+        179
+      ]
+    },
+    {
+      "id": "TF05",
+      "statement": "Chat history is stored forever.",
+      "answer": true,
+      "source_pages": [
+        179
+      ]
+    },
+    {
+      "id": "TF06",
+      "statement": "Clients communicate directly peer-to-peer in the chapter's architecture.",
+      "answer": false,
+      "source_pages": [
+        180
+      ]
+    },
+    {
+      "id": "TF07",
+      "statement": "HTTP keep-alive can reduce TCP handshakes.",
+      "answer": true,
+      "source_pages": [
+        180
+      ]
+    },
+    {
+      "id": "TF08",
+      "statement": "Polling may waste resources on requests that return no messages.",
+      "answer": true,
+      "source_pages": [
+        180
+      ]
+    },
+    {
+      "id": "TF09",
+      "statement": "Long polling eliminates all periodic reconnections.",
+      "answer": false,
+      "source_pages": [
+        182
+      ]
+    },
+    {
+      "id": "TF10",
+      "statement": "WebSocket is client initiated, bidirectional, and persistent.",
+      "answer": true,
+      "source_pages": [
+        183
+      ]
+    },
+    {
+      "id": "TF11",
+      "statement": "WebSocket can begin as HTTP and be upgraded.",
+      "answer": true,
+      "source_pages": [
+        183
+      ]
+    },
+    {
+      "id": "TF12",
+      "statement": "The chapter chooses separate HTTP sending and WebSocket receiving as mandatory.",
+      "answer": false,
+      "source_pages": [
+        183
+      ]
+    },
+    {
+      "id": "TF13",
+      "statement": "Login and profile management can remain ordinary HTTP services.",
+      "answer": true,
+      "source_pages": [
+        184
+      ]
+    },
+    {
+      "id": "TF14",
+      "statement": "The chat service is classified as stateful.",
+      "answer": true,
+      "source_pages": [
+        185
+      ]
+    },
+    {
+      "id": "TF15",
+      "statement": "Service discovery helps avoid chat-server overload.",
+      "answer": true,
+      "source_pages": [
+        185
+      ]
+    },
+    {
+      "id": "TF16",
+      "statement": "A rough 10GB memory estimate is used to justify putting the production system on one server.",
+      "answer": false,
+      "source_pages": [
+        185
+      ]
+    },
+    {
+      "id": "TF17",
+      "statement": "Single point of failure is a major reason to distribute the system.",
+      "answer": true,
+      "source_pages": [
+        185
+      ]
+    },
+    {
+      "id": "TF18",
+      "statement": "Presence servers handle online/offline state.",
+      "answer": true,
+      "source_pages": [
+        186
+      ]
+    },
+    {
+      "id": "TF19",
+      "statement": "Generic user data is stored in relational databases.",
+      "answer": true,
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "id": "TF20",
+      "statement": "The chapter recommends relational databases for chat history because large indexes improve random access.",
+      "answer": false,
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "id": "TF21",
+      "statement": "Recent chat history is accessed more frequently than old history.",
+      "answer": true,
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "id": "TF22",
+      "statement": "Older chat history never needs random access.",
+      "answer": false,
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "id": "TF23",
+      "statement": "The one-on-one read/write ratio is about 1:1.",
+      "answer": true,
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "id": "TF24",
+      "statement": "message_id is used for sequencing.",
+      "answer": true,
+      "source_pages": [
+        187,
+        189
+      ]
+    },
+    {
+      "id": "TF25",
+      "statement": "created_at alone guarantees message order.",
+      "answer": false,
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "id": "TF26",
+      "statement": "Group chat uses (channel_id,message_id) as a composite primary key.",
+      "answer": true,
+      "source_pages": [
+        188
+      ]
+    },
+    {
+      "id": "TF27",
+      "statement": "Local sequence IDs must be globally unique across every chat.",
+      "answer": false,
+      "source_pages": [
+        189
+      ]
+    },
+    {
+      "id": "TF28",
+      "statement": "ZooKeeper is the named service-discovery solution.",
+      "answer": true,
+      "source_pages": [
+        190
+      ]
+    },
+    {
+      "id": "TF29",
+      "statement": "The message is stored in a KV store during the one-on-one flow.",
+      "answer": true,
+      "source_pages": [
+        191
+      ]
+    },
+    {
+      "id": "TF30",
+      "statement": "An offline recipient causes the message to be discarded.",
+      "answer": false,
+      "source_pages": [
+        191
+      ]
+    },
+    {
+      "id": "TF31",
+      "statement": "Each device can maintain a different cur_max_message_id.",
+      "answer": true,
+      "source_pages": [
+        192
+      ]
+    },
+    {
+      "id": "TF32",
+      "statement": "Small-group chat copies a message to each recipient's sync queue.",
+      "answer": true,
+      "source_pages": [
+        193
+      ]
+    },
+    {
+      "id": "TF33",
+      "statement": "Per-recipient message copying remains cheap for arbitrarily huge groups.",
+      "answer": false,
+      "source_pages": [
+        193
+      ]
+    },
+    {
+      "id": "TF34",
+      "statement": "Presence login stores last_active_at.",
+      "answer": true,
+      "source_pages": [
+        194
+      ]
+    },
+    {
+      "id": "TF35",
+      "statement": "Every transient disconnect should immediately flip the user to offline.",
+      "answer": false,
+      "source_pages": [
+        195
+      ]
+    },
+    {
+      "id": "TF36",
+      "statement": "The example sends a heartbeat every 5 seconds.",
+      "answer": true,
+      "source_pages": [
+        195,
+        196
+      ]
+    },
+    {
+      "id": "TF37",
+      "statement": "The 30-second heartbeat threshold is presented as a universal production constant.",
+      "answer": false,
+      "source_pages": [
+        195,
+        196
+      ]
+    },
+    {
+      "id": "TF38",
+      "statement": "Presence fanout uses publish-subscribe for small groups/friend relationships.",
+      "answer": true,
+      "source_pages": [
+        196
+      ]
+    },
+    {
+      "id": "TF39",
+      "statement": "One presence change in a 100,000-member group may create 100,000 events.",
+      "answer": true,
+      "source_pages": [
+        197
+      ]
+    },
+    {
+      "id": "TF40",
+      "statement": "Retry and queueing are named as message-resend techniques.",
+      "answer": true,
+      "source_pages": [
+        198
+      ]
+    }
+  ],
+  "fill_in_the_blank": [
+    {
+      "id": "FIB01",
+      "prompt": "The design targets ______ million DAU.",
+      "answer": "50",
+      "source_pages": [
+        179
+      ]
+    },
+    {
+      "id": "FIB02",
+      "prompt": "Group chat supports at most ______ people.",
+      "answer": "100",
+      "source_pages": [
+        179
+      ]
+    },
+    {
+      "id": "FIB03",
+      "prompt": "Text messages must be shorter than ______ characters.",
+      "answer": "100,000",
+      "source_pages": [
+        179
+      ]
+    },
+    {
+      "id": "FIB04",
+      "prompt": "Chat history is stored ______.",
+      "answer": "forever",
+      "source_pages": [
+        179
+      ]
+    },
+    {
+      "id": "FIB05",
+      "prompt": "HTTP ______-alive reduces TCP handshakes.",
+      "answer": "keep",
+      "source_pages": [
+        180
+      ]
+    },
+    {
+      "id": "FIB06",
+      "prompt": "The selected real-time protocol is ______.",
+      "answer": "WebSocket",
+      "source_pages": [
+        182,
+        183
+      ]
+    },
+    {
+      "id": "FIB07",
+      "prompt": "WebSocket commonly uses port 80 or ______.",
+      "answer": "443",
+      "source_pages": [
+        183
+      ]
+    },
+    {
+      "id": "FIB08",
+      "prompt": "The only stateful service category is the ______ service.",
+      "answer": "chat",
+      "source_pages": [
+        185
+      ]
+    },
+    {
+      "id": "FIB09",
+      "prompt": "Chat history is stored in a key-______ store.",
+      "answer": "value",
+      "source_pages": [
+        186,
+        187
+      ]
+    },
+    {
+      "id": "FIB10",
+      "prompt": "The one-on-one message primary key is message_______.",
+      "answer": "id",
+      "source_pages": [
+        187,
+        188
+      ]
+    },
+    {
+      "id": "FIB11",
+      "prompt": "The group partition key is _______id.",
+      "answer": "channel",
+      "source_pages": [
+        188
+      ]
+    },
+    {
+      "id": "FIB12",
+      "prompt": "Message IDs must be unique and sortable by ______.",
+      "answer": "time",
+      "source_pages": [
+        189
+      ]
+    },
+    {
+      "id": "FIB13",
+      "prompt": "The chapter names Apache ______ for service discovery.",
+      "answer": "ZooKeeper",
+      "source_pages": [
+        190
+      ]
+    },
+    {
+      "id": "FIB14",
+      "prompt": "Messages pass through a message sync ______.",
+      "answer": "queue",
+      "source_pages": [
+        191
+      ]
+    },
+    {
+      "id": "FIB15",
+      "prompt": "Each device tracks cur_max_message_______.",
+      "answer": "id",
+      "source_pages": [
+        192
+      ]
+    },
+    {
+      "id": "FIB16",
+      "prompt": "Small-group sync treats each recipient's queue like an ______.",
+      "answer": "inbox",
+      "source_pages": [
+        193
+      ]
+    },
+    {
+      "id": "FIB17",
+      "prompt": "Presence login stores last_active_______.",
+      "answer": "at",
+      "source_pages": [
+        194
+      ]
+    },
+    {
+      "id": "FIB18",
+      "prompt": "Transient disconnections are handled with a ______ mechanism.",
+      "answer": "heartbeat",
+      "source_pages": [
+        195
+      ]
+    },
+    {
+      "id": "FIB19",
+      "prompt": "Online-status fanout uses a publish-______ model.",
+      "answer": "subscribe",
+      "source_pages": [
+        196
+      ]
+    },
+    {
+      "id": "FIB20",
+      "prompt": "Message resend uses retry and ______.",
+      "answer": "queueing",
+      "source_pages": [
+        198
+      ]
+    }
+  ],
+  "ordering_exercises": [
+    {
+      "id": "ORD01",
+      "title": "Service Discovery Login",
+      "items_scrambled": [
+        "Client opens WebSocket",
+        "Service discovery chooses chat server",
+        "User logs in",
+        "Load balancer routes to API servers",
+        "Backend authenticates user"
+      ],
+      "correct_order": [
+        "User logs in",
+        "Load balancer routes to API servers",
+        "Backend authenticates user",
+        "Service discovery chooses chat server",
+        "Client opens WebSocket"
+      ],
+      "source_pages": [
+        190
+      ]
+    },
+    {
+      "id": "ORD02",
+      "title": "One-on-One Message Flow",
+      "items_scrambled": [
+        "Persist message",
+        "Obtain message ID",
+        "User A sends to Chat Server 1",
+        "Send to sync queue",
+        "Route to User B chat server or push notification",
+        "Deliver over WebSocket"
+      ],
+      "correct_order": [
+        "User A sends to Chat Server 1",
+        "Obtain message ID",
+        "Send to sync queue",
+        "Persist message",
+        "Route to User B chat server or push notification",
+        "Deliver over WebSocket when online"
+      ],
+      "source_pages": [
+        191
+      ]
+    },
+    {
+      "id": "ORD03",
+      "title": "Presence Login",
+      "items_scrambled": [
+        "Store online status",
+        "WebSocket is established",
+        "Store last_active_at",
+        "Show user online"
+      ],
+      "correct_order": [
+        "WebSocket is established",
+        "Store online status",
+        "Store last_active_at",
+        "Show user online"
+      ],
+      "source_pages": [
+        194
+      ]
+    },
+    {
+      "id": "ORD04",
+      "title": "Disconnect Heartbeat Decision",
+      "items_scrambled": [
+        "Mark offline after threshold",
+        "Client periodically sends heartbeat",
+        "Presence server checks recent heartbeat",
+        "Keep online if heartbeat is recent"
+      ],
+      "correct_order": [
+        "Client periodically sends heartbeat",
+        "Presence server checks recent heartbeat",
+        "Keep online if heartbeat is recent",
+        "Mark offline after threshold if no heartbeat arrives"
+      ],
+      "source_pages": [
+        195,
+        196
+      ]
+    }
+  ],
+  "scenario_questions": [
+    {
+      "id": "SC01",
+      "difficulty": "medium",
+      "scenario": "A client checks the server every second even though the user receives only a few messages per hour.",
+      "question": "Which communication technique is this, and what is the main problem?",
+      "expected_answer": "Polling; it wastes server resources on repeated requests that usually return no new messages.",
+      "source_pages": [
+        180,
+        181
+      ]
+    },
+    {
+      "id": "SC02",
+      "difficulty": "hard",
+      "scenario": "A long-polling client is attached to Server A, but a sender's request lands on Server B.",
+      "question": "What chapter drawback does this demonstrate?",
+      "expected_answer": "Under stateless/round-robin balancing, the server receiving the message may not own the recipient's long-poll connection.",
+      "source_pages": [
+        182
+      ]
+    },
+    {
+      "id": "SC03",
+      "difficulty": "medium",
+      "scenario": "You need bidirectional asynchronous messaging over a persistent client/server connection.",
+      "question": "Which protocol does the chapter choose?",
+      "expected_answer": "WebSocket.",
+      "source_pages": [
+        182,
+        183
+      ]
+    },
+    {
+      "id": "SC04",
+      "difficulty": "hard",
+      "scenario": "A user is already logged in, but the system must select a real-time server that is geographically close and not overloaded.",
+      "question": "Which component handles this and what implementation is named?",
+      "expected_answer": "Service discovery, with Apache ZooKeeper as the chapter's example.",
+      "source_pages": [
+        190
+      ]
+    },
+    {
+      "id": "SC05",
+      "difficulty": "hard",
+      "scenario": "Your architecture technically fits 1 million connections on one machine by memory estimate.",
+      "question": "Why should you still distribute it?",
+      "expected_answer": "Single-server architecture creates a critical single point of failure and is unacceptable for the target scale.",
+      "source_pages": [
+        185
+      ]
+    },
+    {
+      "id": "SC06",
+      "difficulty": "medium",
+      "scenario": "You are storing user profiles, settings, and friend lists.",
+      "question": "What storage family does the chapter recommend?",
+      "expected_answer": "A robust relational database, scaled with replication/sharding as needed.",
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "id": "SC07",
+      "difficulty": "hard",
+      "scenario": "You need enormous chat-history scale, fast recent reads, and occasional random access to old messages.",
+      "question": "What storage does the chapter recommend and why?",
+      "expected_answer": "A key-value store because it horizontally scales, offers low-latency access, and handles the chat access pattern better than huge relational indexes.",
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "id": "SC08",
+      "difficulty": "hard",
+      "scenario": "Two messages have identical created_at timestamps.",
+      "question": "Why does the schema still preserve order?",
+      "expected_answer": "Ordering is based on message_id, which must be unique and time-sortable, rather than created_at alone.",
+      "source_pages": [
+        187,
+        189
+      ]
+    },
+    {
+      "id": "SC09",
+      "difficulty": "hard",
+      "scenario": "You only need message IDs to be unique and ordered within a single conversation.",
+      "question": "What simpler ID strategy does the chapter allow?",
+      "expected_answer": "A local sequence number generator scoped to that one-on-one or group channel.",
+      "source_pages": [
+        189
+      ]
+    },
+    {
+      "id": "SC10",
+      "difficulty": "medium",
+      "scenario": "User B is online when User A sends a message.",
+      "question": "Describe the final delivery branch.",
+      "expected_answer": "The message is forwarded to the chat server holding User B's connection, which delivers it over the persistent WebSocket.",
+      "source_pages": [
+        191
+      ]
+    },
+    {
+      "id": "SC11",
+      "difficulty": "medium",
+      "scenario": "User B is offline when User A sends a message.",
+      "question": "What branch is used?",
+      "expected_answer": "The message remains persisted and push-notification servers notify User B.",
+      "source_pages": [
+        191
+      ]
+    },
+    {
+      "id": "SC12",
+      "difficulty": "hard",
+      "scenario": "A user reads messages on a laptop but not yet on a phone.",
+      "question": "How can the phone later fetch only missing messages?",
+      "expected_answer": "The phone maintains its own cur_max_message_id and requests messages addressed to the user with IDs greater than that value.",
+      "source_pages": [
+        192
+      ]
+    },
+    {
+      "id": "SC13",
+      "difficulty": "hard",
+      "scenario": "A group has only 20 members.",
+      "question": "Why is the per-recipient inbox model reasonable?",
+      "expected_answer": "Each client checks one inbox and copying a message to each recipient is inexpensive at small group size.",
+      "source_pages": [
+        193
+      ]
+    },
+    {
+      "id": "SC14",
+      "difficulty": "hard",
+      "scenario": "A group has hundreds of thousands of members.",
+      "question": "Which two chapter designs become problematic?",
+      "expected_answer": "Per-recipient message-copy fanout becomes too expensive, and presence pub-sub can generate one status event per member.",
+      "source_pages": [
+        193,
+        197
+      ]
+    },
+    {
+      "id": "SC15",
+      "difficulty": "hard",
+      "scenario": "A user's mobile connection drops for 8 seconds in a tunnel and returns.",
+      "question": "Why shouldn't the system immediately flicker the user to offline?",
+      "expected_answer": "Brief disconnects are common; heartbeat-based presence should allow a grace interval before marking offline.",
+      "source_pages": [
+        195,
+        196
+      ]
+    },
+    {
+      "id": "SC16",
+      "difficulty": "medium",
+      "scenario": "A chat server holding many persistent connections crashes.",
+      "question": "What recovery behavior is proposed?",
+      "expected_answer": "Service discovery provides a new chat server and affected clients establish new connections.",
+      "source_pages": [
+        198
+      ]
+    }
+  ],
+  "short_answer_questions": [
+    {
+      "id": "SA01",
+      "question": "Why is requirement clarification especially important for a chat-system interview?",
+      "model_answer": "Chat products vary widely: one-on-one messaging, office group chat, game chat, voice latency, group scale, attachments, encryption, and retention all produce different designs. The chapter explicitly says to establish the intended product before designing.",
+      "source_pages": [
+        178,
+        179
+      ]
+    },
+    {
+      "id": "SA02",
+      "question": "Compare polling, long polling, and WebSocket.",
+      "model_answer": "Polling repeatedly checks for updates and wastes requests. Long polling holds a request until data or timeout but still has server-affinity, disconnect-detection, and timeout-reconnection problems. WebSocket is persistent and bidirectional, allowing direct asynchronous server-to-client delivery.",
+      "source_pages": [
+        180,
+        181,
+        182,
+        183
+      ]
+    },
+    {
+      "id": "SA03",
+      "question": "Why does the architecture mix HTTP and WebSocket?",
+      "model_answer": "Ordinary request/response operations such as signup, login, and profile management work naturally over HTTP. Real-time chat needs a persistent bidirectional channel, so WebSocket is used for the stateful chat service.",
+      "source_pages": [
+        184,
+        185
+      ]
+    },
+    {
+      "id": "SA04",
+      "question": "Why is the chat service stateful?",
+      "model_answer": "Each client maintains a persistent connection to a particular chat server and normally remains attached to that server while it is available, so connection state matters.",
+      "source_pages": [
+        185
+      ]
+    },
+    {
+      "id": "SA05",
+      "question": "Why use different storage for generic data and message history?",
+      "model_answer": "Profiles/settings/friend lists are conventional relational data. Chat history is enormous, has a roughly 1:1 read/write pattern, favors recent data but also requires random historical access, so the chapter recommends a horizontally scalable low-latency key-value store.",
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "id": "SA06",
+      "question": "Explain the message-ID design problem.",
+      "model_answer": "Message IDs determine sequence and must be unique and time-sortable. created_at is insufficient because timestamps may collide. Options include auto_increment where available, a global 64-bit Snowflake-style generator, or easier local per-channel sequences.",
+      "source_pages": [
+        187,
+        189
+      ]
+    },
+    {
+      "id": "SA07",
+      "question": "Walk through the one-on-one message flow.",
+      "model_answer": "The sender sends to a chat server, the server obtains a message ID, puts the message on the sync queue, persists it in KV storage, forwards it to the recipient's chat server if online or triggers push if offline, and the recipient chat server delivers over WebSocket.",
+      "source_pages": [
+        191
+      ]
+    },
+    {
+      "id": "SA08",
+      "question": "How does multi-device sync work?",
+      "model_answer": "Each device maintains its own cur_max_message_id. New messages are those addressed to the logged-in user whose stored message IDs exceed that device's cursor. Each device can therefore independently fetch its missing messages.",
+      "source_pages": [
+        192
+      ]
+    },
+    {
+      "id": "SA09",
+      "question": "Why use per-recipient inboxes for small groups?",
+      "model_answer": "It simplifies synchronization because each client reads one inbox, and at small group sizes the cost of copying each message into each recipient's queue is acceptable.",
+      "source_pages": [
+        193
+      ]
+    },
+    {
+      "id": "SA10",
+      "question": "How does heartbeat improve presence accuracy?",
+      "model_answer": "Instead of marking a user offline on every brief disconnect, presence servers consider the user online while heartbeats continue arriving within a configurable threshold. Only after the threshold is exceeded is the user marked offline.",
+      "source_pages": [
+        195,
+        196
+      ]
+    },
+    {
+      "id": "SA11",
+      "question": "How is online status distributed to friends?",
+      "model_answer": "Presence servers use publish-subscribe channels for friend pairs. When a user's status changes, the server publishes to the corresponding channels, and subscribed friends receive the update over WebSocket.",
+      "source_pages": [
+        196
+      ]
+    },
+    {
+      "id": "SA12",
+      "question": "Why does the presence model change for huge groups?",
+      "model_answer": "Publishing every status change to every member creates huge event fanout. The chapter suggests fetching presence only when entering the group or manually refreshing instead.",
+      "source_pages": [
+        197
+      ]
+    }
+  ],
+  "active_recall_prompts": [
+    {
+      "id": "AR01",
+      "prompt": "Recite all core requirements.",
+      "target_points": [
+        "1:1 + group",
+        "web + mobile",
+        "50M DAU",
+        "100 group max",
+        "online indicator",
+        "text only",
+        "<100k chars",
+        "history forever",
+        "multi-device",
+        "push notifications"
+      ],
+      "source_pages": [
+        179
+      ]
+    },
+    {
+      "id": "AR02",
+      "prompt": "Compare polling, long polling, and WebSocket from memory.",
+      "target_points": [
+        "Polling periodic checks",
+        "Long poll waits until data/timeout",
+        "Long-poll drawbacks",
+        "WebSocket client initiated",
+        "persistent",
+        "bidirectional",
+        "HTTP upgrade",
+        "80/443"
+      ],
+      "source_pages": [
+        180,
+        181,
+        182,
+        183
+      ]
+    },
+    {
+      "id": "AR03",
+      "prompt": "Name the three architecture categories and examples.",
+      "target_points": [
+        "Stateless HTTP services",
+        "Stateful chat service",
+        "Third-party push integration"
+      ],
+      "source_pages": [
+        184,
+        185
+      ]
+    },
+    {
+      "id": "AR04",
+      "prompt": "Reconstruct the adjusted high-level architecture.",
+      "target_points": [
+        "Chat servers",
+        "Presence servers",
+        "API servers",
+        "Notification servers",
+        "KV stores",
+        "HTTP + WebSocket"
+      ],
+      "source_pages": [
+        186
+      ]
+    },
+    {
+      "id": "AR05",
+      "prompt": "Explain the storage split.",
+      "target_points": [
+        "Generic data -> relational",
+        "Replication/sharding",
+        "History -> KV",
+        "60B/day cited",
+        "recent-hot",
+        "random old access",
+        "1:1 R/W",
+        "HBase/Cassandra"
+      ],
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "id": "AR06",
+      "prompt": "Reconstruct both message schemas.",
+      "target_points": [
+        "1:1 message_id/from/to/content/created_at",
+        "Group channel_id+message_id PK",
+        "user_id/content/created_at",
+        "channel partition key"
+      ],
+      "source_pages": [
+        187,
+        188
+      ]
+    },
+    {
+      "id": "AR07",
+      "prompt": "State message-ID requirements and three options.",
+      "target_points": [
+        "Unique",
+        "Time sortable",
+        "auto_increment",
+        "global Snowflake",
+        "local per-channel sequence"
+      ],
+      "source_pages": [
+        189
+      ]
+    },
+    {
+      "id": "AR08",
+      "prompt": "Reconstruct service discovery login flow.",
+      "target_points": [
+        "Login",
+        "LB",
+        "API auth",
+        "ZooKeeper chooses by geography/capacity",
+        "Return server",
+        "WebSocket connect"
+      ],
+      "source_pages": [
+        190
+      ]
+    },
+    {
+      "id": "AR09",
+      "prompt": "Reconstruct one-on-one chat flow.",
+      "target_points": [
+        "Sender -> chat server",
+        "ID generator",
+        "sync queue",
+        "KV store",
+        "online -> recipient chat server",
+        "offline -> push",
+        "WebSocket delivery"
+      ],
+      "source_pages": [
+        191
+      ]
+    },
+    {
+      "id": "AR10",
+      "prompt": "Explain multi-device sync without looking.",
+      "target_points": [
+        "Per-device cur_max_message_id",
+        "recipient matches user",
+        "message_id greater than cursor",
+        "fetch from KV"
+      ],
+      "source_pages": [
+        192
+      ]
+    },
+    {
+      "id": "AR11",
+      "prompt": "Explain presence login/logout/disconnect.",
+      "target_points": [
+        "Login online+last_active_at",
+        "Logout offline",
+        "Transient disconnect issue",
+        "Heartbeat every 5s example",
+        "30s threshold example"
+      ],
+      "source_pages": [
+        194,
+        195,
+        196
+      ]
+    },
+    {
+      "id": "AR12",
+      "prompt": "Explain presence fanout and the large-group exception.",
+      "target_points": [
+        "Pub-sub",
+        "Friend-pair channels",
+        "WebSocket",
+        "100k members -> 100k events",
+        "Fetch on entry/refresh"
+      ],
+      "source_pages": [
+        196,
+        197
+      ]
+    }
+  ],
+  "diagram_reconstruction_drills": [
+    {
+      "id": "DR01",
+      "name": "Polling vs Long Polling",
+      "task": "Draw polling as repeated short request/response connections, then long polling as an open request that ends on new data or timeout.",
+      "source_pages": [
+        181,
+        182
+      ]
+    },
+    {
+      "id": "DR02",
+      "name": "WebSocket Handshake",
+      "task": "Draw client GET /ws -> HTTP handshake -> acknowledgement -> bidirectional persistent messages.",
+      "source_pages": [
+        183
+      ]
+    },
+    {
+      "id": "DR03",
+      "name": "Figure 12-7 Service Categories",
+      "task": "Draw stateless HTTP services behind a load balancer, stateful chat service over WebSocket, and third-party push notification.",
+      "source_pages": [
+        184,
+        185
+      ]
+    },
+    {
+      "id": "DR04",
+      "name": "Figure 12-8 Adjusted Architecture",
+      "task": "Draw user HTTP path to API servers and WebSocket path to chat/presence servers, plus notification servers and KV stores.",
+      "source_pages": [
+        186
+      ]
+    },
+    {
+      "id": "DR05",
+      "name": "Figures 12-9 and 12-10 Message Tables",
+      "task": "Recreate the one-on-one message schema and group_message schema with their primary/partition keys.",
+      "source_pages": [
+        188
+      ]
+    },
+    {
+      "id": "DR06",
+      "name": "Figure 12-11 Service Discovery",
+      "task": "Draw User -> Load Balancer -> API Servers -> ZooKeeper -> selected Chat Server -> WebSocket.",
+      "source_pages": [
+        190
+      ]
+    },
+    {
+      "id": "DR07",
+      "name": "Figure 12-12 One-on-One Flow",
+      "task": "Draw sender -> Chat Server 1 -> ID generator -> message sync queue -> KV store, then online branch to Chat Server 2 or offline branch to PN server.",
+      "source_pages": [
+        191
+      ]
+    },
+    {
+      "id": "DR08",
+      "name": "Figure 12-13 Multi-Device Sync",
+      "task": "Draw one user with phone/laptop, distinct cur_max_message_id values, one chat server, and KV store.",
+      "source_pages": [
+        192
+      ]
+    },
+    {
+      "id": "DR09",
+      "name": "Figures 12-14 and 12-15 Small Group Chat",
+      "task": "Draw sender message copied to recipient inbox/sync queues, then show one recipient inbox receiving from multiple senders.",
+      "source_pages": [
+        193,
+        194
+      ]
+    },
+    {
+      "id": "DR10",
+      "name": "Figure 12-16 Presence Login",
+      "task": "Draw client WebSocket -> Presence Server -> KV Store with status=online and last_active_at.",
+      "source_pages": [
+        194
+      ]
+    },
+    {
+      "id": "DR11",
+      "name": "Figure 12-18 Heartbeat",
+      "task": "Draw 5-second heartbeats and a 30-second no-heartbeat threshold leading to offline status.",
+      "source_pages": [
+        195,
+        196
+      ]
+    },
+    {
+      "id": "DR12",
+      "name": "Figure 12-19 Presence Pub-Sub",
+      "task": "Draw User A publishing to A-B, A-C, A-D channels subscribed to by Users B, C, and D.",
+      "source_pages": [
+        196
+      ]
+    }
+  ],
+  "interview_style_questions": [
+    {
+      "id": "INT01",
+      "question": "What requirements would you clarify first for a chat system?",
+      "strong_answer_outline": [
+        "1:1 vs group",
+        "web/mobile",
+        "DAU",
+        "group limit",
+        "message type/size",
+        "presence",
+        "multi-device",
+        "push",
+        "encryption",
+        "history retention"
+      ],
+      "source_pages": [
+        179
+      ]
+    },
+    {
+      "id": "INT02",
+      "question": "What network protocol would you use for real-time messaging and why?",
+      "strong_answer_outline": [
+        "Compare polling/long polling/WebSocket",
+        "WebSocket persistent",
+        "bidirectional",
+        "client initiated",
+        "HTTP upgrade",
+        "simplifies send+receive",
+        "connection management"
+      ],
+      "source_pages": [
+        180,
+        181,
+        182,
+        183
+      ]
+    },
+    {
+      "id": "INT03",
+      "question": "How would you split stateless and stateful services?",
+      "strong_answer_outline": [
+        "HTTP stateless signup/login/profile/group management",
+        "stateful WebSocket chat service",
+        "service discovery",
+        "third-party push"
+      ],
+      "source_pages": [
+        184,
+        185
+      ]
+    },
+    {
+      "id": "INT04",
+      "question": "What database would you use for chat history?",
+      "strong_answer_outline": [
+        "Generic data relational",
+        "History KV",
+        "massive volume",
+        "recent reads",
+        "random old access",
+        "1:1 R/W",
+        "horizontal scale",
+        "low latency"
+      ],
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "id": "INT05",
+      "question": "How would you generate and order message IDs?",
+      "strong_answer_outline": [
+        "Unique",
+        "time-sortable",
+        "created_at insufficient",
+        "global Snowflake option",
+        "local conversation sequence option"
+      ],
+      "source_pages": [
+        187,
+        189
+      ]
+    },
+    {
+      "id": "INT06",
+      "question": "Walk through one-on-one message delivery including offline recipients.",
+      "strong_answer_outline": [
+        "Chat server",
+        "ID generator",
+        "sync queue",
+        "KV persistence",
+        "online routing",
+        "offline push",
+        "WebSocket delivery"
+      ],
+      "source_pages": [
+        191
+      ]
+    },
+    {
+      "id": "INT07",
+      "question": "How would you synchronize messages across multiple devices?",
+      "strong_answer_outline": [
+        "Per-device cursor",
+        "cur_max_message_id",
+        "recipient check",
+        "fetch greater IDs from KV"
+      ],
+      "source_pages": [
+        192
+      ]
+    },
+    {
+      "id": "INT08",
+      "question": "How would you design online presence?",
+      "strong_answer_outline": [
+        "Presence servers",
+        "KV online/last_active",
+        "logout offline",
+        "heartbeat grace period",
+        "pub-sub friend updates",
+        "large-group exception"
+      ],
+      "source_pages": [
+        194,
+        195,
+        196,
+        197
+      ]
+    }
+  ],
+  "common_confusions": [
+    {
+      "confusion": "HTTP cannot be used anywhere in a chat application.",
+      "correction": "The chapter keeps ordinary stateless features such as login, signup, and profiles on HTTP; WebSocket is selected for real-time communication.",
+      "source_pages": [
+        183,
+        184
+      ]
+    },
+    {
+      "confusion": "Long polling is equivalent to WebSocket.",
+      "correction": "Long polling repeatedly holds and renews HTTP requests and has server-affinity/disconnect/timeout inefficiencies; WebSocket is one persistent bidirectional connection.",
+      "source_pages": [
+        182,
+        183
+      ]
+    },
+    {
+      "confusion": "If one machine has enough RAM for all connections, a single-server design is acceptable.",
+      "correction": "The chapter explicitly rejects this due to single-point-of-failure and large-scale architecture concerns.",
+      "source_pages": [
+        185
+      ]
+    },
+    {
+      "confusion": "All chat data should use the same database type.",
+      "correction": "The chapter stores generic profile/settings/friend data in relational databases and chat history in KV stores.",
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "confusion": "created_at is enough to order messages.",
+      "correction": "Two messages can share a timestamp, so message_id is responsible for sequence.",
+      "source_pages": [
+        187,
+        189
+      ]
+    },
+    {
+      "confusion": "Message IDs must be globally unique across the entire service.",
+      "correction": "The chapter says local per-channel sequence IDs can be sufficient because ordering inside a conversation is what matters.",
+      "source_pages": [
+        189
+      ]
+    },
+    {
+      "confusion": "All devices for one account share one synchronization cursor.",
+      "correction": "Each device maintains its own cur_max_message_id and independently fetches missing messages.",
+      "source_pages": [
+        192
+      ]
+    },
+    {
+      "confusion": "Immediate disconnect means immediate offline presence.",
+      "correction": "The heartbeat design deliberately tolerates brief network interruptions before marking a user offline.",
+      "source_pages": [
+        195,
+        196
+      ]
+    },
+    {
+      "confusion": "Per-recipient group fanout scales equally well for tiny and enormous groups.",
+      "correction": "The chapter endorses it for small groups but says copying a message for every user becomes unacceptable for large groups.",
+      "source_pages": [
+        193
+      ]
+    },
+    {
+      "confusion": "Presence pub-sub should always notify every group member.",
+      "correction": "For very large groups, the chapter suggests fetching presence on group entry or refresh rather than broadcasting every status change.",
+      "source_pages": [
+        197
+      ]
+    }
+  ],
+  "practice_problems": [
+    {
+      "id": "PRACTICE01",
+      "type": "capacity",
+      "prompt": "Using the chapter's rough assumption, estimate memory for 2 million persistent connections at 10 KB each.",
+      "solution": "About 20 GB.",
+      "note": "Derived study calculation from the chapter's 1M × 10KB ≈ 10GB example.",
+      "based_on_source_pages": [
+        185
+      ]
+    },
+    {
+      "id": "PRACTICE02",
+      "type": "message_ordering",
+      "prompt": "Two messages have the same created_at timestamp. One has message_id 5001 and the other 5002. Which is later under the chapter's ordering model?",
+      "solution": "message_id 5002.",
+      "based_on_source_pages": [
+        187,
+        189
+      ]
+    },
+    {
+      "id": "PRACTICE03",
+      "type": "device_sync",
+      "prompt": "A phone has cur_max_message_id=653. Messages for the user exist with IDs 650, 653, 654, and 700. Which are new to the phone?",
+      "solution": "654 and 700, assuming the recipient ID matches the logged-in user.",
+      "based_on_source_pages": [
+        192
+      ]
+    },
+    {
+      "id": "PRACTICE04",
+      "type": "device_sync",
+      "prompt": "A laptop has cur_max_message_id=842 while the phone is at 653. Must both devices download the same set of messages?",
+      "solution": "No. Each device uses its own cursor, so each fetches only messages with IDs greater than its own cur_max_message_id.",
+      "based_on_source_pages": [
+        192
+      ]
+    },
+    {
+      "id": "PRACTICE05",
+      "type": "group_fanout",
+      "prompt": "A 100-member group receives one message from one member. Ignoring the sender, how many recipient inbox copies would the small-group approach need?",
+      "solution": "99 copies.",
+      "note": "Derived from the chapter's per-recipient inbox model.",
+      "based_on_source_pages": [
+        193
+      ]
+    },
+    {
+      "id": "PRACTICE06",
+      "type": "presence",
+      "prompt": "Using the example values, a client sends heartbeats every 5 seconds but then sends none for 20 seconds. Should the example logic mark the user offline yet?",
+      "solution": "No. The illustrated offline threshold is 30 seconds.",
+      "based_on_source_pages": [
+        195,
+        196
+      ]
+    },
+    {
+      "id": "PRACTICE07",
+      "type": "presence_scale",
+      "prompt": "A 100,000-member group uses full presence fanout. Approximately how many events can one status change generate?",
+      "solution": "100,000 events, matching the chapter's example.",
+      "based_on_source_pages": [
+        197
+      ]
+    },
+    {
+      "id": "PRACTICE08",
+      "type": "architecture",
+      "prompt": "A chat server crashes while holding persistent client sockets. Which component is responsible for helping clients find replacement servers?",
+      "solution": "Service discovery, represented by ZooKeeper in the chapter.",
+      "based_on_source_pages": [
+        190,
+        198
+      ]
+    }
+  ],
+  "mastery_check": {
+    "beginner": [
+      "Can state all requirements and limits.",
+      "Can explain why WebSocket is chosen.",
+      "Can distinguish stateless and stateful services.",
+      "Can name chat, presence, API, notification, and KV components."
+    ],
+    "intermediate": [
+      "Can compare polling, long polling, and WebSocket.",
+      "Can explain relational vs KV storage choices.",
+      "Can reconstruct both message schemas.",
+      "Can explain message-ID requirements and alternatives.",
+      "Can reconstruct service discovery and one-on-one message flow.",
+      "Can explain per-device cur_max_message_id."
+    ],
+    "advanced": [
+      "Can defend local versus global message-ID generation.",
+      "Can explain small-group inbox fanout and its scalability limit.",
+      "Can design presence login/logout/disconnect flows.",
+      "Can explain heartbeat thresholds and transient network behavior.",
+      "Can reason about pub-sub presence scaling for small versus huge groups.",
+      "Can discuss media, encryption, client caching, geographic caching, failure recovery, and resend mechanisms."
+    ]
+  },
+  "chapter_twelve_final_review": {
+    "must_memorize": [
+      "Scope: 1:1 + groups, web/mobile, 50M DAU, max 100/group, text <100k chars, history forever.",
+      "Core features: low-latency 1:1, small groups, presence, multi-device, push notifications.",
+      "Chat service receives, routes, and holds messages for offline users.",
+      "Polling wastes requests; long polling has server-affinity, disconnect, and timeout inefficiencies.",
+      "WebSocket is client-initiated, persistent, bidirectional, upgraded from HTTP, commonly through ports 80/443.",
+      "Use WebSocket for real-time send/receive; keep ordinary APIs on HTTP.",
+      "Architecture categories: stateless, stateful, third-party integration.",
+      "Chat service is stateful because clients remain connected to specific chat servers.",
+      "Service discovery selects chat servers based on criteria such as geography/capacity.",
+      "ZooKeeper is the chapter's service-discovery example.",
+      "Chat servers = messaging; presence servers = status; API servers = normal APIs; notification servers = push; KV = history.",
+      "Generic data -> relational DB; chat history -> KV store.",
+      "Chat-history characteristics: enormous scale, recent-hot, old random access, ~1:1 read/write.",
+      "1:1 schema primary key = message_id.",
+      "Group schema primary key = (channel_id,message_id); channel_id is partition key.",
+      "Message IDs must be unique and time-sortable.",
+      "ID options: auto_increment, global Snowflake-style 64-bit sequence, local per-channel sequence.",
+      "1:1 flow: sender -> chat server -> ID -> sync queue -> KV -> online chat server or offline push -> recipient.",
+      "Multi-device sync uses per-device cur_max_message_id.",
+      "Small groups copy messages to each recipient's inbox/sync queue.",
+      "Per-recipient copies become too expensive for very large groups.",
+      "Presence login stores online + last_active_at; logout stores offline.",
+      "Heartbeat handles transient disconnects; example uses 5s heartbeats and 30s timeout.",
+      "Presence fanout uses pub-sub friend-pair channels.",
+      "Large groups should fetch status on entry/refresh instead of broadcasting every change.",
+      "Extensions: media, E2E encryption, client caching, geographic caching, chat-server recovery, retry/queueing."
+    ],
+    "memory_chain": "REQUIREMENTS -> HTTP/POLLING/LONG POLLING -> WEBSOCKET -> STATELESS vs STATEFUL -> SERVICE DISCOVERY -> CHAT/PRESENCE/API/NOTIFICATION/KV -> STORAGE MODEL -> MESSAGE ID -> 1:1 FLOW -> MULTI-DEVICE CURSOR -> SMALL-GROUP INBOX FANOUT -> PRESENCE + HEARTBEAT -> PUB-SUB STATUS -> FAILURE/RESEND",
+    "one_sentence_takeaway": "A large chat system combines persistent WebSocket connections, service discovery, horizontally scalable chat-history storage, ordered message IDs, per-device synchronization, inbox-style small-group fanout, and heartbeat-driven presence management."
+  }
+}

@@ -1,0 +1,2650 @@
+{
+  "chapter": {
+    "number": 3,
+    "title": "A Framework for System Design Interviews",
+    "source": "System Design Interview: An Insider's Guide by Alex Xu",
+    "pdf_pages": {
+      "chapter_start": 42,
+      "chapter_end": 50
+    },
+    "primary_goal": "Learn a repeatable four-step framework for approaching open-ended system design interviews while demonstrating technical judgment, collaboration, requirement clarification, communication, prioritization, tradeoff analysis, and time management."
+  },
+  "chapter_summary": {
+    "overview": "Chapter 3 reframes the system design interview as a collaborative problem-solving exercise rather than a test with one correct architecture. The interviewer is evaluating not only technical design skill, but also the candidate's ability to resolve ambiguity, ask useful questions, collaborate, work under pressure, explain choices, respond to feedback, and avoid over-engineering. The chapter presents a four-step process: understand the problem and establish scope; propose a high-level design and get buy-in; perform a focused design deep dive; and wrap up with bottlenecks, failure cases, operational concerns, scaling considerations, refinements, and a recap.",
+    "core_message": "The design process is more important than producing a supposedly perfect final architecture. A strong candidate continuously communicates, makes requirements and assumptions explicit, works with the interviewer as a teammate, prioritizes the most important parts of the system, and adapts the depth of the discussion to interviewer feedback.",
+    "what_interviewers_are_assessing": [
+      "Technical design skill",
+      "Ability to collaborate",
+      "Ability to work under pressure",
+      "Ability to resolve ambiguity constructively",
+      "Ability to ask good questions",
+      "Ability to defend design choices",
+      "Ability to respond to feedback constructively",
+      "Judgment around tradeoffs and avoiding over-engineering"
+    ],
+    "red_flags": [
+      "Jumping into a solution before understanding the requirements",
+      "Over-engineering while ignoring tradeoffs and cost",
+      "Narrow-mindedness",
+      "Stubbornness",
+      "Spending too much time on unnecessary implementation detail",
+      "Thinking silently instead of communicating",
+      "Assuming the design is perfect",
+      "Failing to seek feedback"
+    ],
+    "source_pages": [
+      42,
+      43,
+      44,
+      46,
+      47,
+      49,
+      50
+    ]
+  },
+  "four_step_framework": [
+    {
+      "step": 1,
+      "name": "Understand the problem and establish design scope",
+      "recommended_time": "3-10 minutes",
+      "goals": [
+        "Clarify the requirements.",
+        "Clarify assumptions.",
+        "Understand which features are in scope.",
+        "Understand expected scale.",
+        "Understand relevant existing technology or services.",
+        "Avoid solving the wrong problem."
+      ],
+      "key_actions": [
+        "Do not immediately propose a solution.",
+        "Ask questions before designing.",
+        "If the interviewer asks you to make assumptions, write them down.",
+        "Clarify functional scope and scale.",
+        "Ask about constraints and available technology when relevant."
+      ],
+      "sample_questions_from_chapter": [
+        "What specific features are we going to build?",
+        "How many users does the product have?",
+        "How fast does the company anticipate scaling in 3 months, 6 months, and a year?",
+        "What is the company's technology stack?",
+        "What existing services might be leveraged to simplify the design?"
+      ],
+      "source_pages": [
+        43,
+        44,
+        50
+      ]
+    },
+    {
+      "step": 2,
+      "name": "Propose high-level design and get buy-in",
+      "recommended_time": "10-15 minutes",
+      "goals": [
+        "Develop an initial architecture blueprint.",
+        "Reach agreement with the interviewer on the overall direction.",
+        "Validate the design against scale constraints.",
+        "Use concrete flows to expose edge cases."
+      ],
+      "key_actions": [
+        "Draw key components using box diagrams.",
+        "Include relevant clients, APIs, web servers, data stores, caches, CDN, message queues, and other major components.",
+        "Ask for feedback.",
+        "Treat the interviewer as a teammate.",
+        "Use back-of-the-envelope calculations when helpful.",
+        "Think out loud while estimating.",
+        "Walk through concrete use cases.",
+        "Discuss whether API endpoints or database schemas are appropriate for the level of the problem."
+      ],
+      "news_feed_example": {
+        "major_flows": [
+          {
+            "flow": "Feed publishing",
+            "description": "When a user publishes a post, corresponding data is written into cache/database and the post is populated into friends' news feeds."
+          },
+          {
+            "flow": "News feed building",
+            "description": "The news feed is built by aggregating friends' posts in reverse chronological order."
+          }
+        ],
+        "high_level_components_visible_in_figures": [
+          "User via web browser or mobile app",
+          "DNS",
+          "Load balancer",
+          "Web servers",
+          "Post Service",
+          "Fanout Service",
+          "Notification Service",
+          "Post Cache",
+          "News Feed Cache",
+          "Post DB"
+        ]
+      },
+      "source_pages": [
+        44,
+        45,
+        50
+      ]
+    },
+    {
+      "step": 3,
+      "name": "Design deep dive",
+      "recommended_time": "10-25 minutes",
+      "preconditions": [
+        "Overall goals and feature scope are agreed upon.",
+        "A high-level blueprint has been sketched.",
+        "The interviewer has provided feedback on the high-level design.",
+        "You have initial ideas about which areas deserve deeper exploration."
+      ],
+      "goals": [
+        "Identify the most important components to explore deeply.",
+        "Prioritize areas that demonstrate design ability.",
+        "Respond to interviewer hints and interests.",
+        "Discuss performance characteristics, bottlenecks, resource estimates, or critical component internals as appropriate."
+      ],
+      "key_actions": [
+        "Work with the interviewer to identify components to prioritize.",
+        "Use interviewer feedback to decide where to dive deeper.",
+        "Avoid unnecessary detail that consumes time without producing useful interview signal.",
+        "Manage time deliberately.",
+        "Focus on the most critical components first."
+      ],
+      "examples_from_chapter": [
+        "For a URL shortener, hash-function design is an interesting deep-dive topic.",
+        "For a chat system, reducing latency and supporting online/offline status are interesting deep-dive topics.",
+        "For a senior candidate, discussion may focus more heavily on performance characteristics, bottlenecks, and resource estimations.",
+        "Detailed discussion of a specific feed-ranking algorithm such as EdgeRank may be an inefficient use of interview time when it does not demonstrate scalable-system design."
+      ],
+      "news_feed_deep_dive": {
+        "focus_areas": [
+          "Feed publishing",
+          "News feed retrieval"
+        ],
+        "figure_3_3_components": [
+          "Web servers",
+          "Authentication",
+          "Rate Limiting",
+          "Post Service",
+          "Post Cache",
+          "Post DB",
+          "Notification Service",
+          "Fanout Service",
+          "Graph DB",
+          "User Cache",
+          "User DB",
+          "Message Queue",
+          "Fanout Workers",
+          "News Feed Cache"
+        ],
+        "figure_3_4_components": [
+          "User",
+          "CDN",
+          "Load balancer",
+          "Web servers",
+          "Authentication",
+          "Rate Limiting",
+          "News Feed Service",
+          "News Feed Cache",
+          "User Cache",
+          "User DB",
+          "Post Cache",
+          "Post DB"
+        ]
+      },
+      "source_pages": [
+        46,
+        47,
+        48,
+        49,
+        50
+      ]
+    },
+    {
+      "step": 4,
+      "name": "Wrap up",
+      "recommended_time": "3-5 minutes",
+      "goals": [
+        "Demonstrate critical thinking about the design.",
+        "Summarize the proposed architecture.",
+        "Discuss failure modes and operational concerns.",
+        "Discuss the next scaling threshold.",
+        "Suggest additional refinements."
+      ],
+      "key_actions": [
+        "Identify bottlenecks and potential improvements.",
+        "Never claim the design is perfect.",
+        "Recap the architecture, particularly if multiple options were discussed.",
+        "Discuss error cases such as server failures and network loss.",
+        "Discuss operational issues such as monitoring metrics, error logs, and rollout.",
+        "Explain how the design would change for the next scale curve.",
+        "Mention refinements you would pursue with additional time."
+      ],
+      "source_pages": [
+        49,
+        50
+      ]
+    }
+  ],
+  "news_feed_requirement_example": {
+    "prompt": "Design a news feed system",
+    "clarification_dialogue": [
+      {
+        "candidate_question": "Is this a mobile app, a web app, or both?",
+        "interviewer_answer": "Both."
+      },
+      {
+        "candidate_question": "What are the most important features for the product?",
+        "interviewer_answer": "Ability to make a post and see friends' news feed."
+      },
+      {
+        "candidate_question": "Is the news feed sorted in reverse chronological order or by a particular weighted order?",
+        "interviewer_answer": "Assume reverse chronological order."
+      },
+      {
+        "candidate_question": "How many friends can a user have?",
+        "interviewer_answer": "5000."
+      },
+      {
+        "candidate_question": "What is the traffic volume?",
+        "interviewer_answer": "10 million daily active users."
+      },
+      {
+        "candidate_question": "Can the feed contain images and videos, or only text?",
+        "interviewer_answer": "It can contain both images and videos."
+      }
+    ],
+    "source_pages": [
+      43,
+      44
+    ]
+  },
+  "dos_and_donts": {
+    "dos": [
+      {
+        "rule": "Always ask for clarification.",
+        "reason": "Do not assume that your assumption is correct.",
+        "source_pages": [
+          50
+        ]
+      },
+      {
+        "rule": "Understand the requirements of the problem.",
+        "source_pages": [
+          50
+        ]
+      },
+      {
+        "rule": "Design for the actual context rather than looking for a universal best answer.",
+        "reason": "A startup's appropriate solution can differ from the solution for an established company with millions of users.",
+        "source_pages": [
+          50
+        ]
+      },
+      {
+        "rule": "Let the interviewer know what you are thinking.",
+        "source_pages": [
+          50
+        ]
+      },
+      {
+        "rule": "Suggest multiple approaches if possible.",
+        "source_pages": [
+          50
+        ]
+      },
+      {
+        "rule": "After agreeing on the blueprint, go into details on the components.",
+        "reason": "Design the most critical components first.",
+        "source_pages": [
+          50
+        ]
+      },
+      {
+        "rule": "Bounce ideas off the interviewer.",
+        "reason": "Treat the interviewer as a teammate.",
+        "source_pages": [
+          50
+        ]
+      },
+      {
+        "rule": "Never give up.",
+        "source_pages": [
+          50
+        ]
+      }
+    ],
+    "donts": [
+      {
+        "rule": "Do not be unprepared for typical interview questions.",
+        "source_pages": [
+          50
+        ]
+      },
+      {
+        "rule": "Do not jump into a solution without clarifying requirements and assumptions.",
+        "source_pages": [
+          50
+        ]
+      },
+      {
+        "rule": "Do not go into too much detail on one component at the beginning.",
+        "reason": "Start with the high-level design and then drill down.",
+        "source_pages": [
+          50
+        ]
+      },
+      {
+        "rule": "If you get stuck, do not hesitate to ask for hints.",
+        "source_pages": [
+          50
+        ]
+      },
+      {
+        "rule": "Do not think in silence.",
+        "reason": "Communicate.",
+        "source_pages": [
+          50
+        ]
+      },
+      {
+        "rule": "Do not assume the interview is finished once you produce a design.",
+        "reason": "The interview is not over until the interviewer says it is; ask for feedback early and often.",
+        "source_pages": [
+          50
+        ]
+      }
+    ]
+  },
+  "time_allocation": {
+    "interview_length_example": "45 minutes",
+    "note": "The chapter describes these values as a very rough guide; actual allocation depends on problem scope and interviewer requirements.",
+    "steps": [
+      {
+        "step": 1,
+        "name": "Understand the problem and establish design scope",
+        "minutes": "3-10"
+      },
+      {
+        "step": 2,
+        "name": "Propose high-level design and get buy-in",
+        "minutes": "10-15"
+      },
+      {
+        "step": 3,
+        "name": "Design deep dive",
+        "minutes": "10-25"
+      },
+      {
+        "step": 4,
+        "name": "Wrap",
+        "minutes": "3-5"
+      }
+    ],
+    "source_pages": [
+      50
+    ]
+  },
+  "key_concepts": [
+    {
+      "term": "Open-ended problem",
+      "definition": "A problem without one universally correct solution; system design interviews intentionally contain ambiguity and multiple viable approaches.",
+      "source_pages": [
+        42,
+        43
+      ]
+    },
+    {
+      "term": "Design scope",
+      "definition": "The subset of requirements, features, scale, assumptions, and constraints that the candidate and interviewer agree the design should address.",
+      "source_pages": [
+        43,
+        44
+      ]
+    },
+    {
+      "term": "Clarifying question",
+      "definition": "A question used to remove ambiguity about features, users, scale, ordering, media support, technology, or other requirements before proposing a solution.",
+      "source_pages": [
+        43,
+        44
+      ]
+    },
+    {
+      "term": "Assumption",
+      "definition": "A design premise made when the interviewer does not specify a requirement; the chapter recommends writing assumptions down so they can be referenced later.",
+      "source_pages": [
+        43
+      ]
+    },
+    {
+      "term": "High-level design",
+      "definition": "An initial architectural blueprint showing the major components and relationships without prematurely diving into implementation detail.",
+      "source_pages": [
+        44,
+        45
+      ]
+    },
+    {
+      "term": "Buy-in",
+      "definition": "Agreement with the interviewer on the proposed high-level design before moving into deeper component-level discussion.",
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "term": "Back-of-the-envelope calculation",
+      "definition": "A rough capacity or scale estimate used to evaluate whether the high-level blueprint fits expected constraints.",
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "term": "Concrete use case",
+      "definition": "A specific system flow used to validate the architecture, frame the design, and reveal edge cases.",
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "term": "Design deep dive",
+      "definition": "A focused exploration of the most important architecture components after the high-level design and scope have been agreed upon.",
+      "source_pages": [
+        46,
+        47
+      ]
+    },
+    {
+      "term": "Interview signal",
+      "definition": "Evidence the interviewer can use to assess a candidate's design ability, judgment, collaboration, communication, and reasoning.",
+      "source_pages": [
+        42,
+        46
+      ]
+    },
+    {
+      "term": "Over-engineering",
+      "definition": "Introducing unnecessary complexity or pursuing design purity while ignoring tradeoffs and the compounding costs of the resulting system.",
+      "source_pages": [
+        42
+      ]
+    },
+    {
+      "term": "Bottleneck",
+      "definition": "A limiting part of the proposed architecture that the candidate should be prepared to identify and improve during wrap-up or deep-dive discussion.",
+      "source_pages": [
+        46,
+        49
+      ]
+    },
+    {
+      "term": "Next scale curve",
+      "definition": "The next order of growth the system may need to support, such as moving from one million to ten million users, and the changes required to handle it.",
+      "source_pages": [
+        49
+      ]
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "FC01",
+      "front": "What is the system design interview intended to simulate?",
+      "back": "Real-life collaborative problem solving in which two co-workers work through an ambiguous problem and develop a solution that meets their goals.",
+      "source_pages": [
+        42
+      ]
+    },
+    {
+      "id": "FC02",
+      "front": "Is there one perfect answer to a system design interview?",
+      "back": "No. The problem is open-ended, and the chapter emphasizes that there is no perfect answer.",
+      "source_pages": [
+        42
+      ]
+    },
+    {
+      "id": "FC03",
+      "front": "What matters more than the final design according to Chapter 3?",
+      "back": "The work and reasoning demonstrated during the design process.",
+      "source_pages": [
+        42
+      ]
+    },
+    {
+      "id": "FC04",
+      "front": "What nontechnical abilities can a system design interview reveal?",
+      "back": "Collaboration, working under pressure, resolving ambiguity constructively, and asking good questions.",
+      "source_pages": [
+        42
+      ]
+    },
+    {
+      "id": "FC05",
+      "front": "What design behavior does Chapter 3 identify as a major red flag?",
+      "back": "Over-engineering while ignoring tradeoffs and the compounding cost of complexity.",
+      "source_pages": [
+        42
+      ]
+    },
+    {
+      "id": "FC06",
+      "front": "What are the four steps in the chapter's system design interview framework?",
+      "back": "1) Understand the problem and establish design scope. 2) Propose high-level design and get buy-in. 3) Design deep dive. 4) Wrap up.",
+      "source_pages": [
+        43,
+        44,
+        46,
+        49
+      ]
+    },
+    {
+      "id": "FC07",
+      "front": "What is the main lesson of the 'Jimmy' example?",
+      "back": "Do not rush to answer. In system design, quickly proposing a solution without understanding the requirements is a red flag.",
+      "source_pages": [
+        43
+      ]
+    },
+    {
+      "id": "FC08",
+      "front": "What should you do before proposing an architecture?",
+      "back": "Think deeply and ask questions to clarify requirements and assumptions.",
+      "source_pages": [
+        43
+      ]
+    },
+    {
+      "id": "FC09",
+      "front": "What should you do if the interviewer asks you to make an assumption?",
+      "back": "Make the assumption explicit and write it down so it can be referenced later.",
+      "source_pages": [
+        43
+      ]
+    },
+    {
+      "id": "FC10",
+      "front": "What is one of the most important engineering skills emphasized in Step 1?",
+      "back": "Asking the right questions, making proper assumptions, and gathering the information needed to build the system.",
+      "source_pages": [
+        43
+      ]
+    },
+    {
+      "id": "FC11",
+      "front": "Name four general clarification questions suggested by the chapter.",
+      "back": "Ask what features to build, how many users the product has, how fast it is expected to scale, and what technology stack or existing services can be leveraged.",
+      "source_pages": [
+        43
+      ]
+    },
+    {
+      "id": "FC12",
+      "front": "In the news feed example, what platforms are in scope?",
+      "back": "Both mobile and web.",
+      "source_pages": [
+        43,
+        44
+      ]
+    },
+    {
+      "id": "FC13",
+      "front": "What two major product features are in scope in the news feed example?",
+      "back": "Making a post and viewing friends' news feeds.",
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "id": "FC14",
+      "front": "How is the news feed ordered in the simplified example?",
+      "back": "Reverse chronological order.",
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "id": "FC15",
+      "front": "How many friends may a user have in the news feed example?",
+      "back": "5,000.",
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "id": "FC16",
+      "front": "What traffic volume is specified in the news feed example?",
+      "back": "10 million daily active users.",
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "id": "FC17",
+      "front": "What media types can the example news feed contain?",
+      "back": "Images and videos, in addition to text.",
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "id": "FC18",
+      "front": "What is the goal of Step 2?",
+      "back": "Develop a high-level design and reach agreement or buy-in with the interviewer.",
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "id": "FC19",
+      "front": "How should you treat the interviewer during the high-level design phase?",
+      "back": "As a teammate; ask for feedback and collaborate.",
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "id": "FC20",
+      "front": "What should the initial blueprint contain?",
+      "back": "Box diagrams showing major components such as clients, APIs, web servers, data stores, caches, CDNs, message queues, and other relevant components.",
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "id": "FC21",
+      "front": "Why might you do back-of-the-envelope calculations during Step 2?",
+      "back": "To evaluate whether the high-level blueprint fits the scale constraints.",
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "id": "FC22",
+      "front": "What communication behavior should accompany back-of-the-envelope calculations?",
+      "back": "Think out loud and communicate with the interviewer about whether the calculation is necessary.",
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "id": "FC23",
+      "front": "Why should you walk through concrete use cases?",
+      "back": "They help frame the high-level design and can reveal edge cases.",
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "id": "FC24",
+      "front": "Should API endpoints and database schemas always be included in Step 2?",
+      "back": "No. The appropriate level of detail depends on the problem; communicate with the interviewer.",
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "id": "FC25",
+      "front": "What are the two high-level flows in the news feed design?",
+      "back": "Feed publishing and news feed building.",
+      "source_pages": [
+        44,
+        45
+      ]
+    },
+    {
+      "id": "FC26",
+      "front": "What happens during feed publishing?",
+      "back": "Post data is written into cache/database, and the post is populated into friends' news feeds.",
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "id": "FC27",
+      "front": "What happens during news feed building?",
+      "back": "Friends' posts are aggregated in reverse chronological order.",
+      "source_pages": [
+        45
+      ]
+    },
+    {
+      "id": "FC28",
+      "front": "What should already be accomplished before entering Step 3?",
+      "back": "Agree on goals and scope, sketch a high-level blueprint, obtain interviewer feedback, and identify likely deep-dive areas.",
+      "source_pages": [
+        46
+      ]
+    },
+    {
+      "id": "FC29",
+      "front": "Who decides which components receive a deep dive?",
+      "back": "The candidate and interviewer should work together to identify and prioritize them.",
+      "source_pages": [
+        46
+      ]
+    },
+    {
+      "id": "FC30",
+      "front": "How can the deep-dive emphasis differ for a senior candidate?",
+      "back": "It may focus more on performance characteristics, bottlenecks, and resource estimations.",
+      "source_pages": [
+        46
+      ]
+    },
+    {
+      "id": "FC31",
+      "front": "What is an interesting deep-dive topic for a URL shortener?",
+      "back": "The hash function that converts a long URL into a short one.",
+      "source_pages": [
+        46
+      ]
+    },
+    {
+      "id": "FC32",
+      "front": "What are two interesting deep-dive topics for a chat system?",
+      "back": "Reducing latency and supporting online/offline status.",
+      "source_pages": [
+        46
+      ]
+    },
+    {
+      "id": "FC33",
+      "front": "Why is time management especially important during the deep dive?",
+      "back": "It is easy to spend too much time on minute details that do not demonstrate useful design ability.",
+      "source_pages": [
+        46,
+        47
+      ]
+    },
+    {
+      "id": "FC34",
+      "front": "What example of unnecessary detail does the chapter give?",
+      "back": "Explaining Facebook's EdgeRank feed-ranking algorithm in detail when that does not demonstrate scalable-system design.",
+      "source_pages": [
+        47
+      ]
+    },
+    {
+      "id": "FC35",
+      "front": "Which two news feed use cases are selected for deeper investigation?",
+      "back": "Feed publishing and news feed retrieval.",
+      "source_pages": [
+        47
+      ]
+    },
+    {
+      "id": "FC36",
+      "front": "What is the purpose of Step 4?",
+      "back": "Wrap up by discussing follow-ups, bottlenecks, improvements, failures, operations, future scaling, refinements, and possibly recapping the design.",
+      "source_pages": [
+        49
+      ]
+    },
+    {
+      "id": "FC37",
+      "front": "What should you never say about your system during wrap-up?",
+      "back": "That the design is perfect and nothing can be improved.",
+      "source_pages": [
+        49
+      ]
+    },
+    {
+      "id": "FC38",
+      "front": "Why might a design recap be useful?",
+      "back": "It refreshes the interviewer's memory, especially after a long session or when multiple solutions were considered.",
+      "source_pages": [
+        49
+      ]
+    },
+    {
+      "id": "FC39",
+      "front": "What error cases does the chapter explicitly suggest discussing?",
+      "back": "Server failure and network loss.",
+      "source_pages": [
+        49
+      ]
+    },
+    {
+      "id": "FC40",
+      "front": "What operational issues does the chapter suggest discussing?",
+      "back": "Monitoring metrics, monitoring error logs, and how to roll out the system.",
+      "source_pages": [
+        49
+      ]
+    },
+    {
+      "id": "FC41",
+      "front": "What does 'next scale curve' mean in the wrap-up discussion?",
+      "back": "Explain how the architecture would need to change to support the next level of growth, such as going from 1 million to 10 million users.",
+      "source_pages": [
+        49
+      ]
+    },
+    {
+      "id": "FC42",
+      "front": "What is the first item in the chapter's Dos list?",
+      "back": "Always ask for clarification; do not assume your assumption is correct.",
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "FC43",
+      "front": "Why is there no universal 'best' design?",
+      "back": "The appropriate solution depends on requirements and context; a young startup and an established company with millions of users may need different designs.",
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "FC44",
+      "front": "What does the chapter say about suggesting multiple approaches?",
+      "back": "Suggest multiple approaches if possible.",
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "FC45",
+      "front": "Which components should be designed first once you move beyond the high-level blueprint?",
+      "back": "The most critical components.",
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "FC46",
+      "front": "What should you do if you get stuck?",
+      "back": "Ask the interviewer for hints rather than remaining stuck.",
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "FC47",
+      "front": "What does the chapter say about thinking in silence?",
+      "back": "Do not think in silence; communicate.",
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "FC48",
+      "front": "When is the interview actually finished?",
+      "back": "When the interviewer says it is finished, not merely when you have presented a design.",
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "FC49",
+      "front": "How often should you seek feedback?",
+      "back": "Early and often.",
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "FC50",
+      "front": "What is the rough time allocation for Step 1 in a 45-minute interview?",
+      "back": "3-10 minutes.",
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "FC51",
+      "front": "What is the rough time allocation for Step 2?",
+      "back": "10-15 minutes.",
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "FC52",
+      "front": "What is the rough time allocation for Step 3?",
+      "back": "10-25 minutes.",
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "FC53",
+      "front": "What is the rough time allocation for Step 4?",
+      "back": "3-5 minutes.",
+      "source_pages": [
+        50
+      ]
+    }
+  ],
+  "multiple_choice_questions": [
+    {
+      "id": "MCQ01",
+      "difficulty": "easy",
+      "question": "What is the most accurate description of a system design interview according to Chapter 3?",
+      "choices": {
+        "A": "A trivia test with one correct architecture",
+        "B": "A collaborative exercise for solving an ambiguous problem",
+        "C": "A coding speed competition",
+        "D": "A test of memorized infrastructure diagrams"
+      },
+      "answer": "B",
+      "explanation": "The chapter describes the interview as a simulation of collaborative real-world problem solving.",
+      "source_pages": [
+        42
+      ]
+    },
+    {
+      "id": "MCQ02",
+      "difficulty": "easy",
+      "question": "What does the chapter say matters more than the final design?",
+      "choices": {
+        "A": "Using the most technologies",
+        "B": "The work demonstrated during the design process",
+        "C": "Finishing before the interviewer",
+        "D": "Selecting a specific cloud provider"
+      },
+      "answer": "B",
+      "source_pages": [
+        42
+      ]
+    },
+    {
+      "id": "MCQ03",
+      "difficulty": "medium",
+      "question": "Which is NOT listed as a useful interview signal?",
+      "choices": {
+        "A": "Collaboration",
+        "B": "Resolving ambiguity",
+        "C": "Asking good questions",
+        "D": "Refusing feedback once a design is proposed"
+      },
+      "answer": "D",
+      "source_pages": [
+        42
+      ]
+    },
+    {
+      "id": "MCQ04",
+      "difficulty": "medium",
+      "question": "Which behavior is identified as a red flag?",
+      "choices": {
+        "A": "Discussing tradeoffs",
+        "B": "Asking clarifying questions",
+        "C": "Over-engineering and ignoring tradeoffs",
+        "D": "Seeking feedback"
+      },
+      "answer": "C",
+      "source_pages": [
+        42
+      ]
+    },
+    {
+      "id": "MCQ05",
+      "difficulty": "easy",
+      "question": "What is Step 1 of the four-step process?",
+      "choices": {
+        "A": "Design deep dive",
+        "B": "Wrap up",
+        "C": "Understand the problem and establish design scope",
+        "D": "Implement the database schema"
+      },
+      "answer": "C",
+      "source_pages": [
+        43
+      ]
+    },
+    {
+      "id": "MCQ06",
+      "difficulty": "medium",
+      "question": "What is the lesson of the 'Jimmy' story?",
+      "choices": {
+        "A": "Answer as quickly as possible",
+        "B": "Jump immediately into implementation",
+        "C": "Do not rush to answer before understanding the problem",
+        "D": "Avoid asking questions"
+      },
+      "answer": "C",
+      "source_pages": [
+        43
+      ]
+    },
+    {
+      "id": "MCQ07",
+      "difficulty": "medium",
+      "question": "If the interviewer asks you to make an assumption, what should you do?",
+      "choices": {
+        "A": "Hide it from the interviewer",
+        "B": "Write it down for later reference",
+        "C": "Refuse to continue",
+        "D": "Replace it with a design immediately"
+      },
+      "answer": "B",
+      "source_pages": [
+        43
+      ]
+    },
+    {
+      "id": "MCQ08",
+      "difficulty": "medium",
+      "question": "Which question best helps establish scale?",
+      "choices": {
+        "A": "What color should the UI be?",
+        "B": "How many users does the product have?",
+        "C": "Which IDE does the team use?",
+        "D": "What font does the mobile app use?"
+      },
+      "answer": "B",
+      "source_pages": [
+        43
+      ]
+    },
+    {
+      "id": "MCQ09",
+      "difficulty": "medium",
+      "question": "In the news feed example, how many daily active users are specified?",
+      "choices": {
+        "A": "1 million",
+        "B": "5 million",
+        "C": "10 million",
+        "D": "100 million"
+      },
+      "answer": "C",
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "id": "MCQ10",
+      "difficulty": "medium",
+      "question": "How is the simplified news feed sorted?",
+      "choices": {
+        "A": "Alphabetically",
+        "B": "Reverse chronological order",
+        "C": "Randomly",
+        "D": "By geographic distance"
+      },
+      "answer": "B",
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "id": "MCQ11",
+      "difficulty": "medium",
+      "question": "What is Step 2 primarily trying to achieve?",
+      "choices": {
+        "A": "A production-ready implementation",
+        "B": "A high-level design and interviewer buy-in",
+        "C": "A complete database migration",
+        "D": "A benchmark of every component"
+      },
+      "answer": "B",
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "id": "MCQ12",
+      "difficulty": "medium",
+      "question": "How should you interact with the interviewer during Step 2?",
+      "choices": {
+        "A": "Avoid interrupting your own design to ask questions",
+        "B": "Treat the interviewer as a teammate and ask for feedback",
+        "C": "Only speak after the complete design is finished",
+        "D": "Ask the interviewer to design the system for you"
+      },
+      "answer": "B",
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "id": "MCQ13",
+      "difficulty": "medium",
+      "question": "Which belongs in a high-level box diagram when relevant?",
+      "choices": {
+        "A": "Clients",
+        "B": "Web servers",
+        "C": "Data stores",
+        "D": "All of the above"
+      },
+      "answer": "D",
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "id": "MCQ14",
+      "difficulty": "hard",
+      "question": "Why might you perform a back-of-the-envelope calculation during Step 2?",
+      "choices": {
+        "A": "To replace the high-level architecture",
+        "B": "To evaluate whether the blueprint fits scale constraints",
+        "C": "To avoid discussing requirements",
+        "D": "To calculate exact production cost"
+      },
+      "answer": "B",
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "id": "MCQ15",
+      "difficulty": "hard",
+      "question": "What does the chapter say about API endpoint and database-schema detail during Step 2?",
+      "choices": {
+        "A": "Always include them",
+        "B": "Never include them",
+        "C": "The correct level depends on the problem; communicate with the interviewer",
+        "D": "Only discuss schemas for search engines"
+      },
+      "answer": "C",
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "id": "MCQ16",
+      "difficulty": "medium",
+      "question": "What are the two high-level news feed flows?",
+      "choices": {
+        "A": "Feed publishing and news feed building",
+        "B": "Authentication and billing",
+        "C": "Caching and sharding",
+        "D": "Upload and CDN invalidation"
+      },
+      "answer": "A",
+      "source_pages": [
+        44,
+        45
+      ]
+    },
+    {
+      "id": "MCQ17",
+      "difficulty": "medium",
+      "question": "What should be completed before the design deep dive?",
+      "choices": {
+        "A": "A production deployment",
+        "B": "Agreement on scope, high-level blueprint, feedback, and initial deep-dive direction",
+        "C": "Every implementation detail",
+        "D": "The final wrap-up"
+      },
+      "answer": "B",
+      "source_pages": [
+        46
+      ]
+    },
+    {
+      "id": "MCQ18",
+      "difficulty": "hard",
+      "question": "Who should determine which architecture components are prioritized in the deep dive?",
+      "choices": {
+        "A": "The candidate alone",
+        "B": "The interviewer alone",
+        "C": "The candidate and interviewer collaboratively",
+        "D": "The hiring coordinator"
+      },
+      "answer": "C",
+      "source_pages": [
+        46
+      ]
+    },
+    {
+      "id": "MCQ19",
+      "difficulty": "hard",
+      "question": "For a senior candidate, what might the interviewer emphasize?",
+      "choices": {
+        "A": "CSS layout",
+        "B": "Performance characteristics, bottlenecks, and resource estimations",
+        "C": "Typing speed",
+        "D": "Memorizing product names"
+      },
+      "answer": "B",
+      "source_pages": [
+        46
+      ]
+    },
+    {
+      "id": "MCQ20",
+      "difficulty": "medium",
+      "question": "Which deep-dive area does the chapter suggest for a URL shortener?",
+      "choices": {
+        "A": "Hash-function design",
+        "B": "Video transcoding",
+        "C": "Feed ranking",
+        "D": "Image compression"
+      },
+      "answer": "A",
+      "source_pages": [
+        46
+      ]
+    },
+    {
+      "id": "MCQ21",
+      "difficulty": "medium",
+      "question": "Which topics are suggested for a chat-system deep dive?",
+      "choices": {
+        "A": "Reducing latency and supporting online/offline status",
+        "B": "SQL joins and CDN billing",
+        "C": "Feed ranking and video encoding",
+        "D": "Search indexing only"
+      },
+      "answer": "A",
+      "source_pages": [
+        46
+      ]
+    },
+    {
+      "id": "MCQ22",
+      "difficulty": "hard",
+      "question": "Why should you avoid spending too much time on minute detail?",
+      "choices": {
+        "A": "Details are never important",
+        "B": "They can consume interview time without demonstrating useful ability",
+        "C": "Interviewers dislike technical discussions",
+        "D": "High-level design is always sufficient"
+      },
+      "answer": "B",
+      "source_pages": [
+        46,
+        47
+      ]
+    },
+    {
+      "id": "MCQ23",
+      "difficulty": "medium",
+      "question": "What is the first recommended wrap-up direction?",
+      "choices": {
+        "A": "Claim the design is complete",
+        "B": "Identify bottlenecks and discuss potential improvements",
+        "C": "Start writing code",
+        "D": "Restart requirement gathering"
+      },
+      "answer": "B",
+      "source_pages": [
+        49
+      ]
+    },
+    {
+      "id": "MCQ24",
+      "difficulty": "medium",
+      "question": "Which statement should you avoid during wrap-up?",
+      "choices": {
+        "A": "Here is a bottleneck I would improve",
+        "B": "Here is how I would monitor errors",
+        "C": "My design is perfect and nothing can be improved",
+        "D": "Here is how I would handle the next scale curve"
+      },
+      "answer": "C",
+      "source_pages": [
+        49
+      ]
+    },
+    {
+      "id": "MCQ25",
+      "difficulty": "medium",
+      "question": "Which error cases does Chapter 3 explicitly mention?",
+      "choices": {
+        "A": "Server failure and network loss",
+        "B": "Only compiler errors",
+        "C": "Only malformed JSON",
+        "D": "None"
+      },
+      "answer": "A",
+      "source_pages": [
+        49
+      ]
+    },
+    {
+      "id": "MCQ26",
+      "difficulty": "medium",
+      "question": "What does the chapter suggest discussing about operations?",
+      "choices": {
+        "A": "Monitoring metrics, error logs, and rollout",
+        "B": "Only feature naming",
+        "C": "Only database schemas",
+        "D": "Nothing operational"
+      },
+      "answer": "A",
+      "source_pages": [
+        49
+      ]
+    },
+    {
+      "id": "MCQ27",
+      "difficulty": "hard",
+      "question": "What is an example of discussing the 'next scale curve'?",
+      "choices": {
+        "A": "Changing from 1 million to 10 million supported users",
+        "B": "Changing the application font",
+        "C": "Moving a button",
+        "D": "Renaming an API endpoint"
+      },
+      "answer": "A",
+      "source_pages": [
+        49
+      ]
+    },
+    {
+      "id": "MCQ28",
+      "difficulty": "medium",
+      "question": "Which action appears in the Dos list?",
+      "choices": {
+        "A": "Assume requirements silently",
+        "B": "Suggest multiple approaches if possible",
+        "C": "Avoid interviewer feedback",
+        "D": "Go immediately into low-level detail"
+      },
+      "answer": "B",
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "MCQ29",
+      "difficulty": "hard",
+      "question": "Why might a startup and an established company require different designs?",
+      "choices": {
+        "A": "Because system design has one best answer",
+        "B": "Because appropriate architecture depends on requirements and scale",
+        "C": "Because startups cannot use databases",
+        "D": "Because established companies cannot use caches"
+      },
+      "answer": "B",
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "MCQ30",
+      "difficulty": "medium",
+      "question": "If you get stuck, what does the chapter recommend?",
+      "choices": {
+        "A": "Remain silent",
+        "B": "End the interview",
+        "C": "Ask for hints",
+        "D": "Invent requirements"
+      },
+      "answer": "C",
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "MCQ31",
+      "difficulty": "medium",
+      "question": "What communication pattern does the chapter explicitly reject?",
+      "choices": {
+        "A": "Thinking out loud",
+        "B": "Asking for feedback",
+        "C": "Thinking in silence",
+        "D": "Collaborating"
+      },
+      "answer": "C",
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "MCQ32",
+      "difficulty": "medium",
+      "question": "How often should you seek feedback?",
+      "choices": {
+        "A": "Only at the end",
+        "B": "Early and often",
+        "C": "Never",
+        "D": "Only after coding"
+      },
+      "answer": "B",
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "MCQ33",
+      "difficulty": "medium",
+      "question": "What is the rough Step 1 time range in a 45-minute interview?",
+      "choices": {
+        "A": "1-2 minutes",
+        "B": "3-10 minutes",
+        "C": "15-20 minutes",
+        "D": "25-30 minutes"
+      },
+      "answer": "B",
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "MCQ34",
+      "difficulty": "medium",
+      "question": "What is the rough Step 2 time range?",
+      "choices": {
+        "A": "3-5 minutes",
+        "B": "10-15 minutes",
+        "C": "20-30 minutes",
+        "D": "30-40 minutes"
+      },
+      "answer": "B",
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "MCQ35",
+      "difficulty": "medium",
+      "question": "Which step receives the widest rough time range?",
+      "choices": {
+        "A": "Step 1",
+        "B": "Step 2",
+        "C": "Step 3",
+        "D": "Step 4"
+      },
+      "answer": "C",
+      "explanation": "Step 3 is listed at roughly 10-25 minutes.",
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "MCQ36",
+      "difficulty": "medium",
+      "question": "What is the rough Step 4 time range?",
+      "choices": {
+        "A": "3-5 minutes",
+        "B": "10-15 minutes",
+        "C": "10-25 minutes",
+        "D": "20-30 minutes"
+      },
+      "answer": "A",
+      "source_pages": [
+        50
+      ]
+    }
+  ],
+  "mix_and_match": [
+    {
+      "id": "MM01",
+      "title": "Four-Step Framework",
+      "instructions": "Match each step with its primary purpose.",
+      "left": {
+        "A": "Step 1",
+        "B": "Step 2",
+        "C": "Step 3",
+        "D": "Step 4"
+      },
+      "right": {
+        "1": "Identify bottlenecks, failures, operational issues, future scaling, and refinements",
+        "2": "Clarify requirements and establish scope",
+        "3": "Explore selected critical components in depth",
+        "4": "Propose the architecture blueprint and get interviewer buy-in"
+      },
+      "answer_key": {
+        "A": "2",
+        "B": "4",
+        "C": "3",
+        "D": "1"
+      },
+      "source_pages": [
+        43,
+        44,
+        46,
+        49
+      ]
+    },
+    {
+      "id": "MM02",
+      "title": "Clarification Question to Requirement",
+      "instructions": "Match each question with the type of requirement it clarifies.",
+      "left": {
+        "A": "How many users does the product have?",
+        "B": "What specific features are we going to build?",
+        "C": "How fast will the company scale?",
+        "D": "What technology stack or existing services are available?",
+        "E": "Can the feed contain images or videos?"
+      },
+      "right": {
+        "1": "Functional scope",
+        "2": "Traffic scale",
+        "3": "Growth expectations",
+        "4": "Existing implementation constraints or reusable infrastructure",
+        "5": "Content/media requirements"
+      },
+      "answer_key": {
+        "A": "2",
+        "B": "1",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        43,
+        44
+      ]
+    },
+    {
+      "id": "MM03",
+      "title": "Interview Behavior",
+      "instructions": "Match each behavior with the chapter's characterization.",
+      "left": {
+        "A": "Ask for clarification",
+        "B": "Over-engineer while ignoring tradeoffs",
+        "C": "Think out loud",
+        "D": "Ask for hints when stuck",
+        "E": "Say the design is perfect",
+        "F": "Ask for feedback early and often"
+      },
+      "right": {
+        "1": "Recommended collaboration behavior",
+        "2": "Red flag",
+        "3": "Recommended communication behavior",
+        "4": "Recommended recovery behavior",
+        "5": "Bad wrap-up behavior",
+        "6": "Recommended iterative feedback behavior"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5",
+        "F": "6"
+      },
+      "source_pages": [
+        42,
+        43,
+        44,
+        49,
+        50
+      ]
+    },
+    {
+      "id": "MM04",
+      "title": "Time Allocation",
+      "instructions": "Match each step with its rough time range in the chapter's 45-minute example.",
+      "left": {
+        "A": "Step 1",
+        "B": "Step 2",
+        "C": "Step 3",
+        "D": "Step 4"
+      },
+      "right": {
+        "1": "10-25 minutes",
+        "2": "3-5 minutes",
+        "3": "10-15 minutes",
+        "4": "3-10 minutes"
+      },
+      "answer_key": {
+        "A": "4",
+        "B": "3",
+        "C": "1",
+        "D": "2"
+      },
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "MM05",
+      "title": "News Feed Components",
+      "instructions": "Match each component with its role suggested by the example architecture.",
+      "left": {
+        "A": "Post Service",
+        "B": "Fanout Service",
+        "C": "Notification Service",
+        "D": "News Feed Service",
+        "E": "Message Queue",
+        "F": "Fanout Workers"
+      },
+      "right": {
+        "1": "Handles news-feed retrieval flow",
+        "2": "Supports asynchronous fanout work",
+        "3": "Handles post-related operations",
+        "4": "Carries work between fanout production and workers",
+        "5": "Handles notification-related work",
+        "6": "Coordinates distribution of a post toward friends' feeds"
+      },
+      "answer_key": {
+        "A": "3",
+        "B": "6",
+        "C": "5",
+        "D": "1",
+        "E": "4",
+        "F": "2"
+      },
+      "source_pages": [
+        45,
+        48,
+        49
+      ]
+    }
+  ],
+  "true_false": [
+    {
+      "id": "TF01",
+      "statement": "The chapter says a system design interview has one perfect answer.",
+      "answer": false,
+      "explanation": "The interview is open-ended, and there is no perfect answer.",
+      "source_pages": [
+        42
+      ]
+    },
+    {
+      "id": "TF02",
+      "statement": "The final architecture is more important than the reasoning process.",
+      "answer": false,
+      "explanation": "The chapter says the final design is less important than the work put into the design process.",
+      "source_pages": [
+        42
+      ]
+    },
+    {
+      "id": "TF03",
+      "statement": "Collaboration and ambiguity resolution are part of what interviewers assess.",
+      "answer": true,
+      "source_pages": [
+        42
+      ]
+    },
+    {
+      "id": "TF04",
+      "statement": "Over-engineering can be a red flag.",
+      "answer": true,
+      "source_pages": [
+        42
+      ]
+    },
+    {
+      "id": "TF05",
+      "statement": "You should propose a solution before asking questions so you do not waste time.",
+      "answer": false,
+      "explanation": "The chapter explicitly warns against jumping directly into a solution.",
+      "source_pages": [
+        43
+      ]
+    },
+    {
+      "id": "TF06",
+      "statement": "If you make assumptions, the chapter recommends writing them down.",
+      "answer": true,
+      "source_pages": [
+        43
+      ]
+    },
+    {
+      "id": "TF07",
+      "statement": "The news feed example assumes a maximum of 5,000 friends per user.",
+      "answer": true,
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "id": "TF08",
+      "statement": "The news feed example assumes 100 million DAU.",
+      "answer": false,
+      "explanation": "It assumes 10 million DAU.",
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "id": "TF09",
+      "statement": "The chapter recommends treating the interviewer as a teammate.",
+      "answer": true,
+      "source_pages": [
+        44,
+        50
+      ]
+    },
+    {
+      "id": "TF10",
+      "statement": "Back-of-the-envelope calculations may be useful for validating the scale of a high-level design.",
+      "answer": true,
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "id": "TF11",
+      "statement": "API endpoints and database schemas must always be included in Step 2.",
+      "answer": false,
+      "explanation": "The appropriate level of detail depends on the design problem.",
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "id": "TF12",
+      "statement": "The candidate should independently choose the deep-dive area without involving the interviewer.",
+      "answer": false,
+      "explanation": "The chapter recommends working with the interviewer to identify and prioritize components.",
+      "source_pages": [
+        46
+      ]
+    },
+    {
+      "id": "TF13",
+      "statement": "For senior candidates, bottlenecks and performance characteristics may receive more attention.",
+      "answer": true,
+      "source_pages": [
+        46
+      ]
+    },
+    {
+      "id": "TF14",
+      "statement": "The chapter recommends spending as much time as possible on minute implementation detail.",
+      "answer": false,
+      "explanation": "It warns that unnecessary detail can consume valuable time without demonstrating design skill.",
+      "source_pages": [
+        46,
+        47
+      ]
+    },
+    {
+      "id": "TF15",
+      "statement": "You should be willing to identify weaknesses in your own design during wrap-up.",
+      "answer": true,
+      "source_pages": [
+        49
+      ]
+    },
+    {
+      "id": "TF16",
+      "statement": "Server failure and network loss are suggested wrap-up discussion topics.",
+      "answer": true,
+      "source_pages": [
+        49
+      ]
+    },
+    {
+      "id": "TF17",
+      "statement": "Monitoring and rollout are outside the scope of a system design interview.",
+      "answer": false,
+      "explanation": "The chapter specifically recommends discussing operational issues such as metrics, logs, and rollout.",
+      "source_pages": [
+        49
+      ]
+    },
+    {
+      "id": "TF18",
+      "statement": "The same architecture is necessarily best for a startup and a company serving millions of users.",
+      "answer": false,
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "TF19",
+      "statement": "Thinking silently is recommended so the interviewer does not interrupt.",
+      "answer": false,
+      "explanation": "The chapter says to communicate and not think in silence.",
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "TF20",
+      "statement": "The rough time allocation is a fixed rule that should never change.",
+      "answer": false,
+      "explanation": "The chapter calls it a rough guide that depends on problem scope and interviewer requirements.",
+      "source_pages": [
+        50
+      ]
+    }
+  ],
+  "fill_in_the_blank": [
+    {
+      "id": "FIB01",
+      "prompt": "Step 1 is to understand the problem and establish design ______.",
+      "answer": "scope",
+      "source_pages": [
+        43
+      ]
+    },
+    {
+      "id": "FIB02",
+      "prompt": "Do not jump into a solution before clarifying requirements and ______.",
+      "answer": "assumptions",
+      "source_pages": [
+        43,
+        50
+      ]
+    },
+    {
+      "id": "FIB03",
+      "prompt": "If the interviewer asks you to make assumptions, write them down on the whiteboard or ______.",
+      "answer": "paper",
+      "source_pages": [
+        43
+      ]
+    },
+    {
+      "id": "FIB04",
+      "prompt": "The news feed example assumes ______ million daily active users.",
+      "answer": "10",
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "id": "FIB05",
+      "prompt": "The news feed example assumes up to ______ friends per user.",
+      "answer": "5000",
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "id": "FIB06",
+      "prompt": "The simplified news feed is sorted in reverse ______ order.",
+      "answer": "chronological",
+      "source_pages": [
+        44,
+        45
+      ]
+    },
+    {
+      "id": "FIB07",
+      "prompt": "Step 2 is to propose a high-level design and get ______.",
+      "answer": "buy-in",
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "id": "FIB08",
+      "prompt": "During Step 2, treat your interviewer as a ______.",
+      "answer": "teammate",
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "id": "FIB09",
+      "prompt": "Concrete use cases may help reveal ______ cases.",
+      "answer": "edge",
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "id": "FIB10",
+      "prompt": "Step 3 is the design ______ dive.",
+      "answer": "deep",
+      "source_pages": [
+        46
+      ]
+    },
+    {
+      "id": "FIB11",
+      "prompt": "For a URL shortener, the chapter suggests diving into the ______ function.",
+      "answer": "hash",
+      "source_pages": [
+        46
+      ]
+    },
+    {
+      "id": "FIB12",
+      "prompt": "Time ______ is essential because it is easy to get carried away with minute details.",
+      "answer": "management",
+      "source_pages": [
+        46
+      ]
+    },
+    {
+      "id": "FIB13",
+      "prompt": "During wrap-up, identify system ______ and discuss potential improvements.",
+      "answer": "bottlenecks",
+      "source_pages": [
+        49
+      ]
+    },
+    {
+      "id": "FIB14",
+      "prompt": "The chapter recommends asking for feedback early and ______.",
+      "answer": "often",
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "FIB15",
+      "prompt": "Step 3 receives roughly ______ to ______ minutes in the 45-minute example.",
+      "answer": "10 to 25",
+      "source_pages": [
+        50
+      ]
+    }
+  ],
+  "ordering_exercises": [
+    {
+      "id": "ORD01",
+      "title": "Four-Step Interview Framework",
+      "items_scrambled": [
+        "Wrap up",
+        "Design deep dive",
+        "Understand the problem and establish design scope",
+        "Propose high-level design and get buy-in"
+      ],
+      "correct_order": [
+        "Understand the problem and establish design scope",
+        "Propose high-level design and get buy-in",
+        "Design deep dive",
+        "Wrap up"
+      ],
+      "source_pages": [
+        43,
+        44,
+        46,
+        49
+      ]
+    },
+    {
+      "id": "ORD02",
+      "title": "Good Interview Progression",
+      "items_scrambled": [
+        "Explore selected critical components in depth",
+        "Ask clarifying questions",
+        "Discuss bottlenecks and future improvements",
+        "Sketch high-level architecture",
+        "Get interviewer feedback and buy-in"
+      ],
+      "correct_order": [
+        "Ask clarifying questions",
+        "Sketch high-level architecture",
+        "Get interviewer feedback and buy-in",
+        "Explore selected critical components in depth",
+        "Discuss bottlenecks and future improvements"
+      ],
+      "source_pages": [
+        43,
+        44,
+        46,
+        49
+      ]
+    },
+    {
+      "id": "ORD03",
+      "title": "News Feed Design Progression",
+      "items_scrambled": [
+        "Deep dive into feed publishing and feed retrieval",
+        "Clarify whether feed is reverse chronological",
+        "Identify feed publishing and news feed building as high-level flows",
+        "Clarify DAU and friend count",
+        "Discuss detailed architecture components"
+      ],
+      "correct_order": [
+        "Clarify whether feed is reverse chronological",
+        "Clarify DAU and friend count",
+        "Identify feed publishing and news feed building as high-level flows",
+        "Deep dive into feed publishing and feed retrieval",
+        "Discuss detailed architecture components"
+      ],
+      "source_pages": [
+        44,
+        45,
+        46,
+        47,
+        48,
+        49
+      ]
+    }
+  ],
+  "scenario_questions": [
+    {
+      "id": "SC01",
+      "difficulty": "medium",
+      "scenario": "The interviewer says, 'Design a messaging product.' You immediately draw Kafka, Redis, Cassandra, and five microservices before asking any questions.",
+      "question": "What framework mistake are you making?",
+      "expected_answer": "You skipped Step 1. The chapter says not to jump directly into a solution; first clarify features, scale, assumptions, and scope.",
+      "source_pages": [
+        43,
+        50
+      ]
+    },
+    {
+      "id": "SC02",
+      "difficulty": "hard",
+      "scenario": "The interviewer leaves the expected number of users unspecified and asks you to make a reasonable assumption.",
+      "question": "What should you do?",
+      "expected_answer": "State a reasonable assumption explicitly, write it down, and continue using it consistently while remaining open to interviewer feedback.",
+      "source_pages": [
+        43
+      ]
+    },
+    {
+      "id": "SC03",
+      "difficulty": "medium",
+      "scenario": "You have drawn a high-level architecture but have not yet checked whether it can handle the stated traffic.",
+      "question": "What technique does Chapter 3 suggest?",
+      "expected_answer": "Use a back-of-the-envelope calculation, thinking out loud and communicating with the interviewer, to evaluate whether the blueprint fits the scale constraints.",
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "id": "SC04",
+      "difficulty": "hard",
+      "scenario": "You are designing a very broad search engine and start specifying every REST endpoint and database table before establishing the architecture.",
+      "question": "What issue does the chapter highlight?",
+      "expected_answer": "The discussion may be too low-level for such a broad design problem. The appropriate depth depends on the question, so establish the high-level design first and communicate with the interviewer about how deep to go.",
+      "source_pages": [
+        44,
+        50
+      ]
+    },
+    {
+      "id": "SC05",
+      "difficulty": "hard",
+      "scenario": "Your interviewer repeatedly asks about throughput and bottlenecks after the high-level design.",
+      "question": "How should you adapt the deep dive?",
+      "expected_answer": "Follow the interviewer's signal and prioritize performance characteristics, bottlenecks, and resource estimations rather than pursuing unrelated component details.",
+      "source_pages": [
+        46
+      ]
+    },
+    {
+      "id": "SC06",
+      "difficulty": "medium",
+      "scenario": "You spend 15 minutes explaining a ranking algorithm even though the system-level scalability questions remain unanswered.",
+      "question": "Why is this risky?",
+      "expected_answer": "It is an example of getting carried away with minute detail that consumes precious interview time without demonstrating the broader system design abilities the interviewer needs to evaluate.",
+      "source_pages": [
+        46,
+        47
+      ]
+    },
+    {
+      "id": "SC07",
+      "difficulty": "medium",
+      "scenario": "You reach the end of the design and the interviewer asks, 'What would you improve?'",
+      "question": "What should you avoid saying?",
+      "expected_answer": "Do not say the design is perfect. Identify bottlenecks or tradeoffs and propose improvements.",
+      "source_pages": [
+        49
+      ]
+    },
+    {
+      "id": "SC08",
+      "difficulty": "hard",
+      "scenario": "Your design currently supports one million users. The interviewer asks what happens at ten million.",
+      "question": "What type of wrap-up discussion is this?",
+      "expected_answer": "A next-scale-curve discussion: explain what architectural changes would be needed to support the next growth level.",
+      "source_pages": [
+        49
+      ]
+    },
+    {
+      "id": "SC09",
+      "difficulty": "medium",
+      "scenario": "You become stuck during a deep-dive question and cannot see a path forward.",
+      "question": "What does the chapter recommend?",
+      "expected_answer": "Ask the interviewer for a hint and continue communicating rather than remaining silent.",
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "SC10",
+      "difficulty": "hard",
+      "scenario": "You presented three design alternatives over the course of a long interview.",
+      "question": "What can you do during wrap-up to make the discussion clearer?",
+      "expected_answer": "Give a concise recap of the design and the chosen direction so the interviewer can easily remember the final architecture and tradeoffs.",
+      "source_pages": [
+        49
+      ]
+    }
+  ],
+  "short_answer_questions": [
+    {
+      "id": "SA01",
+      "question": "Why is asking good questions itself an important interview skill?",
+      "model_answer": "System design prompts are intentionally ambiguous. The chapter says interviewers look for the candidate's ability to resolve ambiguity constructively, and asking good questions demonstrates that the candidate can gather the information needed before committing to a design.",
+      "source_pages": [
+        42,
+        43
+      ]
+    },
+    {
+      "id": "SA02",
+      "question": "Why is over-engineering a red flag?",
+      "model_answer": "The chapter describes over-engineering as pursuing design purity while ignoring tradeoffs and the compounding costs of unnecessary complexity. A design should fit the actual requirements rather than maximize architectural sophistication.",
+      "source_pages": [
+        42
+      ]
+    },
+    {
+      "id": "SA03",
+      "question": "What is the purpose of Step 1?",
+      "model_answer": "Step 1 exists to ensure that the candidate and interviewer agree on what is actually being designed. The candidate clarifies required features, scale, growth, assumptions, and relevant technology before choosing an architecture.",
+      "source_pages": [
+        43,
+        44
+      ]
+    },
+    {
+      "id": "SA04",
+      "question": "What is the purpose of interviewer buy-in during Step 2?",
+      "model_answer": "Buy-in confirms that the high-level direction is acceptable before substantial time is spent on detailed design. The chapter encourages asking for feedback and treating the interviewer as a teammate throughout this process.",
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "id": "SA05",
+      "question": "Why are concrete use cases useful during high-level design?",
+      "model_answer": "Walking through concrete flows helps frame how the components work together and can expose edge cases that were not obvious from a static architecture diagram.",
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "id": "SA06",
+      "question": "How should you choose a deep-dive topic?",
+      "model_answer": "Choose it collaboratively with the interviewer based on the most important system components and the feedback or signals the interviewer provides. The candidate should prioritize areas that demonstrate useful design skill rather than diving into arbitrary detail.",
+      "source_pages": [
+        46,
+        47
+      ]
+    },
+    {
+      "id": "SA07",
+      "question": "What should a strong wrap-up contain?",
+      "model_answer": "A strong wrap-up can identify bottlenecks and improvements, recap the architecture, discuss failure cases, address monitoring and rollout, explain how the system would handle the next scale curve, and propose refinements that would be made with more time.",
+      "source_pages": [
+        49
+      ]
+    },
+    {
+      "id": "SA08",
+      "question": "Why does Chapter 3 repeatedly emphasize communication?",
+      "model_answer": "The interview is collaborative and the interviewer needs visible evidence of the candidate's reasoning. Thinking out loud, asking questions, seeking feedback, and bouncing ideas off the interviewer make the design process observable and allow the direction to be corrected early.",
+      "source_pages": [
+        42,
+        44,
+        50
+      ]
+    },
+    {
+      "id": "SA09",
+      "question": "Why is there no universally best architecture?",
+      "model_answer": "The correct architecture depends on the actual requirements and scale. The chapter specifically notes that a young startup and an established company with millions of users may appropriately choose different solutions.",
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "SA10",
+      "question": "Why is time allocation only a rough guide?",
+      "model_answer": "System design questions vary widely in scope, and the interviewer may want different levels of depth. The chapter therefore provides approximate ranges rather than fixed times.",
+      "source_pages": [
+        50
+      ]
+    }
+  ],
+  "active_recall_prompts": [
+    {
+      "id": "AR01",
+      "prompt": "Recite the four-step system design interview framework in order.",
+      "target_points": [
+        "Understand the problem and establish design scope",
+        "Propose high-level design and get buy-in",
+        "Design deep dive",
+        "Wrap up"
+      ],
+      "source_pages": [
+        43,
+        44,
+        46,
+        49
+      ]
+    },
+    {
+      "id": "AR02",
+      "prompt": "Name the major abilities the interviewer is evaluating besides pure technical design skill.",
+      "target_points": [
+        "Collaboration",
+        "Working under pressure",
+        "Resolving ambiguity",
+        "Asking good questions",
+        "Defending choices",
+        "Responding constructively to feedback"
+      ],
+      "source_pages": [
+        42
+      ]
+    },
+    {
+      "id": "AR03",
+      "prompt": "Without looking, name the four general Step 1 questions listed before the news feed example.",
+      "target_points": [
+        "What specific features are we building?",
+        "How many users?",
+        "How quickly will the product scale?",
+        "What technology stack or existing services can we leverage?"
+      ],
+      "source_pages": [
+        43
+      ]
+    },
+    {
+      "id": "AR04",
+      "prompt": "Reconstruct the news feed clarification requirements.",
+      "target_points": [
+        "Mobile and web",
+        "Post creation",
+        "Friends' news feed",
+        "Reverse chronological ordering",
+        "5,000 friends maximum in example",
+        "10 million DAU",
+        "Images and videos supported"
+      ],
+      "source_pages": [
+        43,
+        44
+      ]
+    },
+    {
+      "id": "AR05",
+      "prompt": "What should you do during Step 2 besides draw boxes?",
+      "target_points": [
+        "Ask for feedback",
+        "Treat interviewer as teammate",
+        "Use back-of-the-envelope estimates where helpful",
+        "Think out loud",
+        "Walk through concrete use cases",
+        "Discuss appropriate level of API/schema detail"
+      ],
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "id": "AR06",
+      "prompt": "List the four prerequisites the chapter says should be achieved before the deep dive.",
+      "target_points": [
+        "Agree on goals and feature scope",
+        "Sketch high-level blueprint",
+        "Obtain feedback",
+        "Identify likely deep-dive areas"
+      ],
+      "source_pages": [
+        46
+      ]
+    },
+    {
+      "id": "AR07",
+      "prompt": "Name at least five things you can discuss during wrap-up.",
+      "target_points": [
+        "Bottlenecks",
+        "Potential improvements",
+        "Design recap",
+        "Server failure",
+        "Network loss",
+        "Monitoring metrics",
+        "Error logs",
+        "Rollout",
+        "Next scale curve",
+        "Future refinements"
+      ],
+      "source_pages": [
+        49
+      ]
+    },
+    {
+      "id": "AR08",
+      "prompt": "Recite the rough time ranges for all four steps.",
+      "target_points": [
+        "Step 1: 3-10 minutes",
+        "Step 2: 10-15 minutes",
+        "Step 3: 10-25 minutes",
+        "Step 4: 3-5 minutes"
+      ],
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "AR09",
+      "prompt": "List the major Dos from page 50.",
+      "target_points": [
+        "Ask for clarification",
+        "Understand requirements",
+        "Design for context rather than a universal best answer",
+        "Communicate your thinking",
+        "Suggest multiple approaches",
+        "Design critical components first after blueprint agreement",
+        "Bounce ideas off interviewer",
+        "Never give up"
+      ],
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "AR10",
+      "prompt": "List the major Don'ts from page 50.",
+      "target_points": [
+        "Do not be unprepared",
+        "Do not jump into a solution before clarifying requirements",
+        "Do not go too deep too early",
+        "Do not hesitate to ask for hints when stuck",
+        "Do not think in silence",
+        "Do not assume the interview is over after presenting a design"
+      ],
+      "source_pages": [
+        50
+      ]
+    }
+  ],
+  "interview_simulation_prompts": [
+    {
+      "id": "SIM01",
+      "phase": "Step 1",
+      "prompt": "Design a photo-sharing service.",
+      "task": "Before proposing any architecture, write at least eight clarification questions.",
+      "good_answer_should_cover": [
+        "Major features",
+        "Web/mobile scope",
+        "Number of users",
+        "Daily active users or traffic",
+        "Expected growth",
+        "Image/video support",
+        "Read/write behavior",
+        "Existing infrastructure or technology constraints"
+      ],
+      "based_on_source_pages": [
+        43,
+        44
+      ],
+      "note": "The prompt is newly created for practice; the expected interview behavior comes from Chapter 3."
+    },
+    {
+      "id": "SIM02",
+      "phase": "Step 2",
+      "prompt": "You have clarified a system with mobile clients, web clients, high read traffic, media assets, and asynchronous notifications.",
+      "task": "Describe the high-level boxes you would draw and explain how you would ask the interviewer for buy-in before continuing.",
+      "good_answer_should_demonstrate": [
+        "High-level components rather than excessive detail",
+        "Clear request/data flows",
+        "Collaboration",
+        "Scale validation",
+        "Concrete use-case walkthrough"
+      ],
+      "based_on_source_pages": [
+        44,
+        45
+      ]
+    },
+    {
+      "id": "SIM03",
+      "phase": "Step 3",
+      "prompt": "The interviewer says, 'I'm most interested in the bottleneck around fanout.'",
+      "task": "Explain how you would redirect the deep dive.",
+      "good_answer_should_demonstrate": [
+        "Follow interviewer signal",
+        "Prioritize the requested critical component",
+        "Discuss bottlenecks and scaling behavior",
+        "Avoid unrelated implementation details",
+        "Continue checking for feedback"
+      ],
+      "based_on_source_pages": [
+        46,
+        47
+      ]
+    },
+    {
+      "id": "SIM04",
+      "phase": "Step 4",
+      "prompt": "You have three minutes left after presenting the architecture.",
+      "task": "Give a structured wrap-up plan.",
+      "good_answer_should_cover": [
+        "Brief recap",
+        "Top bottleneck",
+        "Failure case",
+        "Monitoring/operations",
+        "Next scale curve",
+        "One or two future refinements"
+      ],
+      "based_on_source_pages": [
+        49,
+        50
+      ]
+    }
+  ],
+  "diagram_reconstruction_drills": [
+    {
+      "id": "DR01",
+      "name": "Figure 3-1 High-Level Feed Publishing",
+      "task": "Reconstruct the major feed-publishing architecture from memory.",
+      "required_components": [
+        "User",
+        "Web browser/mobile app",
+        "DNS",
+        "Load balancer",
+        "Web servers",
+        "Post Service",
+        "Fanout Service",
+        "Notification Service",
+        "Post Cache",
+        "News Feed Cache",
+        "Post DB"
+      ],
+      "source_pages": [
+        45
+      ]
+    },
+    {
+      "id": "DR02",
+      "name": "Figure 3-2 High-Level News Feed Retrieval",
+      "task": "Reconstruct the major news-feed retrieval path.",
+      "required_components": [
+        "User",
+        "DNS",
+        "Load balancer",
+        "Web servers",
+        "News Feed Service",
+        "News Feed Cache"
+      ],
+      "source_pages": [
+        46
+      ]
+    },
+    {
+      "id": "DR03",
+      "name": "Figure 3-3 Detailed Feed Publishing",
+      "task": "Sketch the detailed feed-publishing architecture and identify the asynchronous fanout path.",
+      "required_components": [
+        "Web servers",
+        "Authentication",
+        "Rate Limiting",
+        "Post Service",
+        "Post Cache",
+        "Post DB",
+        "Notification Service",
+        "Fanout Service",
+        "Graph DB",
+        "User Cache",
+        "User DB",
+        "Message Queue",
+        "Fanout Workers",
+        "News Feed Cache"
+      ],
+      "source_pages": [
+        48
+      ]
+    },
+    {
+      "id": "DR04",
+      "name": "Figure 3-4 Detailed News Feed Retrieval",
+      "task": "Sketch the detailed news feed retrieval architecture.",
+      "required_components": [
+        "User",
+        "CDN",
+        "Load balancer",
+        "Web servers",
+        "Authentication",
+        "Rate Limiting",
+        "News Feed Service",
+        "News Feed Cache",
+        "User Cache",
+        "User DB",
+        "Post Cache",
+        "Post DB"
+      ],
+      "source_pages": [
+        49
+      ]
+    }
+  ],
+  "mistake_diagnosis": [
+    {
+      "id": "MD01",
+      "mistake": "The candidate starts drawing a database schema immediately.",
+      "diagnosis": "Premature deep dive.",
+      "correction": "Clarify the problem first, then establish a high-level blueprint before drilling down.",
+      "source_pages": [
+        43,
+        44,
+        50
+      ]
+    },
+    {
+      "id": "MD02",
+      "mistake": "The candidate assumes the interviewer wants a particular feature without asking.",
+      "diagnosis": "Unvalidated requirement assumption.",
+      "correction": "Ask for clarification or make the assumption explicit and write it down.",
+      "source_pages": [
+        43,
+        50
+      ]
+    },
+    {
+      "id": "MD03",
+      "mistake": "The candidate spends most of the interview explaining a low-level algorithm that is not central to scalability.",
+      "diagnosis": "Poor prioritization and time management.",
+      "correction": "Focus on critical components and use interviewer feedback to choose deep-dive topics.",
+      "source_pages": [
+        46,
+        47
+      ]
+    },
+    {
+      "id": "MD04",
+      "mistake": "The candidate presents the design without ever asking the interviewer for feedback.",
+      "diagnosis": "Insufficient collaboration.",
+      "correction": "Treat the interviewer as a teammate and seek feedback early and often.",
+      "source_pages": [
+        44,
+        50
+      ]
+    },
+    {
+      "id": "MD05",
+      "mistake": "The candidate says there are no remaining bottlenecks.",
+      "diagnosis": "Poor critical evaluation.",
+      "correction": "Acknowledge limitations and discuss possible improvements.",
+      "source_pages": [
+        49
+      ]
+    },
+    {
+      "id": "MD06",
+      "mistake": "The candidate becomes stuck and goes silent for several minutes.",
+      "diagnosis": "Communication breakdown.",
+      "correction": "Explain what you are thinking and ask for a hint if needed.",
+      "source_pages": [
+        50
+      ]
+    }
+  ],
+  "mock_interview_checklist": {
+    "before_designing": [
+      "Have I clarified the core features?",
+      "Have I clarified users/traffic?",
+      "Have I clarified growth expectations?",
+      "Have I clarified important content or ordering behavior?",
+      "Have I written down assumptions?"
+    ],
+    "high_level_design": [
+      "Have I drawn only the major components first?",
+      "Have I explained the primary flows?",
+      "Have I asked for feedback?",
+      "Have I validated scale when appropriate?",
+      "Have I walked through concrete use cases?"
+    ],
+    "deep_dive": [
+      "Have the interviewer and I agreed on what to explore?",
+      "Am I focusing on the most important components?",
+      "Am I responding to interviewer signals?",
+      "Am I avoiding unnecessary detail?",
+      "Am I watching the clock?"
+    ],
+    "wrap_up": [
+      "Can I summarize the architecture clearly?",
+      "Can I identify at least one bottleneck?",
+      "Can I discuss failures?",
+      "Can I discuss monitoring and rollout?",
+      "Can I explain the next scaling step?",
+      "Can I propose further refinements?"
+    ],
+    "source_pages": [
+      43,
+      44,
+      46,
+      47,
+      49,
+      50
+    ]
+  },
+  "mastery_check": {
+    "beginner": [
+      "Can recite all four steps in order.",
+      "Can explain why requirement clarification comes before architecture.",
+      "Can name the rough time ranges for all four steps.",
+      "Can identify major red flags such as over-engineering and jumping into a solution."
+    ],
+    "intermediate": [
+      "Can generate useful clarification questions for a new design prompt.",
+      "Can sketch a high-level blueprint without overcommitting to low-level detail.",
+      "Can explain when back-of-the-envelope estimates are useful.",
+      "Can choose an appropriate deep-dive area based on interviewer feedback.",
+      "Can give a structured wrap-up."
+    ],
+    "advanced": [
+      "Can adapt the depth of the discussion to interviewer signals.",
+      "Can defend multiple design alternatives and their tradeoffs.",
+      "Can deliberately create strong interview signals through communication and prioritization.",
+      "Can manage a 45-minute interview without getting trapped in unnecessary detail.",
+      "Can discuss bottlenecks, failures, operations, and the next scale curve after completing the core design.",
+      "Can reconstruct the news feed example's high-level and detailed architecture figures from memory."
+    ]
+  },
+  "chapter_three_final_review": {
+    "must_memorize": [
+      "The interview is collaborative and open-ended; there is no perfect answer.",
+      "The process and reasoning matter more than the final diagram.",
+      "Interviewers evaluate collaboration, ambiguity resolution, communication, and judgment in addition to technical design.",
+      "Do not over-engineer.",
+      "Step 1: Understand the problem and establish design scope.",
+      "Step 2: Propose high-level design and get buy-in.",
+      "Step 3: Design deep dive.",
+      "Step 4: Wrap up.",
+      "Ask clarifying questions before designing.",
+      "Write assumptions down.",
+      "Treat the interviewer as a teammate.",
+      "Use back-of-the-envelope calculations when they help validate scale.",
+      "Walk through concrete use cases.",
+      "Let interviewer feedback influence the deep dive.",
+      "Prioritize critical components.",
+      "Avoid minute detail that does not demonstrate useful design ability.",
+      "Never claim the design is perfect.",
+      "Discuss bottlenecks, failure cases, operations, future scale, and refinements.",
+      "Communicate; do not think in silence.",
+      "Ask for feedback early and often.",
+      "Rough 45-minute timing: Step 1 = 3-10 min, Step 2 = 10-15 min, Step 3 = 10-25 min, Step 4 = 3-5 min."
+    ],
+    "memory_framework": "CLARIFY -> BLUEPRINT -> DEEP DIVE -> WRAP",
+    "one_sentence_takeaway": "A strong system design interview is a structured collaboration: clarify the problem, agree on a high-level architecture, dive deeply into the most important areas, and finish by critically evaluating failures, bottlenecks, operations, and future scaling."
+  }
+}

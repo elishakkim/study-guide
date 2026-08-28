@@ -1,0 +1,5497 @@
+{
+  "chapter": {
+    "number": 4,
+    "title": "Encoding and Evolution",
+    "book": "Designing Data-Intensive Applications",
+    "author": "Martin Kleppmann",
+    "pdf_pages": {
+      "chapter_start": 133,
+      "chapter_summary_end": 162
+    },
+    "book_pages": {
+      "chapter_start": 111,
+      "chapter_summary_end": 140
+    },
+    "primary_goal": "Understand how data encoding formats and compatibility rules affect evolvability, rolling upgrades, database storage, service APIs, RPC, and asynchronous messaging."
+  },
+  "chapter_summary": {
+    "overview": "Chapter 4 focuses on how applications evolve while old and new code and old and new data coexist. The core requirement is compatibility in both directions: backward compatibility means newer code can read data written by older code, while forward compatibility means older code can read data written by newer code. The chapter distinguishes in-memory data structures from byte-sequence encodings used on disk or over networks, and surveys language-specific serialization, JSON/XML/CSV, binary JSON variants, Thrift, Protocol Buffers, and Avro. Language-native serialization is convenient but often language-bound, unsafe for untrusted input, inefficient, and weak on schema evolution. Text formats are widely interoperable but have ambiguous typing and binary-data issues. Schema-driven binary formats improve compactness and make compatibility rules explicit. Thrift and Protocol Buffers identify fields using numeric tags; Avro omits tags and instead resolves a writer's schema against a reader's schema, making it well suited to dynamically generated schemas. The chapter then examines how encoded data flows through databases, REST/RPC services, message brokers, and actor systems. A recurring theme is that rolling upgrades require old and new versions to coexist safely, so encodings and APIs must preserve unknown fields and evolve without forcing simultaneous upgrades. The chapter closes by arguing that careful compatibility design makes frequent, low-risk deployment and independent evolution achievable.",
+    "major_sections": [
+      "Backward and Forward Compatibility",
+      "Formats for Encoding Data",
+      "Language-Specific Formats",
+      "JSON, XML, CSV, and Binary Variants",
+      "Thrift and Protocol Buffers",
+      "Field Tags and Schema Evolution",
+      "Avro",
+      "Writer's Schema and Reader's Schema",
+      "Schema Evolution Rules",
+      "The Merits of Schemas",
+      "Modes of Dataflow",
+      "Dataflow Through Databases",
+      "REST and RPC",
+      "Problems with RPC",
+      "RPC Compatibility",
+      "Message-Passing Dataflow",
+      "Message Brokers",
+      "Distributed Actor Frameworks"
+    ],
+    "source_pages": [
+      133,
+      134,
+      135,
+      136,
+      137,
+      138,
+      139,
+      140,
+      141,
+      142,
+      143,
+      144,
+      145,
+      146,
+      147,
+      148,
+      149,
+      150,
+      151,
+      152,
+      153,
+      154,
+      155,
+      156,
+      157,
+      158,
+      159,
+      160,
+      161,
+      162
+    ]
+  },
+  "learning_objectives": [
+    {
+      "id": "LO01",
+      "objective": "Explain why code and data versions coexist during rolling upgrades and client upgrade lag.",
+      "source_pages": [
+        133,
+        134
+      ]
+    },
+    {
+      "id": "LO02",
+      "objective": "Define backward compatibility and forward compatibility.",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "LO03",
+      "objective": "Distinguish in-memory representations from byte-sequence encodings.",
+      "source_pages": [
+        134,
+        135
+      ]
+    },
+    {
+      "id": "LO04",
+      "objective": "Define encoding and decoding and recognize their common synonyms.",
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "id": "LO05",
+      "objective": "Explain the weaknesses of programming-language-specific serialization formats.",
+      "source_pages": [
+        135,
+        136
+      ]
+    },
+    {
+      "id": "LO06",
+      "objective": "Identify JSON/XML/CSV datatype and binary-data ambiguities.",
+      "source_pages": [
+        136,
+        137
+      ]
+    },
+    {
+      "id": "LO07",
+      "objective": "Explain the precision problem for large JSON numbers in JavaScript.",
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "LO08",
+      "objective": "Explain why Base64 increases encoded binary data size.",
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "LO09",
+      "objective": "Compare textual JSON with binary JSON formats such as MessagePack.",
+      "source_pages": [
+        137,
+        138,
+        139
+      ]
+    },
+    {
+      "id": "LO10",
+      "objective": "Explain why schema-driven encodings can omit field names.",
+      "source_pages": [
+        139,
+        140,
+        141
+      ]
+    },
+    {
+      "id": "LO11",
+      "objective": "Compare Thrift BinaryProtocol, CompactProtocol, and Protocol Buffers encodings.",
+      "source_pages": [
+        140,
+        141,
+        142
+      ]
+    },
+    {
+      "id": "LO12",
+      "objective": "Explain why field tags are critical to Thrift/Protocol Buffers compatibility.",
+      "source_pages": [
+        142,
+        143
+      ]
+    },
+    {
+      "id": "LO13",
+      "objective": "State the rules for adding, removing, and changing fields in tag-based schemas.",
+      "source_pages": [
+        143
+      ]
+    },
+    {
+      "id": "LO14",
+      "objective": "Explain Protocol Buffers repeated fields and their evolution behavior.",
+      "source_pages": [
+        143
+      ]
+    },
+    {
+      "id": "LO15",
+      "objective": "Explain Avro's tagless encoding and writer/reader schema model.",
+      "source_pages": [
+        144,
+        145,
+        146
+      ]
+    },
+    {
+      "id": "LO16",
+      "objective": "State Avro's add/remove field compatibility rules using defaults.",
+      "source_pages": [
+        146,
+        147
+      ]
+    },
+    {
+      "id": "LO17",
+      "objective": "Explain Avro aliases, union types, and nullability.",
+      "source_pages": [
+        147
+      ]
+    },
+    {
+      "id": "LO18",
+      "objective": "Explain how readers obtain Avro writer schemas in files, databases, and network connections.",
+      "source_pages": [
+        147,
+        148
+      ]
+    },
+    {
+      "id": "LO19",
+      "objective": "Explain why Avro is convenient for dynamically generated schemas.",
+      "source_pages": [
+        148,
+        149
+      ]
+    },
+    {
+      "id": "LO20",
+      "objective": "Explain the benefits of schema repositories and code generation.",
+      "source_pages": [
+        149,
+        150
+      ]
+    },
+    {
+      "id": "LO21",
+      "objective": "Summarize the merits of schema-driven binary formats.",
+      "source_pages": [
+        149,
+        150
+      ]
+    },
+    {
+      "id": "LO22",
+      "objective": "Identify the three principal modes of dataflow in the chapter.",
+      "source_pages": [
+        150,
+        151
+      ]
+    },
+    {
+      "id": "LO23",
+      "objective": "Explain backward/forward compatibility requirements for data stored in databases.",
+      "source_pages": [
+        151,
+        152,
+        153
+      ]
+    },
+    {
+      "id": "LO24",
+      "objective": "Explain why data outlives code and why large-scale migrations are expensive.",
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "LO25",
+      "objective": "Explain the unknown-field preservation hazard when older code rewrites newer data.",
+      "source_pages": [
+        151,
+        152
+      ]
+    },
+    {
+      "id": "LO26",
+      "objective": "Explain why archival data is often rewritten using the newest schema and may use Avro or Parquet.",
+      "source_pages": [
+        153
+      ]
+    },
+    {
+      "id": "LO27",
+      "objective": "Explain service-oriented/microservices architecture as independently deployable services.",
+      "source_pages": [
+        153,
+        154
+      ]
+    },
+    {
+      "id": "LO28",
+      "objective": "Compare REST and SOAP philosophies and tooling.",
+      "source_pages": [
+        154,
+        155
+      ]
+    },
+    {
+      "id": "LO29",
+      "objective": "Explain why remote procedure calls fundamentally differ from local function calls.",
+      "source_pages": [
+        156,
+        157
+      ]
+    },
+    {
+      "id": "LO30",
+      "objective": "Explain uncertainty, retries, duplicate execution, and idempotence in network calls.",
+      "source_pages": [
+        156
+      ]
+    },
+    {
+      "id": "LO31",
+      "objective": "Explain modern RPC directions including futures, streams, and service discovery.",
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "LO32",
+      "objective": "Compare REST's public-API advantages with binary RPC's intra-datacenter performance advantages.",
+      "source_pages": [
+        157,
+        158
+      ]
+    },
+    {
+      "id": "LO33",
+      "objective": "State compatibility requirements for RPC requests and responses during staged upgrades.",
+      "source_pages": [
+        158
+      ]
+    },
+    {
+      "id": "LO34",
+      "objective": "Explain long-lived compatibility problems across organizational boundaries and API versioning.",
+      "source_pages": [
+        158
+      ]
+    },
+    {
+      "id": "LO35",
+      "objective": "Explain how message brokers differ from direct RPC.",
+      "source_pages": [
+        158,
+        159,
+        160
+      ]
+    },
+    {
+      "id": "LO36",
+      "objective": "List message-broker reliability and decoupling advantages.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "LO37",
+      "objective": "Explain compatibility considerations for asynchronous publishers and consumers.",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "LO38",
+      "objective": "Explain the actor model and distributed actor frameworks.",
+      "source_pages": [
+        160,
+        161
+      ]
+    },
+    {
+      "id": "LO39",
+      "objective": "Explain why location transparency works better for actors than for RPC.",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "LO40",
+      "objective": "Connect encoding compatibility to rolling upgrades and evolvability.",
+      "source_pages": [
+        161,
+        162
+      ]
+    }
+  ],
+  "core_concepts": {
+    "evolution_and_compatibility": {
+      "rolling_upgrade": "Deploy a new server version to a few nodes at a time, validate it, and gradually continue, allowing deployment without downtime and reducing deployment risk.",
+      "client_upgrade_problem": "Clients may remain old for a long time because users control when they upgrade.",
+      "backward_compatibility": "Newer code can read data written by older code.",
+      "forward_compatibility": "Older code can read data written by newer code.",
+      "why_forward_is_harder": "Old code must safely ignore additions it could not have anticipated.",
+      "source_pages": [
+        133,
+        134
+      ]
+    },
+    "encoding_and_decoding": {
+      "in_memory": "Objects, structs, lists, arrays, hash tables, trees, pointers, etc.",
+      "external_representation": "Self-contained sequence of bytes suitable for files or network transport.",
+      "encoding_synonyms": [
+        "Serialization",
+        "Marshalling"
+      ],
+      "decoding_synonyms": [
+        "Parsing",
+        "Deserialization",
+        "Unmarshalling"
+      ],
+      "note": "The book prefers 'encoding' because 'serialization' has a different meaning in transaction isolation.",
+      "source_pages": [
+        134,
+        135
+      ]
+    },
+    "language_specific_formats": {
+      "examples": [
+        "Java Serializable",
+        "Ruby Marshal",
+        "Python pickle",
+        "Kryo"
+      ],
+      "advantages": [
+        "Very convenient",
+        "Minimal application code"
+      ],
+      "problems": [
+        "Often tied to one programming language.",
+        "Decoding arbitrary object types can create severe security risks.",
+        "Versioning/compatibility is often an afterthought.",
+        "CPU and size efficiency may be poor."
+      ],
+      "recommendation": "Generally avoid for anything except transient purposes.",
+      "source_pages": [
+        135,
+        136
+      ]
+    },
+    "json_xml_csv": {
+      "strengths": [
+        "Widely known",
+        "Cross-language",
+        "Human-readable enough",
+        "Strong interoperability"
+      ],
+      "number_issues": [
+        "XML/CSV cannot distinguish a number from a digit string without external schema.",
+        "JSON distinguishes strings and numbers but not integer vs floating-point and does not specify precision.",
+        "Integers beyond 2^53 cannot be represented exactly by an IEEE-754 double, causing JavaScript interoperability issues."
+      ],
+      "twitter_workaround": "Twitter historically returned 64-bit tweet IDs both as JSON numbers and decimal strings.",
+      "binary_strings": "JSON/XML do not directly support arbitrary byte strings.",
+      "base64_cost": "Base64 increases data size by about 33%.",
+      "schema_notes": "XML/JSON schemas exist but can be complicated; many JSON tools do not use them.",
+      "csv_issues": [
+        "No schema",
+        "Meaning is application-defined",
+        "Escaping behavior can be inconsistent across parsers"
+      ],
+      "source_pages": [
+        136,
+        137
+      ]
+    },
+    "binary_json": {
+      "examples": [
+        "MessagePack",
+        "BSON",
+        "BJSON",
+        "UBJSON",
+        "BISON",
+        "Smile"
+      ],
+      "tradeoff": "May add datatypes and modest compactness but generally still embeds field names because there is no required schema.",
+      "messagepack_example": "Example record: 66 bytes vs 81 bytes for compact textual JSON.",
+      "source_pages": [
+        137,
+        138,
+        139
+      ]
+    },
+    "thrift_and_protobuf": {
+      "origins": {
+        "Protocol Buffers": "Google",
+        "Thrift": "Facebook"
+      },
+      "shared_design": "Both require schemas and provide code generators.",
+      "field_identity": "Numeric field tags rather than encoded field names.",
+      "example_sizes": {
+        "Thrift BinaryProtocol": 59,
+        "Thrift CompactProtocol": 34,
+        "Protocol Buffers": 33
+      },
+      "compact_protocol": "Packs type/tag information and uses variable-length integer encoding.",
+      "required_optional": "Required/optional affects runtime validation, not binary wire representation.",
+      "source_pages": [
+        139,
+        140,
+        141,
+        142
+      ]
+    },
+    "tag_based_schema_evolution": {
+      "rename_field": "Allowed because encoded records contain tags, not names.",
+      "change_tag": "Not allowed; old data would become invalid/misinterpreted.",
+      "add_field": "Use a fresh tag. For backward compatibility, added fields must be optional or have defaults.",
+      "remove_field": "Only safely remove optional fields; never reuse removed tag numbers.",
+      "datatype_change": "Sometimes possible but may truncate or lose precision.",
+      "protobuf_repeated": "Repeated uses the same field tag multiple times; optional can evolve to repeated with specific compatibility behavior.",
+      "thrift_lists": "Dedicated list type supports nested lists but does not have protobuf's same single-to-repeated evolution behavior.",
+      "source_pages": [
+        142,
+        143
+      ]
+    },
+    "avro": {
+      "origin": "Started in 2009 as a Hadoop subproject.",
+      "schema_formats": [
+        "Avro IDL",
+        "JSON-based schema"
+      ],
+      "tag_numbers": "None.",
+      "example_size_bytes": 32,
+      "encoding": "Values are concatenated with no field tags/names or per-field type markers.",
+      "reader_dependency": "Correct decoding depends on the writer's schema plus a compatible reader's schema.",
+      "writer_schema": "Schema used when encoding.",
+      "reader_schema": "Schema expected by the decoding application.",
+      "resolution": "Avro compares writer and reader schemas and translates differences.",
+      "field_matching": "Fields are matched by name; writer-only fields are ignored; reader-only fields use defaults.",
+      "source_pages": [
+        144,
+        145,
+        146
+      ]
+    },
+    "avro_schema_evolution": {
+      "forward": "New writer schema + old reader schema.",
+      "backward": "Old writer schema + new reader schema.",
+      "add_remove_rule": "Fields may be added or removed compatibly only when appropriate defaults exist.",
+      "nullability": "Null must be explicitly included in a union type to be allowed.",
+      "rename": "Reader aliases can support renamed fields; backward compatible but not necessarily forward compatible.",
+      "union_extension": "Adding a union branch is backward compatible but not forward compatible.",
+      "source_pages": [
+        146,
+        147
+      ]
+    },
+    "avro_writer_schema_distribution": {
+      "large_file": "Store writer schema once in the Avro object-container-file header.",
+      "database_records": "Prefix records with schema version/hash and keep schema versions in a schema database.",
+      "network": "Negotiate schema version when a bidirectional connection is established.",
+      "schema_registry_benefits": [
+        "Documentation",
+        "Compatibility checking",
+        "Decoding old records"
+      ],
+      "source_pages": [
+        147,
+        148
+      ]
+    },
+    "dynamic_schemas": {
+      "avro_advantage": "No numeric tags to manually assign, so schemas can be regenerated directly from relational tables.",
+      "thrift_protobuf_issue": "Field tags would need careful stable assignment and must never accidentally reuse old tags.",
+      "source_pages": [
+        148,
+        149
+      ]
+    },
+    "schema_merits": {
+      "benefits": [
+        "More compact because encoded field names can be omitted.",
+        "Schema serves as up-to-date documentation.",
+        "Schema database allows pre-deployment compatibility checks.",
+        "Code generation provides static typing and IDE support."
+      ],
+      "conclusion": "Schema evolution can preserve flexibility while providing stronger guarantees and tooling.",
+      "source_pages": [
+        149,
+        150
+      ]
+    },
+    "dataflow_modes": {
+      "database": "Writer encodes now; reader decodes later.",
+      "service": "Client encodes request; server decodes and encodes response; client decodes response.",
+      "message": "Publisher encodes; consumer decodes asynchronously.",
+      "source_pages": [
+        150,
+        151,
+        162
+      ]
+    },
+    "database_dataflow": {
+      "backward_need": "New code must read older stored data.",
+      "forward_need": "Old code may read data recently written by new code during rolling upgrades.",
+      "unknown_field_hazard": "Old code can accidentally erase a new field when decoding and re-encoding a record it does not understand.",
+      "data_outlives_code": "Stored values can remain for years after code versions that wrote them have disappeared.",
+      "migration_cost": "Rewriting a huge dataset solely to migrate schema can be expensive.",
+      "schema_evolution_effect": "Database can appear to use one logical schema even though records use multiple historical encodings.",
+      "source_pages": [
+        151,
+        152,
+        153
+      ]
+    },
+    "archival_storage": {
+      "snapshot_behavior": "Copies/dumps are commonly rewritten consistently using the latest schema.",
+      "formats": [
+        "Avro object container files",
+        "Parquet for analytics-oriented column storage"
+      ],
+      "source_pages": [
+        153
+      ]
+    },
+    "services_and_microservices": {
+      "service": "Server exposes an application-specific API over the network.",
+      "encapsulation": "Unlike arbitrary database queries, service APIs restrict clients to predefined business operations.",
+      "soa_microservices_goal": "Independent deployment and evolution by separate teams.",
+      "compatibility_requirement": "Old/new clients and servers may coexist, so API encodings must remain compatible.",
+      "source_pages": [
+        153,
+        154
+      ]
+    },
+    "rest_vs_soap": {
+      "rest": {
+        "type": "Design philosophy built on HTTP",
+        "features": [
+          "URLs identify resources",
+          "HTTP caching",
+          "Authentication",
+          "Content-type negotiation",
+          "Simple formats"
+        ],
+        "tooling": "Often less code generation; OpenAPI/Swagger can document APIs."
+      },
+      "soap": {
+        "type": "XML-based protocol",
+        "features": [
+          "Often HTTP transport but intentionally less dependent on HTTP semantics",
+          "WS-* standards ecosystem",
+          "WSDL API description",
+          "Heavy code generation/tooling"
+        ]
+      },
+      "source_pages": [
+        155
+      ]
+    },
+    "rpc_problems": {
+      "location_transparency_goal": "Make remote calls look like local calls.",
+      "fundamental_differences": [
+        "Networks are unpredictable and can lose requests/responses.",
+        "Timeouts create uncertainty about whether the remote operation happened.",
+        "Retries can duplicate side effects unless operations are idempotent/deduplicated.",
+        "Network latency is much slower and more variable than local-call latency.",
+        "Local pointers cannot cross process/machine boundaries; data must be encoded.",
+        "Cross-language datatype differences create translation problems."
+      ],
+      "source_pages": [
+        156,
+        157
+      ]
+    },
+    "modern_rpc": {
+      "examples": {
+        "Thrift": "RPC support included",
+        "Avro": "RPC support included",
+        "gRPC": "Protocol Buffers",
+        "Finagle": "Thrift",
+        "Rest.li": "JSON over HTTP"
+      },
+      "features": [
+        "Futures/promises for asynchronous failure-prone calls.",
+        "Parallel request composition.",
+        "Streaming RPC.",
+        "Service discovery."
+      ],
+      "tradeoff": "Binary RPC can be faster internally; REST is easier to experiment with, debug, and integrate broadly.",
+      "source_pages": [
+        157,
+        158
+      ]
+    },
+    "rpc_compatibility": {
+      "deployment_assumption": "Servers can generally be upgraded before clients.",
+      "request_requirement": "Backward compatibility on requests.",
+      "response_requirement": "Forward compatibility on responses.",
+      "cross_org_problem": "Providers cannot force external clients to upgrade.",
+      "breaking_changes": "Often require maintaining multiple API versions side by side.",
+      "versioning_examples": [
+        "Version in URL",
+        "Version in HTTP Accept header",
+        "Client-specific version stored server-side"
+      ],
+      "source_pages": [
+        158
+      ]
+    },
+    "message_brokers": {
+      "position": "Between RPC and databases: low-latency delivery but through an intermediary that temporarily stores messages.",
+      "advantages": [
+        "Buffers when recipient is unavailable/overloaded.",
+        "Redelivers after consumer crashes.",
+        "Sender need not know recipient IP/port.",
+        "Supports fan-out to multiple recipients.",
+        "Decouples senders from recipients."
+      ],
+      "communication": "Usually asynchronous and one-way; response can use a separate reply channel.",
+      "examples": [
+        "RabbitMQ",
+        "ActiveMQ",
+        "HornetQ",
+        "NATS",
+        "Apache Kafka"
+      ],
+      "routing": "Producers send to named queues/topics; brokers deliver to consumers/subscribers.",
+      "encoding": "Broker generally treats payload as bytes plus metadata.",
+      "compatibility": "Backward/forward-compatible payloads maximize independent publisher/consumer deployment.",
+      "source_pages": [
+        159,
+        160
+      ]
+    },
+    "actors": {
+      "model": "Actors encapsulate local state, process one message at a time, and communicate asynchronously.",
+      "message_delivery": "Not guaranteed in all error scenarios.",
+      "distributed_behavior": "Same abstraction is used locally and remotely; remote messages are encoded/transmitted/decoded.",
+      "why_location_transparency_better": "Actor semantics already acknowledge asynchronous messaging and possible message loss.",
+      "frameworks": {
+        "Akka": "Java serialization by default; Protocol Buffers can improve compatibility.",
+        "Orleans": "Custom encoding default does not support rolling upgrades; new cluster migration may be needed.",
+        "Erlang OTP": "Record-schema changes can be difficult; rolling upgrades require planning."
+      },
+      "source_pages": [
+        160,
+        161
+      ]
+    }
+  },
+  "flashcards": [
+    {
+      "id": "FC001",
+      "front": "Why do applications need schema evolution?",
+      "back": "Features and requirements change, often requiring stored data to change too.",
+      "source_pages": [
+        133
+      ]
+    },
+    {
+      "id": "FC002",
+      "front": "What is a rolling upgrade?",
+      "back": "Deploying a new version gradually to a subset of nodes, then the rest.",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "FC003",
+      "front": "Why are rolling upgrades valuable?",
+      "back": "They avoid downtime, support frequent releases, and reduce deployment risk.",
+      "source_pages": [
+        134,
+        161
+      ]
+    },
+    {
+      "id": "FC004",
+      "front": "Why can old client versions persist?",
+      "back": "Users decide when to install client updates.",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "FC005",
+      "front": "Define backward compatibility.",
+      "back": "Newer code can read data written by older code.",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "FC006",
+      "front": "Define forward compatibility.",
+      "back": "Older code can read data written by newer code.",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "FC007",
+      "front": "Which compatibility direction is usually harder?",
+      "back": "Forward compatibility.",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "FC008",
+      "front": "Why is forward compatibility harder?",
+      "back": "Old code must safely ignore additions it could not know about.",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "FC009",
+      "front": "What are the two broad forms of data representation?",
+      "back": "In-memory structures and self-contained byte sequences.",
+      "source_pages": [
+        134,
+        135
+      ]
+    },
+    {
+      "id": "FC010",
+      "front": "What is encoding?",
+      "back": "Translation from in-memory structures to a byte sequence.",
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "id": "FC011",
+      "front": "What are synonyms for encoding?",
+      "back": "Serialization or marshalling.",
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "id": "FC012",
+      "front": "What is decoding?",
+      "back": "Translation from bytes back to in-memory structures.",
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "id": "FC013",
+      "front": "What are synonyms for decoding?",
+      "back": "Parsing, deserialization, unmarshalling.",
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "id": "FC014",
+      "front": "Why does the book prefer 'encoding' over 'serialization'?",
+      "back": "Serialization also means something different in transaction isolation.",
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "id": "FC015",
+      "front": "Name language-native encoding examples.",
+      "back": "Java Serializable, Ruby Marshal, Python pickle, Kryo.",
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "id": "FC016",
+      "front": "What is the main convenience of language-native serialization?",
+      "back": "Minimal code to save/restore in-memory objects.",
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "id": "FC017",
+      "front": "What is a cross-language problem with native serialization?",
+      "back": "The format is often tightly bound to one language.",
+      "source_pages": [
+        135,
+        136
+      ]
+    },
+    {
+      "id": "FC018",
+      "front": "What security risk does native deserialization create?",
+      "back": "Untrusted bytes may instantiate arbitrary classes and enable code execution.",
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "id": "FC019",
+      "front": "What evolution weakness do native serializers often have?",
+      "back": "Forward/backward compatibility is often an afterthought.",
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "FC020",
+      "front": "What efficiency issue is cited for Java serialization?",
+      "back": "Poor performance and bloated encoding.",
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "FC021",
+      "front": "What is the chapter's recommendation for language-native formats?",
+      "back": "Use only for transient purposes in general.",
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "FC022",
+      "front": "Why is JSON widely popular?",
+      "back": "Browser/JavaScript support and relative simplicity compared with XML.",
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "FC023",
+      "front": "What is CSV's relative limitation?",
+      "back": "It is language-independent but less expressive/powerful.",
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "FC024",
+      "front": "What numeric ambiguity exists in XML/CSV?",
+      "back": "Cannot distinguish digit strings from numbers without schema.",
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "FC025",
+      "front": "What numeric ambiguity exists in JSON?",
+      "back": "No integer-vs-float distinction and no precision specification.",
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "FC026",
+      "front": "What integer boundary is problematic for IEEE-754 doubles?",
+      "back": "Above 2^53.",
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "FC027",
+      "front": "What Twitter workaround is described?",
+      "back": "Expose 64-bit tweet IDs both as a JSON number and decimal string.",
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "FC028",
+      "front": "Do JSON and XML directly support arbitrary binary strings?",
+      "back": "No.",
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "FC029",
+      "front": "What workaround is used for binary data?",
+      "back": "Base64 encode the bytes as text.",
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "FC030",
+      "front": "How much does Base64 increase size?",
+      "back": "About 33%.",
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "FC031",
+      "front": "Do JSON and XML have optional schema languages?",
+      "back": "Yes.",
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "id": "FC032",
+      "front": "What is CSV's schema situation?",
+      "back": "No built-in schema; application defines row/column meaning.",
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "id": "FC033",
+      "front": "Why are JSON/XML/CSV still useful despite flaws?",
+      "back": "Interoperability and broad agreement often matter more than efficiency.",
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "id": "FC034",
+      "front": "Why might an organization choose binary encoding internally?",
+      "back": "More compact or faster parsing at large scale.",
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "id": "FC035",
+      "front": "Name binary JSON formats.",
+      "back": "MessagePack, BSON, BJSON, UBJSON, BISON, Smile.",
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "id": "FC036",
+      "front": "Why do binary JSON formats still include field names?",
+      "back": "They do not require a schema, so field identity must travel with the record.",
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "id": "FC037",
+      "front": "How large is the chapter's MessagePack example?",
+      "back": "66 bytes.",
+      "source_pages": [
+        138
+      ]
+    },
+    {
+      "id": "FC038",
+      "front": "How large is the compact textual JSON example?",
+      "back": "81 bytes.",
+      "source_pages": [
+        138
+      ]
+    },
+    {
+      "id": "FC039",
+      "front": "What does that size comparison imply?",
+      "back": "Binary JSON's space savings may be modest relative to losing human readability.",
+      "source_pages": [
+        138
+      ]
+    },
+    {
+      "id": "FC040",
+      "front": "Who originally developed Protocol Buffers?",
+      "back": "Google.",
+      "source_pages": [
+        139
+      ]
+    },
+    {
+      "id": "FC041",
+      "front": "Who originally developed Thrift?",
+      "back": "Facebook.",
+      "source_pages": [
+        139
+      ]
+    },
+    {
+      "id": "FC042",
+      "front": "Do Thrift and Protocol Buffers require schemas?",
+      "back": "Yes.",
+      "source_pages": [
+        139
+      ]
+    },
+    {
+      "id": "FC043",
+      "front": "What do their schemas enable?",
+      "back": "Code generation for multiple programming languages.",
+      "source_pages": [
+        140
+      ]
+    },
+    {
+      "id": "FC044",
+      "front": "What is Thrift BinaryProtocol example size?",
+      "back": "59 bytes.",
+      "source_pages": [
+        140
+      ]
+    },
+    {
+      "id": "FC045",
+      "front": "What identifies fields in Thrift/Protobuf wire data?",
+      "back": "Numeric field tags.",
+      "source_pages": [
+        141
+      ]
+    },
+    {
+      "id": "FC046",
+      "front": "Why are field tags compact?",
+      "back": "They replace repeated textual field names.",
+      "source_pages": [
+        141
+      ]
+    },
+    {
+      "id": "FC047",
+      "front": "How large is Thrift CompactProtocol example?",
+      "back": "34 bytes.",
+      "source_pages": [
+        141
+      ]
+    },
+    {
+      "id": "FC048",
+      "front": "How does CompactProtocol save space?",
+      "back": "Bit-packs type/tag information and uses variable-length integers.",
+      "source_pages": [
+        141
+      ]
+    },
+    {
+      "id": "FC049",
+      "front": "How large is the Protocol Buffers example?",
+      "back": "33 bytes.",
+      "source_pages": [
+        142
+      ]
+    },
+    {
+      "id": "FC050",
+      "front": "Does required vs optional change the protobuf binary encoding?",
+      "back": "No; it mainly changes runtime validation.",
+      "source_pages": [
+        142
+      ]
+    },
+    {
+      "id": "FC051",
+      "front": "Can field names change in tag-based schemas?",
+      "back": "Yes, because encoded data uses tags rather than names.",
+      "source_pages": [
+        142
+      ]
+    },
+    {
+      "id": "FC052",
+      "front": "Can field tag numbers change?",
+      "back": "No; changing them breaks existing encoded data.",
+      "source_pages": [
+        142
+      ]
+    },
+    {
+      "id": "FC053",
+      "front": "How do you add a field safely in Thrift/Protobuf?",
+      "back": "Assign a fresh tag and make the new field optional or give it a default.",
+      "source_pages": [
+        143
+      ]
+    },
+    {
+      "id": "FC054",
+      "front": "Why can't a newly added field be required?",
+      "back": "Old records do not contain it, breaking backward compatibility.",
+      "source_pages": [
+        143
+      ]
+    },
+    {
+      "id": "FC055",
+      "front": "How do you remove a field safely?",
+      "back": "Only remove optional fields and never reuse their tag numbers.",
+      "source_pages": [
+        143
+      ]
+    },
+    {
+      "id": "FC056",
+      "front": "What risk comes from changing a 64-bit field back to readers expecting 32 bits?",
+      "back": "Truncation/precision loss.",
+      "source_pages": [
+        143
+      ]
+    },
+    {
+      "id": "FC057",
+      "front": "How are repeated protobuf values encoded?",
+      "back": "The same field tag appears multiple times.",
+      "source_pages": [
+        143
+      ]
+    },
+    {
+      "id": "FC058",
+      "front": "What evolution is protobuf repeated useful for?",
+      "back": "An optional single-valued field can evolve to repeated with defined compatibility behavior.",
+      "source_pages": [
+        143
+      ]
+    },
+    {
+      "id": "FC059",
+      "front": "What advantage does Thrift's dedicated list type have?",
+      "back": "It can support nested lists.",
+      "source_pages": [
+        143
+      ]
+    },
+    {
+      "id": "FC060",
+      "front": "When was Avro started?",
+      "back": "2009.",
+      "source_pages": [
+        144
+      ]
+    },
+    {
+      "id": "FC061",
+      "front": "Why was Avro created?",
+      "back": "Thrift was not a good fit for Hadoop use cases.",
+      "source_pages": [
+        144
+      ]
+    },
+    {
+      "id": "FC062",
+      "front": "How many Avro schema forms are described?",
+      "back": "Two: Avro IDL and JSON-based schema.",
+      "source_pages": [
+        144
+      ]
+    },
+    {
+      "id": "FC063",
+      "front": "Does Avro use field tag numbers?",
+      "back": "No.",
+      "source_pages": [
+        144
+      ]
+    },
+    {
+      "id": "FC064",
+      "front": "How large is the Avro example encoding?",
+      "back": "32 bytes.",
+      "source_pages": [
+        144
+      ]
+    },
+    {
+      "id": "FC065",
+      "front": "Does Avro encode field names or type markers in each record?",
+      "back": "No.",
+      "source_pages": [
+        144
+      ]
+    },
+    {
+      "id": "FC066",
+      "front": "What is the writer's schema?",
+      "back": "The schema used when data is encoded.",
+      "source_pages": [
+        145
+      ]
+    },
+    {
+      "id": "FC067",
+      "front": "What is the reader's schema?",
+      "back": "The schema expected when data is decoded.",
+      "source_pages": [
+        145
+      ]
+    },
+    {
+      "id": "FC068",
+      "front": "Must Avro writer and reader schemas be identical?",
+      "back": "No; they need to be compatible.",
+      "source_pages": [
+        145,
+        146
+      ]
+    },
+    {
+      "id": "FC069",
+      "front": "How does Avro resolve different field order?",
+      "back": "Matches fields by name.",
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "id": "FC070",
+      "front": "What happens to a writer field missing from the reader schema?",
+      "back": "It is ignored.",
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "id": "FC071",
+      "front": "What happens to a reader field missing from the writer schema?",
+      "back": "A declared default value is used.",
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "id": "FC072",
+      "front": "What is forward compatibility in Avro terms?",
+      "back": "New writer schema with old reader schema.",
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "id": "FC073",
+      "front": "What is backward compatibility in Avro terms?",
+      "back": "Old writer schema with new reader schema.",
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "id": "FC074",
+      "front": "What is Avro's rule for adding/removing fields?",
+      "back": "Compatible changes require default values for fields that may be absent.",
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "id": "FC075",
+      "front": "How is nullability represented in Avro?",
+      "back": "Explicit union type containing null.",
+      "source_pages": [
+        147
+      ]
+    },
+    {
+      "id": "FC076",
+      "front": "Does Avro have protobuf-style required/optional markers?",
+      "back": "No; it uses union types and defaults.",
+      "source_pages": [
+        147
+      ]
+    },
+    {
+      "id": "FC077",
+      "front": "How does Avro support field renaming?",
+      "back": "Reader schema aliases.",
+      "source_pages": [
+        147
+      ]
+    },
+    {
+      "id": "FC078",
+      "front": "Is Avro renaming forward compatible in both directions?",
+      "back": "No; the text states aliases make renaming backward compatible but not forward compatible.",
+      "source_pages": [
+        147
+      ]
+    },
+    {
+      "id": "FC079",
+      "front": "What is the compatibility of adding a union branch?",
+      "back": "Backward compatible but not forward compatible.",
+      "source_pages": [
+        147
+      ]
+    },
+    {
+      "id": "FC080",
+      "front": "How is a writer schema stored in a large Avro file?",
+      "back": "Once at the beginning in an object container file.",
+      "source_pages": [
+        147
+      ]
+    },
+    {
+      "id": "FC081",
+      "front": "How can an Avro database record identify its writer schema?",
+      "back": "Include a schema version/hash and look it up in a schema database.",
+      "source_pages": [
+        147,
+        148
+      ]
+    },
+    {
+      "id": "FC082",
+      "front": "How can network peers choose an Avro schema?",
+      "back": "Negotiate schema version when establishing the connection.",
+      "source_pages": [
+        148
+      ]
+    },
+    {
+      "id": "FC083",
+      "front": "Why keep a schema database?",
+      "back": "Documentation, decoding, and compatibility checks.",
+      "source_pages": [
+        148
+      ]
+    },
+    {
+      "id": "FC084",
+      "front": "Why is Avro good for dynamically generated schemas?",
+      "back": "No stable numeric field tags must be manually assigned.",
+      "source_pages": [
+        148
+      ]
+    },
+    {
+      "id": "FC085",
+      "front": "How can Avro mirror a relational table?",
+      "back": "Generate one record schema per table and one Avro field per column.",
+      "source_pages": [
+        148
+      ]
+    },
+    {
+      "id": "FC086",
+      "front": "What problem would Thrift/Protobuf have with dynamic table schemas?",
+      "back": "Field-tag assignment and non-reuse must be managed carefully.",
+      "source_pages": [
+        148,
+        149
+      ]
+    },
+    {
+      "id": "FC087",
+      "front": "Why is code generation useful in static languages?",
+      "back": "Compile-time type checking, efficient structures, and IDE completion.",
+      "source_pages": [
+        149
+      ]
+    },
+    {
+      "id": "FC088",
+      "front": "Why is code generation less valuable in dynamic languages?",
+      "back": "No compile-time type checker needs generated classes.",
+      "source_pages": [
+        149
+      ]
+    },
+    {
+      "id": "FC089",
+      "front": "Can Avro be used without code generation?",
+      "back": "Yes.",
+      "source_pages": [
+        149
+      ]
+    },
+    {
+      "id": "FC090",
+      "front": "What makes an Avro object container file self-describing?",
+      "back": "It embeds the writer's schema and necessary metadata.",
+      "source_pages": [
+        149
+      ]
+    },
+    {
+      "id": "FC091",
+      "front": "What schema merit improves compactness?",
+      "back": "Encoded field names can be omitted.",
+      "source_pages": [
+        150
+      ]
+    },
+    {
+      "id": "FC092",
+      "front": "Why is a schema good documentation?",
+      "back": "It is required for decoding, so it is more likely to stay accurate.",
+      "source_pages": [
+        150
+      ]
+    },
+    {
+      "id": "FC093",
+      "front": "What does a schema database let you check before deployment?",
+      "back": "Forward and backward compatibility.",
+      "source_pages": [
+        150
+      ]
+    },
+    {
+      "id": "FC094",
+      "front": "What are the three dataflow modes discussed?",
+      "back": "Databases, service calls, and asynchronous messaging.",
+      "source_pages": [
+        151
+      ]
+    },
+    {
+      "id": "FC095",
+      "front": "In database dataflow, who encodes?",
+      "back": "The process writing to the database.",
+      "source_pages": [
+        151
+      ]
+    },
+    {
+      "id": "FC096",
+      "front": "In database dataflow, who decodes?",
+      "back": "The process reading later.",
+      "source_pages": [
+        151
+      ]
+    },
+    {
+      "id": "FC097",
+      "front": "Why is a database like sending a message to your future self?",
+      "back": "Later code must decode bytes written by earlier code.",
+      "source_pages": [
+        151
+      ]
+    },
+    {
+      "id": "FC098",
+      "front": "Why is forward compatibility needed in databases?",
+      "back": "Old code may read values written by new code during rolling upgrades.",
+      "source_pages": [
+        151
+      ]
+    },
+    {
+      "id": "FC099",
+      "front": "What is the unknown-field preservation hazard?",
+      "back": "Old code may decode, modify, and re-encode a record and accidentally drop fields added by new code.",
+      "source_pages": [
+        151,
+        152
+      ]
+    },
+    {
+      "id": "FC100",
+      "front": "What does 'data outlives code' mean?",
+      "back": "Stored records can survive for years after the code version that wrote them is gone.",
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "FC101",
+      "front": "Why avoid rewriting all historical data during every schema change?",
+      "back": "It can be expensive for large datasets.",
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "FC102",
+      "front": "How can old rows appear to have a newly added nullable column?",
+      "back": "Database fills in null on read even if old on-disk row lacks the field.",
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "FC103",
+      "front": "What encoding is LinkedIn Espresso cited as using?",
+      "back": "Avro.",
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "FC104",
+      "front": "Why are dumps often rewritten to latest schema?",
+      "back": "Copying is already happening, so data can be normalized to one consistent encoding.",
+      "source_pages": [
+        153
+      ]
+    },
+    {
+      "id": "FC105",
+      "front": "What file format fits immutable Avro archival dumps?",
+      "back": "Avro object container files.",
+      "source_pages": [
+        153
+      ]
+    },
+    {
+      "id": "FC106",
+      "front": "What analytics-friendly format is suggested?",
+      "back": "Parquet.",
+      "source_pages": [
+        153
+      ]
+    },
+    {
+      "id": "FC107",
+      "front": "What is a service?",
+      "back": "An API exposed by a server over the network.",
+      "source_pages": [
+        153
+      ]
+    },
+    {
+      "id": "FC108",
+      "front": "How are services more restrictive than databases?",
+      "back": "They expose predefined business operations instead of arbitrary queries.",
+      "source_pages": [
+        154
+      ]
+    },
+    {
+      "id": "FC109",
+      "front": "What is the deployment goal of microservices/SOA?",
+      "back": "Independent service ownership, deployment, and evolution.",
+      "source_pages": [
+        154
+      ]
+    },
+    {
+      "id": "FC110",
+      "front": "What is a web service?",
+      "back": "A service using HTTP as the underlying protocol.",
+      "source_pages": [
+        154
+      ]
+    },
+    {
+      "id": "FC111",
+      "front": "Name three web-service contexts.",
+      "back": "User device to service, internal service-to-service, cross-organization service integration.",
+      "source_pages": [
+        154
+      ]
+    },
+    {
+      "id": "FC112",
+      "front": "Is REST a protocol?",
+      "back": "No; it is a design philosophy built on HTTP.",
+      "source_pages": [
+        155
+      ]
+    },
+    {
+      "id": "FC113",
+      "front": "What does REST emphasize?",
+      "back": "Resources identified by URLs and use of HTTP features with simple data formats.",
+      "source_pages": [
+        155
+      ]
+    },
+    {
+      "id": "FC114",
+      "front": "What is SOAP?",
+      "back": "An XML-based network API protocol.",
+      "source_pages": [
+        155
+      ]
+    },
+    {
+      "id": "FC115",
+      "front": "What does WSDL describe?",
+      "back": "SOAP web-service APIs.",
+      "source_pages": [
+        155
+      ]
+    },
+    {
+      "id": "FC116",
+      "front": "What API description format is named for REST?",
+      "back": "OpenAPI/Swagger.",
+      "source_pages": [
+        155
+      ]
+    },
+    {
+      "id": "FC117",
+      "front": "What is RPC location transparency?",
+      "back": "Trying to make a remote call look like a local function call.",
+      "source_pages": [
+        156
+      ]
+    },
+    {
+      "id": "FC118",
+      "front": "Why is a network request less predictable than a local function call?",
+      "back": "Requests/responses can be lost, machines can be slow/unavailable, and latency varies.",
+      "source_pages": [
+        156
+      ]
+    },
+    {
+      "id": "FC119",
+      "front": "What unique uncertainty does a network timeout create?",
+      "back": "You may not know whether the remote operation actually executed.",
+      "source_pages": [
+        156
+      ]
+    },
+    {
+      "id": "FC120",
+      "front": "Why can retrying RPC be dangerous?",
+      "back": "The request may have succeeded while only the response was lost, causing duplicate execution.",
+      "source_pages": [
+        156
+      ]
+    },
+    {
+      "id": "FC121",
+      "front": "What property prevents duplicate side effects on retries?",
+      "back": "Idempotence/deduplication.",
+      "source_pages": [
+        156
+      ]
+    },
+    {
+      "id": "FC122",
+      "front": "How does network-call latency differ from local-call latency?",
+      "back": "It is much slower and more variable.",
+      "source_pages": [
+        156
+      ]
+    },
+    {
+      "id": "FC123",
+      "front": "Why can't pointers be passed directly over RPC?",
+      "back": "Remote processes do not share the same address space; parameters must be encoded.",
+      "source_pages": [
+        156,
+        157
+      ]
+    },
+    {
+      "id": "FC124",
+      "front": "What cross-language issue affects RPC?",
+      "back": "Programming languages may have incompatible datatype semantics.",
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "FC125",
+      "front": "Which RPC framework uses Protocol Buffers?",
+      "back": "gRPC.",
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "FC126",
+      "front": "Which RPC framework uses Thrift?",
+      "back": "Finagle.",
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "FC127",
+      "front": "What does Rest.li use?",
+      "back": "JSON over HTTP.",
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "FC128",
+      "front": "What do futures/promises represent in modern RPC frameworks?",
+      "back": "Asynchronous actions that may fail.",
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "FC129",
+      "front": "What extra capability does gRPC support?",
+      "back": "Streams with multiple requests/responses over time.",
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "FC130",
+      "front": "What is service discovery?",
+      "back": "Finding the IP address and port of a service.",
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "FC131",
+      "front": "Why are REST APIs good for experimentation/debugging?",
+      "back": "You can use browsers/curl and broad tooling without code generation.",
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "FC132",
+      "front": "Where does REST predominate according to the chapter?",
+      "back": "Public APIs.",
+      "source_pages": [
+        158
+      ]
+    },
+    {
+      "id": "FC133",
+      "front": "Where are RPC frameworks especially common?",
+      "back": "Internal service-to-service calls, often within one datacenter.",
+      "source_pages": [
+        158
+      ]
+    },
+    {
+      "id": "FC134",
+      "front": "For staged RPC upgrades, what compatibility is needed on requests?",
+      "back": "Backward compatibility.",
+      "source_pages": [
+        158
+      ]
+    },
+    {
+      "id": "FC135",
+      "front": "For staged RPC upgrades, what compatibility is needed on responses?",
+      "back": "Forward compatibility.",
+      "source_pages": [
+        158
+      ]
+    },
+    {
+      "id": "FC136",
+      "front": "Why do public APIs need compatibility for a long time?",
+      "back": "Providers cannot force external clients to upgrade.",
+      "source_pages": [
+        158
+      ]
+    },
+    {
+      "id": "FC137",
+      "front": "What happens when an API must make a breaking change?",
+      "back": "Often multiple versions are maintained side by side.",
+      "source_pages": [
+        158
+      ]
+    },
+    {
+      "id": "FC138",
+      "front": "Name API versioning approaches.",
+      "back": "URL version, Accept-header version, server-stored client version.",
+      "source_pages": [
+        158
+      ]
+    },
+    {
+      "id": "FC139",
+      "front": "What sits between RPC and databases in the chapter?",
+      "back": "Asynchronous message passing through a broker.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "FC140",
+      "front": "What is a message broker also called?",
+      "back": "Message queue or message-oriented middleware.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "FC141",
+      "front": "How does a broker improve reliability under overload?",
+      "back": "Buffers messages while the recipient is unavailable or overloaded.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "FC142",
+      "front": "How can a broker recover from consumer crashes?",
+      "back": "Redeliver messages.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "FC143",
+      "front": "What location information can a broker hide from senders?",
+      "back": "Recipient IP address and port.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "FC144",
+      "front": "Can one brokered message reach multiple recipients?",
+      "back": "Yes.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "FC145",
+      "front": "How do brokers decouple sender and receiver?",
+      "back": "Sender publishes without knowing which consumer receives it.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "FC146",
+      "front": "Is brokered messaging usually synchronous request/response?",
+      "back": "No; typically one-way and asynchronous.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "FC147",
+      "front": "Name broker implementations listed.",
+      "back": "RabbitMQ, ActiveMQ, HornetQ, NATS, Kafka.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "FC148",
+      "front": "What does a producer publish to?",
+      "back": "A named queue or topic.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "FC149",
+      "front": "Can there be many producers and consumers on one topic?",
+      "back": "Yes.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "FC150",
+      "front": "How can a brokered request get a reply?",
+      "back": "Consumer publishes to a separate reply queue/topic.",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "FC151",
+      "front": "Do brokers generally impose a data model?",
+      "back": "No; messages are bytes plus metadata.",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "FC152",
+      "front": "Why should broker messages be backward and forward compatible?",
+      "back": "Publishers and consumers can then evolve independently in any deployment order.",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "FC153",
+      "front": "What field-preservation issue applies when consumers republish?",
+      "back": "Unknown fields may be lost unless explicitly preserved.",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "FC154",
+      "front": "What is an actor?",
+      "back": "An isolated stateful entity that processes one message at a time and communicates by asynchronous messages.",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "FC155",
+      "front": "Do actors guarantee message delivery in all error cases?",
+      "back": "No.",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "FC156",
+      "front": "Why don't actors need normal shared-state locking?",
+      "back": "Each actor owns its local state and processes one message at a time.",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "FC157",
+      "front": "How do distributed actor frameworks handle remote messages?",
+      "back": "Encode them, send over the network, and decode at the recipient.",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "FC158",
+      "front": "Why is location transparency less problematic for actors than RPC?",
+      "back": "Actor semantics already admit asynchronous messaging and possible message loss.",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "FC159",
+      "front": "What is Akka's default serialization in the cited version?",
+      "back": "Java built-in serialization.",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "FC160",
+      "front": "How can Akka improve rolling-upgrade compatibility?",
+      "back": "Use a compatible format such as Protocol Buffers.",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "FC161",
+      "front": "What rolling-upgrade limitation is described for Orleans?",
+      "back": "Default encoding may require a new cluster and traffic migration.",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "FC162",
+      "front": "What is the final chapter conclusion?",
+      "back": "Backward/forward compatibility plus rolling upgrades are achievable with care.",
+      "source_pages": [
+        161,
+        162
+      ]
+    }
+  ],
+  "multiple_choice_questions": [
+    {
+      "id": "MCQ001",
+      "difficulty": "medium",
+      "question": "What is backward compatibility?",
+      "choices": {
+        "A": "New code reads old data",
+        "B": "Old code reads new data",
+        "C": "New data deletes old data",
+        "D": "Same code only"
+      },
+      "answer": "A",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "MCQ002",
+      "difficulty": "medium",
+      "question": "What is forward compatibility?",
+      "choices": {
+        "A": "Old code reads new data",
+        "B": "New code reads old data",
+        "C": "No schema changes",
+        "D": "Only old clients work"
+      },
+      "answer": "A",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "MCQ003",
+      "difficulty": "medium",
+      "question": "Which is generally harder?",
+      "choices": {
+        "A": "Forward compatibility",
+        "B": "Backward compatibility",
+        "C": "Neither ever matters",
+        "D": "Encoding"
+      },
+      "answer": "A",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "MCQ004",
+      "difficulty": "medium",
+      "question": "What is encoding?",
+      "choices": {
+        "A": "In-memory data to bytes",
+        "B": "Bytes to objects",
+        "C": "Encrypting data",
+        "D": "Compressing only"
+      },
+      "answer": "A",
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "id": "MCQ005",
+      "difficulty": "medium",
+      "question": "What is decoding?",
+      "choices": {
+        "A": "Bytes to in-memory data",
+        "B": "Objects to bytes",
+        "C": "Hashing data",
+        "D": "Encrypting data"
+      },
+      "answer": "A",
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "id": "MCQ006",
+      "difficulty": "medium",
+      "question": "Which is a language-specific serializer?",
+      "choices": {
+        "A": "Python pickle",
+        "B": "JSON",
+        "C": "Avro",
+        "D": "Thrift IDL"
+      },
+      "answer": "A",
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "id": "MCQ007",
+      "difficulty": "medium",
+      "question": "Why can native deserialization be dangerous?",
+      "choices": {
+        "A": "Arbitrary class instantiation/code execution",
+        "B": "It always loses data",
+        "C": "It disables networks",
+        "D": "It forces JSON"
+      },
+      "answer": "A",
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "id": "MCQ008",
+      "difficulty": "medium",
+      "question": "What is a major JSON number issue?",
+      "choices": {
+        "A": "No integer/float distinction or precision guarantee",
+        "B": "No strings",
+        "C": "No arrays",
+        "D": "No objects"
+      },
+      "answer": "A",
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "MCQ009",
+      "difficulty": "medium",
+      "question": "What boundary is problematic in JavaScript doubles?",
+      "choices": {
+        "A": "2^53",
+        "B": "2^8",
+        "C": "2^16",
+        "D": "2^31 only"
+      },
+      "answer": "A",
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "MCQ010",
+      "difficulty": "medium",
+      "question": "How is binary data commonly embedded in JSON/XML?",
+      "choices": {
+        "A": "Base64",
+        "B": "WAL",
+        "C": "UTF-16 only",
+        "D": "B-tree"
+      },
+      "answer": "A",
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "MCQ011",
+      "difficulty": "medium",
+      "question": "What size cost does Base64 add?",
+      "choices": {
+        "A": "~33%",
+        "B": "~1%",
+        "C": "~100% always",
+        "D": "0%"
+      },
+      "answer": "A",
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "MCQ012",
+      "difficulty": "medium",
+      "question": "Why do binary JSON formats still encode field names?",
+      "choices": {
+        "A": "No required schema identifies fields",
+        "B": "They use tags",
+        "C": "They use Avro schemas",
+        "D": "They cannot store strings"
+      },
+      "answer": "A",
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "id": "MCQ013",
+      "difficulty": "medium",
+      "question": "What is the MessagePack example size?",
+      "choices": {
+        "A": "66 bytes",
+        "B": "32 bytes",
+        "C": "33 bytes",
+        "D": "59 bytes"
+      },
+      "answer": "A",
+      "source_pages": [
+        138
+      ]
+    },
+    {
+      "id": "MCQ014",
+      "difficulty": "medium",
+      "question": "Which binary schema format was developed at Google?",
+      "choices": {
+        "A": "Protocol Buffers",
+        "B": "Thrift",
+        "C": "Avro",
+        "D": "MessagePack"
+      },
+      "answer": "A",
+      "source_pages": [
+        139
+      ]
+    },
+    {
+      "id": "MCQ015",
+      "difficulty": "medium",
+      "question": "Which was developed at Facebook?",
+      "choices": {
+        "A": "Thrift",
+        "B": "Avro",
+        "C": "Protocol Buffers",
+        "D": "CSV"
+      },
+      "answer": "A",
+      "source_pages": [
+        139
+      ]
+    },
+    {
+      "id": "MCQ016",
+      "difficulty": "medium",
+      "question": "What identifies Thrift/Protobuf fields?",
+      "choices": {
+        "A": "Numeric tags",
+        "B": "Field names on wire",
+        "C": "Row numbers",
+        "D": "URLs"
+      },
+      "answer": "A",
+      "source_pages": [
+        141
+      ]
+    },
+    {
+      "id": "MCQ017",
+      "difficulty": "medium",
+      "question": "What is Thrift CompactProtocol example size?",
+      "choices": {
+        "A": "34 bytes",
+        "B": "66 bytes",
+        "C": "81 bytes",
+        "D": "59 KB"
+      },
+      "answer": "A",
+      "source_pages": [
+        141
+      ]
+    },
+    {
+      "id": "MCQ018",
+      "difficulty": "medium",
+      "question": "What is Protocol Buffers example size?",
+      "choices": {
+        "A": "33 bytes",
+        "B": "66 bytes",
+        "C": "59 bytes",
+        "D": "81 bytes"
+      },
+      "answer": "A",
+      "source_pages": [
+        142
+      ]
+    },
+    {
+      "id": "MCQ019",
+      "difficulty": "medium",
+      "question": "Can a field name be changed in tag-based encoding?",
+      "choices": {
+        "A": "Yes",
+        "B": "No",
+        "C": "Only if tag also changes",
+        "D": "Only after data rewrite"
+      },
+      "answer": "A",
+      "source_pages": [
+        142
+      ]
+    },
+    {
+      "id": "MCQ020",
+      "difficulty": "medium",
+      "question": "Can a field tag be reused after removing a field?",
+      "choices": {
+        "A": "No",
+        "B": "Yes immediately",
+        "C": "Only if type matches",
+        "D": "Always"
+      },
+      "answer": "A",
+      "source_pages": [
+        143
+      ]
+    },
+    {
+      "id": "MCQ021",
+      "difficulty": "medium",
+      "question": "How must newly added tag-based fields be defined for compatibility?",
+      "choices": {
+        "A": "Optional/defaulted",
+        "B": "Required only",
+        "C": "No type",
+        "D": "Repeated only"
+      },
+      "answer": "A",
+      "source_pages": [
+        143
+      ]
+    },
+    {
+      "id": "MCQ022",
+      "difficulty": "medium",
+      "question": "What is a risk of narrowing integer types?",
+      "choices": {
+        "A": "Truncation",
+        "B": "Better precision",
+        "C": "No compatibility issue",
+        "D": "Automatic schema migration"
+      },
+      "answer": "A",
+      "source_pages": [
+        143
+      ]
+    },
+    {
+      "id": "MCQ023",
+      "difficulty": "medium",
+      "question": "How does Protobuf encode repeated values?",
+      "choices": {
+        "A": "Same tag multiple times",
+        "B": "Separate files",
+        "C": "One JSON array name",
+        "D": "No tags"
+      },
+      "answer": "A",
+      "source_pages": [
+        143
+      ]
+    },
+    {
+      "id": "MCQ024",
+      "difficulty": "medium",
+      "question": "Does Avro use field tags?",
+      "choices": {
+        "A": "No",
+        "B": "Yes always",
+        "C": "Only network Avro",
+        "D": "Only file Avro"
+      },
+      "answer": "A",
+      "source_pages": [
+        144
+      ]
+    },
+    {
+      "id": "MCQ025",
+      "difficulty": "medium",
+      "question": "What is Avro example size?",
+      "choices": {
+        "A": "32 bytes",
+        "B": "33 bytes",
+        "C": "34 bytes",
+        "D": "66 bytes"
+      },
+      "answer": "A",
+      "source_pages": [
+        144
+      ]
+    },
+    {
+      "id": "MCQ026",
+      "difficulty": "medium",
+      "question": "How does Avro know data types during decoding?",
+      "choices": {
+        "A": "Schema",
+        "B": "Field tags in bytes",
+        "C": "JSON names",
+        "D": "HTTP headers"
+      },
+      "answer": "A",
+      "source_pages": [
+        145
+      ]
+    },
+    {
+      "id": "MCQ027",
+      "difficulty": "medium",
+      "question": "What is writer's schema?",
+      "choices": {
+        "A": "Schema used to encode",
+        "B": "Schema expected by reader",
+        "C": "API version only",
+        "D": "Database index"
+      },
+      "answer": "A",
+      "source_pages": [
+        145
+      ]
+    },
+    {
+      "id": "MCQ028",
+      "difficulty": "medium",
+      "question": "What is reader's schema?",
+      "choices": {
+        "A": "Schema expected during decode",
+        "B": "Schema used during write only",
+        "C": "WSDL",
+        "D": "HTTP schema"
+      },
+      "answer": "A",
+      "source_pages": [
+        145
+      ]
+    },
+    {
+      "id": "MCQ029",
+      "difficulty": "medium",
+      "question": "Must Avro reader/writer schema be identical?",
+      "choices": {
+        "A": "No, compatible is enough",
+        "B": "Yes always",
+        "C": "Only over network",
+        "D": "Only in Hadoop"
+      },
+      "answer": "A",
+      "source_pages": [
+        145,
+        146
+      ]
+    },
+    {
+      "id": "MCQ030",
+      "difficulty": "medium",
+      "question": "How are Avro fields matched?",
+      "choices": {
+        "A": "By name",
+        "B": "By fixed numeric tags",
+        "C": "By byte offset only",
+        "D": "By table position only"
+      },
+      "answer": "A",
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "id": "MCQ031",
+      "difficulty": "medium",
+      "question": "What happens to a writer-only field in Avro?",
+      "choices": {
+        "A": "Reader ignores it",
+        "B": "Decode fails always",
+        "C": "It becomes null in writer",
+        "D": "Tag is reused"
+      },
+      "answer": "A",
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "id": "MCQ032",
+      "difficulty": "medium",
+      "question": "What fills a reader-only field?",
+      "choices": {
+        "A": "Default value",
+        "B": "Random value",
+        "C": "Tag number",
+        "D": "Nothing ever"
+      },
+      "answer": "A",
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "id": "MCQ033",
+      "difficulty": "medium",
+      "question": "What does Avro require for compatible add/remove?",
+      "choices": {
+        "A": "Default values",
+        "B": "Numeric tags",
+        "C": "No schemas",
+        "D": "Full data rewrite"
+      },
+      "answer": "A",
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "id": "MCQ034",
+      "difficulty": "medium",
+      "question": "How does Avro express nullable fields?",
+      "choices": {
+        "A": "Union containing null",
+        "B": "Optional keyword only",
+        "C": "Implicit null for everything",
+        "D": "Field tag 0"
+      },
+      "answer": "A",
+      "source_pages": [
+        147
+      ]
+    },
+    {
+      "id": "MCQ035",
+      "difficulty": "medium",
+      "question": "How can Avro rename fields?",
+      "choices": {
+        "A": "Aliases",
+        "B": "Reuse tags",
+        "C": "WSDL",
+        "D": "Base64"
+      },
+      "answer": "A",
+      "source_pages": [
+        147
+      ]
+    },
+    {
+      "id": "MCQ036",
+      "difficulty": "medium",
+      "question": "Where can an Avro file store writer schema?",
+      "choices": {
+        "A": "File header",
+        "B": "Every field tag",
+        "C": "HTTP cookie",
+        "D": "B-tree root"
+      },
+      "answer": "A",
+      "source_pages": [
+        147
+      ]
+    },
+    {
+      "id": "MCQ037",
+      "difficulty": "medium",
+      "question": "How can a DB record identify Avro writer schema?",
+      "choices": {
+        "A": "Version/hash plus schema registry",
+        "B": "Only field names",
+        "C": "Only file header",
+        "D": "No way"
+      },
+      "answer": "A",
+      "source_pages": [
+        147,
+        148
+      ]
+    },
+    {
+      "id": "MCQ038",
+      "difficulty": "medium",
+      "question": "Why is Avro good for dynamic schemas?",
+      "choices": {
+        "A": "No manual field tags",
+        "B": "No schema required",
+        "C": "Only JSON values",
+        "D": "No compatibility"
+      },
+      "answer": "A",
+      "source_pages": [
+        148
+      ]
+    },
+    {
+      "id": "MCQ039",
+      "difficulty": "medium",
+      "question": "What is code generation most useful for?",
+      "choices": {
+        "A": "Statically typed languages",
+        "B": "Only JavaScript",
+        "C": "Only CSV",
+        "D": "Only message queues"
+      },
+      "answer": "A",
+      "source_pages": [
+        149
+      ]
+    },
+    {
+      "id": "MCQ040",
+      "difficulty": "medium",
+      "question": "What is one schema merit?",
+      "choices": {
+        "A": "Compatibility checking before deployment",
+        "B": "No documentation",
+        "C": "Larger encoding",
+        "D": "No static typing"
+      },
+      "answer": "A",
+      "source_pages": [
+        150
+      ]
+    },
+    {
+      "id": "MCQ041",
+      "difficulty": "medium",
+      "question": "What are the chapter's three dataflow modes?",
+      "choices": {
+        "A": "Database, services, messaging",
+        "B": "B-tree, LSM, hash",
+        "C": "JSON, XML, CSV",
+        "D": "OLTP, OLAP, ETL"
+      },
+      "answer": "A",
+      "source_pages": [
+        151
+      ]
+    },
+    {
+      "id": "MCQ042",
+      "difficulty": "medium",
+      "question": "Why is backward compatibility required for database storage?",
+      "choices": {
+        "A": "Future code must read old stored bytes",
+        "B": "Old code never reads data",
+        "C": "Databases rewrite everything",
+        "D": "Only clients matter"
+      },
+      "answer": "A",
+      "source_pages": [
+        151
+      ]
+    },
+    {
+      "id": "MCQ043",
+      "difficulty": "medium",
+      "question": "Why is forward compatibility also needed in databases?",
+      "choices": {
+        "A": "Old app instances may read new writes during rolling upgrades",
+        "B": "Old code is always gone first",
+        "C": "Only archives matter",
+        "D": "DB forbids mixed versions"
+      },
+      "answer": "A",
+      "source_pages": [
+        151
+      ]
+    },
+    {
+      "id": "MCQ044",
+      "difficulty": "medium",
+      "question": "What can older code accidentally do to unknown fields?",
+      "choices": {
+        "A": "Drop them when re-encoding",
+        "B": "Always preserve them",
+        "C": "Encrypt them",
+        "D": "Index them"
+      },
+      "answer": "A",
+      "source_pages": [
+        151,
+        152
+      ]
+    },
+    {
+      "id": "MCQ045",
+      "difficulty": "medium",
+      "question": "What does 'data outlives code' mean?",
+      "choices": {
+        "A": "Old encoded records remain long after old binaries are gone",
+        "B": "Code lives forever",
+        "C": "Data is always migrated instantly",
+        "D": "Backups are deleted"
+      },
+      "answer": "A",
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "MCQ046",
+      "difficulty": "medium",
+      "question": "Why avoid full data migrations?",
+      "choices": {
+        "A": "They can be expensive on large datasets",
+        "B": "They are impossible",
+        "C": "They reduce schemas",
+        "D": "They break SQL always"
+      },
+      "answer": "A",
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "MCQ047",
+      "difficulty": "medium",
+      "question": "What format is suggested for analytics-friendly archival data?",
+      "choices": {
+        "A": "Parquet",
+        "B": "Java serialization",
+        "C": "WSDL",
+        "D": "SOAP"
+      },
+      "answer": "A",
+      "source_pages": [
+        153
+      ]
+    },
+    {
+      "id": "MCQ048",
+      "difficulty": "medium",
+      "question": "What is a service in this chapter?",
+      "choices": {
+        "A": "Network API exposed by server",
+        "B": "Database table",
+        "C": "Schema registry only",
+        "D": "Message tag"
+      },
+      "answer": "A",
+      "source_pages": [
+        153
+      ]
+    },
+    {
+      "id": "MCQ049",
+      "difficulty": "medium",
+      "question": "What is a microservices design goal?",
+      "choices": {
+        "A": "Independent deployment/evolution",
+        "B": "All services upgraded simultaneously",
+        "C": "Shared language serialization only",
+        "D": "No APIs"
+      },
+      "answer": "A",
+      "source_pages": [
+        154
+      ]
+    },
+    {
+      "id": "MCQ050",
+      "difficulty": "medium",
+      "question": "What is REST?",
+      "choices": {
+        "A": "HTTP-based design philosophy",
+        "B": "XML-only protocol",
+        "C": "RPC transport",
+        "D": "Schema language"
+      },
+      "answer": "A",
+      "source_pages": [
+        155
+      ]
+    },
+    {
+      "id": "MCQ051",
+      "difficulty": "medium",
+      "question": "What is SOAP?",
+      "choices": {
+        "A": "XML-based API protocol",
+        "B": "JSON-only style",
+        "C": "Actor framework",
+        "D": "Schema registry"
+      },
+      "answer": "A",
+      "source_pages": [
+        155
+      ]
+    },
+    {
+      "id": "MCQ052",
+      "difficulty": "medium",
+      "question": "What describes SOAP APIs?",
+      "choices": {
+        "A": "WSDL",
+        "B": "OpenAPI only",
+        "C": "Protobuf tags",
+        "D": "Avro IDL"
+      },
+      "answer": "A",
+      "source_pages": [
+        155
+      ]
+    },
+    {
+      "id": "MCQ053",
+      "difficulty": "medium",
+      "question": "What can describe REST APIs?",
+      "choices": {
+        "A": "OpenAPI/Swagger",
+        "B": "WAL",
+        "C": "RDF",
+        "D": "Bloom filters"
+      },
+      "answer": "A",
+      "source_pages": [
+        155
+      ]
+    },
+    {
+      "id": "MCQ054",
+      "difficulty": "medium",
+      "question": "What does RPC location transparency try to do?",
+      "choices": {
+        "A": "Make remote calls look local",
+        "B": "Make local calls networked",
+        "C": "Remove serialization",
+        "D": "Eliminate failures"
+      },
+      "answer": "A",
+      "source_pages": [
+        156
+      ]
+    },
+    {
+      "id": "MCQ055",
+      "difficulty": "hard",
+      "question": "Why are RPC timeouts ambiguous?",
+      "choices": {
+        "A": "You don't know whether operation executed",
+        "B": "They always mean operation failed",
+        "C": "They never happen",
+        "D": "They only affect local calls"
+      },
+      "answer": "A",
+      "source_pages": [
+        156
+      ]
+    },
+    {
+      "id": "MCQ056",
+      "difficulty": "hard",
+      "question": "What can retries cause?",
+      "choices": {
+        "A": "Duplicate execution",
+        "B": "Guaranteed exactly-once behavior",
+        "C": "Lower latency always",
+        "D": "No side effects"
+      },
+      "answer": "A",
+      "source_pages": [
+        156
+      ]
+    },
+    {
+      "id": "MCQ057",
+      "difficulty": "hard",
+      "question": "What property helps safe retries?",
+      "choices": {
+        "A": "Idempotence",
+        "B": "Compression",
+        "C": "Field tags",
+        "D": "WSDL"
+      },
+      "answer": "A",
+      "source_pages": [
+        156
+      ]
+    },
+    {
+      "id": "MCQ058",
+      "difficulty": "hard",
+      "question": "Why are RPC latencies different from local calls?",
+      "choices": {
+        "A": "Networks are slower and variable",
+        "B": "They are identical",
+        "C": "Local calls always timeout",
+        "D": "RPC is always faster"
+      },
+      "answer": "A",
+      "source_pages": [
+        156
+      ]
+    },
+    {
+      "id": "MCQ059",
+      "difficulty": "hard",
+      "question": "Which RPC uses Protocol Buffers?",
+      "choices": {
+        "A": "gRPC",
+        "B": "Finagle",
+        "C": "Rest.li",
+        "D": "SOAP"
+      },
+      "answer": "A",
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "MCQ060",
+      "difficulty": "hard",
+      "question": "What do futures/promises represent?",
+      "choices": {
+        "A": "Asynchronous operations that may fail",
+        "B": "Schema versions",
+        "C": "Database indexes",
+        "D": "Binary strings"
+      },
+      "answer": "A",
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "MCQ061",
+      "difficulty": "hard",
+      "question": "What does gRPC additionally support?",
+      "choices": {
+        "A": "Streaming",
+        "B": "Only unary calls",
+        "C": "No network",
+        "D": "No schema"
+      },
+      "answer": "A",
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "MCQ062",
+      "difficulty": "hard",
+      "question": "What is service discovery?",
+      "choices": {
+        "A": "Finding service address/port",
+        "B": "Finding a JSON field",
+        "C": "Finding WAL entries",
+        "D": "Finding old schemas"
+      },
+      "answer": "A",
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "MCQ063",
+      "difficulty": "hard",
+      "question": "Why is REST strong for public APIs?",
+      "choices": {
+        "A": "Broad compatibility/tooling/debuggability",
+        "B": "Fastest binary encoding always",
+        "C": "Requires generated classes",
+        "D": "Hides network failures"
+      },
+      "answer": "A",
+      "source_pages": [
+        157,
+        158
+      ]
+    },
+    {
+      "id": "MCQ064",
+      "difficulty": "hard",
+      "question": "For RPC rolling upgrades, requests generally need?",
+      "choices": {
+        "A": "Backward compatibility",
+        "B": "Forward only",
+        "C": "No compatibility",
+        "D": "Identical versions"
+      },
+      "answer": "A",
+      "source_pages": [
+        158
+      ]
+    },
+    {
+      "id": "MCQ065",
+      "difficulty": "hard",
+      "question": "For RPC rolling upgrades, responses generally need?",
+      "choices": {
+        "A": "Forward compatibility",
+        "B": "Backward only",
+        "C": "No compatibility",
+        "D": "Identical versions"
+      },
+      "answer": "A",
+      "source_pages": [
+        158
+      ]
+    },
+    {
+      "id": "MCQ066",
+      "difficulty": "hard",
+      "question": "Why might providers keep multiple API versions?",
+      "choices": {
+        "A": "External clients cannot be forced to upgrade",
+        "B": "Schemas never evolve",
+        "C": "REST requires it always",
+        "D": "RPC cannot version"
+      },
+      "answer": "A",
+      "source_pages": [
+        158
+      ]
+    },
+    {
+      "id": "MCQ067",
+      "difficulty": "hard",
+      "question": "What is a message broker?",
+      "choices": {
+        "A": "Intermediary that temporarily stores/delivers messages",
+        "B": "Local function call",
+        "C": "Schema file",
+        "D": "B-tree"
+      },
+      "answer": "A",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "MCQ068",
+      "difficulty": "hard",
+      "question": "What broker property helps overloaded consumers?",
+      "choices": {
+        "A": "Buffering",
+        "B": "Synchronous blocking only",
+        "C": "No persistence ever",
+        "D": "Field tags"
+      },
+      "answer": "A",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "MCQ069",
+      "difficulty": "hard",
+      "question": "What broker property helps crashed consumers?",
+      "choices": {
+        "A": "Redelivery",
+        "B": "WSDL",
+        "C": "Base64",
+        "D": "Schema aliases"
+      },
+      "answer": "A",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "MCQ070",
+      "difficulty": "hard",
+      "question": "What location detail can broker hide?",
+      "choices": {
+        "A": "Recipient IP/port",
+        "B": "Schema field tags",
+        "C": "JSON type",
+        "D": "Disk offset"
+      },
+      "answer": "A",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "MCQ071",
+      "difficulty": "hard",
+      "question": "Can broker messages fan out to multiple recipients?",
+      "choices": {
+        "A": "Yes",
+        "B": "No",
+        "C": "Only RPC can",
+        "D": "Only databases can"
+      },
+      "answer": "A",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "MCQ072",
+      "difficulty": "hard",
+      "question": "Broker communication is usually?",
+      "choices": {
+        "A": "Asynchronous and one-way",
+        "B": "Synchronous local call",
+        "C": "Shared memory",
+        "D": "Always exactly-once"
+      },
+      "answer": "A",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "MCQ073",
+      "difficulty": "hard",
+      "question": "Which broker is listed?",
+      "choices": {
+        "A": "RabbitMQ",
+        "B": "Hibernate",
+        "C": "Avro",
+        "D": "WSDL"
+      },
+      "answer": "A",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "MCQ074",
+      "difficulty": "hard",
+      "question": "What do brokers generally treat payload as?",
+      "choices": {
+        "A": "Bytes plus metadata",
+        "B": "Objects with one fixed schema",
+        "C": "SQL tables",
+        "D": "Local pointers"
+      },
+      "answer": "A",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "MCQ075",
+      "difficulty": "hard",
+      "question": "Why should message schemas be both backward/forward compatible?",
+      "choices": {
+        "A": "Publishers and consumers can evolve independently",
+        "B": "To force lockstep deploys",
+        "C": "To remove queues",
+        "D": "To avoid encoding"
+      },
+      "answer": "A",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "MCQ076",
+      "difficulty": "hard",
+      "question": "What does an actor encapsulate?",
+      "choices": {
+        "A": "Local state",
+        "B": "Shared global memory",
+        "C": "One database table",
+        "D": "HTTP cache"
+      },
+      "answer": "A",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "MCQ077",
+      "difficulty": "hard",
+      "question": "How many messages does an actor process at once?",
+      "choices": {
+        "A": "Typically one",
+        "B": "Unlimited concurrently",
+        "C": "Always zero",
+        "D": "Exactly two"
+      },
+      "answer": "A",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "MCQ078",
+      "difficulty": "hard",
+      "question": "Do distributed actors use the same abstraction locally and remotely?",
+      "choices": {
+        "A": "Yes",
+        "B": "No",
+        "C": "Only in Akka",
+        "D": "Only in Erlang"
+      },
+      "answer": "A",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "MCQ079",
+      "difficulty": "hard",
+      "question": "Why is actor location transparency more plausible than RPC's?",
+      "choices": {
+        "A": "Actor model already accepts asynchronous messaging/loss",
+        "B": "Actors use shared memory across nodes",
+        "C": "Actors never fail",
+        "D": "Actors avoid encoding"
+      },
+      "answer": "A",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "MCQ080",
+      "difficulty": "hard",
+      "question": "What is Akka's default serializer in the chapter?",
+      "choices": {
+        "A": "Java serialization",
+        "B": "Avro",
+        "C": "Protobuf",
+        "D": "JSON"
+      },
+      "answer": "A",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "MCQ081",
+      "difficulty": "hard",
+      "question": "What is the chapter's final deployment message?",
+      "choices": {
+        "A": "Compatibility enables rolling upgrades and evolvability",
+        "B": "Always use one encoding forever",
+        "C": "Avoid schema changes",
+        "D": "Only REST evolves"
+      },
+      "answer": "A",
+      "source_pages": [
+        161,
+        162
+      ]
+    }
+  ],
+  "mix_and_match": [
+    {
+      "id": "MM01",
+      "title": "Compatibility direction",
+      "left": {
+        "A": "Backward compatibility",
+        "B": "Forward compatibility",
+        "C": "Rolling upgrade",
+        "D": "Writer's schema",
+        "E": "Reader's schema"
+      },
+      "right": {
+        "1": "New code reads old data",
+        "2": "Old code reads new data",
+        "3": "Deploy gradually across nodes",
+        "4": "Schema used to encode",
+        "5": "Schema expected while decoding"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        134,
+        145
+      ]
+    },
+    {
+      "id": "MM02",
+      "title": "Encoding format to property",
+      "left": {
+        "A": "Java serialization",
+        "B": "JSON",
+        "C": "Thrift",
+        "D": "Protocol Buffers",
+        "E": "Avro"
+      },
+      "right": {
+        "1": "Language-specific object encoding",
+        "2": "Popular textual web format",
+        "3": "Tag-based schema format originally from Facebook",
+        "4": "Tag-based schema format originally from Google",
+        "5": "Tagless writer/reader-schema resolution"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        135,
+        136,
+        139,
+        144,
+        145
+      ]
+    },
+    {
+      "id": "MM03",
+      "title": "RPC/service term to meaning",
+      "left": {
+        "A": "REST",
+        "B": "SOAP",
+        "C": "WSDL",
+        "D": "OpenAPI",
+        "E": "Service discovery"
+      },
+      "right": {
+        "1": "HTTP-oriented design philosophy",
+        "2": "XML-based network API protocol",
+        "3": "SOAP API description language",
+        "4": "REST API description/documentation format",
+        "5": "Find service IP/port"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        155,
+        157
+      ]
+    },
+    {
+      "id": "MM04",
+      "title": "Messaging concept to role",
+      "left": {
+        "A": "Producer",
+        "B": "Broker",
+        "C": "Topic/queue",
+        "D": "Consumer",
+        "E": "Reply queue"
+      },
+      "right": {
+        "1": "Publishes message",
+        "2": "Stores/routes messages",
+        "3": "Named message destination",
+        "4": "Receives message",
+        "5": "Separate channel for response"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        159,
+        160
+      ]
+    },
+    {
+      "id": "MM05",
+      "title": "Avro writer-schema context",
+      "left": {
+        "A": "Large file",
+        "B": "Database record",
+        "C": "Network connection",
+        "D": "Schema database",
+        "E": "Dynamic table export"
+      },
+      "right": {
+        "1": "Embed schema once in file header",
+        "2": "Store version/hash with each record",
+        "3": "Negotiate schema on connection setup",
+        "4": "Store versions and check compatibility",
+        "5": "Regenerate schema from columns automatically"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        147,
+        148
+      ]
+    }
+  ],
+  "true_false": [
+    {
+      "id": "TF001",
+      "statement": "Rolling upgrades allow old and new code versions to coexist.",
+      "answer": true,
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "TF002",
+      "statement": "Backward compatibility means old code reads new data.",
+      "answer": false,
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "TF003",
+      "statement": "Forward compatibility means old code reads new data.",
+      "answer": true,
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "TF004",
+      "statement": "Encoding is the same thing as encryption.",
+      "answer": false,
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "id": "TF005",
+      "statement": "Language-native serialization may introduce remote-code-execution risks.",
+      "answer": true,
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "id": "TF006",
+      "statement": "Language-native serializers are usually ideal for permanent cross-language storage.",
+      "answer": false,
+      "source_pages": [
+        135,
+        136
+      ]
+    },
+    {
+      "id": "TF007",
+      "statement": "JSON distinguishes integers from floating-point numbers precisely.",
+      "answer": false,
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "TF008",
+      "statement": "Numbers beyond 2^53 can be problematic in JavaScript doubles.",
+      "answer": true,
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "TF009",
+      "statement": "JSON/XML directly support arbitrary raw byte strings.",
+      "answer": false,
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "TF010",
+      "statement": "Base64 increases payload size by roughly one third.",
+      "answer": true,
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "TF011",
+      "statement": "CSV has a built-in strong schema.",
+      "answer": false,
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "id": "TF012",
+      "statement": "Binary JSON formats are always dramatically smaller than textual JSON.",
+      "answer": false,
+      "source_pages": [
+        138
+      ]
+    },
+    {
+      "id": "TF013",
+      "statement": "Thrift and Protocol Buffers require schemas.",
+      "answer": true,
+      "source_pages": [
+        139
+      ]
+    },
+    {
+      "id": "TF014",
+      "statement": "Thrift/Protobuf encode field names in every record.",
+      "answer": false,
+      "source_pages": [
+        141
+      ]
+    },
+    {
+      "id": "TF015",
+      "statement": "Thrift CompactProtocol uses variable-length integers.",
+      "answer": true,
+      "source_pages": [
+        141
+      ]
+    },
+    {
+      "id": "TF016",
+      "statement": "Required vs optional changes the protobuf wire representation.",
+      "answer": false,
+      "source_pages": [
+        142
+      ]
+    },
+    {
+      "id": "TF017",
+      "statement": "Tag numbers are critical to compatibility in Thrift/Protobuf.",
+      "answer": true,
+      "source_pages": [
+        142
+      ]
+    },
+    {
+      "id": "TF018",
+      "statement": "A removed field tag can safely be reused immediately.",
+      "answer": false,
+      "source_pages": [
+        143
+      ]
+    },
+    {
+      "id": "TF019",
+      "statement": "Newly added required fields can break backward compatibility.",
+      "answer": true,
+      "source_pages": [
+        143
+      ]
+    },
+    {
+      "id": "TF020",
+      "statement": "Changing integer width can risk truncation in old readers.",
+      "answer": true,
+      "source_pages": [
+        143
+      ]
+    },
+    {
+      "id": "TF021",
+      "statement": "Protobuf repeated fields reuse the same tag multiple times.",
+      "answer": true,
+      "source_pages": [
+        143
+      ]
+    },
+    {
+      "id": "TF022",
+      "statement": "Avro uses numeric field tags just like Protobuf.",
+      "answer": false,
+      "source_pages": [
+        144
+      ]
+    },
+    {
+      "id": "TF023",
+      "statement": "Avro's example record is 32 bytes.",
+      "answer": true,
+      "source_pages": [
+        144
+      ]
+    },
+    {
+      "id": "TF024",
+      "statement": "Avro encoded bytes contain complete field names.",
+      "answer": false,
+      "source_pages": [
+        144
+      ]
+    },
+    {
+      "id": "TF025",
+      "statement": "Avro writer and reader schemas must be identical.",
+      "answer": false,
+      "source_pages": [
+        145,
+        146
+      ]
+    },
+    {
+      "id": "TF026",
+      "statement": "Avro resolves fields by name.",
+      "answer": true,
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "id": "TF027",
+      "statement": "Avro reader-only fields can use declared defaults.",
+      "answer": true,
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "id": "TF028",
+      "statement": "Avro allows null implicitly for every field.",
+      "answer": false,
+      "source_pages": [
+        147
+      ]
+    },
+    {
+      "id": "TF029",
+      "statement": "Avro supports aliases for renamed fields.",
+      "answer": true,
+      "source_pages": [
+        147
+      ]
+    },
+    {
+      "id": "TF030",
+      "statement": "Adding an Avro union branch is forward compatible in the chapter's example.",
+      "answer": false,
+      "source_pages": [
+        147
+      ]
+    },
+    {
+      "id": "TF031",
+      "statement": "An Avro object container file can include the writer schema once.",
+      "answer": true,
+      "source_pages": [
+        147
+      ]
+    },
+    {
+      "id": "TF032",
+      "statement": "A schema registry can help decode database records written by different schema versions.",
+      "answer": true,
+      "source_pages": [
+        148
+      ]
+    },
+    {
+      "id": "TF033",
+      "statement": "Avro is awkward for dynamically generated schemas because of manual field tags.",
+      "answer": false,
+      "source_pages": [
+        148
+      ]
+    },
+    {
+      "id": "TF034",
+      "statement": "Code generation is especially valuable in statically typed languages.",
+      "answer": true,
+      "source_pages": [
+        149
+      ]
+    },
+    {
+      "id": "TF035",
+      "statement": "Avro requires code generation in all languages.",
+      "answer": false,
+      "source_pages": [
+        149
+      ]
+    },
+    {
+      "id": "TF036",
+      "statement": "Schemas can serve as documentation and compatibility gates.",
+      "answer": true,
+      "source_pages": [
+        150
+      ]
+    },
+    {
+      "id": "TF037",
+      "statement": "A database write can be thought of as a message to future code.",
+      "answer": true,
+      "source_pages": [
+        151
+      ]
+    },
+    {
+      "id": "TF038",
+      "statement": "Database storage only needs backward compatibility.",
+      "answer": false,
+      "source_pages": [
+        151
+      ]
+    },
+    {
+      "id": "TF039",
+      "statement": "Older code may accidentally remove fields it does not understand.",
+      "answer": true,
+      "source_pages": [
+        151,
+        152
+      ]
+    },
+    {
+      "id": "TF040",
+      "statement": "Data usually disappears when a new application version is deployed.",
+      "answer": false,
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "TF041",
+      "statement": "Large data migrations can be expensive.",
+      "answer": true,
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "TF042",
+      "statement": "Archival copies may be rewritten using the newest schema.",
+      "answer": true,
+      "source_pages": [
+        153
+      ]
+    },
+    {
+      "id": "TF043",
+      "statement": "Parquet is suggested as an analytics-friendly archival encoding.",
+      "answer": true,
+      "source_pages": [
+        153
+      ]
+    },
+    {
+      "id": "TF044",
+      "statement": "Services expose arbitrary database-style queries to clients by definition.",
+      "answer": false,
+      "source_pages": [
+        154
+      ]
+    },
+    {
+      "id": "TF045",
+      "statement": "Independent deployability is a microservices goal.",
+      "answer": true,
+      "source_pages": [
+        154
+      ]
+    },
+    {
+      "id": "TF046",
+      "statement": "REST is a protocol standardized independently of HTTP.",
+      "answer": false,
+      "source_pages": [
+        155
+      ]
+    },
+    {
+      "id": "TF047",
+      "statement": "SOAP is XML-based.",
+      "answer": true,
+      "source_pages": [
+        155
+      ]
+    },
+    {
+      "id": "TF048",
+      "statement": "WSDL describes SOAP APIs.",
+      "answer": true,
+      "source_pages": [
+        155
+      ]
+    },
+    {
+      "id": "TF049",
+      "statement": "OpenAPI can document RESTful APIs.",
+      "answer": true,
+      "source_pages": [
+        155
+      ]
+    },
+    {
+      "id": "TF050",
+      "statement": "RPC network calls have the same semantics as local calls.",
+      "answer": false,
+      "source_pages": [
+        156
+      ]
+    },
+    {
+      "id": "TF051",
+      "statement": "A timeout may leave you uncertain whether an RPC operation executed.",
+      "answer": true,
+      "source_pages": [
+        156
+      ]
+    },
+    {
+      "id": "TF052",
+      "statement": "Retries can duplicate side effects.",
+      "answer": true,
+      "source_pages": [
+        156
+      ]
+    },
+    {
+      "id": "TF053",
+      "statement": "Idempotence helps make retries safer.",
+      "answer": true,
+      "source_pages": [
+        156
+      ]
+    },
+    {
+      "id": "TF054",
+      "statement": "Network request latency is generally stable and local-call-like.",
+      "answer": false,
+      "source_pages": [
+        156
+      ]
+    },
+    {
+      "id": "TF055",
+      "statement": "RPC parameters must be encoded because pointers cannot cross machines.",
+      "answer": true,
+      "source_pages": [
+        156,
+        157
+      ]
+    },
+    {
+      "id": "TF056",
+      "statement": "gRPC uses Protocol Buffers.",
+      "answer": true,
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "TF057",
+      "statement": "Modern RPC frameworks may expose futures/promises.",
+      "answer": true,
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "TF058",
+      "statement": "gRPC supports streaming calls.",
+      "answer": true,
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "TF059",
+      "statement": "REST is often convenient for public APIs and debugging.",
+      "answer": true,
+      "source_pages": [
+        157,
+        158
+      ]
+    },
+    {
+      "id": "TF060",
+      "statement": "During staged service upgrades, requests need backward compatibility.",
+      "answer": true,
+      "source_pages": [
+        158
+      ]
+    },
+    {
+      "id": "TF061",
+      "statement": "During staged service upgrades, responses need forward compatibility.",
+      "answer": true,
+      "source_pages": [
+        158
+      ]
+    },
+    {
+      "id": "TF062",
+      "statement": "External API providers can always force clients to upgrade immediately.",
+      "answer": false,
+      "source_pages": [
+        158
+      ]
+    },
+    {
+      "id": "TF063",
+      "statement": "Message brokers temporarily store messages.",
+      "answer": true,
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "TF064",
+      "statement": "Message brokers require senders to know recipient IP addresses.",
+      "answer": false,
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "TF065",
+      "statement": "Message brokers can fan out one message to multiple recipients.",
+      "answer": true,
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "TF066",
+      "statement": "Brokered communication is usually asynchronous.",
+      "answer": true,
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "TF067",
+      "statement": "Kafka is listed as a message broker implementation.",
+      "answer": true,
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "TF068",
+      "statement": "Message brokers always enforce a specific data model.",
+      "answer": false,
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "TF069",
+      "statement": "Backward/forward-compatible message formats make independent deploys easier.",
+      "answer": true,
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "TF070",
+      "statement": "Actors normally share one global mutable state.",
+      "answer": false,
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "TF071",
+      "statement": "Actors typically process one message at a time.",
+      "answer": true,
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "TF072",
+      "statement": "Distributed actors encode remote messages into bytes.",
+      "answer": true,
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "TF073",
+      "statement": "Actor semantics make remote/local differences less misleading than RPC location transparency.",
+      "answer": true,
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "TF074",
+      "statement": "Akka's default Java serialization provides strong forward/backward compatibility.",
+      "answer": false,
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "TF075",
+      "statement": "The chapter concludes rolling upgrades are achievable with careful compatibility design.",
+      "answer": true,
+      "source_pages": [
+        161,
+        162
+      ]
+    }
+  ],
+  "fill_in_the_blank": [
+    {
+      "id": "FIB001",
+      "prompt": "New code reading old data is ______ compatibility.",
+      "answer": "backward",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "FIB002",
+      "prompt": "Old code reading new data is ______ compatibility.",
+      "answer": "forward",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "FIB003",
+      "prompt": "Converting in-memory data to bytes is ______.",
+      "answer": "encoding",
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "id": "FIB004",
+      "prompt": "The reverse process is ______.",
+      "answer": "decoding",
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "id": "FIB005",
+      "prompt": "Python's native object serializer is ______.",
+      "answer": "pickle",
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "id": "FIB006",
+      "prompt": "Twitter IDs exposed JSON's precision issue above 2^______.",
+      "answer": "53",
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "FIB007",
+      "prompt": "Base64 increases binary payload size by about ______ percent.",
+      "answer": "33",
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "FIB008",
+      "prompt": "A binary JSON format named in the chapter is ______.",
+      "answer": "MessagePack",
+      "source_pages": [
+        137,
+        138
+      ]
+    },
+    {
+      "id": "FIB009",
+      "prompt": "Thrift identifies fields using numeric field ______.",
+      "answer": "tags",
+      "source_pages": [
+        141
+      ]
+    },
+    {
+      "id": "FIB010",
+      "prompt": "Thrift CompactProtocol example size is ______ bytes.",
+      "answer": "34",
+      "source_pages": [
+        141
+      ]
+    },
+    {
+      "id": "FIB011",
+      "prompt": "Protocol Buffers example size is ______ bytes.",
+      "answer": "33",
+      "source_pages": [
+        142
+      ]
+    },
+    {
+      "id": "FIB012",
+      "prompt": "A removed numeric field tag should never be ______.",
+      "answer": "reused",
+      "source_pages": [
+        143
+      ]
+    },
+    {
+      "id": "FIB013",
+      "prompt": "Avro example size is ______ bytes.",
+      "answer": "32",
+      "source_pages": [
+        144
+      ]
+    },
+    {
+      "id": "FIB014",
+      "prompt": "The schema used during encoding is the ______ schema.",
+      "answer": "writer's",
+      "source_pages": [
+        145
+      ]
+    },
+    {
+      "id": "FIB015",
+      "prompt": "The schema expected during decoding is the ______ schema.",
+      "answer": "reader's",
+      "source_pages": [
+        145
+      ]
+    },
+    {
+      "id": "FIB016",
+      "prompt": "Avro matches fields by field ______.",
+      "answer": "name",
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "id": "FIB017",
+      "prompt": "Avro nullability is expressed through a ______ type.",
+      "answer": "union",
+      "source_pages": [
+        147
+      ]
+    },
+    {
+      "id": "FIB018",
+      "prompt": "An Avro file embedding its schema is an object ______ file.",
+      "answer": "container",
+      "source_pages": [
+        147
+      ]
+    },
+    {
+      "id": "FIB019",
+      "prompt": "A central collection of schema versions is a schema ______.",
+      "answer": "database",
+      "source_pages": [
+        148
+      ]
+    },
+    {
+      "id": "FIB020",
+      "prompt": "REST is a design philosophy based on ______.",
+      "answer": "HTTP",
+      "source_pages": [
+        155
+      ]
+    },
+    {
+      "id": "FIB021",
+      "prompt": "SOAP APIs are described using ______.",
+      "answer": "WSDL",
+      "source_pages": [
+        155
+      ]
+    },
+    {
+      "id": "FIB022",
+      "prompt": "A REST API description format named is ______.",
+      "answer": "OpenAPI",
+      "source_pages": [
+        155
+      ]
+    },
+    {
+      "id": "FIB023",
+      "prompt": "Safe retry semantics are often associated with ______.",
+      "answer": "idempotence",
+      "source_pages": [
+        156
+      ]
+    },
+    {
+      "id": "FIB024",
+      "prompt": "gRPC uses ______ Buffers.",
+      "answer": "Protocol",
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "FIB025",
+      "prompt": "Finding a service's address/port is service ______.",
+      "answer": "discovery",
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "FIB026",
+      "prompt": "A broker destination can be a queue or ______.",
+      "answer": "topic",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "FIB027",
+      "prompt": "RabbitMQ, ActiveMQ, NATS, and Kafka are message ______.",
+      "answer": "brokers",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "FIB028",
+      "prompt": "Actors communicate with asynchronous ______.",
+      "answer": "messages",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "FIB029",
+      "prompt": "Akka can use Protocol Buffers to gain rolling-upgrade ______.",
+      "answer": "compatibility",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "FIB030",
+      "prompt": "The chapter's deployment strategy emphasizing coexistence is a rolling ______.",
+      "answer": "upgrade",
+      "source_pages": [
+        161
+      ]
+    }
+  ],
+  "ordering_exercises": [
+    {
+      "id": "ORD01",
+      "title": "Rolling upgrade",
+      "items_scrambled": [
+        "Finish remaining nodes",
+        "Deploy to a few nodes",
+        "Validate new version",
+        "Old and new versions coexist"
+      ],
+      "correct_order": [
+        "Deploy to a few nodes",
+        "Old and new versions coexist",
+        "Validate new version",
+        "Finish remaining nodes"
+      ],
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "ORD02",
+      "title": "Database dataflow",
+      "items_scrambled": [
+        "Future process decodes",
+        "Writer encodes",
+        "Bytes persist",
+        "Reader uses compatible schema"
+      ],
+      "correct_order": [
+        "Writer encodes",
+        "Bytes persist",
+        "Reader uses compatible schema",
+        "Future process decodes"
+      ],
+      "source_pages": [
+        151,
+        152
+      ]
+    },
+    {
+      "id": "ORD03",
+      "title": "RPC request-response",
+      "items_scrambled": [
+        "Client decodes response",
+        "Server decodes request",
+        "Client encodes request",
+        "Server encodes response"
+      ],
+      "correct_order": [
+        "Client encodes request",
+        "Server decodes request",
+        "Server encodes response",
+        "Client decodes response"
+      ],
+      "source_pages": [
+        162
+      ]
+    },
+    {
+      "id": "ORD04",
+      "title": "Brokered message",
+      "items_scrambled": [
+        "Consumer decodes message",
+        "Producer publishes bytes",
+        "Broker stores/routes message",
+        "Consumer receives message"
+      ],
+      "correct_order": [
+        "Producer publishes bytes",
+        "Broker stores/routes message",
+        "Consumer receives message",
+        "Consumer decodes message"
+      ],
+      "source_pages": [
+        159,
+        160
+      ]
+    },
+    {
+      "id": "ORD05",
+      "title": "Avro decode",
+      "items_scrambled": [
+        "Produce reader representation",
+        "Read writer schema",
+        "Compare reader and writer schemas",
+        "Decode writer bytes"
+      ],
+      "correct_order": [
+        "Read writer schema",
+        "Compare reader and writer schemas",
+        "Decode writer bytes",
+        "Produce reader representation"
+      ],
+      "source_pages": [
+        145,
+        146
+      ]
+    }
+  ],
+  "scenario_questions": [
+    {
+      "id": "SC01",
+      "difficulty": "medium",
+      "scenario": "A server fleet is being upgraded gradually. Half the nodes run v1 and half run v2.",
+      "question": "What compatibility requirements matter?",
+      "expected_answer": "Both backward and forward compatibility, because new code may read old data and old code may read new data.",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "SC02",
+      "difficulty": "hard",
+      "scenario": "A Python service accepts arbitrary pickle payloads from untrusted users.",
+      "question": "What danger does the chapter identify?",
+      "expected_answer": "Language-native deserialization may instantiate arbitrary classes and can lead to arbitrary code execution.",
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "id": "SC03",
+      "difficulty": "medium",
+      "scenario": "A 64-bit identifier is sent as a JSON number to JavaScript clients.",
+      "question": "What compatibility problem can occur?",
+      "expected_answer": "Integers above 2^53 cannot be represented exactly by IEEE-754 doubles, so the value may lose precision.",
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "SC04",
+      "difficulty": "medium",
+      "scenario": "You need to embed 30 MB of binary bytes inside JSON using Base64.",
+      "question": "What approximate encoded size should you expect?",
+      "expected_answer": "About 40 MB, because Base64 adds roughly 33% overhead.",
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "SC05",
+      "difficulty": "hard",
+      "scenario": "A Protobuf field named user_name is renamed display_name without changing tag 3.",
+      "question": "Is old data still meaningful?",
+      "expected_answer": "Yes. Encoded data identifies the field by tag number, so the schema field name can change while retaining the same tag.",
+      "source_pages": [
+        142
+      ]
+    },
+    {
+      "id": "SC06",
+      "difficulty": "hard",
+      "scenario": "A removed Protobuf field used tag 7. A developer wants to reuse tag 7 for a new field.",
+      "question": "Why is that unsafe?",
+      "expected_answer": "Old records may still contain tag 7 with the old meaning, so new code could misinterpret historical data.",
+      "source_pages": [
+        143
+      ]
+    },
+    {
+      "id": "SC07",
+      "difficulty": "medium",
+      "scenario": "A new Thrift field is added as required.",
+      "question": "What compatibility can break?",
+      "expected_answer": "Backward compatibility, because old records lack the new required field.",
+      "source_pages": [
+        143
+      ]
+    },
+    {
+      "id": "SC08",
+      "difficulty": "hard",
+      "scenario": "An Avro writer omits a field that a newer reader expects.",
+      "question": "How can decoding still succeed?",
+      "expected_answer": "The reader schema supplies a declared default value.",
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "id": "SC09",
+      "difficulty": "hard",
+      "scenario": "A relational schema changes every day and you generate binary export schemas automatically.",
+      "question": "Why may Avro be more convenient than Thrift/Protobuf?",
+      "expected_answer": "Avro identifies fields by name during schema resolution and has no numeric tag assignment to maintain across generated schemas.",
+      "source_pages": [
+        148
+      ]
+    },
+    {
+      "id": "SC10",
+      "difficulty": "medium",
+      "scenario": "A five-year-old database record is read by today's application.",
+      "question": "What chapter idea applies?",
+      "expected_answer": "Data outlives code, so newer readers need backward compatibility with historical encodings.",
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "SC11",
+      "difficulty": "hard",
+      "scenario": "Old v1 code reads a v2 record containing a new field, changes another field, and writes the record back.",
+      "question": "What subtle data-loss risk exists?",
+      "expected_answer": "The v1 object model may omit the unknown v2 field and erase it during re-encoding unless unknown fields are preserved.",
+      "source_pages": [
+        151,
+        152
+      ]
+    },
+    {
+      "id": "SC12",
+      "difficulty": "medium",
+      "scenario": "A company takes a full immutable warehouse snapshot.",
+      "question": "Which encoding choices fit the chapter's guidance?",
+      "expected_answer": "Rewrite using the latest schema and use an immutable format such as Avro object container files, or an analytics-friendly columnar format such as Parquet.",
+      "source_pages": [
+        153
+      ]
+    },
+    {
+      "id": "SC13",
+      "difficulty": "hard",
+      "scenario": "An RPC times out after a payment request. The client cannot tell whether the server processed it.",
+      "question": "Why is blind retry dangerous?",
+      "expected_answer": "The request may have executed and only the response was lost; retrying can double-charge unless the protocol uses idempotence/deduplication.",
+      "source_pages": [
+        156
+      ]
+    },
+    {
+      "id": "SC14",
+      "difficulty": "medium",
+      "scenario": "A public API needs to be easy to debug manually from many languages.",
+      "question": "Which style does the chapter say has strong advantages?",
+      "expected_answer": "RESTful HTTP APIs, due to browsers/curl support and broad tooling/ecosystem.",
+      "source_pages": [
+        157,
+        158
+      ]
+    },
+    {
+      "id": "SC15",
+      "difficulty": "medium",
+      "scenario": "Two internal services need efficient low-latency binary communication.",
+      "question": "What approach may be attractive?",
+      "expected_answer": "A custom/binary RPC framework such as gRPC, Thrift, or Avro RPC.",
+      "source_pages": [
+        157,
+        158
+      ]
+    },
+    {
+      "id": "SC16",
+      "difficulty": "hard",
+      "scenario": "A provider changes an external API used by clients it does not control.",
+      "question": "Why might it need multiple API versions?",
+      "expected_answer": "External clients may not upgrade, so breaking changes can require maintaining old and new API versions side by side.",
+      "source_pages": [
+        158
+      ]
+    },
+    {
+      "id": "SC17",
+      "difficulty": "medium",
+      "scenario": "A worker is temporarily overloaded, but producers should continue sending work.",
+      "question": "What broker property helps?",
+      "expected_answer": "The broker buffers messages until the consumer can process them.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "SC18",
+      "difficulty": "medium",
+      "scenario": "A worker crashes after receiving a message.",
+      "question": "What broker behavior can improve reliability?",
+      "expected_answer": "Automatic redelivery to a worker.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "SC19",
+      "difficulty": "hard",
+      "scenario": "Consumers and publishers are deployed in arbitrary order.",
+      "question": "What payload design gives the most flexibility?",
+      "expected_answer": "Backward- and forward-compatible message encodings.",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "SC20",
+      "difficulty": "hard",
+      "scenario": "An actor moves from one machine to another and messages can fail in either local or distributed operation.",
+      "question": "Why is the actor abstraction less misleading than RPC location transparency?",
+      "expected_answer": "Actor semantics already model asynchronous messaging and possible loss, so remote execution does not pretend to have local-call semantics.",
+      "source_pages": [
+        160
+      ]
+    }
+  ],
+  "short_answer_questions": [
+    {
+      "id": "SA01",
+      "question": "Why do rolling upgrades force compatibility concerns?",
+      "model_answer": "They deliberately create periods when multiple code versions are active simultaneously, and those versions may exchange or read data written by one another.",
+      "source_pages": [
+        134,
+        161
+      ]
+    },
+    {
+      "id": "SA02",
+      "question": "Why are language-native object serializers poor long-term interchange formats?",
+      "model_answer": "They are often language-specific, unsafe for untrusted input, weak on compatibility/versioning, and inefficient in size or CPU use.",
+      "source_pages": [
+        135,
+        136
+      ]
+    },
+    {
+      "id": "SA03",
+      "question": "What are the main problems with JSON/XML/CSV?",
+      "model_answer": "Ambiguous numeric typing/precision, awkward binary-data handling, optional or absent schemas, and format-specific quirks such as CSV escaping.",
+      "source_pages": [
+        136,
+        137
+      ]
+    },
+    {
+      "id": "SA04",
+      "question": "Why can schema-driven binary encodings be more compact than binary JSON?",
+      "model_answer": "Schemas supply field identity and type information externally, so records can omit repeated textual field names and use compact tags or schema order.",
+      "source_pages": [
+        137,
+        141,
+        144,
+        150
+      ]
+    },
+    {
+      "id": "SA05",
+      "question": "Explain the compatibility role of field tags in Thrift/Protobuf.",
+      "model_answer": "Tags are stable field identities in encoded data. Names may change, but tags must not. New fields get fresh tags, removed tags are never reused, and new fields must be optional/defaulted.",
+      "source_pages": [
+        142,
+        143
+      ]
+    },
+    {
+      "id": "SA06",
+      "question": "How does Avro differ fundamentally from Thrift/Protobuf?",
+      "model_answer": "Avro encodes values without field tags and resolves the writer's schema against the reader's schema by field name, allowing schema differences as long as they are compatible.",
+      "source_pages": [
+        144,
+        145,
+        146
+      ]
+    },
+    {
+      "id": "SA07",
+      "question": "How can Avro readers discover writer schemas?",
+      "model_answer": "A file may embed the schema once, a DB record may store a schema version/hash referencing a schema database, or network peers may negotiate a schema version.",
+      "source_pages": [
+        147,
+        148
+      ]
+    },
+    {
+      "id": "SA08",
+      "question": "Why are schemas valuable beyond compactness?",
+      "model_answer": "They provide reliable documentation, compatibility checking before deployment, and code generation/static type checking in statically typed languages.",
+      "source_pages": [
+        149,
+        150
+      ]
+    },
+    {
+      "id": "SA09",
+      "question": "Explain 'data outlives code.'",
+      "model_answer": "Application binaries are replaced quickly, but historical database values may remain for years in older encodings, requiring long-term compatibility.",
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "SA10",
+      "question": "Why can older software erase newer fields?",
+      "model_answer": "If it decodes a new record into an older object model that omits unknown fields, then re-encodes the object, those fields can disappear unless preservation is explicit.",
+      "source_pages": [
+        151,
+        152
+      ]
+    },
+    {
+      "id": "SA11",
+      "question": "How do services support organizational evolvability?",
+      "model_answer": "They encapsulate business operations behind APIs and can be owned/deployed independently, reducing coordination—but only if APIs and encodings remain compatible.",
+      "source_pages": [
+        154
+      ]
+    },
+    {
+      "id": "SA12",
+      "question": "Why is RPC location transparency fundamentally flawed?",
+      "model_answer": "Remote calls have network loss, timeouts, uncertain outcomes, variable latency, retry duplication, byte encoding, and cross-language type differences that local calls do not.",
+      "source_pages": [
+        156,
+        157
+      ]
+    },
+    {
+      "id": "SA13",
+      "question": "Why can REST be preferable for public APIs even if binary RPC is faster?",
+      "model_answer": "REST is broadly supported, easy to debug and experiment with, and benefits from a large ecosystem of HTTP tools, proxies, caches, load balancers, and monitoring.",
+      "source_pages": [
+        157,
+        158
+      ]
+    },
+    {
+      "id": "SA14",
+      "question": "What compatibility directions are needed for staged RPC upgrades?",
+      "model_answer": "With servers upgraded before clients, requests need backward compatibility and responses need forward compatibility.",
+      "source_pages": [
+        158
+      ]
+    },
+    {
+      "id": "SA15",
+      "question": "What advantages does a message broker add over direct RPC?",
+      "model_answer": "Buffering, redelivery, location decoupling, multi-recipient fan-out, and logical decoupling of producers from consumers.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "SA16",
+      "question": "Why do actor systems still care about schema evolution?",
+      "model_answer": "During rolling upgrades, actors on old and new nodes exchange encoded messages in both directions, so those message formats must remain compatible.",
+      "source_pages": [
+        160,
+        161
+      ]
+    }
+  ],
+  "active_recall_prompts": [
+    {
+      "id": "AR01",
+      "prompt": "Define backward and forward compatibility without looking.",
+      "target_points": [
+        "new reads old",
+        "old reads new"
+      ],
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "AR02",
+      "prompt": "List all major weaknesses of language-native serialization.",
+      "target_points": [
+        "language lock-in",
+        "unsafe arbitrary class instantiation",
+        "weak versioning",
+        "inefficiency"
+      ],
+      "source_pages": [
+        135,
+        136
+      ]
+    },
+    {
+      "id": "AR03",
+      "prompt": "Recite JSON/XML/CSV type problems.",
+      "target_points": [
+        "number/string ambiguity",
+        "int/float ambiguity",
+        "precision",
+        "2^53",
+        "binary strings",
+        "Base64 33%",
+        "schemas",
+        "CSV escaping"
+      ],
+      "source_pages": [
+        136,
+        137
+      ]
+    },
+    {
+      "id": "AR04",
+      "prompt": "Reconstruct the example sizes for MessagePack, Thrift, Protobuf, and Avro.",
+      "target_points": [
+        "JSON 81",
+        "MessagePack 66",
+        "Thrift Binary 59",
+        "Thrift Compact 34",
+        "Protobuf 33",
+        "Avro 32"
+      ],
+      "source_pages": [
+        138,
+        140,
+        141,
+        142,
+        144
+      ]
+    },
+    {
+      "id": "AR05",
+      "prompt": "Explain tag-based schema evolution rules.",
+      "target_points": [
+        "stable tags",
+        "rename okay",
+        "fresh tag for add",
+        "optional/default",
+        "never reuse removed tags",
+        "type narrowing risk"
+      ],
+      "source_pages": [
+        142,
+        143
+      ]
+    },
+    {
+      "id": "AR06",
+      "prompt": "Explain Avro writer/reader schema resolution.",
+      "target_points": [
+        "writer schema",
+        "reader schema",
+        "compatible not identical",
+        "match by name",
+        "ignore writer-only",
+        "defaults for reader-only"
+      ],
+      "source_pages": [
+        145,
+        146
+      ]
+    },
+    {
+      "id": "AR07",
+      "prompt": "List all three ways Avro writer schemas can be supplied.",
+      "target_points": [
+        "file header",
+        "record version/schema registry",
+        "network negotiation"
+      ],
+      "source_pages": [
+        147,
+        148
+      ]
+    },
+    {
+      "id": "AR08",
+      "prompt": "Recite the merits of schema-driven encoding.",
+      "target_points": [
+        "compact",
+        "documentation",
+        "compatibility checking",
+        "code generation/static typing"
+      ],
+      "source_pages": [
+        150
+      ]
+    },
+    {
+      "id": "AR09",
+      "prompt": "Explain database dataflow compatibility and data outlives code.",
+      "target_points": [
+        "future self",
+        "backward",
+        "forward",
+        "mixed versions",
+        "unknown fields",
+        "historical bytes",
+        "migration cost"
+      ],
+      "source_pages": [
+        151,
+        152,
+        153
+      ]
+    },
+    {
+      "id": "AR10",
+      "prompt": "Compare REST and SOAP.",
+      "target_points": [
+        "REST HTTP philosophy",
+        "URLs/HTTP features",
+        "SOAP XML protocol",
+        "WS-*",
+        "WSDL",
+        "OpenAPI"
+      ],
+      "source_pages": [
+        155
+      ]
+    },
+    {
+      "id": "AR11",
+      "prompt": "List every way an RPC differs from a local call.",
+      "target_points": [
+        "loss",
+        "timeout uncertainty",
+        "retry duplicates",
+        "variable latency",
+        "encoding",
+        "cross-language types"
+      ],
+      "source_pages": [
+        156,
+        157
+      ]
+    },
+    {
+      "id": "AR12",
+      "prompt": "Explain modern RPC features and REST tradeoffs.",
+      "target_points": [
+        "gRPC/protobuf",
+        "Finagle/Thrift",
+        "futures",
+        "streams",
+        "service discovery",
+        "binary performance",
+        "REST tooling"
+      ],
+      "source_pages": [
+        157,
+        158
+      ]
+    },
+    {
+      "id": "AR13",
+      "prompt": "Recite RPC compatibility directions during staged upgrades.",
+      "target_points": [
+        "servers first",
+        "requests backward-compatible",
+        "responses forward-compatible",
+        "external clients",
+        "multiple API versions"
+      ],
+      "source_pages": [
+        158
+      ]
+    },
+    {
+      "id": "AR14",
+      "prompt": "List message-broker advantages.",
+      "target_points": [
+        "buffer",
+        "redelivery",
+        "hide IP/port",
+        "fan-out",
+        "decouple",
+        "asynchronous"
+      ],
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "AR15",
+      "prompt": "Explain the distributed actor model.",
+      "target_points": [
+        "local isolated state",
+        "one message at a time",
+        "async",
+        "message loss possible",
+        "remote encoding",
+        "better location transparency",
+        "compatibility"
+      ],
+      "source_pages": [
+        160,
+        161
+      ]
+    }
+  ],
+  "diagram_reconstruction_drills": [
+    {
+      "id": "DR01",
+      "name": "Compatibility matrix",
+      "task": "Draw old/new writer vs old/new reader and label backward and forward compatibility directions.",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "DR02",
+      "name": "Encoding boundary",
+      "task": "Draw in-memory objects -> encoding -> bytes on disk/network -> decoding -> in-memory objects.",
+      "source_pages": [
+        134,
+        135
+      ]
+    },
+    {
+      "id": "DR03",
+      "name": "Wire-format comparison",
+      "task": "Create a size ladder: JSON 81 -> MessagePack 66 -> Thrift Binary 59 -> Thrift Compact 34 -> Protobuf 33 -> Avro 32.",
+      "source_pages": [
+        138,
+        140,
+        141,
+        142,
+        144
+      ]
+    },
+    {
+      "id": "DR04",
+      "name": "Tag-based record",
+      "task": "Draw a Protobuf/Thrift record with field tags 1,2,3 and show why field names need not appear on wire.",
+      "source_pages": [
+        141,
+        142
+      ]
+    },
+    {
+      "id": "DR05",
+      "name": "Avro writer-reader resolution",
+      "task": "Redraw Figure 4-6 conceptually: writer fields on left, reader fields on right, matching by name, defaults and ignored fields.",
+      "source_pages": [
+        146
+      ]
+    },
+    {
+      "id": "DR06",
+      "name": "Database unknown-field loss",
+      "task": "Redraw Figure 4-7: v2 writes new field -> v1 reads into old object model -> v1 writes back -> new field disappears.",
+      "source_pages": [
+        151,
+        152
+      ]
+    },
+    {
+      "id": "DR07",
+      "name": "Service dataflow",
+      "task": "Draw client encode -> network -> server decode/process -> server encode -> client decode.",
+      "source_pages": [
+        153,
+        154,
+        162
+      ]
+    },
+    {
+      "id": "DR08",
+      "name": "RPC uncertainty",
+      "task": "Draw client request -> network -> server with branches for lost request, server executes/lost response, timeout, and retry duplicate.",
+      "source_pages": [
+        156
+      ]
+    },
+    {
+      "id": "DR09",
+      "name": "Message broker",
+      "task": "Draw multiple producers -> topic/queue -> broker -> multiple consumers plus optional reply queue.",
+      "source_pages": [
+        159,
+        160
+      ]
+    },
+    {
+      "id": "DR10",
+      "name": "Distributed actors",
+      "task": "Draw actors on two nodes using the same send-message abstraction, with remote messages encoded over the network.",
+      "source_pages": [
+        160
+      ]
+    }
+  ],
+  "interview_style_questions": [
+    {
+      "id": "INT01",
+      "question": "What is the difference between backward and forward compatibility?",
+      "strong_answer_outline": [
+        "new reads old",
+        "old reads new",
+        "rolling upgrades",
+        "forward generally harder"
+      ],
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "INT02",
+      "question": "Why not use Java serialization or Python pickle for long-lived distributed data?",
+      "strong_answer_outline": [
+        "language lock-in",
+        "security",
+        "versioning",
+        "efficiency",
+        "transient only"
+      ],
+      "source_pages": [
+        135,
+        136
+      ]
+    },
+    {
+      "id": "INT03",
+      "question": "Compare JSON, Protobuf, and Avro.",
+      "strong_answer_outline": [
+        "human-readable vs binary",
+        "schema",
+        "field names vs tags vs schema order",
+        "compactness",
+        "compatibility"
+      ],
+      "source_pages": [
+        136,
+        137,
+        139,
+        142,
+        144,
+        145,
+        146
+      ]
+    },
+    {
+      "id": "INT04",
+      "question": "How do Protocol Buffers evolve schemas safely?",
+      "strong_answer_outline": [
+        "stable tags",
+        "fresh tags",
+        "optional/default fields",
+        "don't reuse removed tags",
+        "type change risk"
+      ],
+      "source_pages": [
+        142,
+        143
+      ]
+    },
+    {
+      "id": "INT05",
+      "question": "How does Avro support schema evolution?",
+      "strong_answer_outline": [
+        "writer schema",
+        "reader schema",
+        "field-name matching",
+        "defaults",
+        "ignore fields",
+        "aliases",
+        "schema registry"
+      ],
+      "source_pages": [
+        145,
+        146,
+        147,
+        148
+      ]
+    },
+    {
+      "id": "INT06",
+      "question": "Why is a schema registry useful?",
+      "strong_answer_outline": [
+        "decode historical data",
+        "documentation",
+        "version management",
+        "compatibility checks",
+        "deployment safety"
+      ],
+      "source_pages": [
+        148,
+        150
+      ]
+    },
+    {
+      "id": "INT07",
+      "question": "What does 'data outlives code' mean operationally?",
+      "strong_answer_outline": [
+        "historical records",
+        "mixed schema versions",
+        "migration cost",
+        "read-time compatibility"
+      ],
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "INT08",
+      "question": "What is wrong with pretending RPC is a local function call?",
+      "strong_answer_outline": [
+        "loss",
+        "timeout uncertainty",
+        "retry duplicates",
+        "variable latency",
+        "encoding",
+        "cross-language types"
+      ],
+      "source_pages": [
+        156,
+        157
+      ]
+    },
+    {
+      "id": "INT09",
+      "question": "How do you design an evolvable public API?",
+      "strong_answer_outline": [
+        "compatibility",
+        "optional inputs/new output fields",
+        "versioning",
+        "long-lived clients",
+        "multiple versions if breaking"
+      ],
+      "source_pages": [
+        158
+      ]
+    },
+    {
+      "id": "INT10",
+      "question": "When would you choose message queues over synchronous RPC?",
+      "strong_answer_outline": [
+        "buffer overload",
+        "recipient unavailable",
+        "redelivery",
+        "fan-out",
+        "decoupling",
+        "async workflows"
+      ],
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "INT11",
+      "question": "How do schema rules affect independent microservice deployment?",
+      "strong_answer_outline": [
+        "old/new coexist",
+        "service ownership",
+        "no coordinated deploy",
+        "request/response compatibility"
+      ],
+      "source_pages": [
+        154,
+        158
+      ]
+    },
+    {
+      "id": "INT12",
+      "question": "Why do actor systems still need compatible encodings?",
+      "strong_answer_outline": [
+        "rolling upgrades",
+        "new/old nodes exchange messages",
+        "remote messages encoded",
+        "schema changes"
+      ],
+      "source_pages": [
+        160,
+        161
+      ]
+    }
+  ],
+  "common_confusions": [
+    {
+      "confusion": "Backward compatibility means old software can read new data.",
+      "correction": "That is forward compatibility. Backward compatibility means new software reads old data.",
+      "source_pages": [
+        134
+      ]
+    },
+    {
+      "confusion": "Encoding and encryption are the same.",
+      "correction": "Encoding is converting structures to/from bytes; the chapter explicitly says it is unrelated to encryption.",
+      "source_pages": [
+        135
+      ]
+    },
+    {
+      "confusion": "Human-readable JSON has precise numeric semantics across languages.",
+      "correction": "JSON does not distinguish integers and floats or specify precision; JavaScript doubles cannot exactly represent all 64-bit integers.",
+      "source_pages": [
+        136
+      ]
+    },
+    {
+      "confusion": "Binary JSON eliminates field-name overhead.",
+      "correction": "Without an external schema, field names generally still need to be carried in each encoded record.",
+      "source_pages": [
+        137
+      ]
+    },
+    {
+      "confusion": "Protobuf field names are the stable wire identity.",
+      "correction": "Numeric field tags are the stable identity; names may change but tags must not.",
+      "source_pages": [
+        142
+      ]
+    },
+    {
+      "confusion": "Deleted Protobuf tags can be reused after deployment.",
+      "correction": "They must not be reused because old encoded data may still contain the former meaning.",
+      "source_pages": [
+        143
+      ]
+    },
+    {
+      "confusion": "Avro is self-describing at the individual-record byte level.",
+      "correction": "The record encoding omits field names/types and requires the writer schema, which is supplied through surrounding context.",
+      "source_pages": [
+        144,
+        145,
+        147,
+        148
+      ]
+    },
+    {
+      "confusion": "Schemaless formats are automatically more evolvable than schema-driven formats.",
+      "correction": "Schema-driven formats can evolve flexibly while providing explicit compatibility guarantees, documentation, and tooling.",
+      "source_pages": [
+        150
+      ]
+    },
+    {
+      "confusion": "After deploying new server code, all database data is automatically in the new format.",
+      "correction": "Historical data remains in older encodings unless explicitly rewritten; data outlives code.",
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "confusion": "A REST service and database offer the same query flexibility.",
+      "correction": "A service exposes application-specific predefined operations, providing encapsulation; a database often permits general query languages.",
+      "source_pages": [
+        154
+      ]
+    },
+    {
+      "confusion": "RPC timeouts mean the operation definitely failed.",
+      "correction": "The request may have executed and only the response may have been lost.",
+      "source_pages": [
+        156
+      ]
+    },
+    {
+      "confusion": "Retrying an RPC is always harmless.",
+      "correction": "Retries can duplicate operations unless the protocol provides idempotence/deduplication.",
+      "source_pages": [
+        156
+      ]
+    },
+    {
+      "confusion": "REST is always faster than binary RPC.",
+      "correction": "The chapter says custom binary RPC can have better performance; REST's advantages are interoperability, experimentation, debugging, and tooling.",
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "confusion": "Message brokers require producers and consumers to be online simultaneously.",
+      "correction": "A broker can buffer messages while consumers are unavailable or overloaded.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "confusion": "Actor location transparency has exactly the same flaw as RPC.",
+      "correction": "The actor model already assumes asynchronous messaging and possible message loss, so local/remote semantics are less mismatched.",
+      "source_pages": [
+        160
+      ]
+    }
+  ],
+  "practice_problems": [
+    {
+      "id": "P01",
+      "type": "compatibility",
+      "prompt": "v2 code reads records written by v1. Which compatibility direction is this?",
+      "solution": "Backward compatibility.",
+      "based_on_source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "P02",
+      "type": "compatibility",
+      "prompt": "v1 code reads records written by v2. Which compatibility direction is this?",
+      "solution": "Forward compatibility.",
+      "based_on_source_pages": [
+        134
+      ]
+    },
+    {
+      "id": "P03",
+      "type": "base64",
+      "prompt": "Estimate Base64 size for a 9 MB binary payload.",
+      "solution": "Approximately 12 MB, using the chapter's ~33% overhead rule.",
+      "based_on_source_pages": [
+        136
+      ]
+    },
+    {
+      "id": "P04",
+      "type": "wire_size",
+      "prompt": "Order these example encodings largest to smallest: Avro, compact JSON, MessagePack, Protobuf, Thrift Compact.",
+      "solution": "JSON 81 > MessagePack 66 > Thrift Compact 34 > Protobuf 33 > Avro 32.",
+      "based_on_source_pages": [
+        138,
+        141,
+        142,
+        144
+      ]
+    },
+    {
+      "id": "P05",
+      "type": "protobuf_evolution",
+      "prompt": "You add field tag 8 after production deployment. What property should it have to preserve backward compatibility?",
+      "solution": "It must be optional or have a default, not required.",
+      "based_on_source_pages": [
+        143
+      ]
+    },
+    {
+      "id": "P06",
+      "type": "avro",
+      "prompt": "Old writer omits a new reader field with default 0. What does the Avro reader see?",
+      "solution": "The reader supplies the default value 0.",
+      "based_on_source_pages": [
+        146
+      ]
+    },
+    {
+      "id": "P07",
+      "type": "database_evolution",
+      "prompt": "Why might reading and rewriting a newer record with older code be dangerous?",
+      "solution": "Unknown newer fields may be dropped if the older model object does not preserve them.",
+      "based_on_source_pages": [
+        151,
+        152
+      ]
+    },
+    {
+      "id": "P08",
+      "type": "rpc",
+      "prompt": "A POST-like RPC times out. Give two possible realities consistent with the timeout.",
+      "solution": "The request may never have reached the server, or it may have executed successfully but the response was lost/delayed.",
+      "based_on_source_pages": [
+        156
+      ]
+    },
+    {
+      "id": "P09",
+      "type": "rpc_upgrade",
+      "prompt": "Servers are upgraded first, clients second. Which compatibility directions are needed?",
+      "solution": "Requests need backward compatibility; responses need forward compatibility.",
+      "based_on_source_pages": [
+        158
+      ]
+    },
+    {
+      "id": "P10",
+      "type": "messaging",
+      "prompt": "A producer should not care which of five workers processes a job. What architecture fits?",
+      "solution": "Publish to a broker queue/topic and let consumers subscribe/consume.",
+      "based_on_source_pages": [
+        159
+      ]
+    }
+  ],
+  "mastery_check": {
+    "beginner": [
+      "Can define backward and forward compatibility.",
+      "Can define encoding and decoding.",
+      "Can identify JSON/XML/CSV versus schema-driven binary formats.",
+      "Can explain the role of field tags in Protobuf/Thrift.",
+      "Can define writer's schema and reader's schema in Avro."
+    ],
+    "intermediate": [
+      "Can state add/remove/rename compatibility rules for Protobuf/Thrift and Avro.",
+      "Can explain unknown-field preservation and data outlives code.",
+      "Can compare REST, SOAP, and RPC.",
+      "Can explain timeout uncertainty, retries, and idempotence.",
+      "Can list message-broker advantages."
+    ],
+    "advanced": [
+      "Can design schema evolution for independently deployed services.",
+      "Can explain why Avro works well for dynamic schemas and schema registries.",
+      "Can choose appropriate encoding/dataflow mechanisms based on organizational and deployment constraints.",
+      "Can reason about long-lived public API compatibility.",
+      "Can design broker/actor message schemas that tolerate mixed-version deployments."
+    ]
+  },
+  "final_review": {
+    "must_memorize": [
+      "Backward compatibility = new code reads old data.",
+      "Forward compatibility = old code reads new data.",
+      "Rolling upgrades force old/new code and data versions to coexist.",
+      "Encoding = in-memory structures -> bytes; decoding is the reverse.",
+      "Language-specific serialization has language-lock-in, security, versioning, and efficiency drawbacks.",
+      "JSON number precision can break above 2^53 in JavaScript.",
+      "Base64 adds about 33% size overhead.",
+      "Binary JSON still carries field names without a required schema.",
+      "Example sizes: JSON 81, MessagePack 66, Thrift Binary 59, Thrift Compact 34, Protobuf 33, Avro 32 bytes.",
+      "Thrift/Protobuf identify fields by numeric tags.",
+      "Never change or reuse a deployed field tag.",
+      "New tag-based fields should be optional/defaulted.",
+      "Avro has no field tags; it resolves writer and reader schemas.",
+      "Avro matches fields by name, ignores writer-only fields, and fills reader-only fields using defaults.",
+      "Avro writer schema can come from file metadata, a schema registry/version, or network negotiation.",
+      "Schemas provide compactness, documentation, compatibility checking, and static-language code generation.",
+      "Database data often outlives application code.",
+      "Older code must preserve unknown newer fields when rewriting data.",
+      "Service architectures depend on independently deployable, compatible APIs.",
+      "REST = HTTP-based design philosophy; SOAP = XML protocol with WSDL/WS-* tooling.",
+      "Remote calls differ fundamentally from local calls.",
+      "Timeout means uncertain outcome; retry can duplicate side effects.",
+      "Idempotence/deduplication makes retries safer.",
+      "Binary RPC can outperform JSON/REST, but REST has broad interoperability and tooling.",
+      "Staged RPC upgrades: requests backward-compatible, responses forward-compatible.",
+      "External APIs may need multiple versions because clients cannot be forced to upgrade.",
+      "Message brokers buffer, redeliver, hide recipient location, fan out, and decouple producers/consumers.",
+      "Broker payloads should be backward and forward compatible.",
+      "Actors process messages asynchronously with isolated state.",
+      "Distributed actors still need compatible message schemas during rolling upgrades.",
+      "Encoding compatibility is a foundation of evolvability and frequent low-risk deployment."
+    ],
+    "memory_chain": "EVOLUTION -> ROLLING UPGRADE -> BACKWARD/FORWARD COMPATIBILITY -> ENCODING/DECODING -> LANGUAGE SERIALIZATION -> JSON/XML/CSV -> BINARY JSON -> THRIFT/PROTOBUF TAGS -> SCHEMA EVOLUTION -> AVRO WRITER/READER SCHEMAS -> SCHEMA REGISTRY -> DATABASE DATAFLOW -> DATA OUTLIVES CODE -> REST/SOAP/RPC -> NETWORK UNCERTAINTY/IDEMPOTENCE -> RPC COMPATIBILITY -> MESSAGE BROKERS -> ACTORS",
+    "one_sentence_takeaway": "Evolvable systems treat encoding as an architectural contract: old and new code must exchange and preserve data safely across databases, APIs, RPC calls, queues, and actors so that components can be upgraded independently."
+  }
+}

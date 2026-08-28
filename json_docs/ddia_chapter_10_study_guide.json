@@ -1,0 +1,5156 @@
+{
+  "chapter": {
+    "number": 10,
+    "title": "Batch Processing",
+    "book": "Designing Data-Intensive Applications",
+    "author": "Martin Kleppmann",
+    "pdf_pages": {
+      "chapter_start": 411,
+      "summary_end": 452
+    },
+    "book_pages": {
+      "chapter_start": 389,
+      "summary_end": 430
+    },
+    "primary_goal": "Understand batch-processing design principles, Unix-style composability, MapReduce execution, distributed joins/grouping, batch-output semantics, dataflow engines, iterative graph processing, fault tolerance, and the move toward high-level/declarative batch APIs."
+  },
+  "summary": {
+    "overview": "Chapter 10 distinguishes online services, batch processing, and stream processing, then develops batch processing from Unix tools through MapReduce and modern dataflow engines. Unix provides the conceptual foundation: small programs do one thing well, communicate through a uniform interface, separate logic from wiring, treat inputs as immutable, and encourage experimentation. MapReduce extends these ideas across many machines using a distributed filesystem such as HDFS. Mappers emit key-value pairs, the framework partitions, sorts, and shuffles them, and reducers process all values for a key together. That mechanism supports grouping, sort-merge joins, sessionization, and large-scale aggregation. Reduce-side joins are general but expensive; map-side broadcast/hash/merge joins can be much faster when input-size, partitioning, or sorting assumptions hold. Skew/hot keys require special treatment. Batch outputs are ideally immutable files or indexes rather than direct side effects in production databases, because immutability makes retries, rollback, recomputation, and fault recovery much safer. The chapter compares Hadoop with MPP databases: Hadoop emphasizes flexible storage formats and diverse processing models, while MPP systems are tightly integrated and optimized for analytic SQL. MapReduce's heavy intermediate-state materialization makes it robust but slow. Newer dataflow engines such as Spark, Tez, and Flink model an entire workflow as a DAG, pipeline intermediate data, avoid unnecessary sorts, and recompute lost intermediate state when needed. Determinism is important for reliable recomputation. For graph workloads, the chapter introduces iterative processing and the Pregel/BSP model. Finally, high-level APIs and declarative operators let optimizers choose join strategies, exploit columnar storage and vectorized execution, while preserving the flexibility to run arbitrary application code.",
+    "major_sections": [
+      "Online vs Batch vs Stream Processing",
+      "Batch Processing with Unix Tools",
+      "Sorting vs In-Memory Aggregation",
+      "The Unix Philosophy",
+      "Uniform Interfaces",
+      "Separation of Logic and Wiring",
+      "Transparency and Experimentation",
+      "MapReduce and Distributed Filesystems",
+      "HDFS",
+      "MapReduce Job Execution",
+      "Shuffle",
+      "MapReduce Workflows",
+      "Reduce-Side Joins and Grouping",
+      "Sort-Merge Joins",
+      "GROUP BY and Sessionization",
+      "Handling Skew and Hot Keys",
+      "Map-Side Joins",
+      "Broadcast Hash Joins",
+      "Partitioned Hash Joins",
+      "Map-Side Merge Joins",
+      "Output of Batch Workflows",
+      "Search Indexes and Key-Value Store Outputs",
+      "Philosophy of Batch Outputs",
+      "Hadoop vs Distributed/MPP Databases",
+      "Diversity of Storage and Processing Models",
+      "Designing for Frequent Faults",
+      "Materialization of Intermediate State",
+      "Dataflow Engines: Spark, Tez, Flink",
+      "Fault Tolerance by Recomputation",
+      "Graphs and Iterative Processing",
+      "Pregel / Bulk Synchronous Parallel",
+      "High-Level APIs and Declarative Languages"
+    ],
+    "source_pages": [
+      411,
+      412,
+      413,
+      414,
+      415,
+      416,
+      417,
+      418,
+      419,
+      420,
+      421,
+      422,
+      423,
+      424,
+      425,
+      426,
+      427,
+      428,
+      429,
+      430,
+      431,
+      432,
+      433,
+      434,
+      435,
+      436,
+      437,
+      438,
+      439,
+      440,
+      441,
+      442,
+      443,
+      444,
+      445,
+      446,
+      447,
+      448,
+      449,
+      450,
+      451,
+      452
+    ]
+  },
+  "core_concepts": {
+    "system_types": {
+      "service": "Waits for requests and optimizes response time and availability.",
+      "batch": "Processes a bounded, fixed input dataset and produces output; throughput is the primary performance measure.",
+      "stream": "Consumes never-ending event streams shortly after events happen, aiming for lower latency than batch.",
+      "source_pages": [
+        411,
+        412
+      ]
+    },
+    "unix_log_pipeline": {
+      "pipeline": "cat -> awk -> sort -> uniq -c -> sort -r -n -> head",
+      "purpose": "Find the most frequently requested URLs in an nginx log.",
+      "lesson": "Small composable tools can perform surprisingly powerful analysis.",
+      "source_pages": [
+        413,
+        414
+      ]
+    },
+    "sorting_vs_hash_aggregation": {
+      "hash": "Working set depends on number of distinct keys; excellent if it fits in memory.",
+      "sorting": "Can spill to disk and merge sorted runs efficiently using sequential I/O.",
+      "gnu_sort": "Handles larger-than-memory data by spilling to disk and can use multiple CPU cores.",
+      "source_pages": [
+        415,
+        416
+      ]
+    },
+    "unix_philosophy": {
+      "principles": [
+        "Make each program do one thing well.",
+        "Expect program output to become another program's input.",
+        "Build for experimentation and rapid iteration.",
+        "Prefer tools and automation."
+      ],
+      "source_pages": [
+        416,
+        417
+      ]
+    },
+    "uniform_interface": {
+      "unix": "File descriptors and byte streams.",
+      "text_convention": "Many tools treat streams as newline-separated text records.",
+      "benefit": "Independent programs can be connected despite different implementations.",
+      "source_pages": [
+        417,
+        418
+      ]
+    },
+    "logic_vs_wiring": {
+      "idea": "Programs read stdin and write stdout; shells decide where input comes from and output goes.",
+      "benefit": "Loose coupling, late binding, inversion of control, easier composition.",
+      "source_pages": [
+        418
+      ]
+    },
+    "transparency_experimentation": {
+      "immutable_inputs": "Commands normally do not modify input files.",
+      "inspectability": "Pipeline output can be inspected at any stage.",
+      "restartability": "Intermediate files can be materialized and later stages rerun independently.",
+      "source_pages": [
+        419
+      ]
+    },
+    "mapreduce_and_hdfs": {
+      "analogy": "MapReduce is a distributed analogue of Unix-style processing.",
+      "io": "Reads and writes distributed-filesystem files rather than stdin/stdout.",
+      "hdfs": "Hadoop Distributed File System, inspired by GFS.",
+      "shared_nothing": "Uses disks attached to ordinary machines over a datacenter network.",
+      "namenode": "Tracks which file blocks live on which machines.",
+      "fault_tolerance": "Blocks are replicated or protected with erasure coding.",
+      "source_pages": [
+        419,
+        420,
+        421
+      ]
+    },
+    "mapreduce_execution": {
+      "steps": [
+        "Read input files and split into records.",
+        "Mapper emits zero or more key-value pairs per record.",
+        "Framework sorts mapper output by key.",
+        "Reducer receives each key with an iterator over its values and emits output."
+      ],
+      "source_pages": [
+        421,
+        422
+      ]
+    },
+    "mapper": {
+      "behavior": "Called once per input record; stateless across records; may emit zero or more key-value pairs.",
+      "source_pages": [
+        421
+      ]
+    },
+    "reducer": {
+      "behavior": "Called once per key with all values for that key, presented as an iterator.",
+      "source_pages": [
+        422
+      ]
+    },
+    "data_locality": {
+      "principle": "Schedule map tasks near a replica of their input block.",
+      "benefit": "Avoid copying large input data across the network.",
+      "source_pages": [
+        422
+      ]
+    },
+    "shuffle": {
+      "definition": "Partitioning mapper output by reducer, sorting it, and copying partitions from mappers to reducers.",
+      "partitioning": "Hash of the key determines reducer partition.",
+      "merge": "Reducers merge sorted mapper files so equal keys become adjacent.",
+      "source_pages": [
+        423,
+        424
+      ]
+    },
+    "mapreduce_workflows": {
+      "need": "Complex jobs require multiple MapReduce stages.",
+      "handoff": "Output directory of one job becomes input directory of the next.",
+      "scheduler_examples": [
+        "Oozie",
+        "Azkaban",
+        "Luigi",
+        "Airflow",
+        "Pinball"
+      ],
+      "higher_level_tools": [
+        "Pig",
+        "Hive",
+        "Cascading",
+        "Crunch",
+        "FlumeJava"
+      ],
+      "source_pages": [
+        424,
+        425
+      ]
+    },
+    "batch_joins": {
+      "principle": "Batch joins resolve many associations across whole datasets, typically by full scans rather than index lookups.",
+      "locality": "Avoid one remote database request per input record; copy data to the distributed filesystem first.",
+      "source_pages": [
+        425,
+        426,
+        427
+      ]
+    },
+    "sort_merge_join": {
+      "method": "Mappers emit join key; framework partitions/sorts; all records with the same key arrive at one reducer.",
+      "secondary_sort": "Can order one side first and other records by timestamp.",
+      "memory": "Reducer often needs only one small reference record at a time.",
+      "source_pages": [
+        427,
+        428
+      ]
+    },
+    "bringing_related_data_together": {
+      "idea": "Mapper key acts like a destination address; same keys are routed to one reducer.",
+      "benefit": "Separates network communication from application logic.",
+      "fault_tolerance": "Framework retries failed tasks rather than requiring application code to handle partial failures.",
+      "source_pages": [
+        428
+      ]
+    },
+    "group_by": {
+      "method": "Emit grouping key from mapper; partition/sort brings group together in one reducer.",
+      "uses": [
+        "COUNT",
+        "SUM",
+        "Top-k",
+        "Sessionization"
+      ],
+      "source_pages": [
+        428,
+        429
+      ]
+    },
+    "sessionization": {
+      "definition": "Bring all activity events for a user/session together to reconstruct the action sequence.",
+      "key": "Session cookie, user ID, or similar identifier.",
+      "source_pages": [
+        429
+      ]
+    },
+    "skew": {
+      "hot_key": "A key associated with disproportionately large data.",
+      "problem": "One reducer becomes a straggler/hot spot and gates the entire workflow.",
+      "solutions": [
+        "Sample hot keys and spread their records across random reducers.",
+        "Replicate the other join side to reducers handling the hot key.",
+        "Use Hive-specific skew metadata/map-side handling.",
+        "Two-stage aggregation for hot groups."
+      ],
+      "source_pages": [
+        429,
+        430
+      ]
+    },
+    "reduce_side_join": {
+      "advantage": "Works without assumptions about input layout.",
+      "cost": "Sorting, network transfer, merging, and repeated disk I/O.",
+      "source_pages": [
+        430
+      ]
+    },
+    "map_side_join": {
+      "idea": "Avoid reducers and sorting when input assumptions permit.",
+      "source_pages": [
+        430
+      ]
+    },
+    "broadcast_hash_join": {
+      "condition": "One input is small enough to load into each mapper's memory.",
+      "method": "Broadcast small input to all mappers; use in-memory hash table while scanning large input.",
+      "aliases": [
+        "Replicated join (Pig)",
+        "MapJoin (Hive)"
+      ],
+      "source_pages": [
+        431
+      ]
+    },
+    "partitioned_hash_join": {
+      "condition": "Both inputs use same partition count, key, and hash function.",
+      "method": "Join corresponding partitions independently.",
+      "hive_name": "Bucketed map join.",
+      "source_pages": [
+        431,
+        432
+      ]
+    },
+    "map_side_merge_join": {
+      "condition": "Both inputs are partitioned and sorted the same way.",
+      "method": "Incrementally scan matching partitions in key order and merge without reducers.",
+      "source_pages": [
+        432
+      ]
+    },
+    "physical_layout_metadata": {
+      "importance": "Join optimization may require knowing partition count, partition key, and sort order, not just file path/format.",
+      "catalogs": [
+        "HCatalog",
+        "Hive metastore"
+      ],
+      "source_pages": [
+        432
+      ]
+    },
+    "batch_outputs": {
+      "not_just_reports": "Batch jobs often build data structures used by serving systems.",
+      "examples": [
+        "Search indexes",
+        "Machine-learning models/features",
+        "Recommendation databases",
+        "Key-value store files"
+      ],
+      "source_pages": [
+        433,
+        434
+      ]
+    },
+    "search_index_building": {
+      "method": "Partition documents; reducers build index partitions; write immutable index files.",
+      "rebuild": "Can periodically rebuild the entire index and atomically replace old files.",
+      "tradeoff": "Full rebuild may be expensive but is easy to reason about.",
+      "source_pages": [
+        433,
+        434
+      ]
+    },
+    "external_db_side_effect_problem": {
+      "reasons_direct_writes_are_bad": [
+        "Per-record network requests are slow.",
+        "Parallel tasks can overwhelm serving databases.",
+        "External side effects break clean all-or-nothing job-output semantics.",
+        "Retries/speculative execution complicate duplicate effects."
+      ],
+      "better": "Build new immutable database files inside the batch job and bulk-load/switch them into serving systems.",
+      "source_pages": [
+        434,
+        435
+      ]
+    },
+    "immutable_output_philosophy": {
+      "benefits": [
+        "Buggy outputs can be recomputed.",
+        "Old outputs can be switched back in.",
+        "Transient task failures can be retried safely.",
+        "Monitoring jobs can compare output versions.",
+        "Logic and wiring remain separated."
+      ],
+      "human_fault_tolerance": "Ability to recover from buggy code by rerunning or reverting immutable outputs.",
+      "source_pages": [
+        435,
+        436
+      ]
+    },
+    "hadoop_vs_mpp": {
+      "mpp": "Tightly integrated analytic SQL engines with optimized storage/query execution.",
+      "hadoop": "Distributed filesystem plus general-purpose code execution over many file formats.",
+      "source_pages": [
+        436,
+        437,
+        438,
+        439
+      ]
+    },
+    "storage_diversity": {
+      "hadoop": "Files can contain arbitrary encodings/data types; schema can be interpreted later.",
+      "schema_on_read": "Consumers interpret raw data after collection.",
+      "data_lake": "Collect raw data centrally first, model later.",
+      "source_pages": [
+        437,
+        438
+      ]
+    },
+    "processing_model_diversity": {
+      "mpp": "Excellent SQL and integrated query optimization.",
+      "hadoop": "Can run arbitrary application code for ML, search, images, custom algorithms, and SQL engines such as Hive.",
+      "shared_cluster": "Different processing models can coexist over the same HDFS data.",
+      "source_pages": [
+        438,
+        439
+      ]
+    },
+    "frequent_fault_design": {
+      "mpp": "Often abort/retry whole short query; keep data in memory for speed.",
+      "mapreduce": "Retries individual tasks and writes intermediate data eagerly to disk.",
+      "why": "Long jobs and low-priority/preemptible batch tasks make task termination common enough to justify granular recovery.",
+      "source_pages": [
+        439,
+        440
+      ]
+    },
+    "materialization": {
+      "definition": "Eagerly write an intermediate result to storage.",
+      "mapreduce": "Fully materializes between independent jobs.",
+      "unix_pipe": "Streams incrementally with a small buffer.",
+      "downsides": [
+        "Stage barriers/stragglers",
+        "Redundant mappers",
+        "Replication of temporary files"
+      ],
+      "source_pages": [
+        441,
+        442
+      ]
+    },
+    "dataflow_engines": {
+      "examples": [
+        "Spark",
+        "Tez",
+        "Flink"
+      ],
+      "model": "Entire workflow is one job consisting of flexible operators connected by explicit dataflow edges.",
+      "advantages": [
+        "Sort only when required.",
+        "Avoid redundant map stages.",
+        "Improve locality with global workflow knowledge.",
+        "Keep intermediate state in memory/local disk.",
+        "Pipeline operators as data becomes ready.",
+        "Reuse JVM processes."
+      ],
+      "source_pages": [
+        443,
+        444
+      ]
+    },
+    "dataflow_fault_tolerance": {
+      "strategy": "Recompute lost intermediate state from lineage/earlier stages rather than always materializing to HDFS.",
+      "spark": "RDD ancestry tracks how data was derived.",
+      "flink": "Checkpoints operator state.",
+      "determinism": "Recomputation is safest when operators deterministically produce the same output from the same input.",
+      "source_pages": [
+        444,
+        445
+      ]
+    },
+    "determinism": {
+      "bad_sources": [
+        "Unspecified hash-table iteration order",
+        "Random numbers",
+        "System clock",
+        "External data sources"
+      ],
+      "mitigation": "Use deterministic logic such as fixed pseudorandom seeds when recovery depends on recomputation.",
+      "source_pages": [
+        445
+      ]
+    },
+    "materialize_vs_recompute": {
+      "recompute_when": "Intermediate data can cheaply be derived again.",
+      "materialize_when": "Intermediate result is much smaller than source or expensive/CPU-intensive to recompute.",
+      "source_pages": [
+        445
+      ]
+    },
+    "pipelining": {
+      "analogy": "Dataflow engines are closer to Unix pipes than MapReduce temporary files.",
+      "sorting_exception": "Sort must consume full input before producing globally ordered output.",
+      "source_pages": [
+        445
+      ]
+    },
+    "graph_processing": {
+      "goal": "Offline analysis of an entire graph, e.g. PageRank or transitive closure.",
+      "iterative_need": "Many graph algorithms repeatedly propagate information until convergence.",
+      "plain_mapreduce_issue": "Each iteration rereads full input and writes full output, even if little changed.",
+      "source_pages": [
+        446,
+        447
+      ]
+    },
+    "pregel_bsp": {
+      "model": "Bulk synchronous parallel / Pregel-style vertex-centric processing.",
+      "message_passing": "Vertices send messages, generally along graph edges.",
+      "state": "Vertex keeps state across iterations.",
+      "rounds": "Messages sent in one iteration are delivered in the next.",
+      "source_pages": [
+        447
+      ]
+    },
+    "pregel_fault_tolerance": {
+      "guarantee": "Framework hides network faults and processes messages exactly once at destination in the following iteration.",
+      "checkpoint": "Periodically checkpoint vertex state; on failure, roll back or selectively recompute.",
+      "source_pages": [
+        447,
+        448
+      ]
+    },
+    "graph_partitioning": {
+      "problem": "Cross-machine edges create heavy network communication.",
+      "reality": "Simple vertex-ID partitioning may not colocate strongly connected vertices.",
+      "single_machine_rule": "If graph fits on one machine, single-machine processing may be faster than distributed processing.",
+      "source_pages": [
+        448
+      ]
+    },
+    "high_level_apis": {
+      "examples": [
+        "Hive",
+        "Pig",
+        "Cascading",
+        "Crunch",
+        "Spark APIs",
+        "Flink APIs"
+      ],
+      "operators": [
+        "Join",
+        "Group",
+        "Filter",
+        "Aggregate"
+      ],
+      "benefit": "Less code, interactive analysis, and greater optimizer freedom.",
+      "source_pages": [
+        448,
+        449
+      ]
+    },
+    "declarative_optimization": {
+      "benefit": "Optimizer can select join algorithms and reorder joins to reduce intermediate state.",
+      "engines": [
+        "Hive",
+        "Spark",
+        "Flink"
+      ],
+      "source_pages": [
+        449
+      ]
+    },
+    "declarative_plus_arbitrary_code": {
+      "declarative": "Simple filters/projections can exploit columnar reads, vectorized execution, and code generation.",
+      "arbitrary_code": "Still supports parsing, NLP, image processing, statistical algorithms, and external libraries.",
+      "convergence": "Modern batch engines and MPP databases increasingly resemble each other.",
+      "source_pages": [
+        449,
+        450,
+        451
+      ]
+    },
+    "chapter_summary": {
+      "two_core_problems": [
+        "Partitioning",
+        "Fault tolerance"
+      ],
+      "bounded_input": "Batch input has known fixed size, so the job knows when it is finished.",
+      "output_semantics": "Frameworks aim for final output equivalent to fault-free execution despite task retries.",
+      "source_pages": [
+        451,
+        452
+      ]
+    }
+  },
+  "flashcards": [
+    {
+      "id": "FC001",
+      "front": "What are the three processing-system categories introduced?",
+      "back": "Services/online systems, batch systems, and stream/near-real-time systems.",
+      "source_pages": [
+        411,
+        412
+      ]
+    },
+    {
+      "id": "FC002",
+      "front": "Primary performance metric for online services?",
+      "back": "Response time, with availability also important.",
+      "source_pages": [
+        411
+      ]
+    },
+    {
+      "id": "FC003",
+      "front": "Primary performance metric for batch jobs?",
+      "back": "Throughput over a fixed-size input dataset.",
+      "source_pages": [
+        412
+      ]
+    },
+    {
+      "id": "FC004",
+      "front": "What distinguishes stream from batch input?",
+      "back": "Streams process events shortly after they occur; batch operates on a fixed bounded input.",
+      "source_pages": [
+        412
+      ]
+    },
+    {
+      "id": "FC005",
+      "front": "Why is MapReduce worth learning even though its importance declined?",
+      "back": "It clearly illustrates how large-scale batch processing works.",
+      "source_pages": [
+        412
+      ]
+    },
+    {
+      "id": "FC006",
+      "front": "What old technologies resembled batch processing?",
+      "back": "Punch-card tabulators and IBM card-sorting machines.",
+      "source_pages": [
+        412
+      ]
+    },
+    {
+      "id": "FC007",
+      "front": "What Unix tools are used in the log example?",
+      "back": "cat, awk, sort, uniq, sort, head.",
+      "source_pages": [
+        413,
+        414
+      ]
+    },
+    {
+      "id": "FC008",
+      "front": "What does awk '{print $7}' extract in the nginx example?",
+      "back": "The requested URL.",
+      "source_pages": [
+        413,
+        414
+      ]
+    },
+    {
+      "id": "FC009",
+      "front": "Why sort before uniq -c?",
+      "back": "Identical URLs become adjacent so uniq can count them.",
+      "source_pages": [
+        414
+      ]
+    },
+    {
+      "id": "FC010",
+      "front": "What does the second sort do?",
+      "back": "Sorts counts numerically in descending order.",
+      "source_pages": [
+        414
+      ]
+    },
+    {
+      "id": "FC011",
+      "front": "What does head -n 5 do?",
+      "back": "Keeps the five highest-count results.",
+      "source_pages": [
+        414
+      ]
+    },
+    {
+      "id": "FC012",
+      "front": "Hash aggregation memory depends primarily on what?",
+      "back": "Number of distinct keys.",
+      "source_pages": [
+        415
+      ]
+    },
+    {
+      "id": "FC013",
+      "front": "Why can external sorting handle data larger than memory?",
+      "back": "Sort chunks in memory, spill to disk, and merge sorted runs sequentially.",
+      "source_pages": [
+        416
+      ]
+    },
+    {
+      "id": "FC014",
+      "front": "Why is sequential I/O useful in large sort/merge workloads?",
+      "back": "It performs well on disks.",
+      "source_pages": [
+        416
+      ]
+    },
+    {
+      "id": "FC015",
+      "front": "What can GNU sort do when data exceeds memory?",
+      "back": "Spill to disk and use multiple CPU cores.",
+      "source_pages": [
+        416
+      ]
+    },
+    {
+      "id": "FC016",
+      "front": "First Unix philosophy principle?",
+      "back": "Make each program do one thing well.",
+      "source_pages": [
+        416
+      ]
+    },
+    {
+      "id": "FC017",
+      "front": "What composability expectation does Unix promote?",
+      "back": "Output of one program should become input to another.",
+      "source_pages": [
+        416
+      ]
+    },
+    {
+      "id": "FC018",
+      "front": "What uniform interface does Unix use?",
+      "back": "Files/file descriptors as byte streams.",
+      "source_pages": [
+        417
+      ]
+    },
+    {
+      "id": "FC019",
+      "front": "Common Unix record separator?",
+      "back": "Newline.",
+      "source_pages": [
+        417
+      ]
+    },
+    {
+      "id": "FC020",
+      "front": "Why is a uniform interface powerful?",
+      "back": "Programs built independently can interoperate and compose.",
+      "source_pages": [
+        417,
+        418
+      ]
+    },
+    {
+      "id": "FC021",
+      "front": "What is separation of logic and wiring?",
+      "back": "Program handles transformation; shell/configuration determines input/output connections.",
+      "source_pages": [
+        418
+      ]
+    },
+    {
+      "id": "FC022",
+      "front": "What concepts resemble Unix logic/wiring separation?",
+      "back": "Loose coupling, late binding, inversion of control.",
+      "source_pages": [
+        418
+      ]
+    },
+    {
+      "id": "FC023",
+      "front": "Why are immutable inputs useful for experimentation?",
+      "back": "You can rerun commands without damaging source data.",
+      "source_pages": [
+        419
+      ]
+    },
+    {
+      "id": "FC024",
+      "front": "How can Unix pipelines aid debugging?",
+      "back": "Inspect intermediate output at any pipeline stage.",
+      "source_pages": [
+        419
+      ]
+    },
+    {
+      "id": "FC025",
+      "front": "Biggest scalability limit of ordinary Unix tools?",
+      "back": "They run on one machine.",
+      "source_pages": [
+        419
+      ]
+    },
+    {
+      "id": "FC026",
+      "front": "What is MapReduce analogous to?",
+      "back": "A distributed Unix-style process.",
+      "source_pages": [
+        419
+      ]
+    },
+    {
+      "id": "FC027",
+      "front": "Where does Hadoop MapReduce read/write?",
+      "back": "A distributed filesystem, typically HDFS.",
+      "source_pages": [
+        420
+      ]
+    },
+    {
+      "id": "FC028",
+      "front": "What does HDFS stand for?",
+      "back": "Hadoop Distributed File System.",
+      "source_pages": [
+        420
+      ]
+    },
+    {
+      "id": "FC029",
+      "front": "What system inspired HDFS?",
+      "back": "Google File System (GFS).",
+      "source_pages": [
+        420
+      ]
+    },
+    {
+      "id": "FC030",
+      "front": "HDFS architecture principle?",
+      "back": "Shared-nothing.",
+      "source_pages": [
+        420
+      ]
+    },
+    {
+      "id": "FC031",
+      "front": "What does the NameNode track?",
+      "back": "Which file blocks are stored on which machines.",
+      "source_pages": [
+        420
+      ]
+    },
+    {
+      "id": "FC032",
+      "front": "How does HDFS tolerate machine/disk failure?",
+      "back": "Replication or erasure coding across machines.",
+      "source_pages": [
+        420
+      ]
+    },
+    {
+      "id": "FC033",
+      "front": "What is mapper step in MapReduce?",
+      "back": "Extract/emit key-value pairs from each input record.",
+      "source_pages": [
+        421
+      ]
+    },
+    {
+      "id": "FC034",
+      "front": "What is implicitly performed between mapper and reducer?",
+      "back": "Sort by key.",
+      "source_pages": [
+        421
+      ]
+    },
+    {
+      "id": "FC035",
+      "front": "What is reducer input?",
+      "back": "A key and iterator over all values for that key.",
+      "source_pages": [
+        422
+      ]
+    },
+    {
+      "id": "FC036",
+      "front": "Is mapper stateful across records?",
+      "back": "No.",
+      "source_pages": [
+        421
+      ]
+    },
+    {
+      "id": "FC037",
+      "front": "Can a mapper emit zero records?",
+      "back": "Yes.",
+      "source_pages": [
+        421
+      ]
+    },
+    {
+      "id": "FC038",
+      "front": "What determines number of map tasks?",
+      "back": "Input file/file-block partitions.",
+      "source_pages": [
+        422,
+        423
+      ]
+    },
+    {
+      "id": "FC039",
+      "front": "What determines number of reducers?",
+      "back": "Configured by the job author.",
+      "source_pages": [
+        423
+      ]
+    },
+    {
+      "id": "FC040",
+      "front": "How are keys assigned to reducers?",
+      "back": "Hash of the key.",
+      "source_pages": [
+        423
+      ]
+    },
+    {
+      "id": "FC041",
+      "front": "What is data locality?",
+      "back": "Running computation near the machine holding input data.",
+      "source_pages": [
+        422
+      ]
+    },
+    {
+      "id": "FC042",
+      "front": "Why is data locality useful?",
+      "back": "Reduces network transfer of large input files.",
+      "source_pages": [
+        422
+      ]
+    },
+    {
+      "id": "FC043",
+      "front": "What is the shuffle?",
+      "back": "Partitioning by reducer, sorting, and transferring mapper output to reducers.",
+      "source_pages": [
+        424
+      ]
+    },
+    {
+      "id": "FC044",
+      "front": "Is the MapReduce shuffle random?",
+      "back": "No.",
+      "source_pages": [
+        424
+      ]
+    },
+    {
+      "id": "FC045",
+      "front": "What does a reducer do with sorted mapper files?",
+      "back": "Merges them while preserving sort order.",
+      "source_pages": [
+        424
+      ]
+    },
+    {
+      "id": "FC046",
+      "front": "Why do equal keys become adjacent?",
+      "back": "Partitioning and sorted merge place same-key records together.",
+      "source_pages": [
+        424
+      ]
+    },
+    {
+      "id": "FC047",
+      "front": "Why chain MapReduce jobs?",
+      "back": "One job may not provide enough transformation/sorting stages for a complex workflow.",
+      "source_pages": [
+        424
+      ]
+    },
+    {
+      "id": "FC048",
+      "front": "How do independent MapReduce jobs exchange data?",
+      "back": "Via HDFS output/input directories.",
+      "source_pages": [
+        424
+      ]
+    },
+    {
+      "id": "FC049",
+      "front": "Can a downstream job start before upstream job is completely successful?",
+      "back": "Normally no.",
+      "source_pages": [
+        424
+      ]
+    },
+    {
+      "id": "FC050",
+      "front": "Name Hadoop workflow schedulers from the chapter.",
+      "back": "Oozie, Azkaban, Luigi, Airflow, Pinball.",
+      "source_pages": [
+        425
+      ]
+    },
+    {
+      "id": "FC051",
+      "front": "Name higher-level MapReduce workflow tools.",
+      "back": "Pig, Hive, Cascading, Crunch, FlumeJava.",
+      "source_pages": [
+        425
+      ]
+    },
+    {
+      "id": "FC052",
+      "front": "What does a batch join usually process?",
+      "back": "All relevant associations across large datasets.",
+      "source_pages": [
+        425,
+        426
+      ]
+    },
+    {
+      "id": "FC053",
+      "front": "Why not issue one remote DB lookup per activity event?",
+      "back": "Round-trip latency limits throughput, cache usefulness varies, and concurrent queries can overload the DB.",
+      "source_pages": [
+        426
+      ]
+    },
+    {
+      "id": "FC054",
+      "front": "Better batch join strategy?",
+      "back": "Copy needed data to the distributed filesystem and process locally in parallel.",
+      "source_pages": [
+        427
+      ]
+    },
+    {
+      "id": "FC055",
+      "front": "Sort-merge join key in user activity example?",
+      "back": "User ID.",
+      "source_pages": [
+        427
+      ]
+    },
+    {
+      "id": "FC056",
+      "front": "What does secondary sort enable?",
+      "back": "One record type first and related events in a chosen order such as timestamp order.",
+      "source_pages": [
+        428
+      ]
+    },
+    {
+      "id": "FC057",
+      "front": "Why can reducer memory stay small in sort-merge join?",
+      "back": "It can keep one user/reference record while streaming related events.",
+      "source_pages": [
+        428
+      ]
+    },
+    {
+      "id": "FC058",
+      "front": "What does mapper key behave like conceptually?",
+      "back": "A destination address to a reducer call.",
+      "source_pages": [
+        428
+      ]
+    },
+    {
+      "id": "FC059",
+      "front": "What distributed concern does MapReduce hide from application logic?",
+      "back": "Network communication and task retry/fault handling.",
+      "source_pages": [
+        428
+      ]
+    },
+    {
+      "id": "FC060",
+      "front": "How is GROUP BY implemented?",
+      "back": "Mapper emits grouping key; partition/sort routes all same-key records to one reducer.",
+      "source_pages": [
+        428,
+        429
+      ]
+    },
+    {
+      "id": "FC061",
+      "front": "Examples of group aggregations?",
+      "back": "COUNT, SUM, top-k.",
+      "source_pages": [
+        429
+      ]
+    },
+    {
+      "id": "FC062",
+      "front": "What is sessionization?",
+      "back": "Grouping all events for one user/session to reconstruct the sequence of activity.",
+      "source_pages": [
+        429
+      ]
+    },
+    {
+      "id": "FC063",
+      "front": "What is a hot key?",
+      "back": "A key associated with disproportionately large amounts of data.",
+      "source_pages": [
+        429
+      ]
+    },
+    {
+      "id": "FC064",
+      "front": "What problem does a hot key create?",
+      "back": "Reducer skew/hot spot/straggler.",
+      "source_pages": [
+        429
+      ]
+    },
+    {
+      "id": "FC065",
+      "front": "Why is one slow reducer important?",
+      "back": "Job completion and downstream stages wait for the slowest reducer.",
+      "source_pages": [
+        429
+      ]
+    },
+    {
+      "id": "FC066",
+      "front": "How does Pig skewed join detect hot keys?",
+      "back": "Runs a sampling job.",
+      "source_pages": [
+        429,
+        430
+      ]
+    },
+    {
+      "id": "FC067",
+      "front": "How does skewed join spread hot-key work?",
+      "back": "Randomly distributes hot-key records among several reducers and replicates the other side.",
+      "source_pages": [
+        430
+      ]
+    },
+    {
+      "id": "FC068",
+      "front": "How can hot-key aggregation be done?",
+      "back": "Two stages: partial aggregation on random reducers, then combine partial values.",
+      "source_pages": [
+        430
+      ]
+    },
+    {
+      "id": "FC069",
+      "front": "Reduce-side join main advantage?",
+      "back": "No assumptions about input layout.",
+      "source_pages": [
+        430
+      ]
+    },
+    {
+      "id": "FC070",
+      "front": "Reduce-side join main cost?",
+      "back": "Sort, transfer, merge, and disk I/O.",
+      "source_pages": [
+        430
+      ]
+    },
+    {
+      "id": "FC071",
+      "front": "What is a map-side join?",
+      "back": "Join performed directly in mappers without reducers/sort when input assumptions allow.",
+      "source_pages": [
+        430
+      ]
+    },
+    {
+      "id": "FC072",
+      "front": "When is broadcast hash join appropriate?",
+      "back": "One join input is small enough to load in every mapper.",
+      "source_pages": [
+        431
+      ]
+    },
+    {
+      "id": "FC073",
+      "front": "Why 'broadcast' in broadcast hash join?",
+      "back": "Small input is sent/read by every mapper processing the large input.",
+      "source_pages": [
+        431
+      ]
+    },
+    {
+      "id": "FC074",
+      "front": "Why 'hash' in broadcast hash join?",
+      "back": "Small input is stored in a hash table for lookups.",
+      "source_pages": [
+        431
+      ]
+    },
+    {
+      "id": "FC075",
+      "front": "Hive name for broadcast hash join?",
+      "back": "MapJoin.",
+      "source_pages": [
+        431
+      ]
+    },
+    {
+      "id": "FC076",
+      "front": "Pig name for broadcast hash join?",
+      "back": "Replicated join.",
+      "source_pages": [
+        431
+      ]
+    },
+    {
+      "id": "FC077",
+      "front": "Alternative to keeping small join input fully in memory?",
+      "back": "Read-only local-disk index whose hot pages stay cached.",
+      "source_pages": [
+        431
+      ]
+    },
+    {
+      "id": "FC078",
+      "front": "When is partitioned hash join possible?",
+      "back": "Both inputs use the same key, hash function, and number of partitions.",
+      "source_pages": [
+        431,
+        432
+      ]
+    },
+    {
+      "id": "FC079",
+      "front": "Hive name for partitioned hash join?",
+      "back": "Bucketed map join.",
+      "source_pages": [
+        432
+      ]
+    },
+    {
+      "id": "FC080",
+      "front": "When is map-side merge join possible?",
+      "back": "Both inputs are identically partitioned and sorted by the same key.",
+      "source_pages": [
+        432
+      ]
+    },
+    {
+      "id": "FC081",
+      "front": "Does map-side merge join require the smaller side to fit in memory?",
+      "back": "No.",
+      "source_pages": [
+        432
+      ]
+    },
+    {
+      "id": "FC082",
+      "front": "What metadata matters for join optimization?",
+      "back": "Partition count, partition key, hash function, sort key/order.",
+      "source_pages": [
+        432
+      ]
+    },
+    {
+      "id": "FC083",
+      "front": "Where is Hadoop dataset-layout metadata often kept?",
+      "back": "HCatalog or Hive metastore.",
+      "source_pages": [
+        432
+      ]
+    },
+    {
+      "id": "FC084",
+      "front": "What can batch workflows output besides reports?",
+      "back": "Search indexes, databases, recommendation data, ML-related structures.",
+      "source_pages": [
+        433,
+        434
+      ]
+    },
+    {
+      "id": "FC085",
+      "front": "Why is batch building of search indexes natural?",
+      "back": "Documents can be partitioned and reducers independently build immutable index partitions.",
+      "source_pages": [
+        433,
+        434
+      ]
+    },
+    {
+      "id": "FC086",
+      "front": "Benefit of full index rebuild?",
+      "back": "Simple documents-in/indexes-out reasoning.",
+      "source_pages": [
+        434
+      ]
+    },
+    {
+      "id": "FC087",
+      "front": "Why is direct mapper/reducer writing to production DB slow?",
+      "back": "Per-record network requests are much slower than batch throughput.",
+      "source_pages": [
+        434
+      ]
+    },
+    {
+      "id": "FC088",
+      "front": "Why can direct batch writes hurt serving DBs?",
+      "back": "Many parallel tasks can overwhelm them.",
+      "source_pages": [
+        434,
+        435
+      ]
+    },
+    {
+      "id": "FC089",
+      "front": "Why do external DB writes hurt MapReduce semantics?",
+      "back": "Externally visible side effects survive retries/partial jobs and break clean all-or-nothing output.",
+      "source_pages": [
+        435
+      ]
+    },
+    {
+      "id": "FC090",
+      "front": "Better serving-data pattern?",
+      "back": "Build immutable database files in HDFS, then bulk-load or atomically switch serving systems to them.",
+      "source_pages": [
+        435
+      ]
+    },
+    {
+      "id": "FC091",
+      "front": "Why don't immutable batch-built KV files need a WAL in the same way?",
+      "back": "They are built once and then read-only.",
+      "source_pages": [
+        435
+      ]
+    },
+    {
+      "id": "FC092",
+      "front": "What is human fault tolerance?",
+      "back": "Recovering from buggy code by rerunning/reverting immutable outputs.",
+      "source_pages": [
+        436
+      ]
+    },
+    {
+      "id": "FC093",
+      "front": "Why are retries safe for pure MapReduce tasks?",
+      "back": "Inputs are immutable and failed-task outputs are discarded.",
+      "source_pages": [
+        436
+      ]
+    },
+    {
+      "id": "FC094",
+      "front": "Structured Hadoop formats mentioned?",
+      "back": "Avro and Parquet.",
+      "source_pages": [
+        436
+      ]
+    },
+    {
+      "id": "FC095",
+      "front": "MapReduce resembles what from Unix?",
+      "back": "A distributed process with HDFS as filesystem and a built-in sort between map/reduce.",
+      "source_pages": [
+        436,
+        437
+      ]
+    },
+    {
+      "id": "FC096",
+      "front": "What predates MapReduce's join algorithms?",
+      "back": "MPP databases had implemented similar parallel algorithms earlier.",
+      "source_pages": [
+        437
+      ]
+    },
+    {
+      "id": "FC097",
+      "front": "MPP databases focus on what?",
+      "back": "Parallel analytic SQL execution.",
+      "source_pages": [
+        437
+      ]
+    },
+    {
+      "id": "FC098",
+      "front": "Hadoop's differentiator?",
+      "back": "General-purpose processing over arbitrary files and formats.",
+      "source_pages": [
+        437,
+        438
+      ]
+    },
+    {
+      "id": "FC099",
+      "front": "What is schema-on-read?",
+      "back": "Interpret/model raw data when consuming it rather than forcing schema before storage.",
+      "source_pages": [
+        437,
+        438
+      ]
+    },
+    {
+      "id": "FC100",
+      "front": "What is a data lake/enterprise data hub idea?",
+      "back": "Collect raw data centrally first, model/transform later.",
+      "source_pages": [
+        437
+      ]
+    },
+    {
+      "id": "FC101",
+      "front": "What is the 'sushi principle'?",
+      "back": "Raw data is better.",
+      "source_pages": [
+        438
+      ]
+    },
+    {
+      "id": "FC102",
+      "front": "What common use does Hadoop have in ETL?",
+      "back": "Dump raw transactional data to HDFS, clean/transform, then load analytical systems.",
+      "source_pages": [
+        438
+      ]
+    },
+    {
+      "id": "FC103",
+      "front": "Why are MPP systems fast?",
+      "back": "Storage, planning, scheduling, and execution are tightly integrated and optimized.",
+      "source_pages": [
+        438
+      ]
+    },
+    {
+      "id": "FC104",
+      "front": "Why is arbitrary code useful beyond SQL?",
+      "back": "ML, search ranking, image analysis, NLP, fraud models, etc. may need custom logic.",
+      "source_pages": [
+        438
+      ]
+    },
+    {
+      "id": "FC105",
+      "front": "Can multiple processing models share HDFS?",
+      "back": "Yes.",
+      "source_pages": [
+        439
+      ]
+    },
+    {
+      "id": "FC106",
+      "front": "Examples of non-MapReduce systems using HDFS?",
+      "back": "HBase and Impala.",
+      "source_pages": [
+        439
+      ]
+    },
+    {
+      "id": "FC107",
+      "front": "How do MPP systems often recover from node failure during short queries?",
+      "back": "Abort/retry whole query.",
+      "source_pages": [
+        439
+      ]
+    },
+    {
+      "id": "FC108",
+      "front": "How does MapReduce recover?",
+      "back": "Retry individual map/reduce tasks.",
+      "source_pages": [
+        439
+      ]
+    },
+    {
+      "id": "FC109",
+      "front": "Why does MapReduce write lots of intermediate data to disk?",
+      "back": "Fault tolerance and expectation that data may exceed memory.",
+      "source_pages": [
+        439
+      ]
+    },
+    {
+      "id": "FC110",
+      "front": "What workload makes task-level recovery worthwhile?",
+      "back": "Long jobs likely to experience task termination.",
+      "source_pages": [
+        439,
+        440
+      ]
+    },
+    {
+      "id": "FC111",
+      "front": "Why did Google design MapReduce for frequent task termination?",
+      "back": "Low-priority batch tasks could be preempted to free resources for high-priority services.",
+      "source_pages": [
+        440
+      ]
+    },
+    {
+      "id": "FC112",
+      "front": "What benefit does preemption give cluster operators?",
+      "back": "Higher resource utilization/overcommitment.",
+      "source_pages": [
+        440
+      ]
+    },
+    {
+      "id": "FC113",
+      "front": "What is materialization?",
+      "back": "Eagerly computing and writing an intermediate result to storage.",
+      "source_pages": [
+        442
+      ]
+    },
+    {
+      "id": "FC114",
+      "front": "How do Unix pipes differ from MapReduce intermediate files?",
+      "back": "Pipes stream incrementally through a small buffer instead of fully materializing.",
+      "source_pages": [
+        442
+      ]
+    },
+    {
+      "id": "FC115",
+      "front": "One downside of MapReduce materialization barriers?",
+      "back": "Next stage waits for all prior tasks, including stragglers.",
+      "source_pages": [
+        442
+      ]
+    },
+    {
+      "id": "FC116",
+      "front": "Why can intermediate mappers be redundant?",
+      "back": "They may simply reread just-written reducer output before another partition/sort.",
+      "source_pages": [
+        442
+      ]
+    },
+    {
+      "id": "FC117",
+      "front": "Why is HDFS replication of temporary data wasteful?",
+      "back": "Intermediate state may be short-lived and not need full durable replication.",
+      "source_pages": [
+        442
+      ]
+    },
+    {
+      "id": "FC118",
+      "front": "What are Spark, Tez, and Flink?",
+      "back": "Dataflow engines for distributed batch processing.",
+      "source_pages": [
+        443
+      ]
+    },
+    {
+      "id": "FC119",
+      "front": "What is their common improvement over MapReduce?",
+      "back": "Treat entire workflow as one job with flexible operators.",
+      "source_pages": [
+        443
+      ]
+    },
+    {
+      "id": "FC120",
+      "front": "How can dataflow operators connect?",
+      "back": "Repartition/sort, co-partition without sort, or broadcast.",
+      "source_pages": [
+        443
+      ]
+    },
+    {
+      "id": "FC121",
+      "front": "Why can dataflow engines be faster?",
+      "back": "Avoid unnecessary sorts/maps/materialization, pipeline work, improve locality, reuse processes.",
+      "source_pages": [
+        443,
+        444
+      ]
+    },
+    {
+      "id": "FC122",
+      "front": "Where can intermediate state live in dataflow engines?",
+      "back": "Memory or local disk rather than replicated HDFS.",
+      "source_pages": [
+        444
+      ]
+    },
+    {
+      "id": "FC123",
+      "front": "Can downstream operators start before prior stage fully finishes?",
+      "back": "Often yes, when their input is ready.",
+      "source_pages": [
+        444
+      ]
+    },
+    {
+      "id": "FC124",
+      "front": "How does Spark track recomputation lineage?",
+      "back": "RDD ancestry.",
+      "source_pages": [
+        444
+      ]
+    },
+    {
+      "id": "FC125",
+      "front": "How does Flink support recovery?",
+      "back": "Checkpoint operator state.",
+      "source_pages": [
+        444
+      ]
+    },
+    {
+      "id": "FC126",
+      "front": "Why does determinism matter to recomputation?",
+      "back": "Restarted operators must reproduce compatible output for downstream stages.",
+      "source_pages": [
+        445
+      ]
+    },
+    {
+      "id": "FC127",
+      "front": "Examples of accidental nondeterminism?",
+      "back": "Hash-table iteration order, randomness, system clock, external data sources.",
+      "source_pages": [
+        445
+      ]
+    },
+    {
+      "id": "FC128",
+      "front": "How can pseudorandomness be made deterministic?",
+      "back": "Use a fixed seed.",
+      "source_pages": [
+        445
+      ]
+    },
+    {
+      "id": "FC129",
+      "front": "When may materialization beat recomputation?",
+      "back": "Intermediate output is much smaller than source or expensive to recompute.",
+      "source_pages": [
+        445
+      ]
+    },
+    {
+      "id": "FC130",
+      "front": "Which dataflow engine is especially associated with pipelined execution here?",
+      "back": "Flink.",
+      "source_pages": [
+        445
+      ]
+    },
+    {
+      "id": "FC131",
+      "front": "Why can't a full sort produce output immediately?",
+      "back": "The last input record might belong first.",
+      "source_pages": [
+        445
+      ]
+    },
+    {
+      "id": "FC132",
+      "front": "What is PageRank used for?",
+      "back": "Estimate page popularity based on incoming links.",
+      "source_pages": [
+        446
+      ]
+    },
+    {
+      "id": "FC133",
+      "front": "Difference between dataflow DAG and graph processing?",
+      "back": "Dataflow DAG represents operator flow; graph processing means the data itself is a graph.",
+      "source_pages": [
+        446
+      ]
+    },
+    {
+      "id": "FC134",
+      "front": "Why are graph algorithms often iterative?",
+      "back": "They propagate information along edges until convergence/completion.",
+      "source_pages": [
+        446
+      ]
+    },
+    {
+      "id": "FC135",
+      "front": "Why is plain MapReduce inefficient for iteration?",
+      "back": "Each round rereads and rewrites entire datasets even if little changed.",
+      "source_pages": [
+        446,
+        447
+      ]
+    },
+    {
+      "id": "FC136",
+      "front": "What does BSP stand for?",
+      "back": "Bulk Synchronous Parallel.",
+      "source_pages": [
+        447
+      ]
+    },
+    {
+      "id": "FC137",
+      "front": "What other name is used for BSP graph processing?",
+      "back": "Pregel model.",
+      "source_pages": [
+        447
+      ]
+    },
+    {
+      "id": "FC138",
+      "front": "What is Pregel's unit of computation?",
+      "back": "A vertex.",
+      "source_pages": [
+        447
+      ]
+    },
+    {
+      "id": "FC139",
+      "front": "How do Pregel vertices communicate?",
+      "back": "Messages, usually along edges.",
+      "source_pages": [
+        447
+      ]
+    },
+    {
+      "id": "FC140",
+      "front": "Does a Pregel vertex retain state across iterations?",
+      "back": "Yes.",
+      "source_pages": [
+        447
+      ]
+    },
+    {
+      "id": "FC141",
+      "front": "When are messages delivered?",
+      "back": "Messages sent in one iteration are delivered in the next.",
+      "source_pages": [
+        447
+      ]
+    },
+    {
+      "id": "FC142",
+      "front": "How does Pregel recover from faults?",
+      "back": "Checkpoint vertex state and roll back/recompute on failure.",
+      "source_pages": [
+        448
+      ]
+    },
+    {
+      "id": "FC143",
+      "front": "Who decides physical placement of vertices?",
+      "back": "The framework.",
+      "source_pages": [
+        448
+      ]
+    },
+    {
+      "id": "FC144",
+      "front": "What can make distributed graph processing slow?",
+      "back": "Cross-machine communication and large intermediate message volume.",
+      "source_pages": [
+        448
+      ]
+    },
+    {
+      "id": "FC145",
+      "front": "When might one-machine graph processing beat distributed?",
+      "back": "When the graph fits in one machine's memory or disks.",
+      "source_pages": [
+        448
+      ]
+    },
+    {
+      "id": "FC146",
+      "front": "Why did high-level APIs become popular?",
+      "back": "Raw MapReduce code is laborious.",
+      "source_pages": [
+        448,
+        449
+      ]
+    },
+    {
+      "id": "FC147",
+      "front": "What relational-style operators do batch APIs expose?",
+      "back": "Join, group, filter, aggregate.",
+      "source_pages": [
+        449
+      ]
+    },
+    {
+      "id": "FC148",
+      "front": "Why are declarative joins useful?",
+      "back": "Optimizer can choose join strategy and reorder joins.",
+      "source_pages": [
+        449
+      ]
+    },
+    {
+      "id": "FC149",
+      "front": "What can join reordering reduce?",
+      "back": "Intermediate-state size.",
+      "source_pages": [
+        449
+      ]
+    },
+    {
+      "id": "FC150",
+      "front": "What flexibility does callback-based processing retain?",
+      "back": "Ability to run arbitrary libraries/code such as parsing, NLP, image and numerical algorithms.",
+      "source_pages": [
+        449,
+        450
+      ]
+    },
+    {
+      "id": "FC151",
+      "front": "Why express simple filters/projections declaratively?",
+      "back": "Optimizer can exploit columnar storage, vectorized execution, and generated code.",
+      "source_pages": [
+        450
+      ]
+    },
+    {
+      "id": "FC152",
+      "front": "What execution techniques are cited?",
+      "back": "Vectorized execution, Spark JVM bytecode generation, Impala LLVM native code generation.",
+      "source_pages": [
+        450
+      ]
+    },
+    {
+      "id": "FC153",
+      "front": "What trend is happening between batch engines and MPP databases?",
+      "back": "They are becoming more alike.",
+      "source_pages": [
+        450,
+        451
+      ]
+    },
+    {
+      "id": "FC154",
+      "front": "What two main problems must distributed batch frameworks solve?",
+      "back": "Partitioning and fault tolerance.",
+      "source_pages": [
+        451
+      ]
+    },
+    {
+      "id": "FC155",
+      "front": "How does MapReduce fault tolerance trade speed for recovery simplicity?",
+      "back": "Frequent disk materialization allows task retry but slows failure-free execution.",
+      "source_pages": [
+        451
+      ]
+    },
+    {
+      "id": "FC156",
+      "front": "How do dataflow engines trade differently?",
+      "back": "Less materialization and more recomputation after failure.",
+      "source_pages": [
+        451
+      ]
+    },
+    {
+      "id": "FC157",
+      "front": "What property reduces recomputation complexity?",
+      "back": "Deterministic operators.",
+      "source_pages": [
+        451
+      ]
+    },
+    {
+      "id": "FC158",
+      "front": "What join algorithms does the summary emphasize?",
+      "back": "Sort-merge, broadcast hash, partitioned hash joins.",
+      "source_pages": [
+        452
+      ]
+    },
+    {
+      "id": "FC159",
+      "front": "Why can batch frameworks safely retry tasks?",
+      "back": "Callbacks are expected to be stateless and free of external side effects besides designated output.",
+      "source_pages": [
+        452
+      ]
+    },
+    {
+      "id": "FC160",
+      "front": "What is the final distinguishing property of batch input?",
+      "back": "It is bounded and has known finite size.",
+      "source_pages": [
+        452
+      ]
+    },
+    {
+      "id": "FC161",
+      "front": "Why can a batch job know it is finished?",
+      "back": "It eventually consumes the entire bounded input.",
+      "source_pages": [
+        452
+      ]
+    }
+  ],
+  "multiple_choice_questions": [
+    {
+      "id": "MCQ001",
+      "difficulty": "medium",
+      "question": "Primary performance measure of a batch job?",
+      "choices": {
+        "A": "Throughput",
+        "B": "Single-request latency",
+        "C": "Availability only",
+        "D": "Clock accuracy"
+      },
+      "answer": "A",
+      "source_pages": [
+        412
+      ]
+    },
+    {
+      "id": "MCQ002",
+      "difficulty": "medium",
+      "question": "What makes a batch input distinctive?",
+      "choices": {
+        "A": "It is bounded/fixed",
+        "B": "It never ends",
+        "C": "It must be interactive",
+        "D": "It must be SQL"
+      },
+      "answer": "A",
+      "source_pages": [
+        412,
+        452
+      ]
+    },
+    {
+      "id": "MCQ003",
+      "difficulty": "medium",
+      "question": "Unix log pipeline uses sort mainly to?",
+      "choices": {
+        "A": "Bring identical keys together",
+        "B": "Encrypt data",
+        "C": "Shard HDFS",
+        "D": "Create sessions"
+      },
+      "answer": "A",
+      "source_pages": [
+        413,
+        414
+      ]
+    },
+    {
+      "id": "MCQ004",
+      "difficulty": "medium",
+      "question": "Hash aggregation working set depends mainly on?",
+      "choices": {
+        "A": "Distinct keys",
+        "B": "Total records only",
+        "C": "Disk blocks only",
+        "D": "Reducer count only"
+      },
+      "answer": "A",
+      "source_pages": [
+        415
+      ]
+    },
+    {
+      "id": "MCQ005",
+      "difficulty": "medium",
+      "question": "External sorting works for large data because it can?",
+      "choices": {
+        "A": "Spill sorted runs to disk and merge",
+        "B": "Keep everything in RAM",
+        "C": "Avoid all I/O",
+        "D": "Use only hash tables"
+      },
+      "answer": "A",
+      "source_pages": [
+        416
+      ]
+    },
+    {
+      "id": "MCQ006",
+      "difficulty": "medium",
+      "question": "Unix philosophy emphasizes?",
+      "choices": {
+        "A": "Small programs that do one thing well",
+        "B": "Monolithic applications",
+        "C": "Mutable shared state",
+        "D": "Binary-only interfaces"
+      },
+      "answer": "A",
+      "source_pages": [
+        416
+      ]
+    },
+    {
+      "id": "MCQ007",
+      "difficulty": "medium",
+      "question": "Unix composability relies on?",
+      "choices": {
+        "A": "Uniform file/stream interfaces",
+        "B": "One programming language",
+        "C": "One database",
+        "D": "One scheduler"
+      },
+      "answer": "A",
+      "source_pages": [
+        417
+      ]
+    },
+    {
+      "id": "MCQ008",
+      "difficulty": "medium",
+      "question": "stdin/stdout primarily separate?",
+      "choices": {
+        "A": "Logic from wiring",
+        "B": "Storage from durability",
+        "C": "Leaders from followers",
+        "D": "Reads from writes"
+      },
+      "answer": "A",
+      "source_pages": [
+        418
+      ]
+    },
+    {
+      "id": "MCQ009",
+      "difficulty": "medium",
+      "question": "Immutable inputs help because?",
+      "choices": {
+        "A": "Jobs can be rerun safely",
+        "B": "They eliminate sorting",
+        "C": "They create indexes",
+        "D": "They guarantee low latency"
+      },
+      "answer": "A",
+      "source_pages": [
+        419
+      ]
+    },
+    {
+      "id": "MCQ010",
+      "difficulty": "medium",
+      "question": "MapReduce normally stores input/output in?",
+      "choices": {
+        "A": "Distributed filesystem",
+        "B": "Only RAM",
+        "C": "Browser cache",
+        "D": "Relational DB"
+      },
+      "answer": "A",
+      "source_pages": [
+        420
+      ]
+    },
+    {
+      "id": "MCQ011",
+      "difficulty": "medium",
+      "question": "HDFS is based on?",
+      "choices": {
+        "A": "Shared-nothing",
+        "B": "Shared-disk only",
+        "C": "One disk appliance",
+        "D": "Peer-to-peer transactions"
+      },
+      "answer": "A",
+      "source_pages": [
+        420
+      ]
+    },
+    {
+      "id": "MCQ012",
+      "difficulty": "medium",
+      "question": "What does NameNode track?",
+      "choices": {
+        "A": "Block locations",
+        "B": "Mapper source code only",
+        "C": "Reducer counters",
+        "D": "Query plans"
+      },
+      "answer": "A",
+      "source_pages": [
+        420
+      ]
+    },
+    {
+      "id": "MCQ013",
+      "difficulty": "medium",
+      "question": "What does mapper emit?",
+      "choices": {
+        "A": "Key-value pairs",
+        "B": "SQL rows only",
+        "C": "Network packets directly",
+        "D": "Transactions"
+      },
+      "answer": "A",
+      "source_pages": [
+        421
+      ]
+    },
+    {
+      "id": "MCQ014",
+      "difficulty": "medium",
+      "question": "Which step is implicit in MapReduce?",
+      "choices": {
+        "A": "Sort by key",
+        "B": "Schema migration",
+        "C": "Transaction commit",
+        "D": "Replication election"
+      },
+      "answer": "A",
+      "source_pages": [
+        421
+      ]
+    },
+    {
+      "id": "MCQ015",
+      "difficulty": "medium",
+      "question": "Reducer receives?",
+      "choices": {
+        "A": "Key and iterator of values",
+        "B": "One raw input record only",
+        "C": "Only file name",
+        "D": "One network socket"
+      },
+      "answer": "A",
+      "source_pages": [
+        422
+      ]
+    },
+    {
+      "id": "MCQ016",
+      "difficulty": "medium",
+      "question": "Data locality means?",
+      "choices": {
+        "A": "Run compute near input data",
+        "B": "Put all data in memory",
+        "C": "Use one reducer",
+        "D": "Avoid partitioning"
+      },
+      "answer": "A",
+      "source_pages": [
+        422
+      ]
+    },
+    {
+      "id": "MCQ017",
+      "difficulty": "medium",
+      "question": "What determines reducer routing?",
+      "choices": {
+        "A": "Hash of key",
+        "B": "Input filename only",
+        "C": "Timestamp only",
+        "D": "Random choice always"
+      },
+      "answer": "A",
+      "source_pages": [
+        423
+      ]
+    },
+    {
+      "id": "MCQ018",
+      "difficulty": "medium",
+      "question": "What is shuffle?",
+      "choices": {
+        "A": "Partition, sort, transfer mapper output",
+        "B": "Randomize input",
+        "C": "Replicate NameNode",
+        "D": "Commit transaction"
+      },
+      "answer": "A",
+      "source_pages": [
+        424
+      ]
+    },
+    {
+      "id": "MCQ019",
+      "difficulty": "medium",
+      "question": "MapReduce workflows pass intermediate data via?",
+      "choices": {
+        "A": "HDFS directories",
+        "B": "Shared memory only",
+        "C": "HTTP requests",
+        "D": "Locks"
+      },
+      "answer": "A",
+      "source_pages": [
+        424
+      ]
+    },
+    {
+      "id": "MCQ020",
+      "difficulty": "medium",
+      "question": "Batch joins usually favor?",
+      "choices": {
+        "A": "Local scans over per-record remote lookups",
+        "B": "Remote DB query for every row",
+        "C": "Single-threaded index probes",
+        "D": "No partitioning"
+      },
+      "answer": "A",
+      "source_pages": [
+        426,
+        427
+      ]
+    },
+    {
+      "id": "MCQ021",
+      "difficulty": "medium",
+      "question": "Sort-merge join routes equal join keys to?",
+      "choices": {
+        "A": "Same reducer",
+        "B": "Random client",
+        "C": "NameNode",
+        "D": "Different reducers"
+      },
+      "answer": "A",
+      "source_pages": [
+        427,
+        428
+      ]
+    },
+    {
+      "id": "MCQ022",
+      "difficulty": "medium",
+      "question": "Secondary sort can order?",
+      "choices": {
+        "A": "Different record types and event order within a key",
+        "B": "Only file blocks",
+        "C": "Only reducer count",
+        "D": "Only network packets"
+      },
+      "answer": "A",
+      "source_pages": [
+        428
+      ]
+    },
+    {
+      "id": "MCQ023",
+      "difficulty": "medium",
+      "question": "GROUP BY in MapReduce works by?",
+      "choices": {
+        "A": "Using grouping key as mapper key",
+        "B": "Using wall clock",
+        "C": "Avoiding reducers",
+        "D": "One global hash table"
+      },
+      "answer": "A",
+      "source_pages": [
+        428,
+        429
+      ]
+    },
+    {
+      "id": "MCQ024",
+      "difficulty": "medium",
+      "question": "A hot key causes?",
+      "choices": {
+        "A": "Skew/straggler reducer",
+        "B": "Better balance",
+        "C": "No shuffle",
+        "D": "Less work"
+      },
+      "answer": "A",
+      "source_pages": [
+        429
+      ]
+    },
+    {
+      "id": "MCQ025",
+      "difficulty": "medium",
+      "question": "One hot-key mitigation?",
+      "choices": {
+        "A": "Spread hot-key records across several reducers",
+        "B": "Force one reducer",
+        "C": "Disable partitioning",
+        "D": "Use one mapper"
+      },
+      "answer": "A",
+      "source_pages": [
+        429,
+        430
+      ]
+    },
+    {
+      "id": "MCQ026",
+      "difficulty": "medium",
+      "question": "Reduce-side join advantage?",
+      "choices": {
+        "A": "No layout assumptions",
+        "B": "No sort",
+        "C": "No network copy",
+        "D": "Requires small dimension"
+      },
+      "answer": "A",
+      "source_pages": [
+        430
+      ]
+    },
+    {
+      "id": "MCQ027",
+      "difficulty": "medium",
+      "question": "Map-side join advantage?",
+      "choices": {
+        "A": "Avoid reducer/sort when assumptions hold",
+        "B": "Works for every input without assumptions",
+        "C": "Requires more shuffles",
+        "D": "Always slower"
+      },
+      "answer": "A",
+      "source_pages": [
+        430
+      ]
+    },
+    {
+      "id": "MCQ028",
+      "difficulty": "medium",
+      "question": "Broadcast hash join requires?",
+      "choices": {
+        "A": "One small input",
+        "B": "Both inputs same partitioning",
+        "C": "Both inputs sorted",
+        "D": "No memory"
+      },
+      "answer": "A",
+      "source_pages": [
+        431
+      ]
+    },
+    {
+      "id": "MCQ029",
+      "difficulty": "medium",
+      "question": "Partitioned hash join requires?",
+      "choices": {
+        "A": "Same partitioning",
+        "B": "One small global input",
+        "C": "Both globally sorted",
+        "D": "One reducer"
+      },
+      "answer": "A",
+      "source_pages": [
+        431,
+        432
+      ]
+    },
+    {
+      "id": "MCQ030",
+      "difficulty": "medium",
+      "question": "Map-side merge join requires?",
+      "choices": {
+        "A": "Same partitioning and sort order",
+        "B": "Only one input",
+        "C": "Random partitions",
+        "D": "No keys"
+      },
+      "answer": "A",
+      "source_pages": [
+        432
+      ]
+    },
+    {
+      "id": "MCQ031",
+      "difficulty": "medium",
+      "question": "Hadoop layout metadata may live in?",
+      "choices": {
+        "A": "Hive metastore/HCatalog",
+        "B": "NameNode only",
+        "C": "TCP stack",
+        "D": "Browser"
+      },
+      "answer": "A",
+      "source_pages": [
+        432
+      ]
+    },
+    {
+      "id": "MCQ032",
+      "difficulty": "medium",
+      "question": "Batch output often builds?",
+      "choices": {
+        "A": "Indexes/databases serving later queries",
+        "B": "Only human reports",
+        "C": "Only logs",
+        "D": "Only temporary memory"
+      },
+      "answer": "A",
+      "source_pages": [
+        433,
+        434
+      ]
+    },
+    {
+      "id": "MCQ033",
+      "difficulty": "medium",
+      "question": "Why avoid direct external DB writes from tasks?",
+      "choices": {
+        "A": "Slow, overload risk, side effects break retry semantics",
+        "B": "DBs cannot accept writes",
+        "C": "HDFS forbids networking",
+        "D": "Reducers cannot emit values"
+      },
+      "answer": "A",
+      "source_pages": [
+        434,
+        435
+      ]
+    },
+    {
+      "id": "MCQ034",
+      "difficulty": "medium",
+      "question": "Preferred pattern for serving batch output?",
+      "choices": {
+        "A": "Build immutable files then bulk-load/switch",
+        "B": "Write every record directly to prod DB",
+        "C": "Use client-side cache only",
+        "D": "Modify input files"
+      },
+      "answer": "A",
+      "source_pages": [
+        435
+      ]
+    },
+    {
+      "id": "MCQ035",
+      "difficulty": "medium",
+      "question": "Human fault tolerance means?",
+      "choices": {
+        "A": "Recover from buggy code by rerunning/reverting outputs",
+        "B": "Prevent all human errors",
+        "C": "Use more replicas",
+        "D": "Avoid testing"
+      },
+      "answer": "A",
+      "source_pages": [
+        436
+      ]
+    },
+    {
+      "id": "MCQ036",
+      "difficulty": "medium",
+      "question": "Hadoop compared with MPP DBs offers more?",
+      "choices": {
+        "A": "Storage/processing flexibility",
+        "B": "Only SQL",
+        "C": "Only fixed schemas",
+        "D": "Only in-memory processing"
+      },
+      "answer": "A",
+      "source_pages": [
+        437,
+        438
+      ]
+    },
+    {
+      "id": "MCQ037",
+      "difficulty": "medium",
+      "question": "Schema-on-read means?",
+      "choices": {
+        "A": "Interpret/model data when consuming it",
+        "B": "Schema fixed before collection",
+        "C": "No schema ever",
+        "D": "Schema stored in NameNode"
+      },
+      "answer": "A",
+      "source_pages": [
+        437,
+        438
+      ]
+    },
+    {
+      "id": "MCQ038",
+      "difficulty": "medium",
+      "question": "MapReduce task recovery granularity?",
+      "choices": {
+        "A": "Individual task",
+        "B": "Entire cluster",
+        "C": "Only entire job",
+        "D": "Only reducer group"
+      },
+      "answer": "A",
+      "source_pages": [
+        439
+      ]
+    },
+    {
+      "id": "MCQ039",
+      "difficulty": "medium",
+      "question": "Why was frequent task preemption acceptable at Google?",
+      "choices": {
+        "A": "Improves resource utilization",
+        "B": "Makes jobs linearizable",
+        "C": "Eliminates disk I/O",
+        "D": "Avoids retries"
+      },
+      "answer": "A",
+      "source_pages": [
+        440
+      ]
+    },
+    {
+      "id": "MCQ040",
+      "difficulty": "medium",
+      "question": "Materialization means?",
+      "choices": {
+        "A": "Write intermediate result eagerly",
+        "B": "Stream only in RAM",
+        "C": "Drop result",
+        "D": "Commit DB transaction"
+      },
+      "answer": "A",
+      "source_pages": [
+        442
+      ]
+    },
+    {
+      "id": "MCQ041",
+      "difficulty": "medium",
+      "question": "MapReduce materialization downside?",
+      "choices": {
+        "A": "Stage barriers and extra I/O",
+        "B": "Too little durability",
+        "C": "No fault tolerance",
+        "D": "No partitioning"
+      },
+      "answer": "A",
+      "source_pages": [
+        442
+      ]
+    },
+    {
+      "id": "MCQ042",
+      "difficulty": "medium",
+      "question": "Which are dataflow engines?",
+      "choices": {
+        "A": "Spark, Tez, Flink",
+        "B": "MySQL, PostgreSQL, SQLite",
+        "C": "Kafka, RabbitMQ, NATS",
+        "D": "B-tree, LSM, SSTable"
+      },
+      "answer": "A",
+      "source_pages": [
+        443
+      ]
+    },
+    {
+      "id": "MCQ043",
+      "difficulty": "medium",
+      "question": "Dataflow engines treat workflow as?",
+      "choices": {
+        "A": "One graph/job",
+        "B": "Independent shell commands only",
+        "C": "One reducer",
+        "D": "One file"
+      },
+      "answer": "A",
+      "source_pages": [
+        443
+      ]
+    },
+    {
+      "id": "MCQ044",
+      "difficulty": "medium",
+      "question": "Why avoid unconditional sorting?",
+      "choices": {
+        "A": "Sorting is expensive and not always needed",
+        "B": "Sorting breaks fault tolerance",
+        "C": "Sorting cannot be distributed",
+        "D": "Sorting requires SQL"
+      },
+      "answer": "A",
+      "source_pages": [
+        443,
+        444
+      ]
+    },
+    {
+      "id": "MCQ045",
+      "difficulty": "medium",
+      "question": "Intermediate data in dataflow engines often stays?",
+      "choices": {
+        "A": "Memory/local disk",
+        "B": "Always replicated HDFS",
+        "C": "External prod DB",
+        "D": "Only client cache"
+      },
+      "answer": "A",
+      "source_pages": [
+        444
+      ]
+    },
+    {
+      "id": "MCQ046",
+      "difficulty": "hard",
+      "question": "Spark tracks data lineage through?",
+      "choices": {
+        "A": "RDD ancestry",
+        "B": "WAL only",
+        "C": "NameNode metadata only",
+        "D": "Paxos terms"
+      },
+      "answer": "A",
+      "source_pages": [
+        444
+      ]
+    },
+    {
+      "id": "MCQ047",
+      "difficulty": "hard",
+      "question": "Flink recovery uses?",
+      "choices": {
+        "A": "Operator checkpoints",
+        "B": "Only HDFS replication",
+        "C": "2PC",
+        "D": "Read repair"
+      },
+      "answer": "A",
+      "source_pages": [
+        444
+      ]
+    },
+    {
+      "id": "MCQ048",
+      "difficulty": "hard",
+      "question": "Why deterministic operators?",
+      "choices": {
+        "A": "Recomputation should reproduce compatible output",
+        "B": "They avoid partitioning",
+        "C": "They remove reducers",
+        "D": "They guarantee low latency"
+      },
+      "answer": "A",
+      "source_pages": [
+        445
+      ]
+    },
+    {
+      "id": "MCQ049",
+      "difficulty": "hard",
+      "question": "Which is nondeterministic source?",
+      "choices": {
+        "A": "System clock",
+        "B": "Fixed seed",
+        "C": "Immutable file",
+        "D": "Sorted input"
+      },
+      "answer": "A",
+      "source_pages": [
+        445
+      ]
+    },
+    {
+      "id": "MCQ050",
+      "difficulty": "hard",
+      "question": "When may materialization be cheaper than recomputation?",
+      "choices": {
+        "A": "Intermediate data is small or compute is expensive",
+        "B": "Always",
+        "C": "Never",
+        "D": "Only for streams"
+      },
+      "answer": "A",
+      "source_pages": [
+        445
+      ]
+    },
+    {
+      "id": "MCQ051",
+      "difficulty": "hard",
+      "question": "Flink especially emphasizes?",
+      "choices": {
+        "A": "Pipelined execution",
+        "B": "Full HDFS materialization every stage",
+        "C": "One mapper",
+        "D": "No fault tolerance"
+      },
+      "answer": "A",
+      "source_pages": [
+        445
+      ]
+    },
+    {
+      "id": "MCQ052",
+      "difficulty": "hard",
+      "question": "PageRank is a?",
+      "choices": {
+        "A": "Graph analysis/ranking algorithm",
+        "B": "Join algorithm",
+        "C": "Filesystem",
+        "D": "Transaction protocol"
+      },
+      "answer": "A",
+      "source_pages": [
+        446
+      ]
+    },
+    {
+      "id": "MCQ053",
+      "difficulty": "hard",
+      "question": "Pregel is based on?",
+      "choices": {
+        "A": "Bulk Synchronous Parallel",
+        "B": "Two-phase commit",
+        "C": "Snapshot isolation",
+        "D": "Read repair"
+      },
+      "answer": "A",
+      "source_pages": [
+        447
+      ]
+    },
+    {
+      "id": "MCQ054",
+      "difficulty": "hard",
+      "question": "Pregel vertex communication uses?",
+      "choices": {
+        "A": "Messages",
+        "B": "Remote DB query per edge",
+        "C": "Shared global RAM",
+        "D": "SQL locks"
+      },
+      "answer": "A",
+      "source_pages": [
+        447
+      ]
+    },
+    {
+      "id": "MCQ055",
+      "difficulty": "hard",
+      "question": "Pregel vertex state persists across?",
+      "choices": {
+        "A": "Iterations",
+        "B": "Only one message",
+        "C": "No iteration",
+        "D": "File blocks"
+      },
+      "answer": "A",
+      "source_pages": [
+        447
+      ]
+    },
+    {
+      "id": "MCQ056",
+      "difficulty": "hard",
+      "question": "Pregel synchronization occurs?",
+      "choices": {
+        "A": "Between iterations",
+        "B": "After every field",
+        "C": "Never",
+        "D": "Only at job start"
+      },
+      "answer": "A",
+      "source_pages": [
+        447
+      ]
+    },
+    {
+      "id": "MCQ057",
+      "difficulty": "hard",
+      "question": "Graph checkpointing supports?",
+      "choices": {
+        "A": "Fault recovery",
+        "B": "Join optimization",
+        "C": "Schema-on-read",
+        "D": "Data locality only"
+      },
+      "answer": "A",
+      "source_pages": [
+        448
+      ]
+    },
+    {
+      "id": "MCQ058",
+      "difficulty": "hard",
+      "question": "Distributed graph processing can be slow due to?",
+      "choices": {
+        "A": "Cross-machine messaging",
+        "B": "No data",
+        "C": "No partitioning",
+        "D": "Too few edges"
+      },
+      "answer": "A",
+      "source_pages": [
+        448
+      ]
+    },
+    {
+      "id": "MCQ059",
+      "difficulty": "hard",
+      "question": "If graph fits on one machine, likely fastest option?",
+      "choices": {
+        "A": "Single-machine algorithm",
+        "B": "Pregel cluster always",
+        "C": "MapReduce always",
+        "D": "MPP SQL always"
+      },
+      "answer": "A",
+      "source_pages": [
+        448
+      ]
+    },
+    {
+      "id": "MCQ060",
+      "difficulty": "hard",
+      "question": "High-level APIs expose?",
+      "choices": {
+        "A": "Relational-style join/group/filter/aggregate",
+        "B": "Only map/reduce callbacks",
+        "C": "Only file operations",
+        "D": "Only graph messages"
+      },
+      "answer": "A",
+      "source_pages": [
+        449
+      ]
+    },
+    {
+      "id": "MCQ061",
+      "difficulty": "hard",
+      "question": "Declarative joins allow optimizer to?",
+      "choices": {
+        "A": "Choose/reorder join algorithms",
+        "B": "Avoid all partitioning",
+        "C": "Guarantee no skew",
+        "D": "Disable code"
+      },
+      "answer": "A",
+      "source_pages": [
+        449
+      ]
+    },
+    {
+      "id": "MCQ062",
+      "difficulty": "hard",
+      "question": "Columnar/vectorized optimization is easier when?",
+      "choices": {
+        "A": "Simple operations are declarative",
+        "B": "Everything is opaque callback code",
+        "C": "No schemas exist",
+        "D": "Data is randomized"
+      },
+      "answer": "A",
+      "source_pages": [
+        450
+      ]
+    },
+    {
+      "id": "MCQ063",
+      "difficulty": "hard",
+      "question": "Modern batch engines trend toward?",
+      "choices": {
+        "A": "Combining declarative optimization with arbitrary-code flexibility",
+        "B": "Removing optimizers",
+        "C": "Only SQL",
+        "D": "Only MapReduce"
+      },
+      "answer": "A",
+      "source_pages": [
+        450,
+        451
+      ]
+    },
+    {
+      "id": "MCQ064",
+      "difficulty": "hard",
+      "question": "Two core distributed batch concerns?",
+      "choices": {
+        "A": "Partitioning and fault tolerance",
+        "B": "CAP and consensus",
+        "C": "Indexes and transactions",
+        "D": "Caching and compression"
+      },
+      "answer": "A",
+      "source_pages": [
+        451
+      ]
+    },
+    {
+      "id": "MCQ065",
+      "difficulty": "hard",
+      "question": "MapReduce fault tolerance favors?",
+      "choices": {
+        "A": "Disk materialization + easy task retry",
+        "B": "Only in-memory state",
+        "C": "No retries",
+        "D": "External side effects"
+      },
+      "answer": "A",
+      "source_pages": [
+        451
+      ]
+    },
+    {
+      "id": "MCQ066",
+      "difficulty": "hard",
+      "question": "Dataflow fault tolerance favors?",
+      "choices": {
+        "A": "Less materialization + recomputation",
+        "B": "No lineage",
+        "C": "Always full job restart",
+        "D": "No deterministic operators"
+      },
+      "answer": "A",
+      "source_pages": [
+        451
+      ]
+    },
+    {
+      "id": "MCQ067",
+      "difficulty": "hard",
+      "question": "Framework-safe retries depend on tasks being?",
+      "choices": {
+        "A": "Stateless and side-effect-free except designated output",
+        "B": "Stateful with external writes",
+        "C": "Interactive",
+        "D": "Leader-elected"
+      },
+      "answer": "A",
+      "source_pages": [
+        452
+      ]
+    }
+  ],
+  "mix_and_match": [
+    {
+      "id": "MM01",
+      "title": "Processing model",
+      "left": {
+        "A": "Online service",
+        "B": "Batch",
+        "C": "Stream",
+        "D": "MapReduce",
+        "E": "Pregel"
+      },
+      "right": {
+        "1": "Request/response latency",
+        "2": "Bounded input and throughput",
+        "3": "Near-real-time event processing",
+        "4": "Map-shuffle-reduce distributed batch",
+        "5": "Iterative vertex-centric graph processing"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        411,
+        412,
+        421,
+        447
+      ]
+    },
+    {
+      "id": "MM02",
+      "title": "Join algorithm",
+      "left": {
+        "A": "Sort-merge",
+        "B": "Broadcast hash",
+        "C": "Partitioned hash",
+        "D": "Map-side merge",
+        "E": "Skewed join"
+      },
+      "right": {
+        "1": "Shuffle/sort same keys to reducer",
+        "2": "Small input copied to all mappers",
+        "3": "Inputs partitioned identically",
+        "4": "Inputs partitioned and sorted identically",
+        "5": "Hot-key work spread across multiple reducers"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        427,
+        430,
+        431,
+        432
+      ]
+    },
+    {
+      "id": "MM03",
+      "title": "MapReduce mechanics",
+      "left": {
+        "A": "Mapper",
+        "B": "Shuffle",
+        "C": "Reducer",
+        "D": "NameNode",
+        "E": "Data locality"
+      },
+      "right": {
+        "1": "Emits key-value pairs",
+        "2": "Partition/sort/transfer",
+        "3": "Processes all values for a key",
+        "4": "Tracks HDFS block locations",
+        "5": "Run task near input replica"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        420,
+        421,
+        422,
+        423,
+        424
+      ]
+    },
+    {
+      "id": "MM04",
+      "title": "Execution/fault-tolerance strategy",
+      "left": {
+        "A": "Unix pipe",
+        "B": "MapReduce",
+        "C": "Spark lineage",
+        "D": "Flink checkpoint",
+        "E": "Immutable output"
+      },
+      "right": {
+        "1": "Incremental small-buffer transport",
+        "2": "Durable intermediate materialization",
+        "3": "Recompute from RDD ancestry",
+        "4": "Restore operator state",
+        "5": "Safe rerun/rollback"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        419,
+        442,
+        444,
+        445,
+        435,
+        436
+      ]
+    },
+    {
+      "id": "MM05",
+      "title": "Data-system style",
+      "left": {
+        "A": "MPP database",
+        "B": "Hadoop/HDFS",
+        "C": "Schema-on-read",
+        "D": "High-level batch API",
+        "E": "Declarative optimizer"
+      },
+      "right": {
+        "1": "Integrated analytic SQL engine",
+        "2": "Flexible shared filesystem + many processing models",
+        "3": "Interpret raw data at consumption time",
+        "4": "Join/group/filter/aggregate abstractions",
+        "5": "Chooses join order/strategy"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        437,
+        438,
+        439,
+        449
+      ]
+    }
+  ],
+  "true_false": [
+    {
+      "id": "TF001",
+      "statement": "Batch processing primarily optimizes request latency.",
+      "answer": false,
+      "source_pages": [
+        412
+      ]
+    },
+    {
+      "id": "TF002",
+      "statement": "Batch input is bounded.",
+      "answer": true,
+      "source_pages": [
+        412,
+        452
+      ]
+    },
+    {
+      "id": "TF003",
+      "statement": "Unix pipelines demonstrate composability through small tools.",
+      "answer": true,
+      "source_pages": [
+        413,
+        416,
+        417
+      ]
+    },
+    {
+      "id": "TF004",
+      "statement": "Hash aggregation memory grows only with total record count.",
+      "answer": false,
+      "source_pages": [
+        415
+      ]
+    },
+    {
+      "id": "TF005",
+      "statement": "External sorting can process data larger than RAM.",
+      "answer": true,
+      "source_pages": [
+        416
+      ]
+    },
+    {
+      "id": "TF006",
+      "statement": "Unix files provide a uniform byte-stream interface.",
+      "answer": true,
+      "source_pages": [
+        417
+      ]
+    },
+    {
+      "id": "TF007",
+      "statement": "stdin/stdout tightly couple transformation logic to file paths.",
+      "answer": false,
+      "source_pages": [
+        418
+      ]
+    },
+    {
+      "id": "TF008",
+      "statement": "Immutable input helps experimentation.",
+      "answer": true,
+      "source_pages": [
+        419
+      ]
+    },
+    {
+      "id": "TF009",
+      "statement": "MapReduce normally modifies its input files in place.",
+      "answer": false,
+      "source_pages": [
+        419,
+        420
+      ]
+    },
+    {
+      "id": "TF010",
+      "statement": "HDFS is a shared-nothing filesystem.",
+      "answer": true,
+      "source_pages": [
+        420
+      ]
+    },
+    {
+      "id": "TF011",
+      "statement": "The NameNode stores every data block itself.",
+      "answer": false,
+      "source_pages": [
+        420
+      ]
+    },
+    {
+      "id": "TF012",
+      "statement": "Mapper output is always sorted before reducer processing.",
+      "answer": true,
+      "source_pages": [
+        421
+      ]
+    },
+    {
+      "id": "TF013",
+      "statement": "Mappers are expected to keep state across input records.",
+      "answer": false,
+      "source_pages": [
+        421
+      ]
+    },
+    {
+      "id": "TF014",
+      "statement": "Reducer count must equal mapper count.",
+      "answer": false,
+      "source_pages": [
+        423
+      ]
+    },
+    {
+      "id": "TF015",
+      "statement": "Shuffle includes partitioning, sorting, and transfer.",
+      "answer": true,
+      "source_pages": [
+        424
+      ]
+    },
+    {
+      "id": "TF016",
+      "statement": "MapReduce shuffle is random.",
+      "answer": false,
+      "source_pages": [
+        424
+      ]
+    },
+    {
+      "id": "TF017",
+      "statement": "Downstream MapReduce workflow stages generally wait for upstream completion.",
+      "answer": true,
+      "source_pages": [
+        424
+      ]
+    },
+    {
+      "id": "TF018",
+      "statement": "Per-record remote DB lookups are ideal for batch join throughput.",
+      "answer": false,
+      "source_pages": [
+        426,
+        427
+      ]
+    },
+    {
+      "id": "TF019",
+      "statement": "Sort-merge join brings equal keys together.",
+      "answer": true,
+      "source_pages": [
+        427,
+        428
+      ]
+    },
+    {
+      "id": "TF020",
+      "statement": "GROUP BY and joins share the same key-routing pattern in MapReduce.",
+      "answer": true,
+      "source_pages": [
+        428,
+        429
+      ]
+    },
+    {
+      "id": "TF021",
+      "statement": "Hot keys can create reducer skew.",
+      "answer": true,
+      "source_pages": [
+        429
+      ]
+    },
+    {
+      "id": "TF022",
+      "statement": "Skew mitigation may replicate one join input.",
+      "answer": true,
+      "source_pages": [
+        430
+      ]
+    },
+    {
+      "id": "TF023",
+      "statement": "Reduce-side joins require strong assumptions about input partitioning.",
+      "answer": false,
+      "source_pages": [
+        430
+      ]
+    },
+    {
+      "id": "TF024",
+      "statement": "Map-side joins can avoid reducers and sorting.",
+      "answer": true,
+      "source_pages": [
+        430
+      ]
+    },
+    {
+      "id": "TF025",
+      "statement": "Broadcast hash joins need one input small enough for each mapper.",
+      "answer": true,
+      "source_pages": [
+        431
+      ]
+    },
+    {
+      "id": "TF026",
+      "statement": "Partitioned hash joins require identically partitioned inputs.",
+      "answer": true,
+      "source_pages": [
+        431,
+        432
+      ]
+    },
+    {
+      "id": "TF027",
+      "statement": "Map-side merge joins require identical partitioning and sorting.",
+      "answer": true,
+      "source_pages": [
+        432
+      ]
+    },
+    {
+      "id": "TF028",
+      "statement": "Physical data layout is irrelevant to map-side join optimization.",
+      "answer": false,
+      "source_pages": [
+        432
+      ]
+    },
+    {
+      "id": "TF029",
+      "statement": "Batch jobs only produce human-readable reports.",
+      "answer": false,
+      "source_pages": [
+        433,
+        434
+      ]
+    },
+    {
+      "id": "TF030",
+      "statement": "Direct writes to an external production DB preserve MapReduce's clean output semantics.",
+      "answer": false,
+      "source_pages": [
+        434,
+        435
+      ]
+    },
+    {
+      "id": "TF031",
+      "statement": "Immutable outputs make rollback/recompute easier.",
+      "answer": true,
+      "source_pages": [
+        435,
+        436
+      ]
+    },
+    {
+      "id": "TF032",
+      "statement": "MapReduce task retries are safe partly because failed-task output is discarded.",
+      "answer": true,
+      "source_pages": [
+        436
+      ]
+    },
+    {
+      "id": "TF033",
+      "statement": "Hadoop only supports relational rows.",
+      "answer": false,
+      "source_pages": [
+        437
+      ]
+    },
+    {
+      "id": "TF034",
+      "statement": "Schema-on-read shifts interpretation toward consumers.",
+      "answer": true,
+      "source_pages": [
+        437,
+        438
+      ]
+    },
+    {
+      "id": "TF035",
+      "statement": "MPP databases are tightly integrated and can optimize SQL well.",
+      "answer": true,
+      "source_pages": [
+        438
+      ]
+    },
+    {
+      "id": "TF036",
+      "statement": "Hadoop can support multiple processing models over the same files.",
+      "answer": true,
+      "source_pages": [
+        439
+      ]
+    },
+    {
+      "id": "TF037",
+      "statement": "MapReduce usually retries the entire job after one task fails.",
+      "answer": false,
+      "source_pages": [
+        439
+      ]
+    },
+    {
+      "id": "TF038",
+      "statement": "MapReduce's disk-heavy design improves granular fault recovery.",
+      "answer": true,
+      "source_pages": [
+        439
+      ]
+    },
+    {
+      "id": "TF039",
+      "statement": "Preemptible low-priority tasks motivated MapReduce's fault model.",
+      "answer": true,
+      "source_pages": [
+        440
+      ]
+    },
+    {
+      "id": "TF040",
+      "statement": "Materialization means streaming through a tiny in-memory buffer.",
+      "answer": false,
+      "source_pages": [
+        442
+      ]
+    },
+    {
+      "id": "TF041",
+      "statement": "MapReduce's intermediate materialization can create stage barriers.",
+      "answer": true,
+      "source_pages": [
+        442
+      ]
+    },
+    {
+      "id": "TF042",
+      "statement": "Spark, Tez, and Flink are dataflow engines.",
+      "answer": true,
+      "source_pages": [
+        443
+      ]
+    },
+    {
+      "id": "TF043",
+      "statement": "Dataflow engines require strict alternating map and reduce operators.",
+      "answer": false,
+      "source_pages": [
+        443
+      ]
+    },
+    {
+      "id": "TF044",
+      "statement": "Dataflow engines can skip sorting when order is unnecessary.",
+      "answer": true,
+      "source_pages": [
+        443
+      ]
+    },
+    {
+      "id": "TF045",
+      "statement": "Intermediate state may stay in memory/local disk in dataflow engines.",
+      "answer": true,
+      "source_pages": [
+        444
+      ]
+    },
+    {
+      "id": "TF046",
+      "statement": "Spark lineage supports recomputation.",
+      "answer": true,
+      "source_pages": [
+        444
+      ]
+    },
+    {
+      "id": "TF047",
+      "statement": "Flink checkpoints operator state.",
+      "answer": true,
+      "source_pages": [
+        444
+      ]
+    },
+    {
+      "id": "TF048",
+      "statement": "Nondeterministic operators complicate recovery.",
+      "answer": true,
+      "source_pages": [
+        445
+      ]
+    },
+    {
+      "id": "TF049",
+      "statement": "Using the system clock inside an operator can introduce nondeterminism.",
+      "answer": true,
+      "source_pages": [
+        445
+      ]
+    },
+    {
+      "id": "TF050",
+      "statement": "Recomputation is always cheaper than materialization.",
+      "answer": false,
+      "source_pages": [
+        445
+      ]
+    },
+    {
+      "id": "TF051",
+      "statement": "Pipelined dataflow resembles Unix pipes.",
+      "answer": true,
+      "source_pages": [
+        445
+      ]
+    },
+    {
+      "id": "TF052",
+      "statement": "Sorting can generally emit globally sorted output before seeing all input.",
+      "answer": false,
+      "source_pages": [
+        445
+      ]
+    },
+    {
+      "id": "TF053",
+      "statement": "PageRank is an example of graph analysis.",
+      "answer": true,
+      "source_pages": [
+        446
+      ]
+    },
+    {
+      "id": "TF054",
+      "statement": "A dataflow DAG means the data itself must be a graph.",
+      "answer": false,
+      "source_pages": [
+        446
+      ]
+    },
+    {
+      "id": "TF055",
+      "statement": "Plain MapReduce handles iteration efficiently by only updating changed graph vertices.",
+      "answer": false,
+      "source_pages": [
+        446,
+        447
+      ]
+    },
+    {
+      "id": "TF056",
+      "statement": "Pregel is a BSP-style graph model.",
+      "answer": true,
+      "source_pages": [
+        447
+      ]
+    },
+    {
+      "id": "TF057",
+      "statement": "Pregel vertices communicate by message passing.",
+      "answer": true,
+      "source_pages": [
+        447
+      ]
+    },
+    {
+      "id": "TF058",
+      "statement": "Pregel vertices retain state across iterations.",
+      "answer": true,
+      "source_pages": [
+        447
+      ]
+    },
+    {
+      "id": "TF059",
+      "statement": "Pregel messages from one iteration are delivered in the next.",
+      "answer": true,
+      "source_pages": [
+        447
+      ]
+    },
+    {
+      "id": "TF060",
+      "statement": "Pregel fault tolerance can use checkpoints.",
+      "answer": true,
+      "source_pages": [
+        448
+      ]
+    },
+    {
+      "id": "TF061",
+      "statement": "Distributed graph processing has no cross-machine communication cost.",
+      "answer": false,
+      "source_pages": [
+        448
+      ]
+    },
+    {
+      "id": "TF062",
+      "statement": "A single-machine graph algorithm may outperform a distributed one if the graph fits.",
+      "answer": true,
+      "source_pages": [
+        448
+      ]
+    },
+    {
+      "id": "TF063",
+      "statement": "High-level APIs can expose relational-style operators.",
+      "answer": true,
+      "source_pages": [
+        449
+      ]
+    },
+    {
+      "id": "TF064",
+      "statement": "Declarative join specifications give optimizers more freedom.",
+      "answer": true,
+      "source_pages": [
+        449
+      ]
+    },
+    {
+      "id": "TF065",
+      "statement": "Opaque arbitrary callbacks are always easier to optimize than declarative filters.",
+      "answer": false,
+      "source_pages": [
+        449,
+        450
+      ]
+    },
+    {
+      "id": "TF066",
+      "statement": "Columnar/vectorized execution benefits from declarative operators.",
+      "answer": true,
+      "source_pages": [
+        450
+      ]
+    },
+    {
+      "id": "TF067",
+      "statement": "Modern batch engines and MPP databases are becoming more similar.",
+      "answer": true,
+      "source_pages": [
+        450,
+        451
+      ]
+    },
+    {
+      "id": "TF068",
+      "statement": "The two main batch-framework problems in the summary are partitioning and fault tolerance.",
+      "answer": true,
+      "source_pages": [
+        451
+      ]
+    },
+    {
+      "id": "TF069",
+      "statement": "Batch callbacks are ideally free of external side effects.",
+      "answer": true,
+      "source_pages": [
+        452
+      ]
+    },
+    {
+      "id": "TF070",
+      "statement": "Bounded input lets a batch job know when it has finished.",
+      "answer": true,
+      "source_pages": [
+        452
+      ]
+    }
+  ],
+  "fill_in_the_blank": [
+    {
+      "id": "FIB001",
+      "prompt": "Batch processing's primary performance measure is ______.",
+      "answer": "throughput",
+      "source_pages": [
+        412
+      ]
+    },
+    {
+      "id": "FIB002",
+      "prompt": "Unix's standard output stream is abbreviated ______.",
+      "answer": "stdout",
+      "source_pages": [
+        418
+      ]
+    },
+    {
+      "id": "FIB003",
+      "prompt": "Unix's standard input stream is abbreviated ______.",
+      "answer": "stdin",
+      "source_pages": [
+        418
+      ]
+    },
+    {
+      "id": "FIB004",
+      "prompt": "Hadoop's distributed filesystem is ______.",
+      "answer": "HDFS",
+      "source_pages": [
+        420
+      ]
+    },
+    {
+      "id": "FIB005",
+      "prompt": "HDFS block locations are tracked by the ______.",
+      "answer": "NameNode",
+      "source_pages": [
+        420
+      ]
+    },
+    {
+      "id": "FIB006",
+      "prompt": "Mapper output is represented as key-______ pairs.",
+      "answer": "value",
+      "source_pages": [
+        421
+      ]
+    },
+    {
+      "id": "FIB007",
+      "prompt": "The partition-sort-copy stage is the ______.",
+      "answer": "shuffle",
+      "source_pages": [
+        424
+      ]
+    },
+    {
+      "id": "FIB008",
+      "prompt": "A join that uses reducer-side sorting/merging is a sort-______ join.",
+      "answer": "merge",
+      "source_pages": [
+        427,
+        428
+      ]
+    },
+    {
+      "id": "FIB009",
+      "prompt": "Grouping clickstream records into user sessions is ______.",
+      "answer": "sessionization",
+      "source_pages": [
+        429
+      ]
+    },
+    {
+      "id": "FIB010",
+      "prompt": "A disproportionately large key is a ______ key.",
+      "answer": "hot",
+      "source_pages": [
+        429
+      ]
+    },
+    {
+      "id": "FIB011",
+      "prompt": "A map-side join copying a small table everywhere is a ______ hash join.",
+      "answer": "broadcast",
+      "source_pages": [
+        431
+      ]
+    },
+    {
+      "id": "FIB012",
+      "prompt": "Hive calls partitioned hash joins ______ map joins.",
+      "answer": "bucketed",
+      "source_pages": [
+        432
+      ]
+    },
+    {
+      "id": "FIB013",
+      "prompt": "Eagerly writing intermediate state is called ______.",
+      "answer": "materialization",
+      "source_pages": [
+        442
+      ]
+    },
+    {
+      "id": "FIB014",
+      "prompt": "Spark tracks recomputation through RDD ______.",
+      "answer": "ancestry",
+      "source_pages": [
+        444
+      ]
+    },
+    {
+      "id": "FIB015",
+      "prompt": "Recovery is easier when operators are ______.",
+      "answer": "deterministic",
+      "source_pages": [
+        445
+      ]
+    },
+    {
+      "id": "FIB016",
+      "prompt": "The vertex-centric BSP model is commonly called ______.",
+      "answer": "Pregel",
+      "source_pages": [
+        447
+      ]
+    },
+    {
+      "id": "FIB017",
+      "prompt": "BSP stands for Bulk Synchronous ______.",
+      "answer": "Parallel",
+      "source_pages": [
+        447
+      ]
+    },
+    {
+      "id": "FIB018",
+      "prompt": "Zoo-like graph messages are processed in discrete ______.",
+      "answer": "iterations",
+      "source_pages": [
+        447
+      ]
+    },
+    {
+      "id": "FIB019",
+      "prompt": "High-level engines increasingly use ______ operators so optimizers can choose strategies.",
+      "answer": "declarative",
+      "source_pages": [
+        449
+      ]
+    },
+    {
+      "id": "FIB020",
+      "prompt": "The two core batch problems are partitioning and fault ______.",
+      "answer": "tolerance",
+      "source_pages": [
+        451
+      ]
+    },
+    {
+      "id": "FIB021",
+      "prompt": "Batch input is ______, meaning finite and known in size.",
+      "answer": "bounded",
+      "source_pages": [
+        452
+      ]
+    }
+  ],
+  "ordering_exercises": [
+    {
+      "id": "ORD01",
+      "title": "Unix log analysis",
+      "items_scrambled": [
+        "Count adjacent URLs",
+        "Extract URL",
+        "Take top five",
+        "Sort URLs",
+        "Sort counts descending"
+      ],
+      "correct_order": [
+        "Extract URL",
+        "Sort URLs",
+        "Count adjacent URLs",
+        "Sort counts descending",
+        "Take top five"
+      ],
+      "source_pages": [
+        413,
+        414
+      ]
+    },
+    {
+      "id": "ORD02",
+      "title": "MapReduce data path",
+      "items_scrambled": [
+        "Reducer processes grouped values",
+        "Mapper emits key-value pairs",
+        "Shuffle partitions/sorts/transfers",
+        "Input split into records"
+      ],
+      "correct_order": [
+        "Input split into records",
+        "Mapper emits key-value pairs",
+        "Shuffle partitions/sorts/transfers",
+        "Reducer processes grouped values"
+      ],
+      "source_pages": [
+        421,
+        422,
+        423,
+        424
+      ]
+    },
+    {
+      "id": "ORD03",
+      "title": "Sort-merge join",
+      "items_scrambled": [
+        "Reducer joins same-key records",
+        "Mappers extract join key",
+        "Reducer inputs merge",
+        "Framework partitions/sorts"
+      ],
+      "correct_order": [
+        "Mappers extract join key",
+        "Framework partitions/sorts",
+        "Reducer inputs merge",
+        "Reducer joins same-key records"
+      ],
+      "source_pages": [
+        427,
+        428
+      ]
+    },
+    {
+      "id": "ORD04",
+      "title": "Dataflow failure recovery",
+      "items_scrambled": [
+        "Lost partition detected",
+        "Recompute from lineage",
+        "Downstream continues/recovers",
+        "Machine loses intermediate state"
+      ],
+      "correct_order": [
+        "Machine loses intermediate state",
+        "Lost partition detected",
+        "Recompute from lineage",
+        "Downstream continues/recovers"
+      ],
+      "source_pages": [
+        444,
+        445
+      ]
+    },
+    {
+      "id": "ORD05",
+      "title": "Pregel iteration",
+      "items_scrambled": [
+        "Deliver previous-round messages",
+        "Update vertex state",
+        "Send messages",
+        "Barrier/end iteration"
+      ],
+      "correct_order": [
+        "Deliver previous-round messages",
+        "Update vertex state",
+        "Send messages",
+        "Barrier/end iteration"
+      ],
+      "source_pages": [
+        447
+      ]
+    }
+  ],
+  "scenario_questions": [
+    {
+      "id": "SC001",
+      "difficulty": "medium",
+      "scenario": "A nightly job processes 5 TB of logs and no user waits for the result.",
+      "question": "Which performance metric matters most?",
+      "expected_answer": "Throughput, because this is a batch/offline workload.",
+      "source_pages": [
+        412
+      ]
+    },
+    {
+      "id": "SC002",
+      "difficulty": "medium",
+      "scenario": "There are 10 billion records but only 10,000 distinct keys.",
+      "question": "Would hash aggregation likely be memory-efficient?",
+      "expected_answer": "Potentially yes; working-set size depends mainly on distinct keys, not total records.",
+      "source_pages": [
+        415
+      ]
+    },
+    {
+      "id": "SC003",
+      "difficulty": "medium",
+      "scenario": "Distinct keys exceed memory but data can be sequentially scanned from disk.",
+      "question": "What approach is attractive?",
+      "expected_answer": "External sorting/mergesort with disk spill.",
+      "source_pages": [
+        416
+      ]
+    },
+    {
+      "id": "SC004",
+      "difficulty": "medium",
+      "scenario": "A custom Unix tool hardcodes its input/output filenames.",
+      "question": "What Unix design benefit does it lose?",
+      "expected_answer": "Separation of logic and wiring/composability through stdin/stdout.",
+      "source_pages": [
+        418
+      ]
+    },
+    {
+      "id": "SC005",
+      "difficulty": "medium",
+      "scenario": "A mapper reads a 500 MB HDFS block stored locally.",
+      "question": "What optimization is being used?",
+      "expected_answer": "Data locality: putting computation near the data.",
+      "source_pages": [
+        422
+      ]
+    },
+    {
+      "id": "SC006",
+      "difficulty": "medium",
+      "scenario": "Two equal keys are emitted by different mappers.",
+      "question": "Where must they end up?",
+      "expected_answer": "The same reducer partition after the shuffle.",
+      "source_pages": [
+        423,
+        424
+      ]
+    },
+    {
+      "id": "SC007",
+      "difficulty": "medium",
+      "scenario": "A user activity job queries a production user DB once per event.",
+      "question": "Why is this poor batch design?",
+      "expected_answer": "Remote round trips limit throughput and parallel lookups can overwhelm the DB; copy the data into the batch environment.",
+      "source_pages": [
+        426,
+        427
+      ]
+    },
+    {
+      "id": "SC008",
+      "difficulty": "medium",
+      "scenario": "A reducer must join one profile with millions of activity events for one celebrity.",
+      "question": "What issue appears?",
+      "expected_answer": "Skew/hot key causing one reducer to become a straggler.",
+      "source_pages": [
+        429
+      ]
+    },
+    {
+      "id": "SC009",
+      "difficulty": "medium",
+      "scenario": "One dimension table is 50 MB; fact table is 5 TB.",
+      "question": "Best join family?",
+      "expected_answer": "Broadcast hash join if the 50 MB input fits comfortably in each mapper.",
+      "source_pages": [
+        431
+      ]
+    },
+    {
+      "id": "SC010",
+      "difficulty": "medium",
+      "scenario": "Two 5 TB datasets are partitioned identically by user_id but not sorted.",
+      "question": "Best map-side join family?",
+      "expected_answer": "Partitioned hash join.",
+      "source_pages": [
+        431,
+        432
+      ]
+    },
+    {
+      "id": "SC011",
+      "difficulty": "hard",
+      "scenario": "Two large inputs are partitioned and sorted identically by user_id.",
+      "question": "Best map-side join?",
+      "expected_answer": "Map-side merge join.",
+      "source_pages": [
+        432
+      ]
+    },
+    {
+      "id": "SC012",
+      "difficulty": "hard",
+      "scenario": "A batch job writes each recommendation directly into the live serving DB.",
+      "question": "What two major risks?",
+      "expected_answer": "Overload/poor performance and externally visible side effects that complicate retry/partial-job semantics.",
+      "source_pages": [
+        434,
+        435
+      ]
+    },
+    {
+      "id": "SC013",
+      "difficulty": "hard",
+      "scenario": "A new recommendation model is buggy.",
+      "question": "How does immutable output help?",
+      "expected_answer": "Re-run old code or switch back to prior output files without undoing arbitrary in-place mutations.",
+      "source_pages": [
+        435,
+        436
+      ]
+    },
+    {
+      "id": "SC014",
+      "difficulty": "hard",
+      "scenario": "A short MPP query loses one worker.",
+      "question": "What recovery model is common?",
+      "expected_answer": "Abort/retry the whole query because the query is short.",
+      "source_pages": [
+        439
+      ]
+    },
+    {
+      "id": "SC015",
+      "difficulty": "hard",
+      "scenario": "A 10-hour MapReduce job loses one mapper.",
+      "question": "What recovery model is preferred?",
+      "expected_answer": "Retry only the failed task rather than the whole job.",
+      "source_pages": [
+        439
+      ]
+    },
+    {
+      "id": "SC016",
+      "difficulty": "hard",
+      "scenario": "Low-priority tasks are killed whenever production traffic spikes.",
+      "question": "Why is MapReduce well suited?",
+      "expected_answer": "Task-level retry and durable intermediate data tolerate frequent preemption.",
+      "source_pages": [
+        440
+      ]
+    },
+    {
+      "id": "SC017",
+      "difficulty": "hard",
+      "scenario": "A MapReduce workflow has 80 stages, each writing HDFS output.",
+      "question": "What performance issue grows?",
+      "expected_answer": "Heavy materialization, barriers, extra I/O, and replicated temporary state.",
+      "source_pages": [
+        441,
+        442
+      ]
+    },
+    {
+      "id": "SC018",
+      "difficulty": "hard",
+      "scenario": "A Spark node loses an intermediate partition.",
+      "question": "How can Spark recover?",
+      "expected_answer": "Recompute the partition from RDD lineage/ancestry.",
+      "source_pages": [
+        444
+      ]
+    },
+    {
+      "id": "SC019",
+      "difficulty": "hard",
+      "scenario": "A recomputed operator uses current time in its output.",
+      "question": "Why is recovery risky?",
+      "expected_answer": "The operator is nondeterministic, so recomputed data may conflict with already consumed data.",
+      "source_pages": [
+        445
+      ]
+    },
+    {
+      "id": "SC020",
+      "difficulty": "hard",
+      "scenario": "A CPU-expensive stage shrinks 10 TB to 5 GB.",
+      "question": "Materialize or recompute?",
+      "expected_answer": "Materialization may be cheaper because the small intermediate result is expensive to regenerate.",
+      "source_pages": [
+        445
+      ]
+    },
+    {
+      "id": "SC021",
+      "difficulty": "hard",
+      "scenario": "A PageRank iteration changes only 0.1% of vertices but MapReduce rewrites everything.",
+      "question": "Why inefficient?",
+      "expected_answer": "Plain MapReduce does not exploit iterative/localized graph changes and rereads/rewrites the entire dataset.",
+      "source_pages": [
+        446,
+        447
+      ]
+    },
+    {
+      "id": "SC022",
+      "difficulty": "hard",
+      "scenario": "A graph easily fits in 128 GB RAM on one server.",
+      "question": "Should you automatically distribute it?",
+      "expected_answer": "No; a single-machine algorithm may outperform distributed processing due to communication overhead.",
+      "source_pages": [
+        448
+      ]
+    },
+    {
+      "id": "SC023",
+      "difficulty": "hard",
+      "scenario": "A user declares a join in Spark SQL rather than hand-coding it.",
+      "question": "What optimization becomes possible?",
+      "expected_answer": "Cost-based choice of join strategy and join reordering.",
+      "source_pages": [
+        449
+      ]
+    },
+    {
+      "id": "SC024",
+      "difficulty": "hard",
+      "scenario": "A filter selects only 3 of 100 Parquet columns.",
+      "question": "Why is declarative execution useful?",
+      "expected_answer": "Optimizer can read only required columns and use vectorized/generated execution.",
+      "source_pages": [
+        450
+      ]
+    }
+  ],
+  "short_answer_questions": [
+    {
+      "id": "SA001",
+      "question": "Why does the chapter begin with Unix tools?",
+      "model_answer": "Unix demonstrates composability, immutable inputs, simple uniform interfaces, logic/wiring separation, and experimentation—the same principles recur in distributed batch systems.",
+      "source_pages": [
+        413,
+        416,
+        417,
+        418,
+        419
+      ]
+    },
+    {
+      "id": "SA002",
+      "question": "Sorting vs in-memory hash aggregation?",
+      "model_answer": "Hashing is excellent when distinct-key state fits memory; sorting scales beyond memory by spilling sorted runs and merging them using sequential disk I/O.",
+      "source_pages": [
+        415,
+        416
+      ]
+    },
+    {
+      "id": "SA003",
+      "question": "Explain MapReduce execution in four steps.",
+      "model_answer": "Read records, map to key-value pairs, sort/partition/shuffle by key, reduce all values for each key.",
+      "source_pages": [
+        421,
+        422,
+        423,
+        424
+      ]
+    },
+    {
+      "id": "SA004",
+      "question": "Why is shuffle central to MapReduce?",
+      "model_answer": "It physically brings all records for a key to the same reducer, enabling joins, grouping, and aggregation without application-managed networking.",
+      "source_pages": [
+        423,
+        424,
+        428,
+        429
+      ]
+    },
+    {
+      "id": "SA005",
+      "question": "Why are remote lookups per input record a bad batch-join strategy?",
+      "model_answer": "Round-trip latency throttles throughput, caches may not help, and parallelism can overload the remote service; local bulk processing is better.",
+      "source_pages": [
+        426,
+        427
+      ]
+    },
+    {
+      "id": "SA006",
+      "question": "How does sort-merge join work?",
+      "model_answer": "Both inputs emit the join key, shuffle/sort co-locates matching records, and a reducer streams the grouped records and performs the join.",
+      "source_pages": [
+        427,
+        428
+      ]
+    },
+    {
+      "id": "SA007",
+      "question": "Reduce-side vs map-side join?",
+      "model_answer": "Reduce-side is general but pays shuffle/sort cost; map-side is faster when input size/partitioning/sorting assumptions permit local joining.",
+      "source_pages": [
+        430,
+        431,
+        432
+      ]
+    },
+    {
+      "id": "SA008",
+      "question": "How do you handle a hot key?",
+      "model_answer": "Detect/specify it, split its records across several reducers, replicate the other join side as needed, or aggregate in two stages.",
+      "source_pages": [
+        429,
+        430
+      ]
+    },
+    {
+      "id": "SA009",
+      "question": "Why are immutable batch outputs valuable?",
+      "model_answer": "They make retries, rollback, recomputation, version comparison, and recovery from buggy code much safer.",
+      "source_pages": [
+        435,
+        436
+      ]
+    },
+    {
+      "id": "SA010",
+      "question": "Why avoid direct external side effects from tasks?",
+      "model_answer": "Retries and speculative attempts can make partial or duplicate side effects visible, breaking the framework's clean output semantics.",
+      "source_pages": [
+        434,
+        435
+      ]
+    },
+    {
+      "id": "SA011",
+      "question": "Hadoop vs MPP database?",
+      "model_answer": "MPP tightly integrates storage and analytic SQL for speed; Hadoop provides a flexible shared filesystem and arbitrary processing models over diverse formats.",
+      "source_pages": [
+        437,
+        438,
+        439
+      ]
+    },
+    {
+      "id": "SA012",
+      "question": "What is schema-on-read?",
+      "model_answer": "Store raw data first and interpret/transform it later when a consumer needs it.",
+      "source_pages": [
+        437,
+        438
+      ]
+    },
+    {
+      "id": "SA013",
+      "question": "Why does MapReduce tolerate individual-task failure?",
+      "model_answer": "Long/preemptible jobs would make full-job restart expensive; durable materialization makes retry of only failed tasks easy.",
+      "source_pages": [
+        439,
+        440
+      ]
+    },
+    {
+      "id": "SA014",
+      "question": "What is intermediate-state materialization?",
+      "model_answer": "Writing one stage's result to durable storage before the next stage starts.",
+      "source_pages": [
+        441,
+        442
+      ]
+    },
+    {
+      "id": "SA015",
+      "question": "Why are dataflow engines faster than chains of MapReduce jobs?",
+      "model_answer": "They model the whole DAG, avoid unnecessary sorting/map stages, pipeline data, improve locality, and keep intermediate state local/in-memory.",
+      "source_pages": [
+        443,
+        444
+      ]
+    },
+    {
+      "id": "SA016",
+      "question": "How do Spark/Flink recover without fully materializing every stage?",
+      "model_answer": "Spark recomputes from lineage; Flink restores checkpointed operator state and recomputes as necessary.",
+      "source_pages": [
+        444
+      ]
+    },
+    {
+      "id": "SA017",
+      "question": "Why does determinism matter in dataflow recovery?",
+      "model_answer": "Re-execution must recreate compatible data; nondeterministic outputs can contradict downstream state already produced.",
+      "source_pages": [
+        445
+      ]
+    },
+    {
+      "id": "SA018",
+      "question": "When should an intermediate result still be materialized?",
+      "model_answer": "When it is much smaller than the source, expensive to recompute, or otherwise valuable to publish/reuse.",
+      "source_pages": [
+        442,
+        445
+      ]
+    },
+    {
+      "id": "SA019",
+      "question": "What problem is Pregel designed for?",
+      "model_answer": "Iterative whole-graph processing where vertices retain state and exchange messages across synchronized rounds.",
+      "source_pages": [
+        446,
+        447
+      ]
+    },
+    {
+      "id": "SA020",
+      "question": "What is the main performance challenge of distributed graph algorithms?",
+      "model_answer": "Cross-machine communication can dominate; poor graph partitioning creates large message volumes.",
+      "source_pages": [
+        448
+      ]
+    },
+    {
+      "id": "SA021",
+      "question": "Why are high-level declarative APIs faster as well as easier?",
+      "model_answer": "They expose semantics so optimizers can choose join strategies, reorder operations, exploit columnar formats, vectorize, and generate code.",
+      "source_pages": [
+        449,
+        450
+      ]
+    },
+    {
+      "id": "SA022",
+      "question": "What are the two core problems distributed batch frameworks must solve?",
+      "model_answer": "Partitioning related data to the right workers and providing fault tolerance despite task/node failures.",
+      "source_pages": [
+        451
+      ]
+    }
+  ],
+  "active_recall_prompts": [
+    {
+      "id": "AR001",
+      "prompt": "Reconstruct the nginx Unix pipeline from memory.",
+      "target_points": [
+        "extract URL",
+        "sort",
+        "uniq count",
+        "numeric reverse sort",
+        "top five"
+      ],
+      "source_pages": [
+        413,
+        414
+      ]
+    },
+    {
+      "id": "AR002",
+      "prompt": "Explain Unix philosophy as a systems-design principle.",
+      "target_points": [
+        "one thing well",
+        "uniform interface",
+        "output feeds input",
+        "logic/wiring separation",
+        "experimentation"
+      ],
+      "source_pages": [
+        416,
+        417,
+        418,
+        419
+      ]
+    },
+    {
+      "id": "AR003",
+      "prompt": "Explain MapReduce from input block to reducer output.",
+      "target_points": [
+        "input split",
+        "mapper",
+        "partition",
+        "sort",
+        "shuffle",
+        "merge",
+        "reducer"
+      ],
+      "source_pages": [
+        421,
+        422,
+        423,
+        424
+      ]
+    },
+    {
+      "id": "AR004",
+      "prompt": "Explain data locality.",
+      "target_points": [
+        "HDFS replica",
+        "scheduler",
+        "map task",
+        "avoid network copy"
+      ],
+      "source_pages": [
+        422
+      ]
+    },
+    {
+      "id": "AR005",
+      "prompt": "Explain why mapper key is like an address.",
+      "target_points": [
+        "same key",
+        "same reducer",
+        "framework networking",
+        "application logic separated"
+      ],
+      "source_pages": [
+        428
+      ]
+    },
+    {
+      "id": "AR006",
+      "prompt": "Compare sort-merge, broadcast hash, partitioned hash, and map-side merge joins.",
+      "target_points": [
+        "general shuffle",
+        "small input",
+        "co-partitioned",
+        "co-partitioned+sorted"
+      ],
+      "source_pages": [
+        427,
+        431,
+        432
+      ]
+    },
+    {
+      "id": "AR007",
+      "prompt": "Explain skew mitigation.",
+      "target_points": [
+        "hot key",
+        "sampling",
+        "multiple reducers",
+        "replicate other side",
+        "two-stage aggregation"
+      ],
+      "source_pages": [
+        429,
+        430
+      ]
+    },
+    {
+      "id": "AR008",
+      "prompt": "Explain immutable batch-output philosophy.",
+      "target_points": [
+        "no side effects",
+        "retry",
+        "rollback",
+        "recompute",
+        "human fault tolerance"
+      ],
+      "source_pages": [
+        435,
+        436
+      ]
+    },
+    {
+      "id": "AR009",
+      "prompt": "Compare Hadoop and MPP databases.",
+      "target_points": [
+        "general files/code",
+        "integrated SQL",
+        "schema-on-read",
+        "performance",
+        "processing diversity"
+      ],
+      "source_pages": [
+        437,
+        438,
+        439
+      ]
+    },
+    {
+      "id": "AR010",
+      "prompt": "Explain why MapReduce is disk-heavy.",
+      "target_points": [
+        "fault tolerance",
+        "large data",
+        "task retry",
+        "preemption"
+      ],
+      "source_pages": [
+        439,
+        440
+      ]
+    },
+    {
+      "id": "AR011",
+      "prompt": "Explain materialization vs pipelining.",
+      "target_points": [
+        "HDFS files",
+        "stage barrier",
+        "Unix pipes",
+        "stream incrementally",
+        "temporary state"
+      ],
+      "source_pages": [
+        441,
+        442,
+        445
+      ]
+    },
+    {
+      "id": "AR012",
+      "prompt": "List dataflow-engine improvements.",
+      "target_points": [
+        "whole DAG",
+        "skip sort",
+        "remove redundant maps",
+        "locality",
+        "memory/local disk",
+        "pipeline",
+        "JVM reuse"
+      ],
+      "source_pages": [
+        443,
+        444
+      ]
+    },
+    {
+      "id": "AR013",
+      "prompt": "Explain lineage/checkpoint recovery.",
+      "target_points": [
+        "lost intermediate state",
+        "Spark RDD ancestry",
+        "Flink checkpoints",
+        "recompute"
+      ],
+      "source_pages": [
+        444
+      ]
+    },
+    {
+      "id": "AR014",
+      "prompt": "Explain nondeterminism hazards.",
+      "target_points": [
+        "hash iteration",
+        "random",
+        "clock",
+        "external data",
+        "fixed seed"
+      ],
+      "source_pages": [
+        445
+      ]
+    },
+    {
+      "id": "AR015",
+      "prompt": "Explain Pregel.",
+      "target_points": [
+        "vertex-centric",
+        "messages",
+        "persistent state",
+        "iterations",
+        "barrier",
+        "checkpoint"
+      ],
+      "source_pages": [
+        447,
+        448
+      ]
+    },
+    {
+      "id": "AR016",
+      "prompt": "Explain why graph partitioning is hard.",
+      "target_points": [
+        "communication locality",
+        "vertex ID partitioning",
+        "network messages",
+        "single-machine alternative"
+      ],
+      "source_pages": [
+        448
+      ]
+    },
+    {
+      "id": "AR017",
+      "prompt": "Explain declarative optimization.",
+      "target_points": [
+        "relational operators",
+        "join algorithm choice",
+        "join reorder",
+        "column pruning",
+        "vectorization/codegen"
+      ],
+      "source_pages": [
+        449,
+        450
+      ]
+    },
+    {
+      "id": "AR018",
+      "prompt": "State the chapter's two main batch-system problems.",
+      "target_points": [
+        "partitioning",
+        "fault tolerance",
+        "MapReduce disk/retry",
+        "dataflow recomputation"
+      ],
+      "source_pages": [
+        451
+      ]
+    }
+  ],
+  "diagram_reconstruction_drills": [
+    {
+      "id": "DR01",
+      "name": "Unix log pipeline",
+      "task": "Draw cat -> awk -> sort -> uniq -c -> sort -r -n -> head and annotate each transformation.",
+      "source_pages": [
+        413,
+        414
+      ]
+    },
+    {
+      "id": "DR02",
+      "name": "MapReduce job",
+      "task": "Draw input blocks -> mappers -> local sorted partitions -> shuffle -> reducer merge -> HDFS output.",
+      "source_pages": [
+        421,
+        422,
+        423,
+        424
+      ]
+    },
+    {
+      "id": "DR03",
+      "name": "Sort-merge join",
+      "task": "Draw activity and user inputs keyed by user_id, shuffled to same reducer, with user profile first then activity events.",
+      "source_pages": [
+        427,
+        428
+      ]
+    },
+    {
+      "id": "DR04",
+      "name": "Hot-key skew",
+      "task": "Draw one celebrity key overloading a reducer, then redraw it split across multiple reducers with replicated join-side data.",
+      "source_pages": [
+        429,
+        430
+      ]
+    },
+    {
+      "id": "DR05",
+      "name": "Broadcast hash join",
+      "task": "Draw one small table copied to all mappers scanning partitions of a large table.",
+      "source_pages": [
+        431
+      ]
+    },
+    {
+      "id": "DR06",
+      "name": "Partitioned hash join",
+      "task": "Draw two identically partitioned datasets joined partition-by-partition.",
+      "source_pages": [
+        431,
+        432
+      ]
+    },
+    {
+      "id": "DR07",
+      "name": "Immutable batch serving output",
+      "task": "Draw batch job building new immutable DB/index files, copying them to serving nodes, then atomic switch from old to new.",
+      "source_pages": [
+        434,
+        435
+      ]
+    },
+    {
+      "id": "DR08",
+      "name": "MapReduce materialization vs dataflow pipeline",
+      "task": "Contrast HDFS barriers between stages with pipelined operator edges using local/memory intermediate state.",
+      "source_pages": [
+        441,
+        442,
+        443,
+        444,
+        445
+      ]
+    },
+    {
+      "id": "DR09",
+      "name": "Dataflow recovery lineage",
+      "task": "Draw an operator DAG, lose one intermediate partition, then trace recomputation from the nearest surviving ancestor.",
+      "source_pages": [
+        444,
+        445
+      ]
+    },
+    {
+      "id": "DR10",
+      "name": "Pregel supersteps",
+      "task": "Draw vertices sending messages in iteration N, barrier, then receiving them in iteration N+1 while retaining state.",
+      "source_pages": [
+        447,
+        448
+      ]
+    },
+    {
+      "id": "DR11",
+      "name": "Declarative batch optimizer",
+      "task": "Draw a logical join/filter/group plan and show optimizer selecting join type, join order, and column pruning.",
+      "source_pages": [
+        449,
+        450
+      ]
+    }
+  ],
+  "interview_style_questions": [
+    {
+      "id": "INT01",
+      "question": "Why is Unix philosophy relevant to modern distributed data processing?",
+      "strong_answer_outline": [
+        "composability",
+        "uniform interface",
+        "immutable inputs",
+        "logic/wiring separation",
+        "experimentation",
+        "MapReduce analogy"
+      ],
+      "source_pages": [
+        416,
+        417,
+        418,
+        419
+      ]
+    },
+    {
+      "id": "INT02",
+      "question": "Walk me through MapReduce execution.",
+      "strong_answer_outline": [
+        "input blocks",
+        "mapper",
+        "partition by key hash",
+        "sort",
+        "shuffle",
+        "merge",
+        "reduce",
+        "HDFS output"
+      ],
+      "source_pages": [
+        421,
+        422,
+        423,
+        424
+      ]
+    },
+    {
+      "id": "INT03",
+      "question": "What exactly is the shuffle?",
+      "strong_answer_outline": [
+        "partition",
+        "sort",
+        "copy mapper partitions to reducers",
+        "same key colocated"
+      ],
+      "source_pages": [
+        423,
+        424
+      ]
+    },
+    {
+      "id": "INT04",
+      "question": "Explain reduce-side vs map-side joins.",
+      "strong_answer_outline": [
+        "generality vs assumptions",
+        "shuffle/sort cost",
+        "broadcast hash",
+        "partitioned hash",
+        "map-side merge"
+      ],
+      "source_pages": [
+        427,
+        430,
+        431,
+        432
+      ]
+    },
+    {
+      "id": "INT05",
+      "question": "How do you handle data skew in a distributed join?",
+      "strong_answer_outline": [
+        "hot keys",
+        "sampling",
+        "split key across reducers",
+        "replicate other side",
+        "two-stage aggregation"
+      ],
+      "source_pages": [
+        429,
+        430
+      ]
+    },
+    {
+      "id": "INT06",
+      "question": "Why should batch tasks avoid side effects?",
+      "strong_answer_outline": [
+        "safe retries",
+        "speculative attempts",
+        "all-or-nothing output",
+        "immutable inputs",
+        "recomputation"
+      ],
+      "source_pages": [
+        434,
+        435,
+        436,
+        452
+      ]
+    },
+    {
+      "id": "INT07",
+      "question": "Hadoop vs MPP database—what is the architectural tradeoff?",
+      "strong_answer_outline": [
+        "flexible filesystem",
+        "schema-on-read",
+        "arbitrary code",
+        "MPP integration",
+        "SQL optimization",
+        "processing-model diversity"
+      ],
+      "source_pages": [
+        437,
+        438,
+        439
+      ]
+    },
+    {
+      "id": "INT08",
+      "question": "Why does MapReduce materialize so much state?",
+      "strong_answer_outline": [
+        "task-level fault recovery",
+        "HDFS durability",
+        "large/preemptible jobs",
+        "performance cost"
+      ],
+      "source_pages": [
+        439,
+        440,
+        441,
+        442
+      ]
+    },
+    {
+      "id": "INT09",
+      "question": "Why are Spark/Flink/Tez faster than multi-stage MapReduce?",
+      "strong_answer_outline": [
+        "whole DAG",
+        "no mandatory sort",
+        "pipeline",
+        "local/in-memory state",
+        "locality",
+        "JVM reuse"
+      ],
+      "source_pages": [
+        443,
+        444
+      ]
+    },
+    {
+      "id": "INT10",
+      "question": "How does lineage-based recovery work?",
+      "strong_answer_outline": [
+        "derive intermediate partition",
+        "track ancestry",
+        "recompute lost data",
+        "deterministic operators"
+      ],
+      "source_pages": [
+        444,
+        445
+      ]
+    },
+    {
+      "id": "INT11",
+      "question": "What is Pregel/BSP?",
+      "strong_answer_outline": [
+        "vertex-centric",
+        "message passing",
+        "persistent vertex state",
+        "synchronized rounds",
+        "checkpointing"
+      ],
+      "source_pages": [
+        447,
+        448
+      ]
+    },
+    {
+      "id": "INT12",
+      "question": "Why can distributed graph processing be slower than single-machine processing?",
+      "strong_answer_outline": [
+        "cross-machine edges",
+        "message volume",
+        "partitioning difficulty",
+        "coordination barriers"
+      ],
+      "source_pages": [
+        448
+      ]
+    },
+    {
+      "id": "INT13",
+      "question": "Why are declarative batch APIs valuable?",
+      "strong_answer_outline": [
+        "less code",
+        "optimizer freedom",
+        "join selection/reorder",
+        "columnar/vectorization",
+        "codegen",
+        "retain arbitrary code"
+      ],
+      "source_pages": [
+        449,
+        450
+      ]
+    },
+    {
+      "id": "INT14",
+      "question": "What are the two fundamental problems of distributed batch processing?",
+      "strong_answer_outline": [
+        "partitioning",
+        "fault tolerance",
+        "MapReduce materialization",
+        "dataflow recomputation"
+      ],
+      "source_pages": [
+        451
+      ]
+    }
+  ],
+  "practice_problems": [
+    {
+      "id": "P01",
+      "type": "aggregation",
+      "prompt": "You have 2 billion events but only 500 distinct keys. Which approach is likely memory-efficient: hash aggregation or full external sort?",
+      "solution": "Hash aggregation is attractive because state scales with the number of distinct keys, which is only 500.",
+      "based_on_source_pages": [
+        415
+      ]
+    },
+    {
+      "id": "P02",
+      "type": "shuffle",
+      "prompt": "If mapper M1 and M2 both emit key 'user42', can they be assigned to different reducers?",
+      "solution": "No. Reducer partitioning by key ensures all occurrences of user42 go to the same reducer.",
+      "based_on_source_pages": [
+        423,
+        424
+      ]
+    },
+    {
+      "id": "P03",
+      "type": "join",
+      "prompt": "Fact table = 8 TB, dimension table = 20 MB. Which join would you try first?",
+      "solution": "Broadcast hash join, assuming 20 MB comfortably fits in each mapper's memory.",
+      "based_on_source_pages": [
+        431
+      ]
+    },
+    {
+      "id": "P04",
+      "type": "join",
+      "prompt": "Two 4 TB inputs are partitioned by the same key/hash/count but not sorted. Which map-side join fits?",
+      "solution": "Partitioned hash join.",
+      "based_on_source_pages": [
+        431,
+        432
+      ]
+    },
+    {
+      "id": "P05",
+      "type": "join",
+      "prompt": "Both inputs are partitioned and sorted identically. Which join can stream through both?",
+      "solution": "Map-side merge join.",
+      "based_on_source_pages": [
+        432
+      ]
+    },
+    {
+      "id": "P06",
+      "type": "skew",
+      "prompt": "One key contains 40% of all records. What likely happens with normal hash-to-reducer routing?",
+      "solution": "One reducer becomes a hot spot/straggler; use skew-aware splitting/replication or two-stage aggregation.",
+      "based_on_source_pages": [
+        429,
+        430
+      ]
+    },
+    {
+      "id": "P07",
+      "type": "fault_tolerance",
+      "prompt": "A mapper writes directly to a production DB and is retried after failure. What correctness concern appears?",
+      "solution": "Duplicate/partial external side effects can become visible because MapReduce can only discard its own designated task output, not arbitrary DB writes.",
+      "based_on_source_pages": [
+        434,
+        435,
+        436
+      ]
+    },
+    {
+      "id": "P08",
+      "type": "dataflow",
+      "prompt": "A Spark executor loses an intermediate partition. What information enables recomputation?",
+      "solution": "RDD lineage/ancestry describing which input partitions/operators produced the lost data.",
+      "based_on_source_pages": [
+        444
+      ]
+    },
+    {
+      "id": "P09",
+      "type": "determinism",
+      "prompt": "A recovery recomputes an operator that calls currentTimeMillis(). Why can output differ?",
+      "solution": "System time is nondeterministic; recomputation may produce values different from the first execution.",
+      "based_on_source_pages": [
+        445
+      ]
+    },
+    {
+      "id": "P10",
+      "type": "materialization",
+      "prompt": "A 12-hour model-training stage produces a 3 GB intermediate artifact used by five jobs. Recompute or materialize?",
+      "solution": "Materialization is attractive because the artifact is small relative to expensive compute and reusable by several downstream jobs.",
+      "based_on_source_pages": [
+        442,
+        445
+      ]
+    },
+    {
+      "id": "P11",
+      "type": "graph",
+      "prompt": "A graph fits comfortably on one server and has many cross-edge interactions. Distributed Pregel or local algorithm?",
+      "solution": "The chapter suggests a single-machine implementation may be faster due to distributed communication overhead.",
+      "based_on_source_pages": [
+        448
+      ]
+    },
+    {
+      "id": "P12",
+      "type": "optimizer",
+      "prompt": "Why can declaring a join be faster than manually implementing one?",
+      "solution": "The optimizer can inspect input properties, choose a join algorithm, reorder joins, and reduce intermediate state.",
+      "based_on_source_pages": [
+        449
+      ]
+    }
+  ],
+  "mastery_check": {
+    "beginner": [
+      "Can distinguish online, batch, and stream processing.",
+      "Can explain Unix composability and MapReduce's map-shuffle-reduce flow.",
+      "Can define shuffle, materialization, hot key, and data locality."
+    ],
+    "intermediate": [
+      "Can compare sort-merge, broadcast hash, partitioned hash, and map-side merge joins.",
+      "Can explain immutable batch-output semantics and safe retries.",
+      "Can compare MapReduce with dataflow engines and MPP databases."
+    ],
+    "advanced": [
+      "Can choose a join based on input size/partitioning/sort metadata.",
+      "Can reason about skew and straggler mitigation.",
+      "Can explain lineage/checkpoint-based fault recovery and determinism requirements.",
+      "Can explain Pregel/BSP and when distribution is counterproductive.",
+      "Can explain why declarative APIs enable machine-level optimization."
+    ]
+  },
+  "final_review": {
+    "must_memorize": [
+      "Batch = bounded input, offline execution, throughput-focused.",
+      "Unix philosophy: small tools, uniform interfaces, immutable inputs, composition, experimentation.",
+      "Hash aggregation works when distinct-key state fits memory; sort/merge scales beyond memory.",
+      "MapReduce: input records -> mapper -> partition/sort/shuffle -> reducer -> HDFS output.",
+      "Shuffle brings all equal keys to the same reducer.",
+      "Map tasks are partitioned by input blocks; reducer count is configurable.",
+      "Data locality runs computation near HDFS input replicas.",
+      "Reduce-side sort-merge joins are general but expensive.",
+      "Broadcast hash join: one small input.",
+      "Partitioned hash join: same key/hash/count partitioning.",
+      "Map-side merge join: same partitioning and same sort order.",
+      "Hot keys create skew/stragglers and need special splitting/replication.",
+      "Batch tasks should avoid external side effects so retries remain safe.",
+      "Immutable outputs support rollback, recomputation, and human fault tolerance.",
+      "Hadoop favors flexible files and arbitrary processing; MPP favors integrated analytic SQL optimization.",
+      "Schema-on-read stores raw data first and models later.",
+      "MapReduce materializes intermediate state heavily for granular fault recovery.",
+      "Spark/Tez/Flink model an entire workflow as a dataflow DAG.",
+      "Dataflow engines avoid unnecessary sorts/materialization and pipeline operators.",
+      "Spark lineage and Flink checkpoints support recovery.",
+      "Deterministic operators make recomputation reliable.",
+      "Materialize when recomputation is expensive or intermediate results are small/reusable.",
+      "Pregel/BSP is iterative, vertex-centric, message-passing graph processing.",
+      "Distributed graph processing can lose to one-machine processing when communication dominates.",
+      "Declarative APIs let optimizers choose/reorder joins and exploit columnar/vectorized execution.",
+      "The two core distributed batch problems are partitioning and fault tolerance."
+    ],
+    "memory_chain": "ONLINE/BATCH/STREAM -> UNIX PIPELINE -> UNIX PHILOSOPHY -> HDFS -> MAP -> PARTITION/SORT/SHUFFLE -> REDUCE -> WORKFLOWS -> SORT-MERGE JOIN -> GROUP BY -> SKEW -> BROADCAST/PARTITIONED/MERGE MAP JOINS -> IMMUTABLE OUTPUT -> HADOOP VS MPP -> MATERIALIZATION -> SPARK/TEZ/FLINK -> LINEAGE/CHECKPOINT -> DETERMINISM -> PREgel/BSP -> HIGH-LEVEL DECLARATIVE APIs",
+    "one_sentence_takeaway": "Reliable batch systems scale Unix's immutable, composable dataflow philosophy by partitioning work across machines and hiding failure through retry, materialization, lineage, or checkpointing."
+  }
+}

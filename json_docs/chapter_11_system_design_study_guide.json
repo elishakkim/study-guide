@@ -1,0 +1,3380 @@
+{
+  "chapter": {
+    "number": 11,
+    "title": "Design a News Feed System",
+    "source": "System Design Interview: An Insider's Guide by Alex Xu",
+    "pdf_pages": {
+      "chapter_start": 166,
+      "chapter_end": 176,
+      "references_page": 177
+    },
+    "primary_goal": "Design a scalable news feed system in which users can publish posts and view friends' posts in reverse chronological order, while supporting media content, fast feed retrieval, efficient fanout, caching, authentication, rate limiting, and large-scale operation."
+  },
+  "chapter_summary": {
+    "overview": "Chapter 11 designs a news feed system similar to Facebook News Feed, Instagram feed, or Twitter timeline. The simplified requirements support both web and mobile clients, allow users to publish posts and view friends' posts, sort feeds in reverse chronological order, allow up to 5,000 friends per user, serve 10 million daily active users, and support image/video media. The architecture is organized around two major flows: feed publishing and news feed retrieval. Publishing persists a post in database/cache, fans the post out to friends, and may trigger notifications. Retrieval reads precomputed feed IDs from cache and hydrates them with user and post objects. The deep dive compares fanout on write versus fanout on read and selects a hybrid model: push for most users, pull for celebrities or high-fanout users. The fanout pipeline uses a graph database for friend IDs, user cache for friend metadata/settings, a message queue, fanout workers, and a news feed cache that stores IDs rather than full objects. Media is served through a CDN, and the cache tier is divided into news feed, content, social graph, action, and counter layers. The wrap-up highlights database scaling, stateless web servers, aggressive caching, multi-data-center support, message-queue decoupling, and monitoring.",
+    "two_core_flows": [
+      "Feed publishing",
+      "News feed retrieval/building"
+    ],
+    "selected_fanout_strategy": "Hybrid: fanout-on-write/push for most users, fanout-on-read/pull for celebrities or users with many friends/followers.",
+    "source_pages": [
+      166,
+      167,
+      168,
+      169,
+      170,
+      171,
+      172,
+      173,
+      174,
+      175,
+      176
+    ]
+  },
+  "learning_objectives": [
+    {
+      "id": "LO01",
+      "objective": "Define a news feed and recognize similar interview prompts.",
+      "source_pages": [
+        166
+      ]
+    },
+    {
+      "id": "LO02",
+      "objective": "State all clarified requirements: clients, features, ordering, friend limit, DAU, and media support.",
+      "source_pages": [
+        167
+      ]
+    },
+    {
+      "id": "LO03",
+      "objective": "Explain the two major flows: feed publishing and news feed building/retrieval.",
+      "source_pages": [
+        168
+      ]
+    },
+    {
+      "id": "LO04",
+      "objective": "Describe the POST and GET news feed APIs and the role of auth_token.",
+      "source_pages": [
+        168
+      ]
+    },
+    {
+      "id": "LO05",
+      "objective": "Explain all components in the high-level feed publishing flow.",
+      "source_pages": [
+        169
+      ]
+    },
+    {
+      "id": "LO06",
+      "objective": "Explain all components in the high-level news feed retrieval flow.",
+      "source_pages": [
+        170
+      ]
+    },
+    {
+      "id": "LO07",
+      "objective": "Explain authentication and rate limiting responsibilities of web servers.",
+      "source_pages": [
+        171,
+        172
+      ]
+    },
+    {
+      "id": "LO08",
+      "objective": "Define fanout and compare fanout on write versus fanout on read.",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "LO09",
+      "objective": "Explain the hotkey problem in fanout-on-write.",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "LO10",
+      "objective": "Explain why inactive users favor fanout-on-read.",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "LO11",
+      "objective": "Explain the chapter's hybrid fanout strategy.",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "LO12",
+      "objective": "Explain how consistent hashing can mitigate hotkey pressure.",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "LO13",
+      "objective": "Reconstruct the fanout service's five-step workflow.",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "LO14",
+      "objective": "Explain the role of graph DB, user cache, user settings, message queues, fanout workers, and feed cache.",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "LO15",
+      "objective": "Explain why the news feed cache stores IDs rather than whole user/post objects.",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "LO16",
+      "objective": "Explain why the feed cache is size-limited.",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "LO17",
+      "objective": "Reconstruct the detailed news feed retrieval flow.",
+      "source_pages": [
+        174,
+        175
+      ]
+    },
+    {
+      "id": "LO18",
+      "objective": "Explain why media is served from a CDN.",
+      "source_pages": [
+        174
+      ]
+    },
+    {
+      "id": "LO19",
+      "objective": "Explain feed hydration using news feed, user, and post caches.",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "LO20",
+      "objective": "Name and explain all five cache layers.",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "LO21",
+      "objective": "Discuss the wrap-up scaling topics for databases, web tier, data centers, queues, caching, and monitoring.",
+      "source_pages": [
+        176
+      ]
+    }
+  ],
+  "requirements_and_scope": {
+    "clients": [
+      "Web app",
+      "Mobile app"
+    ],
+    "core_features": [
+      "A user can publish a post.",
+      "A user can see friends' posts on the news feed page."
+    ],
+    "feed_order": "Reverse chronological order",
+    "maximum_friends_per_user": 5000,
+    "traffic": "10 million DAU",
+    "media_support": [
+      "Text",
+      "Images",
+      "Videos"
+    ],
+    "source_pages": [
+      167
+    ]
+  },
+  "news_feed_definition": {
+    "source_summary": "A constantly updating list of stories containing items such as status updates, photos, videos, links, app activity, and likes from people, pages, and groups a user follows.",
+    "similar_interview_questions": [
+      "Design Facebook news feed",
+      "Design Instagram feed",
+      "Design Twitter timeline"
+    ],
+    "source_pages": [
+      166
+    ]
+  },
+  "high_level_design": {
+    "feed_publishing": {
+      "definition": "When a user publishes a post, the post is written to cache and database, and the post is populated to friends' news feeds.",
+      "source_pages": [
+        168
+      ]
+    },
+    "news_feed_building": {
+      "definition": "Build the feed by aggregating friends' posts in reverse chronological order.",
+      "source_pages": [
+        168
+      ]
+    }
+  },
+  "apis": {
+    "feed_publishing": {
+      "method": "POST",
+      "endpoint": "/v1/me/feed",
+      "parameters": {
+        "content": "Text content of the post.",
+        "auth_token": "Used to authenticate the API request."
+      },
+      "source_pages": [
+        168
+      ]
+    },
+    "news_feed_retrieval": {
+      "method": "GET",
+      "endpoint": "/v1/me/feed",
+      "parameters": {
+        "auth_token": "Used to authenticate the API request."
+      },
+      "source_pages": [
+        168
+      ]
+    }
+  },
+  "feed_publishing_high_level_flow": {
+    "components": [
+      {
+        "component": "User",
+        "role": "Views feed on browser/mobile and publishes posts.",
+        "example_request": "/v1/me/feed?content=Hello&auth_token={auth_token}",
+        "source_pages": [
+          169
+        ]
+      },
+      {
+        "component": "Load balancer",
+        "role": "Distributes traffic to web servers.",
+        "source_pages": [
+          169
+        ]
+      },
+      {
+        "component": "Web servers",
+        "role": "Route traffic to internal services.",
+        "source_pages": [
+          169
+        ]
+      },
+      {
+        "component": "Post service",
+        "role": "Persists the post in database and cache.",
+        "source_pages": [
+          169
+        ]
+      },
+      {
+        "component": "Fanout service",
+        "role": "Pushes new content to friends' news feeds and stores feed data in cache for fast retrieval.",
+        "source_pages": [
+          169
+        ]
+      },
+      {
+        "component": "Notification service",
+        "role": "Informs friends that new content is available and sends push notifications.",
+        "source_pages": [
+          169
+        ]
+      }
+    ]
+  },
+  "news_feed_retrieval_high_level_flow": {
+    "components": [
+      {
+        "component": "User",
+        "role": "Requests /v1/me/feed.",
+        "source_pages": [
+          170
+        ]
+      },
+      {
+        "component": "Load balancer",
+        "role": "Redirects requests to web servers.",
+        "source_pages": [
+          170
+        ]
+      },
+      {
+        "component": "Web servers",
+        "role": "Route the request to the news feed service.",
+        "source_pages": [
+          170
+        ]
+      },
+      {
+        "component": "News feed service",
+        "role": "Fetches news feed data from cache.",
+        "source_pages": [
+          170
+        ]
+      },
+      {
+        "component": "News feed cache",
+        "role": "Stores feed IDs needed to render the feed.",
+        "source_pages": [
+          170
+        ]
+      }
+    ]
+  },
+  "web_server_deep_dive": {
+    "responsibilities": [
+      "Communicate with clients.",
+      "Enforce authentication.",
+      "Enforce rate limiting."
+    ],
+    "authentication_rule": "Only users signed in with a valid auth_token may make posts.",
+    "rate_limiting_rule": "Limit how many posts a user can make during a time period to prevent spam and abusive content.",
+    "source_pages": [
+      171,
+      172
+    ]
+  },
+  "fanout": {
+    "definition": "The process of delivering a post to all friends.",
+    "models": {
+      "fanout_on_write": {
+        "alias": "Push model",
+        "mechanism": "Pre-compute the news feed at write time by immediately delivering a new post into friends' feed caches.",
+        "pros": [
+          "News feed is generated in real time and can be pushed immediately.",
+          "Feed retrieval is fast because the feed is already precomputed."
+        ],
+        "cons": [
+          "Users with many friends require expensive friend-list lookup and feed generation for many recipients.",
+          "The chapter calls this a hotkey problem.",
+          "Precomputing feeds for inactive or rarely active users wastes computing resources."
+        ],
+        "source_pages": [
+          172
+        ]
+      },
+      "fanout_on_read": {
+        "alias": "Pull model",
+        "mechanism": "Generate the news feed at read time by pulling recent posts when the user loads the home page.",
+        "pros": [
+          "Does not waste compute precomputing feeds for inactive users.",
+          "No fanout hotkey problem because data is not pushed to all friends."
+        ],
+        "cons": [
+          "Feed retrieval is slower because the feed was not precomputed."
+        ],
+        "source_pages": [
+          172
+        ]
+      }
+    },
+    "selected_hybrid": {
+      "majority_of_users": "Use push/fanout-on-write because fast retrieval is important.",
+      "celebrities_or_high_degree_users": "Use pull/fanout-on-read so followers fetch content on demand rather than forcing a massive write fanout.",
+      "hotkey_mitigation": "Consistent hashing can distribute requests/data more evenly and help mitigate hotkey pressure.",
+      "source_pages": [
+        172
+      ]
+    }
+  },
+  "fanout_service_workflow": [
+    {
+      "step": 1,
+      "action": "Fetch friend IDs from the graph database.",
+      "reason": "Graph databases are suitable for friend relationships and friend recommendations.",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "step": 2,
+      "action": "Fetch friends' information from user cache and filter according to user settings.",
+      "examples": [
+        "Muted friend's posts should not appear.",
+        "Selective sharing may hide a post from some friends."
+      ],
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "step": 3,
+      "action": "Send the friends list and new post ID to the message queue.",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "step": 4,
+      "action": "Fanout workers pull from the message queue and write feed data to the news feed cache.",
+      "cache_model": "<post_id, user_id>",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "step": 5,
+      "action": "Store <post_id, user_id> in the news feed cache.",
+      "source_pages": [
+        173
+      ]
+    }
+  ],
+  "feed_cache_design": {
+    "mapping_model": "<post_id, user_id>",
+    "stores_ids_only": true,
+    "why_ids_only": "Storing complete user and post objects in feed cache would consume too much memory.",
+    "size_policy": "Use a configurable maximum because users are unlikely to scroll through thousands of posts and are usually interested in recent content.",
+    "effect": "The chapter expects a low cache-miss rate for this bounded recent-feed cache.",
+    "source_pages": [
+      173
+    ]
+  },
+  "news_feed_retrieval_deep_dive": {
+    "media_storage": "Images, videos, and other media are stored in a CDN for fast retrieval.",
+    "steps": [
+      {
+        "step": 1,
+        "action": "User requests /v1/me/feed.",
+        "source_pages": [
+          175
+        ]
+      },
+      {
+        "step": 2,
+        "action": "Load balancer distributes the request to web servers.",
+        "source_pages": [
+          175
+        ]
+      },
+      {
+        "step": 3,
+        "action": "Web servers call the news feed service.",
+        "source_pages": [
+          175
+        ]
+      },
+      {
+        "step": 4,
+        "action": "News feed service retrieves a list of post IDs from news feed cache.",
+        "source_pages": [
+          175
+        ]
+      },
+      {
+        "step": 5,
+        "action": "News feed service fetches complete user and post objects from user cache and post cache to construct a fully hydrated feed.",
+        "source_pages": [
+          175
+        ]
+      },
+      {
+        "step": 6,
+        "action": "Return the fully hydrated feed to the client as JSON for rendering.",
+        "source_pages": [
+          175
+        ]
+      }
+    ],
+    "source_pages": [
+      174,
+      175
+    ]
+  },
+  "cache_architecture": {
+    "importance": "The chapter states that cache is extremely important to a news feed system.",
+    "layers": [
+      {
+        "layer": "News Feed",
+        "stores": "IDs of news feeds.",
+        "source_pages": [
+          175
+        ]
+      },
+      {
+        "layer": "Content",
+        "stores": "Post data.",
+        "specialization": "Popular content is stored in hot cache.",
+        "source_pages": [
+          175
+        ]
+      },
+      {
+        "layer": "Social Graph",
+        "stores": "User relationship data such as follower/following.",
+        "source_pages": [
+          175
+        ]
+      },
+      {
+        "layer": "Action",
+        "stores": "Information about likes, replies, and other user actions on posts.",
+        "source_pages": [
+          175
+        ]
+      },
+      {
+        "layer": "Counters",
+        "stores": "Like, reply, follower, following, and other counters.",
+        "source_pages": [
+          175
+        ]
+      }
+    ]
+  },
+  "wrap_up_scaling_topics": {
+    "database_scaling": [
+      "Vertical scaling vs horizontal scaling",
+      "SQL vs NoSQL",
+      "Master-slave replication",
+      "Read replicas",
+      "Consistency models",
+      "Database sharding"
+    ],
+    "other_talking_points": [
+      "Keep web tier stateless.",
+      "Cache data as much as possible.",
+      "Support multiple data centers.",
+      "Use message queues to decouple components.",
+      "Monitor key metrics."
+    ],
+    "example_metrics": [
+      "QPS during peak hours",
+      "Latency while users refresh their news feed"
+    ],
+    "source_wording_note": "The source prints 'Lose couple components with message queues'; this guide interprets the intended architectural point as decoupling components with message queues while preserving the source's meaning.",
+    "source_pages": [
+      176
+    ]
+  },
+  "key_concepts": [
+    {
+      "term": "News Feed",
+      "definition": "A continuously updated stream of stories from people, pages, or groups a user follows.",
+      "source_pages": [
+        166
+      ]
+    },
+    {
+      "term": "Feed Publishing",
+      "definition": "Persisting a new post and distributing it into friends' feeds.",
+      "source_pages": [
+        168,
+        169
+      ]
+    },
+    {
+      "term": "News Feed Retrieval",
+      "definition": "Fetching feed IDs and hydrating them into a complete feed for a requesting user.",
+      "source_pages": [
+        170,
+        175
+      ]
+    },
+    {
+      "term": "Fanout",
+      "definition": "Delivering a post to all friends/followers who should receive it.",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "term": "Fanout on Write",
+      "alias": "Push model",
+      "definition": "Precomputing recipient feeds when the author publishes.",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "term": "Fanout on Read",
+      "alias": "Pull model",
+      "definition": "Building a user's feed on demand when the user reads it.",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "term": "Hotkey Problem",
+      "definition": "High fanout from a user with many friends/followers makes write-time distribution expensive.",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "term": "Hybrid Fanout",
+      "definition": "Push for most users, pull for celebrities/high-fanout users.",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "term": "Graph Database",
+      "definition": "Used to manage friend relationships and friend recommendations.",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "term": "Fanout Worker",
+      "definition": "Consumes fanout tasks from the queue and writes feed entries to feed cache.",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "term": "Hydration",
+      "definition": "Constructing full feed objects by combining cached feed IDs with user/post objects.",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "term": "Hot Cache",
+      "definition": "Cache tier for popular post content.",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "term": "CDN",
+      "definition": "Stores and serves media such as images and videos for fast retrieval.",
+      "source_pages": [
+        174
+      ]
+    },
+    {
+      "term": "Stateless Web Tier",
+      "definition": "A horizontally scalable web layer that avoids depending on local per-server state.",
+      "source_pages": [
+        176
+      ]
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "FC01",
+      "front": "What system is designed in Chapter 11?",
+      "back": "A news feed system.",
+      "source_pages": [
+        166
+      ]
+    },
+    {
+      "id": "FC02",
+      "front": "What similar interview questions are named?",
+      "back": "Facebook news feed, Instagram feed, and Twitter timeline.",
+      "source_pages": [
+        166
+      ]
+    },
+    {
+      "id": "FC03",
+      "front": "Which client types must be supported?",
+      "back": "Both web and mobile apps.",
+      "source_pages": [
+        167
+      ]
+    },
+    {
+      "id": "FC04",
+      "front": "What are the two core user features?",
+      "back": "Publish a post and view friends' posts in the news feed.",
+      "source_pages": [
+        167
+      ]
+    },
+    {
+      "id": "FC05",
+      "front": "How is the simplified feed ordered?",
+      "back": "Reverse chronological order.",
+      "source_pages": [
+        167
+      ]
+    },
+    {
+      "id": "FC06",
+      "front": "What is the maximum number of friends per user?",
+      "back": "5,000.",
+      "source_pages": [
+        167
+      ]
+    },
+    {
+      "id": "FC07",
+      "front": "What traffic volume is assumed?",
+      "back": "10 million DAU.",
+      "source_pages": [
+        167
+      ]
+    },
+    {
+      "id": "FC08",
+      "front": "Can the feed contain images and videos?",
+      "back": "Yes, in addition to text.",
+      "source_pages": [
+        167
+      ]
+    },
+    {
+      "id": "FC09",
+      "front": "What are the two main design flows?",
+      "back": "Feed publishing and news feed building/retrieval.",
+      "source_pages": [
+        168
+      ]
+    },
+    {
+      "id": "FC10",
+      "front": "What happens during feed publishing at a high level?",
+      "back": "The post is written to cache/database and populated to friends' news feeds.",
+      "source_pages": [
+        168
+      ]
+    },
+    {
+      "id": "FC11",
+      "front": "How is the simplified news feed built?",
+      "back": "By aggregating friends' posts in reverse chronological order.",
+      "source_pages": [
+        168
+      ]
+    },
+    {
+      "id": "FC12",
+      "front": "What is the publish API?",
+      "back": "POST /v1/me/feed.",
+      "source_pages": [
+        168
+      ]
+    },
+    {
+      "id": "FC13",
+      "front": "What publish API parameters are listed?",
+      "back": "content and auth_token.",
+      "source_pages": [
+        168
+      ]
+    },
+    {
+      "id": "FC14",
+      "front": "What is the retrieval API?",
+      "back": "GET /v1/me/feed.",
+      "source_pages": [
+        168
+      ]
+    },
+    {
+      "id": "FC15",
+      "front": "What is auth_token used for?",
+      "back": "Authenticating API requests.",
+      "source_pages": [
+        168
+      ]
+    },
+    {
+      "id": "FC16",
+      "front": "What does the load balancer do during publishing?",
+      "back": "Distributes traffic to web servers.",
+      "source_pages": [
+        169
+      ]
+    },
+    {
+      "id": "FC17",
+      "front": "What do web servers do in the high-level publishing flow?",
+      "back": "Route requests to internal services.",
+      "source_pages": [
+        169
+      ]
+    },
+    {
+      "id": "FC18",
+      "front": "What does the Post Service do?",
+      "back": "Persists the post in database and cache.",
+      "source_pages": [
+        169
+      ]
+    },
+    {
+      "id": "FC19",
+      "front": "What does the Fanout Service do?",
+      "back": "Pushes new content to friends' news feeds and stores feed data in cache.",
+      "source_pages": [
+        169
+      ]
+    },
+    {
+      "id": "FC20",
+      "front": "What does the Notification Service do?",
+      "back": "Notifies friends that new content is available and sends push notifications.",
+      "source_pages": [
+        169
+      ]
+    },
+    {
+      "id": "FC21",
+      "front": "What does News Feed Service fetch at high level?",
+      "back": "News feed data from cache.",
+      "source_pages": [
+        170
+      ]
+    },
+    {
+      "id": "FC22",
+      "front": "What does News Feed Cache store?",
+      "back": "Feed IDs needed to render the news feed.",
+      "source_pages": [
+        170
+      ]
+    },
+    {
+      "id": "FC23",
+      "front": "What two cross-cutting responsibilities do web servers enforce in the deep dive?",
+      "back": "Authentication and rate limiting.",
+      "source_pages": [
+        171,
+        172
+      ]
+    },
+    {
+      "id": "FC24",
+      "front": "Who may make posts?",
+      "back": "Users signed in with a valid auth_token.",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "FC25",
+      "front": "Why rate-limit posting?",
+      "back": "To prevent spam and abusive content.",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "FC26",
+      "front": "What is fanout?",
+      "back": "The process of delivering a post to all friends.",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "FC27",
+      "front": "What are the two fanout models?",
+      "back": "Fanout on write (push) and fanout on read (pull).",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "FC28",
+      "front": "What is fanout on write?",
+      "back": "Precompute recipients' feeds when a post is published.",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "FC29",
+      "front": "What is fanout on read?",
+      "back": "Build the feed on demand when the user loads the home page.",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "FC30",
+      "front": "What is a major advantage of fanout on write?",
+      "back": "Feed retrieval is fast because the feed is precomputed.",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "FC31",
+      "front": "What other push-model advantage is listed?",
+      "back": "The feed is generated in real time and can be pushed immediately.",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "FC32",
+      "front": "What is the push-model hotkey problem?",
+      "back": "A user with many friends/followers creates expensive fanout work to many recipients.",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "FC33",
+      "front": "What resource inefficiency exists in fanout on write?",
+      "back": "It wastes compute precomputing feeds for inactive users.",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "FC34",
+      "front": "What is a pull-model advantage for inactive users?",
+      "back": "No resources are spent precomputing their feeds until they read.",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "FC35",
+      "front": "Why does fanout on read avoid the hotkey problem?",
+      "back": "Posts are not pushed to every friend/follower at write time.",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "FC36",
+      "front": "What is fanout on read's primary disadvantage?",
+      "back": "Feed retrieval is slower because the feed is not precomputed.",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "FC37",
+      "front": "What fanout strategy does the chapter adopt?",
+      "back": "A hybrid approach.",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "FC38",
+      "front": "Which users use push in the hybrid model?",
+      "back": "The majority of users.",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "FC39",
+      "front": "Which users use pull in the hybrid model?",
+      "back": "Celebrities or users with many friends/followers.",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "FC40",
+      "front": "Why use pull for celebrities?",
+      "back": "To avoid overloading the system with massive write fanout.",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "FC41",
+      "front": "What technique is mentioned for hotkey mitigation?",
+      "back": "Consistent hashing.",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "FC42",
+      "front": "What is step 1 of fanout service?",
+      "back": "Fetch friend IDs from the graph database.",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "FC43",
+      "front": "Why use a graph database?",
+      "back": "It is suited to friend relationships and friend recommendations.",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "FC44",
+      "front": "What happens after friend IDs are fetched?",
+      "back": "Fetch friends' info from user cache and filter based on user settings.",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "FC45",
+      "front": "Give one reason a friend's post may be filtered out.",
+      "back": "The user muted that friend.",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "FC46",
+      "front": "Give another reason a post may be filtered out.",
+      "back": "Selective sharing/hiding excludes that recipient.",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "FC47",
+      "front": "What is sent to the fanout message queue?",
+      "back": "Friends list and new post ID.",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "FC48",
+      "front": "Who consumes fanout tasks?",
+      "back": "Fanout workers.",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "FC49",
+      "front": "Where do fanout workers write?",
+      "back": "News feed cache.",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "FC50",
+      "front": "How can news feed cache be conceptualized?",
+      "back": "As a <post_id, user_id> mapping table.",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "FC51",
+      "front": "Why store only IDs in news feed cache?",
+      "back": "Full user and post objects would consume too much memory.",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "FC52",
+      "front": "Why configure a feed-cache size limit?",
+      "back": "Most users care about recent content and rarely scroll through thousands of posts.",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "FC53",
+      "front": "What cache behavior does the chapter expect after limiting feed depth?",
+      "back": "A low cache-miss rate.",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "FC54",
+      "front": "Where are images and videos stored for retrieval?",
+      "back": "In a CDN.",
+      "source_pages": [
+        174
+      ]
+    },
+    {
+      "id": "FC55",
+      "front": "Why use a CDN for media?",
+      "back": "For fast retrieval.",
+      "source_pages": [
+        174
+      ]
+    },
+    {
+      "id": "FC56",
+      "front": "What is step 1 of detailed feed retrieval?",
+      "back": "User requests /v1/me/feed.",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "FC57",
+      "front": "What does the News Feed Service read first?",
+      "back": "A list of post IDs from news feed cache.",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "FC58",
+      "front": "Why are post IDs alone insufficient?",
+      "back": "A feed also needs username, profile picture, post content, images, and other data.",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "FC59",
+      "front": "Where are complete user objects fetched from?",
+      "back": "User cache.",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "FC60",
+      "front": "Where are complete post objects fetched from?",
+      "back": "Post cache.",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "FC61",
+      "front": "What is the process of combining feed IDs with user/post objects commonly called in this guide?",
+      "back": "Feed hydration.",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "FC62",
+      "front": "What format is returned to the client?",
+      "back": "JSON.",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "FC63",
+      "front": "How many cache layers does the chapter define?",
+      "back": "Five.",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "FC64",
+      "front": "What does the News Feed cache layer store?",
+      "back": "IDs of news feeds.",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "FC65",
+      "front": "What does the Content cache layer store?",
+      "back": "Post data.",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "FC66",
+      "front": "Where is popular post content stored?",
+      "back": "Hot cache.",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "FC67",
+      "front": "What does the Social Graph cache layer store?",
+      "back": "User relationship data.",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "FC68",
+      "front": "What does the Action cache layer store?",
+      "back": "Likes, replies, and other user actions on posts.",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "FC69",
+      "front": "What does the Counters cache layer store?",
+      "back": "Like, reply, follower, following, and other counters.",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "FC70",
+      "front": "What database-scaling dimensions are mentioned?",
+      "back": "Vertical vs horizontal, SQL vs NoSQL, replication, read replicas, consistency, and sharding.",
+      "source_pages": [
+        176
+      ]
+    },
+    {
+      "id": "FC71",
+      "front": "What should be true of the web tier?",
+      "back": "Keep it stateless.",
+      "source_pages": [
+        176
+      ]
+    },
+    {
+      "id": "FC72",
+      "front": "What general caching advice is given?",
+      "back": "Cache data as much as possible.",
+      "source_pages": [
+        176
+      ]
+    },
+    {
+      "id": "FC73",
+      "front": "What geographic availability idea is listed?",
+      "back": "Support multiple data centers.",
+      "source_pages": [
+        176
+      ]
+    },
+    {
+      "id": "FC74",
+      "front": "What architectural role do message queues play?",
+      "back": "Decouple components.",
+      "source_pages": [
+        176
+      ]
+    },
+    {
+      "id": "FC75",
+      "front": "What example metrics should be monitored?",
+      "back": "Peak-hour QPS and latency while users refresh news feeds.",
+      "source_pages": [
+        176
+      ]
+    }
+  ],
+  "multiple_choice_questions": [
+    {
+      "id": "MCQ01",
+      "difficulty": "easy",
+      "question": "Which feed ordering is assumed?",
+      "choices": {
+        "A": "Reverse chronological",
+        "B": "Alphabetical",
+        "C": "Random",
+        "D": "Topic score only"
+      },
+      "answer": "A",
+      "source_pages": [
+        167
+      ]
+    },
+    {
+      "id": "MCQ02",
+      "difficulty": "medium",
+      "question": "What maximum friend count is assumed?",
+      "choices": {
+        "A": "500",
+        "B": "1,000",
+        "C": "5,000",
+        "D": "50,000"
+      },
+      "answer": "C",
+      "source_pages": [
+        167
+      ]
+    },
+    {
+      "id": "MCQ03",
+      "difficulty": "medium",
+      "question": "What traffic volume is assumed?",
+      "choices": {
+        "A": "1M DAU",
+        "B": "10M DAU",
+        "C": "100M DAU",
+        "D": "1B DAU"
+      },
+      "answer": "B",
+      "source_pages": [
+        167
+      ]
+    },
+    {
+      "id": "MCQ04",
+      "difficulty": "medium",
+      "question": "Which media types may appear in feed posts?",
+      "choices": {
+        "A": "Text only",
+        "B": "Images only",
+        "C": "Images and videos",
+        "D": "Audio only"
+      },
+      "answer": "C",
+      "source_pages": [
+        167
+      ]
+    },
+    {
+      "id": "MCQ05",
+      "difficulty": "medium",
+      "question": "What are the two primary flows?",
+      "choices": {
+        "A": "Publishing and retrieval",
+        "B": "Login and logout",
+        "C": "Search and autocomplete",
+        "D": "Upload and transcoding"
+      },
+      "answer": "A",
+      "source_pages": [
+        168
+      ]
+    },
+    {
+      "id": "MCQ06",
+      "difficulty": "easy",
+      "question": "Which method publishes a feed post?",
+      "choices": {
+        "A": "GET",
+        "B": "POST",
+        "C": "DELETE",
+        "D": "PATCH only"
+      },
+      "answer": "B",
+      "source_pages": [
+        168
+      ]
+    },
+    {
+      "id": "MCQ07",
+      "difficulty": "easy",
+      "question": "Which method retrieves a feed?",
+      "choices": {
+        "A": "GET",
+        "B": "POST",
+        "C": "PUT",
+        "D": "DELETE"
+      },
+      "answer": "A",
+      "source_pages": [
+        168
+      ]
+    },
+    {
+      "id": "MCQ08",
+      "difficulty": "medium",
+      "question": "What is the endpoint for both main operations?",
+      "choices": {
+        "A": "/v1/me/feed",
+        "B": "/v1/news/post",
+        "C": "/v2/timeline",
+        "D": "/feed/all"
+      },
+      "answer": "A",
+      "source_pages": [
+        168
+      ]
+    },
+    {
+      "id": "MCQ09",
+      "difficulty": "medium",
+      "question": "What authenticates feed API calls?",
+      "choices": {
+        "A": "auth_token",
+        "B": "PageRank",
+        "C": "post_id only",
+        "D": "CDN key"
+      },
+      "answer": "A",
+      "source_pages": [
+        168
+      ]
+    },
+    {
+      "id": "MCQ10",
+      "difficulty": "medium",
+      "question": "Which service persists the post?",
+      "choices": {
+        "A": "Post service",
+        "B": "Notification service",
+        "C": "Graph DB",
+        "D": "CDN"
+      },
+      "answer": "A",
+      "source_pages": [
+        169
+      ]
+    },
+    {
+      "id": "MCQ11",
+      "difficulty": "medium",
+      "question": "Which service distributes a post into friends' feeds?",
+      "choices": {
+        "A": "Fanout service",
+        "B": "DNS",
+        "C": "CDN",
+        "D": "Counter cache"
+      },
+      "answer": "A",
+      "source_pages": [
+        169
+      ]
+    },
+    {
+      "id": "MCQ12",
+      "difficulty": "medium",
+      "question": "Which service alerts friends about new content?",
+      "choices": {
+        "A": "Notification service",
+        "B": "Post service only",
+        "C": "Graph DB",
+        "D": "User cache"
+      },
+      "answer": "A",
+      "source_pages": [
+        169
+      ]
+    },
+    {
+      "id": "MCQ13",
+      "difficulty": "medium",
+      "question": "What does the high-level News Feed Cache hold?",
+      "choices": {
+        "A": "Feed IDs",
+        "B": "All media files",
+        "C": "Passwords",
+        "D": "Graph edges only"
+      },
+      "answer": "A",
+      "source_pages": [
+        170
+      ]
+    },
+    {
+      "id": "MCQ14",
+      "difficulty": "hard",
+      "question": "What two controls do web servers enforce in the deep dive?",
+      "choices": {
+        "A": "Authentication and rate limiting",
+        "B": "Sharding and replication",
+        "C": "Fanout and hydration",
+        "D": "CDN and DNS"
+      },
+      "answer": "A",
+      "source_pages": [
+        171,
+        172
+      ]
+    },
+    {
+      "id": "MCQ15",
+      "difficulty": "hard",
+      "question": "Why rate-limit posting?",
+      "choices": {
+        "A": "Prevent spam and abuse",
+        "B": "Reduce image resolution",
+        "C": "Change feed order",
+        "D": "Replace auth"
+      },
+      "answer": "A",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "MCQ16",
+      "difficulty": "medium",
+      "question": "What is fanout?",
+      "choices": {
+        "A": "Delivering a post to all friends",
+        "B": "Compressing media",
+        "C": "Sorting counters",
+        "D": "Authenticating users"
+      },
+      "answer": "A",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "MCQ17",
+      "difficulty": "medium",
+      "question": "What is another name for fanout on write?",
+      "choices": {
+        "A": "Push model",
+        "B": "Pull model",
+        "C": "Graph model",
+        "D": "Hydration model"
+      },
+      "answer": "A",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "MCQ18",
+      "difficulty": "medium",
+      "question": "What is another name for fanout on read?",
+      "choices": {
+        "A": "Push model",
+        "B": "Pull model",
+        "C": "Write-through",
+        "D": "Hot cache"
+      },
+      "answer": "B",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "MCQ19",
+      "difficulty": "hard",
+      "question": "What is the main read-time benefit of fanout on write?",
+      "choices": {
+        "A": "Feed is already precomputed",
+        "B": "No cache is needed",
+        "C": "No write cost exists",
+        "D": "No friends list is needed"
+      },
+      "answer": "A",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "MCQ20",
+      "difficulty": "hard",
+      "question": "What creates the hotkey problem in push fanout?",
+      "choices": {
+        "A": "Users with many friends/followers",
+        "B": "Users with zero friends",
+        "C": "Small posts",
+        "D": "CDN media"
+      },
+      "answer": "A",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "MCQ21",
+      "difficulty": "hard",
+      "question": "Why is push wasteful for inactive users?",
+      "choices": {
+        "A": "Their feeds are precomputed even though they rarely read them",
+        "B": "They have no user ID",
+        "C": "They cannot be cached",
+        "D": "They only use web"
+      },
+      "answer": "A",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "MCQ22",
+      "difficulty": "hard",
+      "question": "Why is pull better for inactive users?",
+      "choices": {
+        "A": "Work happens only when they read",
+        "B": "It precomputes more data",
+        "C": "It pushes to all followers",
+        "D": "It removes post storage"
+      },
+      "answer": "A",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "MCQ23",
+      "difficulty": "hard",
+      "question": "What is pull fanout's main disadvantage?",
+      "choices": {
+        "A": "Slower retrieval",
+        "B": "More write amplification",
+        "C": "No post ordering",
+        "D": "No graph data"
+      },
+      "answer": "A",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "MCQ24",
+      "difficulty": "hard",
+      "question": "Which strategy is selected?",
+      "choices": {
+        "A": "Hybrid push/pull",
+        "B": "Push only",
+        "C": "Pull only",
+        "D": "No fanout"
+      },
+      "answer": "A",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "MCQ25",
+      "difficulty": "hard",
+      "question": "Who generally gets fanout-on-read in the hybrid model?",
+      "choices": {
+        "A": "Celebrities/high-fanout users",
+        "B": "Every inactive user only",
+        "C": "All users",
+        "D": "Users with one friend"
+      },
+      "answer": "A",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "MCQ26",
+      "difficulty": "hard",
+      "question": "Why is consistent hashing mentioned?",
+      "choices": {
+        "A": "Mitigate hotkey pressure by distributing requests/data",
+        "B": "Store media",
+        "C": "Sort posts alphabetically",
+        "D": "Authenticate users"
+      },
+      "answer": "A",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "MCQ27",
+      "difficulty": "medium",
+      "question": "Where are friend IDs fetched from?",
+      "choices": {
+        "A": "Graph database",
+        "B": "CDN",
+        "C": "Counter cache",
+        "D": "Notification service"
+      },
+      "answer": "A",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "MCQ28",
+      "difficulty": "hard",
+      "question": "What happens after friend IDs are retrieved?",
+      "choices": {
+        "A": "Fetch friend info and apply user-setting filters",
+        "B": "Immediately send media to CDN",
+        "C": "Delete posts",
+        "D": "Return JSON"
+      },
+      "answer": "A",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "MCQ29",
+      "difficulty": "hard",
+      "question": "Which setting may remove a friend's post from the feed?",
+      "choices": {
+        "A": "Mute",
+        "B": "Password length",
+        "C": "Device type",
+        "D": "DNS TTL"
+      },
+      "answer": "A",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "MCQ30",
+      "difficulty": "medium",
+      "question": "What is placed into the fanout message queue?",
+      "choices": {
+        "A": "Friends list and new post ID",
+        "B": "Full video files",
+        "C": "Auth passwords",
+        "D": "Only user counters"
+      },
+      "answer": "A",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "MCQ31",
+      "difficulty": "medium",
+      "question": "Who consumes fanout queue messages?",
+      "choices": {
+        "A": "Fanout workers",
+        "B": "CDN",
+        "C": "Load balancer",
+        "D": "Graph DB"
+      },
+      "answer": "A",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "MCQ32",
+      "difficulty": "medium",
+      "question": "How is feed cache represented conceptually?",
+      "choices": {
+        "A": "<post_id,user_id> mapping",
+        "B": "<password,email> mapping",
+        "C": "<video,CDN> mapping",
+        "D": "<counter,shard> mapping"
+      },
+      "answer": "A",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "MCQ33",
+      "difficulty": "hard",
+      "question": "Why does the feed cache store only IDs?",
+      "choices": {
+        "A": "To limit memory usage",
+        "B": "Because posts have no content",
+        "C": "Because graph DB cannot store users",
+        "D": "Because JSON cannot contain objects"
+      },
+      "answer": "A",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "MCQ34",
+      "difficulty": "hard",
+      "question": "Why is feed-cache depth bounded?",
+      "choices": {
+        "A": "Users rarely scroll through thousands of posts",
+        "B": "HTTP allows only 100 posts",
+        "C": "CDN requires it",
+        "D": "Graph DB has no space"
+      },
+      "answer": "A",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "MCQ35",
+      "difficulty": "medium",
+      "question": "Where are media files served from?",
+      "choices": {
+        "A": "CDN",
+        "B": "Graph DB",
+        "C": "News Feed Cache",
+        "D": "Load balancer"
+      },
+      "answer": "A",
+      "source_pages": [
+        174
+      ]
+    },
+    {
+      "id": "MCQ36",
+      "difficulty": "hard",
+      "question": "What does News Feed Service fetch first in the detailed read path?",
+      "choices": {
+        "A": "Post IDs from news feed cache",
+        "B": "All posts from DB",
+        "C": "All media from CDN",
+        "D": "All graph edges"
+      },
+      "answer": "A",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "MCQ37",
+      "difficulty": "hard",
+      "question": "What is required to construct a fully hydrated feed?",
+      "choices": {
+        "A": "User and post objects in addition to feed IDs",
+        "B": "Only post IDs",
+        "C": "Only counters",
+        "D": "Only notification state"
+      },
+      "answer": "A",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "MCQ38",
+      "difficulty": "medium",
+      "question": "Where are user objects fetched from?",
+      "choices": {
+        "A": "User cache",
+        "B": "CDN",
+        "C": "News Feed Cache only",
+        "D": "Notification service"
+      },
+      "answer": "A",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "MCQ39",
+      "difficulty": "medium",
+      "question": "Where are post objects fetched from?",
+      "choices": {
+        "A": "Post cache",
+        "B": "Graph DB only",
+        "C": "Counter cache",
+        "D": "Load balancer"
+      },
+      "answer": "A",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "MCQ40",
+      "difficulty": "medium",
+      "question": "In what format is the completed feed returned?",
+      "choices": {
+        "A": "JSON",
+        "B": "CSV",
+        "C": "XML only",
+        "D": "Binary video only"
+      },
+      "answer": "A",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "MCQ41",
+      "difficulty": "medium",
+      "question": "How many cache layers are listed?",
+      "choices": {
+        "A": "3",
+        "B": "4",
+        "C": "5",
+        "D": "6"
+      },
+      "answer": "C",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "MCQ42",
+      "difficulty": "medium",
+      "question": "Which cache layer stores popular post data in hot cache?",
+      "choices": {
+        "A": "Content",
+        "B": "Action",
+        "C": "Counters",
+        "D": "Social Graph"
+      },
+      "answer": "A",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "MCQ43",
+      "difficulty": "medium",
+      "question": "Which cache layer stores follower/following relationship data?",
+      "choices": {
+        "A": "Social Graph",
+        "B": "News Feed",
+        "C": "Content",
+        "D": "Counters"
+      },
+      "answer": "A",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "MCQ44",
+      "difficulty": "medium",
+      "question": "Which cache layer stores liked/replied state?",
+      "choices": {
+        "A": "Action",
+        "B": "Content",
+        "C": "Counters",
+        "D": "News Feed"
+      },
+      "answer": "A",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "MCQ45",
+      "difficulty": "medium",
+      "question": "Which cache layer stores like/reply/follower counts?",
+      "choices": {
+        "A": "Counters",
+        "B": "Action",
+        "C": "Content",
+        "D": "News Feed"
+      },
+      "answer": "A",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "MCQ46",
+      "difficulty": "medium",
+      "question": "What should the web tier be for scalability?",
+      "choices": {
+        "A": "Stateless",
+        "B": "Stateful per user",
+        "C": "Single-server only",
+        "D": "Disk-bound"
+      },
+      "answer": "A",
+      "source_pages": [
+        176
+      ]
+    },
+    {
+      "id": "MCQ47",
+      "difficulty": "medium",
+      "question": "What geographic resilience topic is listed?",
+      "choices": {
+        "A": "Multiple data centers",
+        "B": "One region only",
+        "C": "No replication",
+        "D": "No failover"
+      },
+      "answer": "A",
+      "source_pages": [
+        176
+      ]
+    },
+    {
+      "id": "MCQ48",
+      "difficulty": "medium",
+      "question": "What is message queue's wrap-up role?",
+      "choices": {
+        "A": "Decouple components",
+        "B": "Store videos",
+        "C": "Authenticate users",
+        "D": "Replace cache"
+      },
+      "answer": "A",
+      "source_pages": [
+        176
+      ]
+    },
+    {
+      "id": "MCQ49",
+      "difficulty": "medium",
+      "question": "Which metric is explicitly suggested?",
+      "choices": {
+        "A": "Peak-hour QPS",
+        "B": "CPU model",
+        "C": "Screen resolution",
+        "D": "Friend name length"
+      },
+      "answer": "A",
+      "source_pages": [
+        176
+      ]
+    },
+    {
+      "id": "MCQ50",
+      "difficulty": "medium",
+      "question": "Which user-experience metric is explicitly suggested?",
+      "choices": {
+        "A": "Feed refresh latency",
+        "B": "Email bounce rate",
+        "C": "DNS record count",
+        "D": "Video frame rate"
+      },
+      "answer": "A",
+      "source_pages": [
+        176
+      ]
+    }
+  ],
+  "mix_and_match": [
+    {
+      "id": "MM01",
+      "title": "Publishing Component to Role",
+      "left": {
+        "A": "Load balancer",
+        "B": "Web servers",
+        "C": "Post service",
+        "D": "Fanout service",
+        "E": "Notification service"
+      },
+      "right": {
+        "1": "Persist post in DB/cache",
+        "2": "Inform friends about new content",
+        "3": "Distribute traffic",
+        "4": "Route traffic to internal services",
+        "5": "Push post into friends' feeds"
+      },
+      "answer_key": {
+        "A": "3",
+        "B": "4",
+        "C": "1",
+        "D": "5",
+        "E": "2"
+      },
+      "source_pages": [
+        169
+      ]
+    },
+    {
+      "id": "MM02",
+      "title": "Fanout Model to Property",
+      "left": {
+        "A": "Fanout on write",
+        "B": "Fanout on read",
+        "C": "Hybrid approach",
+        "D": "Consistent hashing"
+      },
+      "right": {
+        "1": "Push for most, pull for celebrities",
+        "2": "Precompute at post time",
+        "3": "Generate feed on demand",
+        "4": "Help distribute hotkey load"
+      },
+      "answer_key": {
+        "A": "2",
+        "B": "3",
+        "C": "1",
+        "D": "4"
+      },
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "MM03",
+      "title": "Fanout Pipeline Component",
+      "left": {
+        "A": "Graph DB",
+        "B": "User cache",
+        "C": "Message queue",
+        "D": "Fanout workers",
+        "E": "News feed cache"
+      },
+      "right": {
+        "1": "Stores <post_id,user_id> feed entries",
+        "2": "Provides friend information/settings",
+        "3": "Stores friend relationships",
+        "4": "Buffers friend-list/post fanout tasks",
+        "5": "Consumes tasks and writes feed entries"
+      },
+      "answer_key": {
+        "A": "3",
+        "B": "2",
+        "C": "4",
+        "D": "5",
+        "E": "1"
+      },
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "MM04",
+      "title": "Cache Layer to Data",
+      "left": {
+        "A": "News Feed",
+        "B": "Content",
+        "C": "Social Graph",
+        "D": "Action",
+        "E": "Counters"
+      },
+      "right": {
+        "1": "Likes/replies/other action state",
+        "2": "Feed IDs",
+        "3": "Post data and hot content",
+        "4": "Relationship data",
+        "5": "Like/reply/follower/following counts"
+      },
+      "answer_key": {
+        "A": "2",
+        "B": "3",
+        "C": "4",
+        "D": "1",
+        "E": "5"
+      },
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "MM05",
+      "title": "Concern to Technique",
+      "left": {
+        "A": "Spam posting",
+        "B": "Large media retrieval",
+        "C": "High-fanout celebrity",
+        "D": "Component coupling",
+        "E": "Peak read latency"
+      },
+      "right": {
+        "1": "CDN",
+        "2": "Rate limiting",
+        "3": "Pull-on-read for that user's content",
+        "4": "Message queues",
+        "5": "Aggressive cache use"
+      },
+      "answer_key": {
+        "A": "2",
+        "B": "1",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        172,
+        174,
+        176
+      ]
+    }
+  ],
+  "true_false": [
+    {
+      "id": "TF01",
+      "statement": "The design supports both web and mobile clients.",
+      "answer": true,
+      "source_pages": [
+        167
+      ]
+    },
+    {
+      "id": "TF02",
+      "statement": "The feed is sorted alphabetically.",
+      "answer": false,
+      "source_pages": [
+        167
+      ]
+    },
+    {
+      "id": "TF03",
+      "statement": "The friend limit is 5,000.",
+      "answer": true,
+      "source_pages": [
+        167
+      ]
+    },
+    {
+      "id": "TF04",
+      "statement": "The assumed traffic is 10 million DAU.",
+      "answer": true,
+      "source_pages": [
+        167
+      ]
+    },
+    {
+      "id": "TF05",
+      "statement": "The feed is text-only.",
+      "answer": false,
+      "source_pages": [
+        167
+      ]
+    },
+    {
+      "id": "TF06",
+      "statement": "Feed publishing uses POST /v1/me/feed.",
+      "answer": true,
+      "source_pages": [
+        168
+      ]
+    },
+    {
+      "id": "TF07",
+      "statement": "Feed retrieval uses GET /v1/me/feed.",
+      "answer": true,
+      "source_pages": [
+        168
+      ]
+    },
+    {
+      "id": "TF08",
+      "statement": "The Post Service persists posts.",
+      "answer": true,
+      "source_pages": [
+        169
+      ]
+    },
+    {
+      "id": "TF09",
+      "statement": "The Fanout Service is responsible for push notifications to devices.",
+      "answer": false,
+      "explanation": "Fanout populates friends' news feeds; Notification Service handles notifications.",
+      "source_pages": [
+        169
+      ]
+    },
+    {
+      "id": "TF10",
+      "statement": "News Feed Cache stores feed IDs.",
+      "answer": true,
+      "source_pages": [
+        170
+      ]
+    },
+    {
+      "id": "TF11",
+      "statement": "Web servers enforce authentication and rate limiting.",
+      "answer": true,
+      "source_pages": [
+        171,
+        172
+      ]
+    },
+    {
+      "id": "TF12",
+      "statement": "Any unauthenticated user may publish a post.",
+      "answer": false,
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "TF13",
+      "statement": "Fanout on write precomputes feeds during write time.",
+      "answer": true,
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "TF14",
+      "statement": "Fanout on write makes feed reads slower than pull.",
+      "answer": false,
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "TF15",
+      "statement": "Fanout on write can waste resources for inactive users.",
+      "answer": true,
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "TF16",
+      "statement": "Fanout on read precomputes all recipient feeds when a post is published.",
+      "answer": false,
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "TF17",
+      "statement": "Fanout on read avoids the push-model hotkey problem.",
+      "answer": true,
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "TF18",
+      "statement": "Fanout on read has slower feed retrieval.",
+      "answer": true,
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "TF19",
+      "statement": "The chapter chooses a pure push model for everyone.",
+      "answer": false,
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "TF20",
+      "statement": "Celebrities/high-fanout users use pull in the hybrid strategy.",
+      "answer": true,
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "TF21",
+      "statement": "Consistent hashing is mentioned as a hotkey mitigation technique.",
+      "answer": true,
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "TF22",
+      "statement": "Friend IDs are fetched from a graph database.",
+      "answer": true,
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "TF23",
+      "statement": "User settings may filter muted friends from the feed.",
+      "answer": true,
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "TF24",
+      "statement": "The fanout queue receives a friends list and new post ID.",
+      "answer": true,
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "TF25",
+      "statement": "The news feed cache stores full user and post objects for every feed entry.",
+      "answer": false,
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "TF26",
+      "statement": "The feed cache is bounded because most users care mainly about recent content.",
+      "answer": true,
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "TF27",
+      "statement": "Images and videos are stored in CDN for fast retrieval.",
+      "answer": true,
+      "source_pages": [
+        174
+      ]
+    },
+    {
+      "id": "TF28",
+      "statement": "The retrieval service only needs post IDs to render the final feed.",
+      "answer": false,
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "TF29",
+      "statement": "User and post caches are used to hydrate the feed.",
+      "answer": true,
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "TF30",
+      "statement": "The final feed is returned as JSON.",
+      "answer": true,
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "TF31",
+      "statement": "There are five cache layers in the chapter.",
+      "answer": true,
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "TF32",
+      "statement": "The Action cache stores like/reply action state.",
+      "answer": true,
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "TF33",
+      "statement": "The Counters cache stores follower/following counts.",
+      "answer": true,
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "TF34",
+      "statement": "The wrap-up recommends a stateful web tier.",
+      "answer": false,
+      "source_pages": [
+        176
+      ]
+    },
+    {
+      "id": "TF35",
+      "statement": "Supporting multiple data centers is a wrap-up topic.",
+      "answer": true,
+      "source_pages": [
+        176
+      ]
+    },
+    {
+      "id": "TF36",
+      "statement": "Peak QPS and feed refresh latency are suggested monitoring metrics.",
+      "answer": true,
+      "source_pages": [
+        176
+      ]
+    }
+  ],
+  "fill_in_the_blank": [
+    {
+      "id": "FIB01",
+      "prompt": "The simplified feed is sorted in ______ chronological order.",
+      "answer": "reverse",
+      "source_pages": [
+        167
+      ]
+    },
+    {
+      "id": "FIB02",
+      "prompt": "A user may have up to ______ friends.",
+      "answer": "5000",
+      "source_pages": [
+        167
+      ]
+    },
+    {
+      "id": "FIB03",
+      "prompt": "Traffic volume is ______ million DAU.",
+      "answer": "10",
+      "source_pages": [
+        167
+      ]
+    },
+    {
+      "id": "FIB04",
+      "prompt": "Publishing uses HTTP ______.",
+      "answer": "POST",
+      "source_pages": [
+        168
+      ]
+    },
+    {
+      "id": "FIB05",
+      "prompt": "Retrieval uses HTTP ______.",
+      "answer": "GET",
+      "source_pages": [
+        168
+      ]
+    },
+    {
+      "id": "FIB06",
+      "prompt": "API authentication uses auth________.",
+      "answer": "token",
+      "source_pages": [
+        168
+      ]
+    },
+    {
+      "id": "FIB07",
+      "prompt": "The service that persists posts is the ______ service.",
+      "answer": "Post",
+      "source_pages": [
+        169
+      ]
+    },
+    {
+      "id": "FIB08",
+      "prompt": "Delivering a post to all friends is called ______.",
+      "answer": "fanout",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "FIB09",
+      "prompt": "Fanout on write is also called the ______ model.",
+      "answer": "push",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "FIB10",
+      "prompt": "Fanout on read is also called the ______ model.",
+      "answer": "pull",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "FIB11",
+      "prompt": "The write-fanout overload issue is called the ______ problem.",
+      "answer": "hotkey",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "FIB12",
+      "prompt": "Friend IDs are fetched from a ______ database.",
+      "answer": "graph",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "FIB13",
+      "prompt": "Fanout workers consume tasks from a message ______.",
+      "answer": "queue",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "FIB14",
+      "prompt": "News feed cache stores <post_id, _______id>.",
+      "answer": "user",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "FIB15",
+      "prompt": "Images and videos are stored in a ______ for fast retrieval.",
+      "answer": "CDN",
+      "source_pages": [
+        174
+      ]
+    },
+    {
+      "id": "FIB16",
+      "prompt": "The fully hydrated feed is returned as ______.",
+      "answer": "JSON",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "FIB17",
+      "prompt": "Popular post content is stored in ______ cache.",
+      "answer": "hot",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "FIB18",
+      "prompt": "The web tier should be kept ______.",
+      "answer": "stateless",
+      "source_pages": [
+        176
+      ]
+    }
+  ],
+  "ordering_exercises": [
+    {
+      "id": "ORD01",
+      "title": "Feed Publishing Flow",
+      "items_scrambled": [
+        "Fanout to friends' feeds",
+        "User publishes post",
+        "Load balancer sends to web server",
+        "Persist via Post Service",
+        "Notification Service alerts friends"
+      ],
+      "correct_order": [
+        "User publishes post",
+        "Load balancer sends to web server",
+        "Persist via Post Service",
+        "Fanout to friends' feeds",
+        "Notification Service alerts friends"
+      ],
+      "source_pages": [
+        169
+      ]
+    },
+    {
+      "id": "ORD02",
+      "title": "Fanout Service Workflow",
+      "items_scrambled": [
+        "Fanout workers write feed entries",
+        "Get friend IDs from graph DB",
+        "Send friends + post ID to queue",
+        "Fetch/filter friend info from user cache",
+        "Store <post_id,user_id> in feed cache"
+      ],
+      "correct_order": [
+        "Get friend IDs from graph DB",
+        "Fetch/filter friend info from user cache",
+        "Send friends + post ID to queue",
+        "Fanout workers write feed entries",
+        "Store <post_id,user_id> in feed cache"
+      ],
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "ORD03",
+      "title": "Detailed Feed Retrieval",
+      "items_scrambled": [
+        "Fetch user/post objects",
+        "Return JSON",
+        "User requests feed",
+        "Get post IDs from feed cache",
+        "Web servers call News Feed Service",
+        "Load balancer distributes request"
+      ],
+      "correct_order": [
+        "User requests feed",
+        "Load balancer distributes request",
+        "Web servers call News Feed Service",
+        "Get post IDs from feed cache",
+        "Fetch user/post objects",
+        "Return JSON"
+      ],
+      "source_pages": [
+        175
+      ]
+    }
+  ],
+  "scenario_questions": [
+    {
+      "id": "SC01",
+      "difficulty": "medium",
+      "scenario": "A normal user with a few hundred friends publishes a post, and feed-read latency is the primary concern.",
+      "question": "Which fanout model does the chapter favor?",
+      "expected_answer": "Fanout on write/push, because the feed is precomputed and reads are fast.",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "SC02",
+      "difficulty": "hard",
+      "scenario": "A celebrity has millions of followers.",
+      "question": "Why is pure fanout on write problematic and what does the chapter do instead?",
+      "expected_answer": "Pushing the post to every follower creates hotkey/write-fanout pressure. The hybrid model lets followers pull celebrity content on demand.",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "SC03",
+      "difficulty": "medium",
+      "scenario": "A user logs in once every few months.",
+      "question": "Which fanout model is more resource-efficient for that user?",
+      "expected_answer": "Fanout on read, because the system avoids precomputing a feed that is rarely consumed.",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "SC04",
+      "difficulty": "hard",
+      "scenario": "A user is muted by one of her friends.",
+      "question": "At what point does the chapter's fanout pipeline apply this rule?",
+      "expected_answer": "After friend IDs are fetched, friend information is read from user cache and user settings are used to filter recipients/content.",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "SC05",
+      "difficulty": "hard",
+      "scenario": "The fanout service stores full user objects and post objects inside every recipient's feed cache.",
+      "question": "What scalability problem does the chapter predict?",
+      "expected_answer": "Very high memory consumption; the chapter stores only IDs in news feed cache.",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "SC06",
+      "difficulty": "medium",
+      "scenario": "A user scrolls only through the latest few hundred posts.",
+      "question": "How does this behavior influence feed-cache design?",
+      "expected_answer": "The cache can have a configurable bounded size rather than storing thousands of entries indefinitely.",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "SC07",
+      "difficulty": "medium",
+      "scenario": "The client receives post IDs but still needs username, profile picture, text, and image references.",
+      "question": "What does News Feed Service do?",
+      "expected_answer": "Fetch complete user and post objects from user cache and post cache to hydrate the feed.",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "SC08",
+      "difficulty": "medium",
+      "scenario": "Large images and videos are making feed rendering slow.",
+      "question": "What component does the chapter use for those assets?",
+      "expected_answer": "A CDN.",
+      "source_pages": [
+        174
+      ]
+    },
+    {
+      "id": "SC09",
+      "difficulty": "hard",
+      "scenario": "One popular post receives enormous read traffic.",
+      "question": "Which cache-layer detail is relevant?",
+      "expected_answer": "Popular content is stored in the Content layer's hot cache.",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "SC10",
+      "difficulty": "medium",
+      "scenario": "You need to display whether the requesting user already liked or replied to each post.",
+      "question": "Which cache layer is designed for that?",
+      "expected_answer": "Action cache.",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "SC11",
+      "difficulty": "medium",
+      "scenario": "You need to display like counts and follower counts.",
+      "question": "Which cache layer is responsible?",
+      "expected_answer": "Counters cache.",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "SC12",
+      "difficulty": "hard",
+      "scenario": "One fanout-processing component is overloaded and you want producers and consumers to scale independently.",
+      "question": "What chapter technique supports this?",
+      "expected_answer": "Message queues to decouple components.",
+      "source_pages": [
+        173,
+        176
+      ]
+    },
+    {
+      "id": "SC13",
+      "difficulty": "medium",
+      "scenario": "Your web tier needs to scale out across many servers.",
+      "question": "What architectural property does the chapter recommend?",
+      "expected_answer": "Keep the web tier stateless.",
+      "source_pages": [
+        176
+      ]
+    },
+    {
+      "id": "SC14",
+      "difficulty": "medium",
+      "scenario": "Feed refreshes become slow during peak usage.",
+      "question": "Which two explicit operational metrics should you inspect?",
+      "expected_answer": "Peak-hour QPS and feed-refresh latency.",
+      "source_pages": [
+        176
+      ]
+    }
+  ],
+  "short_answer_questions": [
+    {
+      "id": "SA01",
+      "question": "Describe the two core system flows.",
+      "model_answer": "Publishing persists a post and fans it out to friends' feed caches, while retrieval reads feed IDs and constructs the user's visible feed from cached user/post data.",
+      "source_pages": [
+        168,
+        169,
+        170,
+        175
+      ]
+    },
+    {
+      "id": "SA02",
+      "question": "Compare fanout on write and fanout on read.",
+      "model_answer": "Fanout on write precomputes recipient feeds when a post is created, producing fast reads but expensive writes and wasted work for inactive users. Fanout on read delays aggregation until the feed is requested, saving write-side work but making feed reads slower.",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "SA03",
+      "question": "Why is a hybrid fanout model selected?",
+      "model_answer": "Fast feed retrieval is important for most users, so push is used by default. Extremely high-fanout users such as celebrities would overload a push model, so their followers pull those posts on demand.",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "SA04",
+      "question": "Walk through the fanout service.",
+      "model_answer": "Fetch friend IDs from graph DB, fetch/filter friend information using user cache and settings, enqueue the friend list and post ID, let fanout workers consume the queue, and store <post_id,user_id> feed entries in news feed cache.",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "SA05",
+      "question": "Why does news feed cache store IDs instead of complete objects?",
+      "model_answer": "Replicating full user/post objects into every recipient's feed cache would consume too much memory. The design stores lightweight IDs and hydrates the objects later from dedicated caches.",
+      "source_pages": [
+        173,
+        175
+      ]
+    },
+    {
+      "id": "SA06",
+      "question": "Explain detailed news feed retrieval.",
+      "model_answer": "The request reaches web servers through a load balancer, web servers call News Feed Service, the service reads post IDs from News Feed Cache, fetches full user and post objects from their caches, constructs the hydrated feed, and returns it as JSON.",
+      "source_pages": [
+        174,
+        175
+      ]
+    },
+    {
+      "id": "SA07",
+      "question": "Explain the five-layer cache architecture.",
+      "model_answer": "News Feed stores feed IDs; Content stores post data with popular content in hot cache; Social Graph stores relationship data; Action stores liked/replied/other action state; Counters stores numerical counts such as likes, replies, followers, and following.",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "SA08",
+      "question": "What should you discuss if the interviewer asks how to scale the design further?",
+      "model_answer": "Database vertical/horizontal scaling, SQL versus NoSQL, replication/read replicas, consistency, sharding, stateless web servers, aggressive caching, multiple data centers, message-queue decoupling, and operational monitoring.",
+      "source_pages": [
+        176
+      ]
+    }
+  ],
+  "active_recall_prompts": [
+    {
+      "id": "AR01",
+      "prompt": "Recite every clarified requirement.",
+      "target_points": [
+        "Web + mobile",
+        "Publish posts",
+        "View friends' posts",
+        "Reverse chronological",
+        "5000 friends",
+        "10M DAU",
+        "Images/videos"
+      ],
+      "source_pages": [
+        167
+      ]
+    },
+    {
+      "id": "AR02",
+      "prompt": "Recite both API definitions.",
+      "target_points": [
+        "POST /v1/me/feed",
+        "content",
+        "auth_token",
+        "GET /v1/me/feed",
+        "auth_token"
+      ],
+      "source_pages": [
+        168
+      ]
+    },
+    {
+      "id": "AR03",
+      "prompt": "Reconstruct feed publishing components.",
+      "target_points": [
+        "User",
+        "Load balancer",
+        "Web servers",
+        "Post Service",
+        "Fanout Service",
+        "Notification Service"
+      ],
+      "source_pages": [
+        169
+      ]
+    },
+    {
+      "id": "AR04",
+      "prompt": "Compare push and pull fanout from memory.",
+      "target_points": [
+        "Push precompute",
+        "Fast reads",
+        "Hotkey",
+        "Waste inactive compute",
+        "Pull on demand",
+        "No hotkey",
+        "Slow reads"
+      ],
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "AR05",
+      "prompt": "Explain the hybrid model.",
+      "target_points": [
+        "Push majority",
+        "Pull celebrities/high-followers",
+        "Avoid overload",
+        "Consistent hashing helps hotkeys"
+      ],
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "AR06",
+      "prompt": "Reconstruct the five fanout-service steps.",
+      "target_points": [
+        "Graph DB friend IDs",
+        "User cache/filter settings",
+        "Queue friends+post",
+        "Fanout workers",
+        "Write feed cache"
+      ],
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "AR07",
+      "prompt": "Explain why the feed cache stores only IDs and is bounded.",
+      "target_points": [
+        "Memory cost",
+        "Store IDs only",
+        "Configurable limit",
+        "Recent posts matter",
+        "Low miss rate"
+      ],
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "AR08",
+      "prompt": "Reconstruct detailed retrieval.",
+      "target_points": [
+        "Request",
+        "Load balancer",
+        "Web server",
+        "News Feed Service",
+        "Feed IDs",
+        "User/Post caches",
+        "JSON"
+      ],
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "AR09",
+      "prompt": "Name all five cache layers.",
+      "target_points": [
+        "News Feed",
+        "Content",
+        "Social Graph",
+        "Action",
+        "Counters"
+      ],
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "AR10",
+      "prompt": "Name the wrap-up scaling topics.",
+      "target_points": [
+        "DB scaling options",
+        "Stateless web",
+        "Cache aggressively",
+        "Multi-DC",
+        "Message queues",
+        "Monitor QPS/latency"
+      ],
+      "source_pages": [
+        176
+      ]
+    }
+  ],
+  "diagram_reconstruction_drills": [
+    {
+      "id": "DR01",
+      "name": "Figure 11-2 Feed Publishing",
+      "task": "Draw User -> Load Balancer -> Web Servers -> Post Service/Fanout Service/Notification Service, with Post Cache/DB and News Feed Cache.",
+      "source_pages": [
+        169
+      ]
+    },
+    {
+      "id": "DR02",
+      "name": "Figure 11-3 News Feed Building",
+      "task": "Draw User -> Load Balancer -> Web Servers -> News Feed Service -> News Feed Cache.",
+      "source_pages": [
+        170
+      ]
+    },
+    {
+      "id": "DR03",
+      "name": "Figure 11-4 Publishing Deep Dive",
+      "task": "Draw web-server authentication/rate limiting plus Post Service, Notification Service, Fanout Service, Graph DB, User Cache/User DB, message queue, fanout workers, and News Feed Cache.",
+      "source_pages": [
+        171
+      ]
+    },
+    {
+      "id": "DR04",
+      "name": "Figure 11-5 Fanout Service",
+      "task": "Draw Fanout Service -> Graph DB and User Cache -> Message Queue -> Fanout Workers -> News Feed Cache.",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "DR05",
+      "name": "Figure 11-6 Feed Cache Model",
+      "task": "Draw repeated rows of <post_id,user_id> rather than full post/user objects.",
+      "source_pages": [
+        173,
+        174
+      ]
+    },
+    {
+      "id": "DR06",
+      "name": "Figure 11-7 Retrieval Deep Dive",
+      "task": "Draw User -> Load Balancer -> Web Servers -> News Feed Service -> News Feed Cache + User Cache/User DB + Post Cache/Post DB, with media from CDN.",
+      "source_pages": [
+        174,
+        175
+      ]
+    },
+    {
+      "id": "DR07",
+      "name": "Figure 11-8 Cache Architecture",
+      "task": "Draw five layers: News Feed; Content with hot/normal; Social Graph with follower/following; Action with liked/replied/others; Counters with like/reply/other counters.",
+      "source_pages": [
+        175
+      ]
+    }
+  ],
+  "interview_style_questions": [
+    {
+      "id": "INT01",
+      "question": "What requirements would you clarify before designing a news feed?",
+      "strong_answer_outline": [
+        "Client platforms",
+        "Publishing",
+        "Retrieval",
+        "Ordering/ranking",
+        "Friend/follower count",
+        "Traffic/DAU",
+        "Media types"
+      ],
+      "source_pages": [
+        167
+      ]
+    },
+    {
+      "id": "INT02",
+      "question": "What are the two major request flows?",
+      "strong_answer_outline": [
+        "Publish: persist + fanout + notify",
+        "Read: fetch feed IDs + hydrate + return"
+      ],
+      "source_pages": [
+        168,
+        169,
+        170,
+        175
+      ]
+    },
+    {
+      "id": "INT03",
+      "question": "How would you design fanout?",
+      "strong_answer_outline": [
+        "Define push vs pull",
+        "Push fast reads",
+        "Push hotkey/write amplification",
+        "Pull slower reads",
+        "Pull saves inactive work",
+        "Hybrid selection"
+      ],
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "INT04",
+      "question": "How do you handle celebrities with huge follower counts?",
+      "strong_answer_outline": [
+        "Do not push to every follower",
+        "Use pull-on-read for celebrity content",
+        "Use hybrid model",
+        "Consistent hashing can mitigate hotspots"
+      ],
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "INT05",
+      "question": "How does fanout respect social settings?",
+      "strong_answer_outline": [
+        "Graph DB gets friend IDs",
+        "User cache gets friend metadata/settings",
+        "Filter muted friends/selective sharing",
+        "Only then enqueue fanout"
+      ],
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "INT06",
+      "question": "How do you keep feed reads fast without exploding memory?",
+      "strong_answer_outline": [
+        "Precompute feed IDs",
+        "Store IDs only",
+        "Bound feed-cache depth",
+        "Hydrate user/post objects from dedicated caches",
+        "CDN for media"
+      ],
+      "source_pages": [
+        173,
+        174,
+        175
+      ]
+    },
+    {
+      "id": "INT07",
+      "question": "What caching strategy does the chapter use?",
+      "strong_answer_outline": [
+        "News Feed IDs",
+        "Content/hot cache",
+        "Social Graph",
+        "Action state",
+        "Counters"
+      ],
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "INT08",
+      "question": "What additional scaling topics would you mention?",
+      "strong_answer_outline": [
+        "DB scale/sharding/replication/consistency",
+        "Stateless web tier",
+        "Aggressive caching",
+        "Multi-DC",
+        "Message queues",
+        "QPS/latency monitoring"
+      ],
+      "source_pages": [
+        176
+      ]
+    }
+  ],
+  "common_confusions": [
+    {
+      "confusion": "Fanout on write means the post is written only once.",
+      "correction": "It means recipient news feeds are precomputed at write time, which can create substantial fanout work.",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "confusion": "Fanout on read is always better because it avoids write amplification.",
+      "correction": "It makes retrieval slower, so the chapter uses push for most users because fast feed reads are crucial.",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "confusion": "The chapter uses push fanout for celebrities too.",
+      "correction": "Celebrities/high-fanout users are handled with pull-on-read in the hybrid model.",
+      "source_pages": [
+        172
+      ]
+    },
+    {
+      "confusion": "Friendship alone determines whether a post appears.",
+      "correction": "User settings such as mute and selective sharing can filter otherwise valid friend relationships.",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "confusion": "News Feed Cache stores full post/user objects.",
+      "correction": "It stores IDs to reduce memory usage; full objects are fetched later from user/post caches.",
+      "source_pages": [
+        173,
+        175
+      ]
+    },
+    {
+      "confusion": "The feed cache must retain every historical post.",
+      "correction": "The chapter uses a configurable limit because users mostly care about recent content.",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "confusion": "Post images and videos are served from the same feed-ID cache.",
+      "correction": "Media content is stored in a CDN for fast retrieval.",
+      "source_pages": [
+        174
+      ]
+    },
+    {
+      "confusion": "One generic cache is enough to describe the design.",
+      "correction": "The chapter explicitly separates caching into News Feed, Content, Social Graph, Action, and Counters layers.",
+      "source_pages": [
+        175
+      ]
+    }
+  ],
+  "practice_problems": [
+    {
+      "id": "PRACTICE01",
+      "type": "derived_scale",
+      "prompt": "If every one of 10 million DAU had the maximum 5,000 friends, how many user-friend relationship references would that represent before accounting for symmetry/deduplication?",
+      "solution": "10,000,000 * 5,000 = 50,000,000,000 relationship references.",
+      "note": "Derived study calculation from chapter requirements; the chapter does not provide this number.",
+      "based_on_source_pages": [
+        167
+      ]
+    },
+    {
+      "id": "PRACTICE02",
+      "type": "fanout_tradeoff",
+      "prompt": "A user with 100 friends publishes often and most friends read feeds frequently. Which default fanout model fits the chapter's strategy?",
+      "solution": "Fanout on write/push because fast reads are prioritized and fanout size is manageable.",
+      "based_on_source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "PRACTICE03",
+      "type": "fanout_tradeoff",
+      "prompt": "A celebrity with massive followers publishes once per hour. Which model should be applied to that celebrity's content?",
+      "solution": "Fanout on read/pull for that high-fanout user's content.",
+      "based_on_source_pages": [
+        172
+      ]
+    },
+    {
+      "id": "PRACTICE04",
+      "type": "cache_design",
+      "prompt": "Why not store 10,000 fully hydrated feed objects per user in the News Feed Cache?",
+      "solution": "The chapter warns that full user/post objects would consume large amounts of memory, and users rarely scroll through thousands of posts. Store bounded IDs and hydrate on read instead.",
+      "based_on_source_pages": [
+        173,
+        175
+      ]
+    },
+    {
+      "id": "PRACTICE05",
+      "type": "cache_layer",
+      "prompt": "Choose the cache layer for each datum: post body, follower relationship, has-liked state, like count.",
+      "solution": "Post body -> Content; follower relationship -> Social Graph; has-liked -> Action; like count -> Counters.",
+      "based_on_source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "PRACTICE06",
+      "type": "read_path",
+      "prompt": "Place these in order: return JSON, fetch post IDs, fetch user/post objects, request feed.",
+      "solution": "Request feed -> fetch post IDs -> fetch user/post objects -> return JSON.",
+      "based_on_source_pages": [
+        175
+      ]
+    }
+  ],
+  "mastery_check": {
+    "beginner": [
+      "Can state requirements: web/mobile, reverse chronological, 5,000 friends, 10M DAU, media.",
+      "Can name the publishing and retrieval flows.",
+      "Can state POST and GET /v1/me/feed.",
+      "Can define push and pull fanout."
+    ],
+    "intermediate": [
+      "Can compare fanout-on-write and fanout-on-read tradeoffs.",
+      "Can explain the celebrity/high-fanout exception.",
+      "Can reconstruct the fanout pipeline.",
+      "Can explain feed-ID-only caching and bounded feed depth.",
+      "Can reconstruct the hydrated retrieval path."
+    ],
+    "advanced": [
+      "Can defend the hybrid fanout strategy in an interview.",
+      "Can explain user-setting filtering in the fanout pipeline.",
+      "Can reason about hotkey mitigation with consistent hashing.",
+      "Can explain all five cache layers and why each exists.",
+      "Can discuss database scale, stateless web tiers, multi-DC, message queues, and operational metrics.",
+      "Can redraw the major chapter diagrams from memory."
+    ]
+  },
+  "chapter_eleven_final_review": {
+    "must_memorize": [
+      "Requirements: web + mobile, publish/read feeds, reverse chronological, max 5,000 friends, 10M DAU, media support.",
+      "Two flows: feed publishing and news feed retrieval.",
+      "POST /v1/me/feed publishes; GET /v1/me/feed retrieves.",
+      "Publishing: user -> LB -> web -> Post Service/Fanout Service/Notification Service.",
+      "Retrieval: user -> LB -> web -> News Feed Service -> News Feed Cache.",
+      "Web servers enforce authentication and rate limiting.",
+      "Fanout = delivering a post to friends/followers.",
+      "Fanout on write = push/precompute; fast reads but hotkey and wasted inactive-user compute.",
+      "Fanout on read = pull/on-demand; avoids push hotkey but slower reads.",
+      "Hybrid: push for most users, pull celebrity/high-fanout content.",
+      "Consistent hashing can help distribute hotkey load.",
+      "Fanout pipeline: graph DB -> user cache/filter -> queue -> fanout workers -> feed cache.",
+      "Graph DB stores/manages friendship relationships.",
+      "Mute/selective sharing can filter posts from a feed.",
+      "News feed cache stores <post_id,user_id>, not full objects.",
+      "Bound feed-cache depth because users care mostly about recent content.",
+      "Media is served from CDN.",
+      "Retrieval reads feed IDs then hydrates with user/post caches.",
+      "Final feed is returned as JSON.",
+      "Five cache layers: News Feed, Content, Social Graph, Action, Counters.",
+      "Wrap-up: database scale, stateless web tier, aggressive caching, multi-DC, message queues, monitoring."
+    ],
+    "memory_chain": "PUBLISH -> POST SERVICE -> FANOUT -> GRAPH FRIENDS -> USER SETTINGS -> QUEUE -> FANOUT WORKERS -> FEED ID CACHE || READ -> FEED IDS -> USER/POST CACHE HYDRATION -> JSON + CDN MEDIA || HYBRID PUSH/PULL + 5-LAYER CACHE",
+    "one_sentence_takeaway": "A scalable news feed system precomputes lightweight feed entries for most users, uses pull-on-read for high-fanout authors, hydrates cached feed IDs into full posts at read time, and relies heavily on caches, queues, graph relationships, and stateless horizontally scalable services."
+  }
+}

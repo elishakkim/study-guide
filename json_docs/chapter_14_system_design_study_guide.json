@@ -1,0 +1,3019 @@
+{
+  "chapter": {
+    "number": 14,
+    "title": "Design YouTube",
+    "source": "System Design Interview: An Insider's Guide by Alex Xu",
+    "pdf_pages": {
+      "chapter_start": 220,
+      "chapter_end": 242,
+      "references_page": 243
+    }
+  },
+  "overview": "Design a YouTube-like video platform focused on two core flows: video upload and video streaming. The design uses CDN and blob storage, separates streaming from API traffic, transcodes uploads into multiple compatible formats/bitrates, uses a DAG-based processing pipeline, and adds optimizations for upload speed, parallelism, security, CDN cost, and fault tolerance.",
+  "requirements": {
+    "core_features": [
+      "Upload video",
+      "Watch video"
+    ],
+    "clients": [
+      "Mobile apps",
+      "Web browsers",
+      "Smart TV"
+    ],
+    "dau": 5000000,
+    "average_daily_time": "30 minutes",
+    "international_users": true,
+    "formats_and_resolutions": "Most formats and resolutions",
+    "encryption_required": true,
+    "max_video_size": "1 GB",
+    "design_goals": [
+      "Fast video upload",
+      "Smooth streaming",
+      "Change video quality",
+      "Low infrastructure cost",
+      "High availability",
+      "Scalability",
+      "Reliability"
+    ],
+    "source_pages": [
+      221
+    ]
+  },
+  "capacity_estimation": {
+    "assumptions": {
+      "videos_watched_per_user_per_day": 5,
+      "uploading_user_fraction": "10%",
+      "uploads_per_uploading_user": 1,
+      "average_video_size": "300 MB"
+    },
+    "daily_storage": "5M * 10% * 300 MB = 150 TB/day",
+    "cdn_cost_assumption": "$0.02/GB",
+    "daily_streaming_cost": "5M * 5 * 0.3GB * $0.02 = $150,000/day",
+    "takeaway": "CDN bandwidth cost is a major architectural concern.",
+    "source_pages": [
+      221,
+      222
+    ]
+  },
+  "high_level_architecture": [
+    {
+      "component": "Client",
+      "role": "Uploads and watches videos on phone, browser, or TV.",
+      "source_pages": [
+        223
+      ]
+    },
+    {
+      "component": "CDN",
+      "role": "Caches and streams video directly to viewers from nearby edge servers.",
+      "source_pages": [
+        223,
+        228
+      ]
+    },
+    {
+      "component": "API servers",
+      "role": "Handle everything except video streaming: signup, metadata, recommendations, upload URL generation, etc.",
+      "source_pages": [
+        223
+      ]
+    }
+  ],
+  "upload_components": [
+    {
+      "component": "Load balancer",
+      "role": "Distributes requests across API servers.",
+      "source_pages": [
+        224
+      ]
+    },
+    {
+      "component": "Metadata DB",
+      "role": "Stores video metadata; sharded and replicated.",
+      "source_pages": [
+        224
+      ]
+    },
+    {
+      "component": "Metadata cache",
+      "role": "Caches video metadata and user objects.",
+      "source_pages": [
+        224
+      ]
+    },
+    {
+      "component": "Original storage",
+      "role": "Blob storage for original uploads.",
+      "source_pages": [
+        224
+      ]
+    },
+    {
+      "component": "Transcoding servers",
+      "role": "Convert videos to suitable formats, codecs, resolutions, and bitrates.",
+      "source_pages": [
+        224
+      ]
+    },
+    {
+      "component": "Transcoded storage",
+      "role": "Blob storage for encoded outputs.",
+      "source_pages": [
+        225
+      ]
+    },
+    {
+      "component": "CDN",
+      "role": "Caches encoded outputs for streaming.",
+      "source_pages": [
+        225
+      ]
+    },
+    {
+      "component": "Completion queue",
+      "role": "Stores transcoding-completion events.",
+      "source_pages": [
+        225
+      ]
+    },
+    {
+      "component": "Completion handler",
+      "role": "Workers consume completion events and update metadata cache/DB.",
+      "source_pages": [
+        225
+      ]
+    }
+  ],
+  "upload_flow": {
+    "parallel_flows": [
+      "Upload actual video",
+      "Update video metadata"
+    ],
+    "actual_video_steps": [
+      "Upload source video to original storage.",
+      "Transcoding servers fetch it and transcode it.",
+      "After transcoding, store encoded files in transcoded storage.",
+      "In parallel, enqueue a transcoding-completion event.",
+      "Distribute encoded files to CDN.",
+      "Completion-handler workers consume completion events.",
+      "Completion handler updates metadata DB and cache.",
+      "API servers tell the client the video is ready."
+    ],
+    "metadata_flow": "While the file uploads, the client separately sends metadata such as file name, size, and format through API servers to Metadata Cache and Metadata DB.",
+    "source_pages": [
+      225,
+      226,
+      227
+    ]
+  },
+  "streaming": {
+    "download_vs_streaming": {
+      "download": "Whole video is copied to the device.",
+      "streaming": "Client receives a little data at a time so playback can begin immediately."
+    },
+    "protocols_named": [
+      "MPEG-DASH",
+      "Apple HLS",
+      "Microsoft Smooth Streaming",
+      "Adobe HDS"
+    ],
+    "important_point": "Choose a streaming protocol compatible with required encodings and playback players.",
+    "delivery": "Video is streamed directly from the CDN edge server nearest the viewer.",
+    "source_pages": [
+      227,
+      228
+    ]
+  },
+  "transcoding": {
+    "why_needed": [
+      "Raw videos consume enormous storage.",
+      "Devices and browsers support different formats.",
+      "Higher bandwidth users can receive higher-quality versions.",
+      "Lower bandwidth users can receive lower-resolution versions.",
+      "Network conditions change, so quality should be switchable."
+    ],
+    "bitrate": "Rate at which bits are processed over time; higher bitrate generally means higher quality and higher resource/network requirements.",
+    "container": {
+      "definition": "Wrapper containing video, audio, and metadata.",
+      "examples": [
+        ".avi",
+        ".mov",
+        ".mp4"
+      ]
+    },
+    "codec": {
+      "definition": "Compression/decompression algorithm.",
+      "examples": [
+        "H.264",
+        "VP9",
+        "HEVC"
+      ]
+    },
+    "source_pages": [
+      229
+    ]
+  },
+  "dag_model": {
+    "purpose": "Represent video-processing tasks as stages that may run sequentially or in parallel.",
+    "why": [
+      "Transcoding is computationally expensive.",
+      "Different creators may require different processing pipelines.",
+      "DAG abstraction supports flexibility and parallelism."
+    ],
+    "tasks": {
+      "inspection": "Check quality and malformed input.",
+      "video_encoding": "Create different resolutions/codecs/bitrates.",
+      "thumbnail": "Use uploaded or generated thumbnail.",
+      "watermark": "Overlay identifying information."
+    },
+    "source_pages": [
+      229,
+      230
+    ]
+  },
+  "transcoding_architecture": {
+    "components": [
+      "Preprocessor",
+      "DAG scheduler",
+      "Resource manager",
+      "Task workers",
+      "Temporary storage",
+      "Encoded video"
+    ],
+    "preprocessor": [
+      "Split video into GOP-aligned chunks.",
+      "Perform server-side GOP splitting for old clients that cannot do it.",
+      "Generate a DAG from configuration files.",
+      "Cache/persist GOPs and metadata in temporary storage for retries."
+    ],
+    "dag_scheduler": "Split the DAG into stages and place tasks into the resource manager's task queue.",
+    "resource_manager": {
+      "task_queue": "Priority queue of tasks.",
+      "worker_queue": "Priority queue containing worker utilization info.",
+      "running_queue": "Tracks active task/worker assignments.",
+      "task_scheduler": [
+        "Select highest-priority task.",
+        "Select optimal worker.",
+        "Assign task.",
+        "Track assignment in running queue.",
+        "Remove it when completed."
+      ]
+    },
+    "task_workers": "Execute DAG-defined tasks; different workers may specialize in different tasks.",
+    "temporary_storage": {
+      "metadata": "Memory/cache because it is small and frequently accessed.",
+      "video_audio": "Blob storage.",
+      "cleanup": "Free temporary data after video processing finishes."
+    },
+    "source_pages": [
+      231,
+      232,
+      233,
+      234,
+      235,
+      236
+    ]
+  },
+  "optimizations": {
+    "speed": [
+      {
+        "name": "Chunked/resumable upload",
+        "details": "Split by GOP alignment; upload chunks instead of the whole file so failed uploads can resume.",
+        "source_pages": [
+          236
+        ]
+      },
+      {
+        "name": "Upload centers close to users",
+        "details": "Use geographically distributed upload centers; the chapter proposes CDN infrastructure for this.",
+        "source_pages": [
+          236,
+          237
+        ]
+      },
+      {
+        "name": "Parallelism with message queues",
+        "details": "Insert queues between modules so downstream workers can consume jobs independently rather than blocking on upstream stages.",
+        "source_pages": [
+          237,
+          238
+        ]
+      }
+    ],
+    "security": [
+      {
+        "name": "Pre-signed upload URL",
+        "flow": [
+          "Client requests pre-signed URL from API server.",
+          "API server returns the URL.",
+          "Client uploads directly using the signed URL."
+        ],
+        "azure_equivalent": "Shared Access Signature",
+        "source_pages": [
+          238,
+          239
+        ]
+      },
+      {
+        "name": "Video protection",
+        "options": [
+          "DRM: Apple FairPlay, Google Widevine, Microsoft PlayReady",
+          "AES encryption plus authorization policy",
+          "Visual watermarking"
+        ],
+        "source_pages": [
+          239
+        ]
+      }
+    ]
+  },
+  "cdn_cost_optimization": {
+    "observation": "Video popularity follows a long-tail distribution: a few videos are very popular, many receive few or no views.",
+    "strategies": [
+      "Serve only the most popular videos from CDN; serve less popular videos from high-capacity storage video servers.",
+      "For less popular content, keep fewer encoded versions; short videos may be encoded on demand.",
+      "Do not distribute region-specific popular videos to regions where they are not popular.",
+      "At very large scale, consider building a CDN and partnering with ISPs."
+    ],
+    "decision_inputs": [
+      "Content popularity",
+      "User access patterns",
+      "Video size",
+      "Historical viewing patterns"
+    ],
+    "source_pages": [
+      239,
+      240
+    ]
+  },
+  "error_handling": {
+    "recoverable": "Retry several times; if it continues failing, return an error.",
+    "non_recoverable": "Stop associated tasks and return an error, e.g. malformed video.",
+    "playbook": {
+      "upload_error": "Retry a few times.",
+      "split_video_error": "If old client cannot split, upload whole video and split server-side.",
+      "transcoding_error": "Retry.",
+      "preprocessor_error": "Regenerate DAG.",
+      "dag_scheduler_error": "Reschedule task.",
+      "resource_manager_queue_down": "Use a replica.",
+      "task_worker_down": "Retry on a new worker.",
+      "api_server_down": "Route to another stateless API server.",
+      "metadata_cache_down": "Use replicated cache node and replace failed node.",
+      "metadata_db_master_down": "Promote a slave.",
+      "metadata_db_slave_down": "Use another slave for reads and replace failed server."
+    },
+    "source_pages": [
+      240,
+      241
+    ]
+  },
+  "wrap_up": {
+    "api_scaling": "API servers are stateless, so scale horizontally.",
+    "database_scaling": "Use replication and sharding.",
+    "live_streaming": {
+      "similarities": [
+        "Uploading",
+        "Encoding",
+        "Streaming"
+      ],
+      "differences": [
+        "Higher latency requirements may require different streaming protocols.",
+        "Less parallelism is needed because small chunks are processed in real time.",
+        "Error handling must be faster; slow recovery is unacceptable."
+      ]
+    },
+    "video_takedowns": "Violating videos can be detected during upload or via user flagging and then removed.",
+    "source_pages": [
+      242
+    ]
+  },
+  "flashcards": [
+    {
+      "id": "FC01",
+      "front": "What are the two core features in scope?",
+      "back": "Upload video and watch video.",
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "FC02",
+      "front": "What clients are supported?",
+      "back": "Mobile apps, web browsers, and smart TVs.",
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "FC03",
+      "front": "What DAU is assumed?",
+      "back": "5 million.",
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "FC04",
+      "front": "What average daily time is assumed?",
+      "back": "30 minutes.",
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "FC05",
+      "front": "What is the maximum video size?",
+      "back": "1 GB.",
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "FC06",
+      "front": "Is encryption required?",
+      "back": "Yes.",
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "FC07",
+      "front": "How many videos does each user watch per day in the estimate?",
+      "back": "5.",
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "FC08",
+      "front": "What percentage of users upload daily?",
+      "back": "10%.",
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "FC09",
+      "front": "What average uploaded video size is assumed?",
+      "back": "300 MB.",
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "FC10",
+      "front": "What is estimated daily storage?",
+      "back": "150 TB/day.",
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "FC11",
+      "front": "What CDN price per GB is assumed?",
+      "back": "$0.02/GB.",
+      "source_pages": [
+        222
+      ]
+    },
+    {
+      "id": "FC12",
+      "front": "What is estimated daily CDN streaming cost?",
+      "back": "$150,000/day.",
+      "source_pages": [
+        222
+      ]
+    },
+    {
+      "id": "FC13",
+      "front": "What two cloud services are explicitly leveraged?",
+      "back": "CDN and blob storage.",
+      "source_pages": [
+        223
+      ]
+    },
+    {
+      "id": "FC14",
+      "front": "What are the three high-level components?",
+      "back": "Client, CDN, API servers.",
+      "source_pages": [
+        223
+      ]
+    },
+    {
+      "id": "FC15",
+      "front": "What goes directly through CDN?",
+      "back": "Video streaming.",
+      "source_pages": [
+        223
+      ]
+    },
+    {
+      "id": "FC16",
+      "front": "What do API servers handle?",
+      "back": "Everything except video streaming.",
+      "source_pages": [
+        223
+      ]
+    },
+    {
+      "id": "FC17",
+      "front": "What does Metadata DB store?",
+      "back": "Video metadata.",
+      "source_pages": [
+        224
+      ]
+    },
+    {
+      "id": "FC18",
+      "front": "How is Metadata DB scaled?",
+      "back": "Sharding and replication.",
+      "source_pages": [
+        224
+      ]
+    },
+    {
+      "id": "FC19",
+      "front": "What does Metadata Cache hold?",
+      "back": "Video metadata and user objects.",
+      "source_pages": [
+        224
+      ]
+    },
+    {
+      "id": "FC20",
+      "front": "Where are original videos stored?",
+      "back": "Original blob storage.",
+      "source_pages": [
+        224
+      ]
+    },
+    {
+      "id": "FC21",
+      "front": "What do transcoding servers do?",
+      "back": "Convert videos into compatible formats/bitrates/resolutions.",
+      "source_pages": [
+        224
+      ]
+    },
+    {
+      "id": "FC22",
+      "front": "Where are transcoded videos stored?",
+      "back": "Transcoded blob storage.",
+      "source_pages": [
+        225
+      ]
+    },
+    {
+      "id": "FC23",
+      "front": "What does the completion queue contain?",
+      "back": "Transcoding-completion events.",
+      "source_pages": [
+        225
+      ]
+    },
+    {
+      "id": "FC24",
+      "front": "What does the completion handler update?",
+      "back": "Metadata DB and cache.",
+      "source_pages": [
+        225,
+        227
+      ]
+    },
+    {
+      "id": "FC25",
+      "front": "What two upload activities happen in parallel?",
+      "back": "Actual video upload and metadata update.",
+      "source_pages": [
+        225
+      ]
+    },
+    {
+      "id": "FC26",
+      "front": "What happens first in the upload flow?",
+      "back": "Upload to original storage.",
+      "source_pages": [
+        226
+      ]
+    },
+    {
+      "id": "FC27",
+      "front": "What happens after transcoding completes?",
+      "back": "Store encoded outputs and enqueue completion event in parallel.",
+      "source_pages": [
+        226
+      ]
+    },
+    {
+      "id": "FC28",
+      "front": "When is the client told the video is ready?",
+      "back": "After completion processing/metadata update.",
+      "source_pages": [
+        227
+      ]
+    },
+    {
+      "id": "FC29",
+      "front": "What is streaming?",
+      "back": "Receiving video data incrementally for immediate playback.",
+      "source_pages": [
+        227
+      ]
+    },
+    {
+      "id": "FC30",
+      "front": "Name the streaming protocols listed.",
+      "back": "MPEG-DASH, HLS, Smooth Streaming, HDS.",
+      "source_pages": [
+        227
+      ]
+    },
+    {
+      "id": "FC31",
+      "front": "Where is video streamed from?",
+      "back": "The closest CDN edge server.",
+      "source_pages": [
+        228
+      ]
+    },
+    {
+      "id": "FC32",
+      "front": "What is bitrate?",
+      "back": "Rate at which bits are processed over time.",
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "FC33",
+      "front": "Why transcode?",
+      "back": "Storage, compatibility, quality adaptation, changing network conditions.",
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "FC34",
+      "front": "What is a container?",
+      "back": "A wrapper for video, audio, and metadata.",
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "FC35",
+      "front": "Name three container examples.",
+      "back": ".avi, .mov, .mp4.",
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "FC36",
+      "front": "What is a codec?",
+      "back": "Compression/decompression algorithm.",
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "FC37",
+      "front": "Name three codec examples.",
+      "back": "H.264, VP9, HEVC.",
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "FC38",
+      "front": "Why use a DAG?",
+      "back": "Flexible sequential/parallel video-processing tasks.",
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "FC39",
+      "front": "Name four DAG tasks.",
+      "back": "Inspection, encoding, thumbnail, watermark.",
+      "source_pages": [
+        230
+      ]
+    },
+    {
+      "id": "FC40",
+      "front": "What are the six transcoding architecture components?",
+      "back": "Preprocessor, DAG scheduler, resource manager, task workers, temporary storage, encoded video.",
+      "source_pages": [
+        231
+      ]
+    },
+    {
+      "id": "FC41",
+      "front": "What is GOP?",
+      "back": "Group of Pictures, an independently playable short chunk of frames.",
+      "source_pages": [
+        232
+      ]
+    },
+    {
+      "id": "FC42",
+      "front": "What four things does the preprocessor do?",
+      "back": "Split GOPs, split for old clients, generate DAG, persist/cache retry data.",
+      "source_pages": [
+        232
+      ]
+    },
+    {
+      "id": "FC43",
+      "front": "What does the DAG scheduler do?",
+      "back": "Splits DAG into stages and enqueues tasks.",
+      "source_pages": [
+        233
+      ]
+    },
+    {
+      "id": "FC44",
+      "front": "What is in the task queue?",
+      "back": "Prioritized tasks.",
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "FC45",
+      "front": "What is in the worker queue?",
+      "back": "Worker utilization information.",
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "FC46",
+      "front": "What is in the running queue?",
+      "back": "Active task/worker assignments.",
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "FC47",
+      "front": "What does the task scheduler choose?",
+      "back": "Highest-priority task and optimal worker.",
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "FC48",
+      "front": "Where should small hot metadata live temporarily?",
+      "back": "Memory/cache.",
+      "source_pages": [
+        235,
+        236
+      ]
+    },
+    {
+      "id": "FC49",
+      "front": "Where should video/audio intermediate data live?",
+      "back": "Blob storage.",
+      "source_pages": [
+        236
+      ]
+    },
+    {
+      "id": "FC50",
+      "front": "What is the key upload benefit of GOP chunking?",
+      "back": "Resumable uploads.",
+      "source_pages": [
+        236
+      ]
+    },
+    {
+      "id": "FC51",
+      "front": "How do geographic upload centers help?",
+      "back": "Reduce upload latency by placing ingestion near users.",
+      "source_pages": [
+        236,
+        237
+      ]
+    },
+    {
+      "id": "FC52",
+      "front": "How do message queues improve the pipeline?",
+      "back": "Loose coupling and parallelism.",
+      "source_pages": [
+        237,
+        238
+      ]
+    },
+    {
+      "id": "FC53",
+      "front": "What is a pre-signed URL for?",
+      "back": "Authorized direct upload to a specific storage object.",
+      "source_pages": [
+        238,
+        239
+      ]
+    },
+    {
+      "id": "FC54",
+      "front": "What does Azure call the equivalent?",
+      "back": "Shared Access Signature.",
+      "source_pages": [
+        239
+      ]
+    },
+    {
+      "id": "FC55",
+      "front": "Name three protection approaches.",
+      "back": "DRM, AES encryption, visual watermarking.",
+      "source_pages": [
+        239
+      ]
+    },
+    {
+      "id": "FC56",
+      "front": "Name three DRM systems.",
+      "back": "FairPlay, Widevine, PlayReady.",
+      "source_pages": [
+        239
+      ]
+    },
+    {
+      "id": "FC57",
+      "front": "What does long-tail popularity mean?",
+      "back": "Few videos are very popular; many have few/no views.",
+      "source_pages": [
+        239,
+        240
+      ]
+    },
+    {
+      "id": "FC58",
+      "front": "What should be prioritized for CDN?",
+      "back": "Popular videos.",
+      "source_pages": [
+        239,
+        240
+      ]
+    },
+    {
+      "id": "FC59",
+      "front": "How can unpopular short videos reduce encoding cost?",
+      "back": "Encode on demand and/or keep fewer variants.",
+      "source_pages": [
+        240
+      ]
+    },
+    {
+      "id": "FC60",
+      "front": "How can regional popularity reduce cost?",
+      "back": "Avoid distributing content to irrelevant regions.",
+      "source_pages": [
+        240
+      ]
+    },
+    {
+      "id": "FC61",
+      "front": "What is a recoverable error example?",
+      "back": "A video segment failing to transcode.",
+      "source_pages": [
+        240
+      ]
+    },
+    {
+      "id": "FC62",
+      "front": "What is a non-recoverable error example?",
+      "back": "Malformed video format.",
+      "source_pages": [
+        240
+      ]
+    },
+    {
+      "id": "FC63",
+      "front": "How is a task-worker failure handled?",
+      "back": "Retry on a new worker.",
+      "source_pages": [
+        241
+      ]
+    },
+    {
+      "id": "FC64",
+      "front": "How is a resource-manager queue failure handled?",
+      "back": "Use a replica.",
+      "source_pages": [
+        241
+      ]
+    },
+    {
+      "id": "FC65",
+      "front": "How is an API-server failure handled?",
+      "back": "Route to another stateless API server.",
+      "source_pages": [
+        241
+      ]
+    },
+    {
+      "id": "FC66",
+      "front": "How is Metadata DB master failure handled?",
+      "back": "Promote a slave.",
+      "source_pages": [
+        241
+      ]
+    },
+    {
+      "id": "FC67",
+      "front": "How is the API tier scaled?",
+      "back": "Horizontally.",
+      "source_pages": [
+        242
+      ]
+    },
+    {
+      "id": "FC68",
+      "front": "How is the DB scaled?",
+      "back": "Replication and sharding.",
+      "source_pages": [
+        242
+      ]
+    },
+    {
+      "id": "FC69",
+      "front": "What are the main live-streaming differences?",
+      "back": "Stricter latency, less parallelism need, faster error handling.",
+      "source_pages": [
+        242
+      ]
+    },
+    {
+      "id": "FC70",
+      "front": "How can violating videos be discovered?",
+      "back": "During upload or via user flagging.",
+      "source_pages": [
+        242
+      ]
+    }
+  ],
+  "multiple_choice_questions": [
+    {
+      "id": "MCQ01",
+      "question": "Which feature is in core scope?",
+      "choices": {
+        "A": "Upload video",
+        "B": "Comments only",
+        "C": "Subscriptions only",
+        "D": "Ads only"
+      },
+      "answer": "A",
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "MCQ02",
+      "question": "What client is supported?",
+      "choices": {
+        "A": "Smart TV",
+        "B": "Only browser",
+        "C": "Only phone",
+        "D": "Only desktop"
+      },
+      "answer": "A",
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "MCQ03",
+      "question": "What DAU is assumed?",
+      "choices": {
+        "A": "500K",
+        "B": "5M",
+        "C": "50M",
+        "D": "500M"
+      },
+      "answer": "B",
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "MCQ04",
+      "question": "What max upload size is assumed?",
+      "choices": {
+        "A": "100MB",
+        "B": "300MB",
+        "C": "1GB",
+        "D": "10GB"
+      },
+      "answer": "C",
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "MCQ05",
+      "question": "What daily storage is estimated?",
+      "choices": {
+        "A": "15TB",
+        "B": "150TB",
+        "C": "1.5PB",
+        "D": "15PB"
+      },
+      "answer": "B",
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "MCQ06",
+      "question": "What daily CDN cost is estimated?",
+      "choices": {
+        "A": "$15K",
+        "B": "$150K",
+        "C": "$1.5M",
+        "D": "$15M"
+      },
+      "answer": "B",
+      "source_pages": [
+        222
+      ]
+    },
+    {
+      "id": "MCQ07",
+      "question": "What two external infrastructure types are emphasized?",
+      "choices": {
+        "A": "CDN and blob storage",
+        "B": "SQL and DNS",
+        "C": "Queues and chat servers",
+        "D": "Graph DB and email"
+      },
+      "answer": "A",
+      "source_pages": [
+        223
+      ]
+    },
+    {
+      "id": "MCQ08",
+      "question": "Which traffic bypasses API servers?",
+      "choices": {
+        "A": "Video streaming",
+        "B": "Signup",
+        "C": "Metadata update",
+        "D": "Upload URL generation"
+      },
+      "answer": "A",
+      "source_pages": [
+        223
+      ]
+    },
+    {
+      "id": "MCQ09",
+      "question": "Where is metadata persisted?",
+      "choices": {
+        "A": "Metadata DB",
+        "B": "Only CDN",
+        "C": "Only client",
+        "D": "Completion queue"
+      },
+      "answer": "A",
+      "source_pages": [
+        224
+      ]
+    },
+    {
+      "id": "MCQ10",
+      "question": "How is Metadata DB scaled?",
+      "choices": {
+        "A": "Sharding and replication",
+        "B": "One server",
+        "C": "Browser cache only",
+        "D": "No persistence"
+      },
+      "answer": "A",
+      "source_pages": [
+        224
+      ]
+    },
+    {
+      "id": "MCQ11",
+      "question": "Where is original video stored?",
+      "choices": {
+        "A": "Blob storage",
+        "B": "Graph DB",
+        "C": "Queue",
+        "D": "Cache only"
+      },
+      "answer": "A",
+      "source_pages": [
+        224
+      ]
+    },
+    {
+      "id": "MCQ12",
+      "question": "What does transcoding do?",
+      "choices": {
+        "A": "Create compatible video variants",
+        "B": "Authenticate users",
+        "C": "Rank comments",
+        "D": "Resolve DNS"
+      },
+      "answer": "A",
+      "source_pages": [
+        224,
+        229
+      ]
+    },
+    {
+      "id": "MCQ13",
+      "question": "What does the completion queue hold?",
+      "choices": {
+        "A": "Completion events",
+        "B": "User passwords",
+        "C": "Video frames only",
+        "D": "Recommendations"
+      },
+      "answer": "A",
+      "source_pages": [
+        225
+      ]
+    },
+    {
+      "id": "MCQ14",
+      "question": "What does the completion handler update?",
+      "choices": {
+        "A": "Metadata DB/cache",
+        "B": "CDN only",
+        "C": "Original storage only",
+        "D": "User browser"
+      },
+      "answer": "A",
+      "source_pages": [
+        225,
+        227
+      ]
+    },
+    {
+      "id": "MCQ15",
+      "question": "What best defines streaming?",
+      "choices": {
+        "A": "Incremental playback data",
+        "B": "Full file download first",
+        "C": "Metadata only",
+        "D": "Database copy"
+      },
+      "answer": "A",
+      "source_pages": [
+        227
+      ]
+    },
+    {
+      "id": "MCQ16",
+      "question": "Which is a streaming protocol?",
+      "choices": {
+        "A": "MPEG-DASH",
+        "B": "SMTP",
+        "C": "FTP",
+        "D": "SQL"
+      },
+      "answer": "A",
+      "source_pages": [
+        227
+      ]
+    },
+    {
+      "id": "MCQ17",
+      "question": "Where does playback data come from?",
+      "choices": {
+        "A": "Nearby CDN edge",
+        "B": "Metadata DB",
+        "C": "Original storage only",
+        "D": "Completion queue"
+      },
+      "answer": "A",
+      "source_pages": [
+        228
+      ]
+    },
+    {
+      "id": "MCQ18",
+      "question": "What is bitrate?",
+      "choices": {
+        "A": "Bits processed over time",
+        "B": "Frame count",
+        "C": "Filename",
+        "D": "Encryption level"
+      },
+      "answer": "A",
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "MCQ19",
+      "question": "Which is a container?",
+      "choices": {
+        "A": ".mp4",
+        "B": "H.264",
+        "C": "VP9",
+        "D": "HEVC"
+      },
+      "answer": "A",
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "MCQ20",
+      "question": "Which is a codec?",
+      "choices": {
+        "A": "H.264",
+        "B": ".mov",
+        "C": ".avi",
+        "D": ".mp4"
+      },
+      "answer": "A",
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "MCQ21",
+      "question": "Why use a DAG?",
+      "choices": {
+        "A": "Flexible sequential/parallel tasks",
+        "B": "Eliminate encoding",
+        "C": "Store profiles",
+        "D": "Replace CDN"
+      },
+      "answer": "A",
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "MCQ22",
+      "question": "Which is a DAG task?",
+      "choices": {
+        "A": "Thumbnail generation",
+        "B": "DNS",
+        "C": "Signup",
+        "D": "Billing"
+      },
+      "answer": "A",
+      "source_pages": [
+        230
+      ]
+    },
+    {
+      "id": "MCQ23",
+      "question": "What does GOP stand for?",
+      "choices": {
+        "A": "Group of Pictures",
+        "B": "Group of Protocols",
+        "C": "Global Output Path",
+        "D": "Graph of Pixels"
+      },
+      "answer": "A",
+      "source_pages": [
+        232
+      ]
+    },
+    {
+      "id": "MCQ24",
+      "question": "Why persist GOPs/metadata temporarily?",
+      "choices": {
+        "A": "Retry failed encoding",
+        "B": "Store profiles",
+        "C": "Reduce comments",
+        "D": "Replace DB"
+      },
+      "answer": "A",
+      "source_pages": [
+        232
+      ]
+    },
+    {
+      "id": "MCQ25",
+      "question": "What does the DAG scheduler do?",
+      "choices": {
+        "A": "Split DAG into stages",
+        "B": "Stream to viewers",
+        "C": "Store users",
+        "D": "Encrypt all data"
+      },
+      "answer": "A",
+      "source_pages": [
+        233
+      ]
+    },
+    {
+      "id": "MCQ26",
+      "question": "What type of queue is the task queue?",
+      "choices": {
+        "A": "Priority queue",
+        "B": "FIFO only",
+        "C": "Stack",
+        "D": "Hash table"
+      },
+      "answer": "A",
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "MCQ27",
+      "question": "What does the worker queue store?",
+      "choices": {
+        "A": "Worker utilization info",
+        "B": "Encoded files",
+        "C": "Users",
+        "D": "Comments"
+      },
+      "answer": "A",
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "MCQ28",
+      "question": "What does the running queue track?",
+      "choices": {
+        "A": "Active task-worker bindings",
+        "B": "Completed uploads",
+        "C": "Only errors",
+        "D": "CDN prices"
+      },
+      "answer": "A",
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "MCQ29",
+      "question": "Where should frequently accessed small metadata live?",
+      "choices": {
+        "A": "Memory/cache",
+        "B": "Tape",
+        "C": "CDN only",
+        "D": "Cold archive"
+      },
+      "answer": "A",
+      "source_pages": [
+        235,
+        236
+      ]
+    },
+    {
+      "id": "MCQ30",
+      "question": "Where should intermediate video/audio data live?",
+      "choices": {
+        "A": "Blob storage",
+        "B": "Only RAM",
+        "C": "User profile DB",
+        "D": "Cookie"
+      },
+      "answer": "A",
+      "source_pages": [
+        236
+      ]
+    },
+    {
+      "id": "MCQ31",
+      "question": "What upload technique enables resumability?",
+      "choices": {
+        "A": "GOP chunking",
+        "B": "Single huge upload",
+        "C": "No transcoding",
+        "D": "Full restart"
+      },
+      "answer": "A",
+      "source_pages": [
+        236
+      ]
+    },
+    {
+      "id": "MCQ32",
+      "question": "What is used as nearby upload centers?",
+      "choices": {
+        "A": "CDN",
+        "B": "Metadata DB",
+        "C": "Queue",
+        "D": "User cache"
+      },
+      "answer": "A",
+      "source_pages": [
+        237
+      ]
+    },
+    {
+      "id": "MCQ33",
+      "question": "Why insert message queues?",
+      "choices": {
+        "A": "Decouple and parallelize",
+        "B": "Remove workers",
+        "C": "Replace storage",
+        "D": "Increase dependency"
+      },
+      "answer": "A",
+      "source_pages": [
+        237,
+        238
+      ]
+    },
+    {
+      "id": "MCQ34",
+      "question": "What authorizes direct object upload?",
+      "choices": {
+        "A": "Pre-signed URL",
+        "B": "Public credentials",
+        "C": "Comment token",
+        "D": "GOP ID"
+      },
+      "answer": "A",
+      "source_pages": [
+        238,
+        239
+      ]
+    },
+    {
+      "id": "MCQ35",
+      "question": "Which is a DRM system?",
+      "choices": {
+        "A": "Widevine",
+        "B": "Kafka",
+        "C": "HBase",
+        "D": "ZooKeeper"
+      },
+      "answer": "A",
+      "source_pages": [
+        239
+      ]
+    },
+    {
+      "id": "MCQ36",
+      "question": "What is another protection option?",
+      "choices": {
+        "A": "AES encryption",
+        "B": "No authorization",
+        "C": "Plaintext only",
+        "D": "SQL sharding"
+      },
+      "answer": "A",
+      "source_pages": [
+        239
+      ]
+    },
+    {
+      "id": "MCQ37",
+      "question": "What does long-tail distribution imply?",
+      "choices": {
+        "A": "Few popular, many rarely viewed",
+        "B": "All equal popularity",
+        "C": "Only new videos matter",
+        "D": "No regional differences"
+      },
+      "answer": "A",
+      "source_pages": [
+        239,
+        240
+      ]
+    },
+    {
+      "id": "MCQ38",
+      "question": "What should receive CDN priority?",
+      "choices": {
+        "A": "Popular videos",
+        "B": "Every video equally",
+        "C": "Malformed videos",
+        "D": "Only originals"
+      },
+      "answer": "A",
+      "source_pages": [
+        239,
+        240
+      ]
+    },
+    {
+      "id": "MCQ39",
+      "question": "What can happen for less popular short videos?",
+      "choices": {
+        "A": "Encode on demand",
+        "B": "Always precompute every format",
+        "C": "Never stream",
+        "D": "Only keep original"
+      },
+      "answer": "A",
+      "source_pages": [
+        240
+      ]
+    },
+    {
+      "id": "MCQ40",
+      "question": "What helps region-specific content cost?",
+      "choices": {
+        "A": "Avoid unnecessary global distribution",
+        "B": "Replicate everywhere",
+        "C": "Disable CDN",
+        "D": "Use one region"
+      },
+      "answer": "A",
+      "source_pages": [
+        240
+      ]
+    },
+    {
+      "id": "MCQ41",
+      "question": "How is a recoverable transcode failure handled?",
+      "choices": {
+        "A": "Retry",
+        "B": "Delete immediately",
+        "C": "Never retry",
+        "D": "Promote DB slave"
+      },
+      "answer": "A",
+      "source_pages": [
+        240
+      ]
+    },
+    {
+      "id": "MCQ42",
+      "question": "How is malformed video handled?",
+      "choices": {
+        "A": "Stop tasks and return error",
+        "B": "Retry forever",
+        "C": "Send to CDN",
+        "D": "Ignore"
+      },
+      "answer": "A",
+      "source_pages": [
+        240
+      ]
+    },
+    {
+      "id": "MCQ43",
+      "question": "What if resource-manager queue is down?",
+      "choices": {
+        "A": "Use replica",
+        "B": "Delete jobs",
+        "C": "Disable system",
+        "D": "Use browser cache"
+      },
+      "answer": "A",
+      "source_pages": [
+        241
+      ]
+    },
+    {
+      "id": "MCQ44",
+      "question": "What if task worker is down?",
+      "choices": {
+        "A": "Retry on a new worker",
+        "B": "Drop job",
+        "C": "Restart all APIs",
+        "D": "Promote DB"
+      },
+      "answer": "A",
+      "source_pages": [
+        241
+      ]
+    },
+    {
+      "id": "MCQ45",
+      "question": "Why can API failure be rerouted easily?",
+      "choices": {
+        "A": "API servers are stateless",
+        "B": "CDN stores state",
+        "C": "DB is local",
+        "D": "Workers are clients"
+      },
+      "answer": "A",
+      "source_pages": [
+        241
+      ]
+    },
+    {
+      "id": "MCQ46",
+      "question": "What if DB master fails?",
+      "choices": {
+        "A": "Promote a slave",
+        "B": "Delete replicas",
+        "C": "Use CDN as DB",
+        "D": "Only retry upload"
+      },
+      "answer": "A",
+      "source_pages": [
+        241
+      ]
+    },
+    {
+      "id": "MCQ47",
+      "question": "How does API tier scale?",
+      "choices": {
+        "A": "Horizontally",
+        "B": "Cannot scale",
+        "C": "Only vertically",
+        "D": "Only via CDN"
+      },
+      "answer": "A",
+      "source_pages": [
+        242
+      ]
+    },
+    {
+      "id": "MCQ48",
+      "question": "Which live-streaming difference is correct?",
+      "choices": {
+        "A": "Stricter latency/error handling",
+        "B": "No encoding",
+        "C": "No upload",
+        "D": "No network"
+      },
+      "answer": "A",
+      "source_pages": [
+        242
+      ]
+    }
+  ],
+  "mix_and_match": [
+    {
+      "id": "MM01",
+      "title": "Upload component to role",
+      "left": {
+        "A": "Original storage",
+        "B": "Transcoding servers",
+        "C": "Completion queue",
+        "D": "Completion handler",
+        "E": "CDN"
+      },
+      "right": {
+        "1": "Store source video",
+        "2": "Create compatible variants",
+        "3": "Buffer completion events",
+        "4": "Update metadata after completion",
+        "5": "Stream to viewers"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        224,
+        225,
+        227,
+        228
+      ]
+    },
+    {
+      "id": "MM02",
+      "title": "Video concept to example",
+      "left": {
+        "A": "Container",
+        "B": "Codec",
+        "C": "Streaming protocol",
+        "D": "DRM",
+        "E": "Encoded output"
+      },
+      "right": {
+        "1": "H.264",
+        "2": "MPEG-DASH",
+        "3": "Widevine",
+        "4": ".mp4",
+        "5": "funny_720p.mp4"
+      },
+      "answer_key": {
+        "A": "4",
+        "B": "1",
+        "C": "2",
+        "D": "3",
+        "E": "5"
+      },
+      "source_pages": [
+        227,
+        229,
+        236,
+        239
+      ]
+    },
+    {
+      "id": "MM03",
+      "title": "Transcoding component to role",
+      "left": {
+        "A": "Preprocessor",
+        "B": "DAG scheduler",
+        "C": "Resource manager",
+        "D": "Task worker",
+        "E": "Temporary storage"
+      },
+      "right": {
+        "1": "Split/generate DAG/persist retry data",
+        "2": "Break DAG into stages",
+        "3": "Allocate tasks to workers",
+        "4": "Execute task",
+        "5": "Hold intermediate data"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        232,
+        233,
+        234,
+        235,
+        236
+      ]
+    },
+    {
+      "id": "MM04",
+      "title": "Optimization to benefit",
+      "left": {
+        "A": "GOP chunks",
+        "B": "Nearby upload centers",
+        "C": "Message queues",
+        "D": "Pre-signed URL",
+        "E": "Popularity-aware CDN"
+      },
+      "right": {
+        "1": "Resumable upload",
+        "2": "Lower upload latency",
+        "3": "Loose coupling/parallelism",
+        "4": "Authorized direct upload",
+        "5": "Lower delivery cost"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        236,
+        237,
+        238,
+        239,
+        240
+      ]
+    },
+    {
+      "id": "MM05",
+      "title": "Failure to recovery",
+      "left": {
+        "A": "Worker down",
+        "B": "Resource-manager queue down",
+        "C": "API server down",
+        "D": "DB master down",
+        "E": "Old client cannot split"
+      },
+      "right": {
+        "1": "New worker",
+        "2": "Replica",
+        "3": "Another stateless API server",
+        "4": "Promote slave",
+        "5": "Server-side splitting"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        241
+      ]
+    }
+  ],
+  "true_false": [
+    {
+      "id": "TF01",
+      "statement": "Core scope includes every YouTube feature.",
+      "answer": false,
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "TF02",
+      "statement": "Smart TV is supported.",
+      "answer": true,
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "TF03",
+      "statement": "Encryption is required.",
+      "answer": true,
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "TF04",
+      "statement": "Daily storage estimate is 150 TB.",
+      "answer": true,
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "TF05",
+      "statement": "Daily CDN estimate is $150,000.",
+      "answer": true,
+      "source_pages": [
+        222
+      ]
+    },
+    {
+      "id": "TF06",
+      "statement": "The design recommends building CDN from scratch immediately.",
+      "answer": false,
+      "source_pages": [
+        223
+      ]
+    },
+    {
+      "id": "TF07",
+      "statement": "Video streaming goes directly through CDN.",
+      "answer": true,
+      "source_pages": [
+        223,
+        228
+      ]
+    },
+    {
+      "id": "TF08",
+      "statement": "Metadata DB is sharded and replicated.",
+      "answer": true,
+      "source_pages": [
+        224
+      ]
+    },
+    {
+      "id": "TF09",
+      "statement": "Original video is stored in blob storage.",
+      "answer": true,
+      "source_pages": [
+        224
+      ]
+    },
+    {
+      "id": "TF10",
+      "statement": "Completion queue stores transcoding completion events.",
+      "answer": true,
+      "source_pages": [
+        225
+      ]
+    },
+    {
+      "id": "TF11",
+      "statement": "Actual upload and metadata update happen in parallel.",
+      "answer": true,
+      "source_pages": [
+        225,
+        227
+      ]
+    },
+    {
+      "id": "TF12",
+      "statement": "Streaming requires full download before playback.",
+      "answer": false,
+      "source_pages": [
+        227
+      ]
+    },
+    {
+      "id": "TF13",
+      "statement": "HLS is a streaming protocol.",
+      "answer": true,
+      "source_pages": [
+        227
+      ]
+    },
+    {
+      "id": "TF14",
+      "statement": "Higher bitrate generally means higher quality.",
+      "answer": true,
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "TF15",
+      "statement": "Container and codec mean the same thing.",
+      "answer": false,
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "TF16",
+      "statement": "A DAG supports parallel tasks.",
+      "answer": true,
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "TF17",
+      "statement": "GOP chunks are independently playable units.",
+      "answer": true,
+      "source_pages": [
+        232
+      ]
+    },
+    {
+      "id": "TF18",
+      "statement": "Preprocessor can persist retry data.",
+      "answer": true,
+      "source_pages": [
+        232
+      ]
+    },
+    {
+      "id": "TF19",
+      "statement": "Task and worker queues are priority queues.",
+      "answer": true,
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "TF20",
+      "statement": "Running queue tracks active task/worker assignments.",
+      "answer": true,
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "TF21",
+      "statement": "Metadata can be cached in memory.",
+      "answer": true,
+      "source_pages": [
+        235,
+        236
+      ]
+    },
+    {
+      "id": "TF22",
+      "statement": "GOP chunking enables resumable upload.",
+      "answer": true,
+      "source_pages": [
+        236
+      ]
+    },
+    {
+      "id": "TF23",
+      "statement": "Nearby upload centers reduce upload latency.",
+      "answer": true,
+      "source_pages": [
+        236,
+        237
+      ]
+    },
+    {
+      "id": "TF24",
+      "statement": "Message queues can increase parallelism.",
+      "answer": true,
+      "source_pages": [
+        237,
+        238
+      ]
+    },
+    {
+      "id": "TF25",
+      "statement": "Pre-signed URLs provide controlled upload permission.",
+      "answer": true,
+      "source_pages": [
+        238,
+        239
+      ]
+    },
+    {
+      "id": "TF26",
+      "statement": "Widevine is a DRM system.",
+      "answer": true,
+      "source_pages": [
+        239
+      ]
+    },
+    {
+      "id": "TF27",
+      "statement": "Every video should get identical CDN replication.",
+      "answer": false,
+      "source_pages": [
+        239,
+        240
+      ]
+    },
+    {
+      "id": "TF28",
+      "statement": "Unpopular short videos may be encoded on demand.",
+      "answer": true,
+      "source_pages": [
+        240
+      ]
+    },
+    {
+      "id": "TF29",
+      "statement": "Malformed video is treated as recoverable.",
+      "answer": false,
+      "source_pages": [
+        240
+      ]
+    },
+    {
+      "id": "TF30",
+      "statement": "Task-worker failure can be retried on a new worker.",
+      "answer": true,
+      "source_pages": [
+        241
+      ]
+    },
+    {
+      "id": "TF31",
+      "statement": "API servers are stateless.",
+      "answer": true,
+      "source_pages": [
+        241,
+        242
+      ]
+    },
+    {
+      "id": "TF32",
+      "statement": "DB master failure can trigger slave promotion.",
+      "answer": true,
+      "source_pages": [
+        241
+      ]
+    },
+    {
+      "id": "TF33",
+      "statement": "API tier can scale horizontally.",
+      "answer": true,
+      "source_pages": [
+        242
+      ]
+    },
+    {
+      "id": "TF34",
+      "statement": "Live streaming has identical error-handling requirements.",
+      "answer": false,
+      "source_pages": [
+        242
+      ]
+    }
+  ],
+  "fill_in_the_blank": [
+    {
+      "id": "FIB01",
+      "prompt": "The system assumes ______ million DAU.",
+      "answer": "5",
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "FIB02",
+      "prompt": "Maximum video size is ______ GB.",
+      "answer": "1",
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "FIB03",
+      "prompt": "Average video size is ______ MB.",
+      "answer": "300",
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "FIB04",
+      "prompt": "Daily storage is ______ TB.",
+      "answer": "150",
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "FIB05",
+      "prompt": "Daily CDN streaming estimate is $_______.",
+      "answer": "150,000",
+      "source_pages": [
+        222
+      ]
+    },
+    {
+      "id": "FIB06",
+      "prompt": "Video playback streams directly from ______.",
+      "answer": "CDN",
+      "source_pages": [
+        223
+      ]
+    },
+    {
+      "id": "FIB07",
+      "prompt": "Original videos use ______ storage.",
+      "answer": "blob",
+      "source_pages": [
+        224
+      ]
+    },
+    {
+      "id": "FIB08",
+      "prompt": "Video encoding is also called video ______.",
+      "answer": "transcoding",
+      "source_pages": [
+        224
+      ]
+    },
+    {
+      "id": "FIB09",
+      "prompt": "Completion events enter a completion ______.",
+      "answer": "queue",
+      "source_pages": [
+        225
+      ]
+    },
+    {
+      "id": "FIB10",
+      "prompt": "MPEG-DASH uses Dynamic Adaptive Streaming over ______.",
+      "answer": "HTTP",
+      "source_pages": [
+        227
+      ]
+    },
+    {
+      "id": "FIB11",
+      "prompt": "HLS stands for HTTP Live ______.",
+      "answer": "Streaming",
+      "source_pages": [
+        227
+      ]
+    },
+    {
+      "id": "FIB12",
+      "prompt": "H.264 is a video ______.",
+      "answer": "codec",
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "FIB13",
+      "prompt": ".mp4 is a video ______.",
+      "answer": "container",
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "FIB14",
+      "prompt": "GOP stands for Group of ______.",
+      "answer": "Pictures",
+      "source_pages": [
+        232
+      ]
+    },
+    {
+      "id": "FIB15",
+      "prompt": "The DAG scheduler places tasks in the task ______.",
+      "answer": "queue",
+      "source_pages": [
+        233
+      ]
+    },
+    {
+      "id": "FIB16",
+      "prompt": "The worker ______ stores utilization information.",
+      "answer": "queue",
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "FIB17",
+      "prompt": "Chunked upload uses ______ alignment.",
+      "answer": "GOP",
+      "source_pages": [
+        236
+      ]
+    },
+    {
+      "id": "FIB18",
+      "prompt": "Authorized direct upload uses a pre-signed ______.",
+      "answer": "URL",
+      "source_pages": [
+        238,
+        239
+      ]
+    },
+    {
+      "id": "FIB19",
+      "prompt": "Widevine is a ______ system.",
+      "answer": "DRM",
+      "source_pages": [
+        239
+      ]
+    },
+    {
+      "id": "FIB20",
+      "prompt": "Video popularity follows a ______-tail distribution.",
+      "answer": "long",
+      "source_pages": [
+        239,
+        240
+      ]
+    },
+    {
+      "id": "FIB21",
+      "prompt": "API servers are ______, enabling horizontal scaling.",
+      "answer": "stateless",
+      "source_pages": [
+        242
+      ]
+    }
+  ],
+  "ordering_exercises": [
+    {
+      "id": "ORD01",
+      "title": "Video upload flow",
+      "items_scrambled": [
+        "Completion handler updates metadata",
+        "Upload to original storage",
+        "Transcode video",
+        "Distribute to CDN",
+        "Store encoded output / queue completion",
+        "Mark ready"
+      ],
+      "correct_order": [
+        "Upload to original storage",
+        "Transcode video",
+        "Store encoded output / queue completion",
+        "Distribute to CDN",
+        "Completion handler updates metadata",
+        "Mark ready"
+      ],
+      "source_pages": [
+        226,
+        227
+      ]
+    },
+    {
+      "id": "ORD02",
+      "title": "Resource scheduling",
+      "items_scrambled": [
+        "Assign worker",
+        "Pick highest-priority task",
+        "Track running assignment",
+        "Choose optimal worker",
+        "Remove finished assignment"
+      ],
+      "correct_order": [
+        "Pick highest-priority task",
+        "Choose optimal worker",
+        "Assign worker",
+        "Track running assignment",
+        "Remove finished assignment"
+      ],
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "ORD03",
+      "title": "Pre-signed upload",
+      "items_scrambled": [
+        "Client uploads to storage",
+        "API returns signed URL",
+        "Client requests signed URL"
+      ],
+      "correct_order": [
+        "Client requests signed URL",
+        "API returns signed URL",
+        "Client uploads to storage"
+      ],
+      "source_pages": [
+        239
+      ]
+    }
+  ],
+  "scenario_questions": [
+    {
+      "id": "SC01",
+      "scenario": "A 900 MB upload fails near completion.",
+      "question": "What design prevents starting over?",
+      "expected_answer": "GOP-aligned chunked/resumable upload.",
+      "source_pages": [
+        236
+      ]
+    },
+    {
+      "id": "SC02",
+      "scenario": "A user on slow mobile data keeps buffering.",
+      "question": "How does the transcoding strategy help?",
+      "expected_answer": "Serve a lower-resolution/lower-bitrate version and switch quality as network conditions change.",
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "SC03",
+      "scenario": "A creator needs watermarking and thumbnail generation, while another does not.",
+      "question": "What model supports this?",
+      "expected_answer": "A configurable DAG-based transcoding pipeline.",
+      "source_pages": [
+        229,
+        230
+      ]
+    },
+    {
+      "id": "SC04",
+      "scenario": "An old client cannot split the upload into GOP chunks.",
+      "question": "What should happen?",
+      "expected_answer": "Upload the whole video and split it server-side.",
+      "source_pages": [
+        232,
+        241
+      ]
+    },
+    {
+      "id": "SC05",
+      "scenario": "Encoding cannot start until another module completes synchronously.",
+      "question": "How do you improve parallelism?",
+      "expected_answer": "Insert a message queue between modules to decouple them.",
+      "source_pages": [
+        237,
+        238
+      ]
+    },
+    {
+      "id": "SC06",
+      "scenario": "You want direct object-store upload without exposing broad storage credentials.",
+      "question": "What should the API provide?",
+      "expected_answer": "A pre-signed URL.",
+      "source_pages": [
+        238,
+        239
+      ]
+    },
+    {
+      "id": "SC07",
+      "scenario": "Premium content needs playback protection.",
+      "question": "Name the protection options in the chapter.",
+      "expected_answer": "DRM, AES encryption with authorization, and visual watermarking.",
+      "source_pages": [
+        239
+      ]
+    },
+    {
+      "id": "SC08",
+      "scenario": "Thousands of rarely viewed videos consume expensive CDN resources.",
+      "question": "What cost optimization applies?",
+      "expected_answer": "Serve popular videos from CDN and less popular videos from high-capacity storage servers.",
+      "source_pages": [
+        239,
+        240
+      ]
+    },
+    {
+      "id": "SC09",
+      "scenario": "A video is popular only in one region.",
+      "question": "What should distribution do?",
+      "expected_answer": "Avoid distributing it to regions where it is not popular.",
+      "source_pages": [
+        240
+      ]
+    },
+    {
+      "id": "SC10",
+      "scenario": "One transcoding segment fails.",
+      "question": "How is it handled?",
+      "expected_answer": "Treat as recoverable and retry a few times.",
+      "source_pages": [
+        240
+      ]
+    },
+    {
+      "id": "SC11",
+      "scenario": "The input video is malformed.",
+      "question": "How is it handled?",
+      "expected_answer": "Stop related tasks and return an appropriate error.",
+      "source_pages": [
+        240
+      ]
+    },
+    {
+      "id": "SC12",
+      "scenario": "The resource-manager queue is down.",
+      "question": "What is the fallback?",
+      "expected_answer": "Use a replica.",
+      "source_pages": [
+        241
+      ]
+    },
+    {
+      "id": "SC13",
+      "scenario": "A task worker dies.",
+      "question": "What happens?",
+      "expected_answer": "Retry the task on another worker.",
+      "source_pages": [
+        241
+      ]
+    },
+    {
+      "id": "SC14",
+      "scenario": "The metadata DB master dies.",
+      "question": "What happens?",
+      "expected_answer": "Promote a slave to master.",
+      "source_pages": [
+        241
+      ]
+    },
+    {
+      "id": "SC15",
+      "scenario": "You adapt the service to live streaming.",
+      "question": "What key differences should you mention?",
+      "expected_answer": "Higher latency requirements, less need for parallelism because small chunks are processed in real time, and stricter/faster error handling.",
+      "source_pages": [
+        242
+      ]
+    }
+  ],
+  "short_answer_questions": [
+    {
+      "id": "SA01",
+      "question": "Why does the design use CDN and blob storage instead of building them?",
+      "model_answer": "They are complex and costly to build at scale, and the interview should focus on choosing appropriate infrastructure rather than reimplementing every subsystem.",
+      "source_pages": [
+        223
+      ]
+    },
+    {
+      "id": "SA02",
+      "question": "Explain the upload pipeline.",
+      "model_answer": "Original storage -> transcoding -> transcoded storage/CDN plus completion queue -> completion handler -> metadata update -> client marked ready.",
+      "source_pages": [
+        224,
+        225,
+        226,
+        227
+      ]
+    },
+    {
+      "id": "SA03",
+      "question": "Why is transcoding required?",
+      "model_answer": "Raw video is huge; devices support different formats; users have different bandwidth; network conditions change, so multiple quality/format variants are necessary.",
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "SA04",
+      "question": "Explain container vs codec.",
+      "model_answer": "Container packages video/audio/metadata, such as .mp4. Codec compresses/decompresses video, such as H.264 or VP9.",
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "SA05",
+      "question": "Why use a DAG?",
+      "model_answer": "It lets different processing tasks and dependencies be configured while supporting parallel execution.",
+      "source_pages": [
+        229,
+        230
+      ]
+    },
+    {
+      "id": "SA06",
+      "question": "Explain the resource manager.",
+      "model_answer": "It manages a priority task queue, worker-utilization queue, running queue, and a scheduler that matches high-priority tasks to suitable workers.",
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "SA07",
+      "question": "How are uploads sped up?",
+      "model_answer": "Split videos into GOP chunks for resumable upload and use upload centers geographically close to users.",
+      "source_pages": [
+        236,
+        237
+      ]
+    },
+    {
+      "id": "SA08",
+      "question": "How does the chapter reduce CDN cost?",
+      "model_answer": "Exploit long-tail popularity: CDN for popular content, fewer/on-demand encodings for unpopular content, regional placement, and potentially owned CDN/ISP partnerships.",
+      "source_pages": [
+        239,
+        240
+      ]
+    },
+    {
+      "id": "SA09",
+      "question": "How is failure handled?",
+      "model_answer": "Retry recoverable work, stop malformed/non-recoverable work, and use replicas, failover, rescheduling, and stateless rerouting for infrastructure failures.",
+      "source_pages": [
+        240,
+        241
+      ]
+    },
+    {
+      "id": "SA10",
+      "question": "What changes for live streaming?",
+      "model_answer": "Latency requirements are stricter, a different streaming protocol may be needed, parallelism requirements are lower, and slow error recovery is unacceptable.",
+      "source_pages": [
+        242
+      ]
+    }
+  ],
+  "active_recall_prompts": [
+    {
+      "id": "AR01",
+      "prompt": "Recite all core requirements and numerical assumptions.",
+      "target_points": [
+        "5M DAU",
+        "30 min/day",
+        "upload/watch",
+        "mobile/web/TV",
+        "1GB max",
+        "encryption",
+        "international",
+        "most formats"
+      ],
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "AR02",
+      "prompt": "Reproduce daily storage and CDN cost calculations.",
+      "target_points": [
+        "150TB/day",
+        "$150k/day"
+      ],
+      "source_pages": [
+        221,
+        222
+      ]
+    },
+    {
+      "id": "AR03",
+      "prompt": "Name all upload architecture components.",
+      "target_points": [
+        "LB",
+        "API",
+        "Metadata DB/cache",
+        "original storage",
+        "transcode",
+        "transcoded storage",
+        "CDN",
+        "completion queue",
+        "completion handler"
+      ],
+      "source_pages": [
+        224,
+        225
+      ]
+    },
+    {
+      "id": "AR04",
+      "prompt": "Reconstruct the upload flow in order.",
+      "target_points": [
+        "original",
+        "transcode",
+        "encoded storage",
+        "CDN",
+        "completion queue",
+        "handler",
+        "metadata",
+        "ready"
+      ],
+      "source_pages": [
+        226,
+        227
+      ]
+    },
+    {
+      "id": "AR05",
+      "prompt": "Explain transcoding and distinguish container/codec.",
+      "target_points": [
+        "storage",
+        "compatibility",
+        "bandwidth",
+        "network changes",
+        "container",
+        "codec"
+      ],
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "AR06",
+      "prompt": "Name the DAG tasks and architecture components.",
+      "target_points": [
+        "inspection",
+        "encoding",
+        "thumbnail",
+        "watermark",
+        "preprocessor",
+        "scheduler",
+        "resource manager",
+        "workers",
+        "temporary storage"
+      ],
+      "source_pages": [
+        229,
+        230,
+        231
+      ]
+    },
+    {
+      "id": "AR07",
+      "prompt": "Recite preprocessor responsibilities.",
+      "target_points": [
+        "GOP split",
+        "old clients",
+        "DAG generation",
+        "retry data"
+      ],
+      "source_pages": [
+        232
+      ]
+    },
+    {
+      "id": "AR08",
+      "prompt": "Explain resource-manager queues.",
+      "target_points": [
+        "task",
+        "worker",
+        "running",
+        "task scheduler"
+      ],
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "AR09",
+      "prompt": "Name all speed and safety optimizations.",
+      "target_points": [
+        "GOP upload",
+        "geo upload centers",
+        "message queues",
+        "pre-signed URL",
+        "DRM",
+        "AES",
+        "watermark"
+      ],
+      "source_pages": [
+        236,
+        237,
+        238,
+        239
+      ]
+    },
+    {
+      "id": "AR10",
+      "prompt": "Recite CDN cost optimizations and error-handling rules.",
+      "target_points": [
+        "popular CDN",
+        "unpopular storage",
+        "fewer variants",
+        "regional",
+        "ISP",
+        "retry",
+        "replicas",
+        "failover"
+      ],
+      "source_pages": [
+        239,
+        240,
+        241
+      ]
+    }
+  ],
+  "diagram_reconstruction_drills": [
+    {
+      "id": "DR01",
+      "name": "High-level architecture",
+      "task": "Draw Client -> CDN for streaming and Client -> API Servers for everything else.",
+      "source_pages": [
+        223
+      ]
+    },
+    {
+      "id": "DR02",
+      "name": "Upload architecture",
+      "task": "Draw original storage, transcoders, transcoded storage/CDN, completion queue/handler, metadata DB/cache, API/LB.",
+      "source_pages": [
+        224,
+        225
+      ]
+    },
+    {
+      "id": "DR03",
+      "name": "Actual upload flow",
+      "task": "Number original upload -> transcode -> encoded output + completion queue -> CDN + metadata update -> ready.",
+      "source_pages": [
+        226,
+        227
+      ]
+    },
+    {
+      "id": "DR04",
+      "name": "Transcoding DAG",
+      "task": "Draw video/audio/metadata stages and parallel encoding/thumbnail/audio tasks.",
+      "source_pages": [
+        229,
+        230,
+        233
+      ]
+    },
+    {
+      "id": "DR05",
+      "name": "Transcoding architecture",
+      "task": "Draw Preprocessor -> DAG Scheduler -> Resource Manager -> Task Workers -> Encoded Video, with Temporary Storage.",
+      "source_pages": [
+        231,
+        232
+      ]
+    },
+    {
+      "id": "DR06",
+      "name": "Resource manager",
+      "task": "Draw Task Queue + Worker Queue -> Scheduler -> Worker, with Running Queue tracking assignment.",
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "DR07",
+      "name": "Pre-signed upload",
+      "task": "Draw Client -> API request -> signed URL -> direct storage upload.",
+      "source_pages": [
+        238,
+        239
+      ]
+    },
+    {
+      "id": "DR08",
+      "name": "Popularity-aware delivery",
+      "task": "Draw popular content from CDN and unpopular content from storage servers.",
+      "source_pages": [
+        239,
+        240
+      ]
+    }
+  ],
+  "interview_style_questions": [
+    {
+      "id": "INT01",
+      "question": "What requirements would you clarify first?",
+      "strong_answer_outline": [
+        "scope",
+        "clients",
+        "DAU",
+        "international",
+        "formats",
+        "encryption",
+        "max size",
+        "cloud services"
+      ],
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "INT02",
+      "question": "What capacity estimates matter?",
+      "strong_answer_outline": [
+        "upload fraction",
+        "average size",
+        "daily storage",
+        "views/day",
+        "CDN bandwidth cost"
+      ],
+      "source_pages": [
+        221,
+        222
+      ]
+    },
+    {
+      "id": "INT03",
+      "question": "How would you separate the control plane and media path?",
+      "strong_answer_outline": [
+        "CDN streams video",
+        "API handles metadata/business logic"
+      ],
+      "source_pages": [
+        223
+      ]
+    },
+    {
+      "id": "INT04",
+      "question": "Walk through upload and transcoding.",
+      "strong_answer_outline": [
+        "original blob",
+        "DAG transcode",
+        "encoded blob",
+        "CDN",
+        "completion queue",
+        "metadata update"
+      ],
+      "source_pages": [
+        224,
+        225,
+        226,
+        227,
+        229,
+        230
+      ]
+    },
+    {
+      "id": "INT05",
+      "question": "How would you make uploads fast and resilient?",
+      "strong_answer_outline": [
+        "GOP chunks",
+        "resumable upload",
+        "geo upload centers",
+        "client/server splitting"
+      ],
+      "source_pages": [
+        236,
+        237
+      ]
+    },
+    {
+      "id": "INT06",
+      "question": "How do you make the transcoding system parallel?",
+      "strong_answer_outline": [
+        "DAG",
+        "queues",
+        "resource manager",
+        "workers",
+        "temporary storage"
+      ],
+      "source_pages": [
+        229,
+        231,
+        232,
+        233,
+        234,
+        235,
+        236,
+        237,
+        238
+      ]
+    },
+    {
+      "id": "INT07",
+      "question": "How do you protect uploads and playback?",
+      "strong_answer_outline": [
+        "pre-signed URL",
+        "DRM",
+        "AES",
+        "watermark"
+      ],
+      "source_pages": [
+        238,
+        239
+      ]
+    },
+    {
+      "id": "INT08",
+      "question": "How do you reduce CDN cost?",
+      "strong_answer_outline": [
+        "long tail",
+        "popular CDN",
+        "unpopular storage",
+        "fewer variants",
+        "regional",
+        "ISP"
+      ],
+      "source_pages": [
+        239,
+        240
+      ]
+    },
+    {
+      "id": "INT09",
+      "question": "How do you handle failures?",
+      "strong_answer_outline": [
+        "recoverable retry",
+        "non-recoverable stop",
+        "replicas",
+        "reschedule",
+        "new worker",
+        "stateless API failover",
+        "DB failover"
+      ],
+      "source_pages": [
+        240,
+        241
+      ]
+    },
+    {
+      "id": "INT10",
+      "question": "What changes for live streaming?",
+      "strong_answer_outline": [
+        "latency",
+        "protocol",
+        "parallelism",
+        "error recovery"
+      ],
+      "source_pages": [
+        242
+      ]
+    }
+  ],
+  "practice_problems": [
+    {
+      "id": "P01",
+      "prompt": "If 20% of 5M users upload 300MB/day, estimate storage.",
+      "solution": "5M * 20% * 300MB = 300TB/day.",
+      "based_on_source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "P02",
+      "prompt": "If streaming traffic doubles and price/GB stays constant, what happens to the $150k/day estimate?",
+      "solution": "It doubles to about $300k/day.",
+      "based_on_source_pages": [
+        222
+      ]
+    },
+    {
+      "id": "P03",
+      "prompt": "Classify .mp4, H.264, and HLS.",
+      "solution": ".mp4 = container; H.264 = codec; HLS = streaming protocol.",
+      "based_on_source_pages": [
+        227,
+        229
+      ]
+    },
+    {
+      "id": "P04",
+      "prompt": "A phone has uploaded 18 of 20 GOP chunks before failure. What is the main recovery benefit?",
+      "solution": "Resume the missing chunks instead of restarting the whole upload.",
+      "based_on_source_pages": [
+        236
+      ]
+    },
+    {
+      "id": "P05",
+      "prompt": "A DAG scheduler fails temporarily. What recovery is specified?",
+      "solution": "Reschedule the task.",
+      "based_on_source_pages": [
+        241
+      ]
+    },
+    {
+      "id": "P06",
+      "prompt": "The metadata DB master fails. What recovery is specified?",
+      "solution": "Promote a slave to master.",
+      "based_on_source_pages": [
+        241
+      ]
+    }
+  ],
+  "final_review": {
+    "must_memorize": [
+      "5M DAU; 5 videos watched/user/day; 10% upload/day; 300MB average; 150TB/day storage.",
+      "$0.02/GB assumption -> about $150k/day streaming cost.",
+      "Client + CDN + API servers.",
+      "Streaming from CDN; API handles everything else.",
+      "Original blob -> transcode -> encoded blob/CDN -> completion queue/handler -> metadata ready.",
+      "Transcoding solves raw size, compatibility, bandwidth adaptation, and network variation.",
+      "Containers: .avi/.mov/.mp4. Codecs: H.264/VP9/HEVC.",
+      "DAG tasks: inspection, encoding, thumbnail, watermark.",
+      "Transcoding architecture: preprocessor, DAG scheduler, resource manager, workers, temporary storage, encoded output.",
+      "GOP chunking enables resumable upload.",
+      "Message queues increase loose coupling and parallelism.",
+      "Pre-signed URLs secure direct upload.",
+      "Protection: DRM, AES, watermark.",
+      "Long-tail popularity drives CDN cost optimization.",
+      "Recoverable errors retry; malformed/non-recoverable errors stop.",
+      "API tier is stateless and horizontally scalable; DB uses replication/sharding.",
+      "Live streaming changes latency, parallelism, and error-handling requirements."
+    ],
+    "memory_chain": "SCOPE -> COST -> CLIENT/CDN/API -> ORIGINAL STORAGE -> TRANSCODE -> ENCODED STORAGE/CDN -> COMPLETION EVENT -> METADATA READY -> STREAMING -> DAG -> GOP -> RESOURCE MANAGER -> CHUNKING/GEO/QUEUES -> SIGNED URL/DRM -> LONG-TAIL COST -> ERROR HANDLING -> LIVE"
+  }
+}

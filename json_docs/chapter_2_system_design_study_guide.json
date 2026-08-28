@@ -1,0 +1,2093 @@
+{
+  "chapter": {
+    "number": 2,
+    "title": "Back-of-the-Envelope Estimation",
+    "source": "System Design Interview: An Insider's Guide by Alex Xu",
+    "pdf_pages": {
+      "chapter_start": 34,
+      "chapter_end": 40,
+      "references_page": 41
+    },
+    "primary_goal": "Learn how to make quick, defensible estimates of capacity and performance requirements during a system design interview using powers of two, latency intuition, availability numbers, assumptions, units, rounding, and approximation."
+  },
+  "chapter_summary": {
+    "overview": "Chapter 2 introduces back-of-the-envelope estimation as a way to estimate whether a proposed design can meet system capacity or performance requirements. The chapter focuses on three foundational areas: powers of two and data-size units, latency numbers for common computer operations, and availability expressed as uptime percentages or 'nines'. It then walks through an example estimating Twitter QPS and media storage, and closes with practical interview tips.",
+    "core_ideas": [
+      "Use approximate calculations to reason about system scale rather than chasing exact arithmetic.",
+      "Know common data-size units based on powers of two.",
+      "Develop intuition for the relative speed of memory, disk, network, compression, and cross-region communication.",
+      "Understand how availability percentages translate into allowed downtime.",
+      "State assumptions explicitly before calculating.",
+      "Label every number with units.",
+      "Practice common estimates such as QPS, peak QPS, storage, cache, and server count."
+    ],
+    "source_pages": [
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40
+    ]
+  },
+  "learning_objectives": [
+    {
+      "id": "LO1",
+      "objective": "Explain what a back-of-the-envelope estimate is and why it is used in system design interviews.",
+      "source_pages": [
+        34
+      ]
+    },
+    {
+      "id": "LO2",
+      "objective": "Recall the power-of-two data units from kilobyte through petabyte and their approximate decimal-scale equivalents.",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "LO3",
+      "objective": "Convert between nanoseconds, microseconds, and milliseconds.",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "LO4",
+      "objective": "Develop intuition for the relative latency of cache, memory, compression, network, disk, and cross-region operations.",
+      "source_pages": [
+        36,
+        37
+      ]
+    },
+    {
+      "id": "LO5",
+      "objective": "Explain the major latency lessons summarized by the chapter.",
+      "source_pages": [
+        37
+      ]
+    },
+    {
+      "id": "LO6",
+      "objective": "Define high availability and SLA and relate 'nines' of availability to expected downtime.",
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "LO7",
+      "objective": "Estimate DAU, average QPS, the chapter's doubled QPS estimate, daily storage, and multi-year storage from stated assumptions.",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "LO8",
+      "objective": "Apply rounding, approximation, written assumptions, and unit labeling during interview calculations.",
+      "source_pages": [
+        40
+      ]
+    }
+  ],
+  "power_of_two_reference": [
+    {
+      "power": 10,
+      "approximate_value": "1 Thousand",
+      "full_name": "1 Kilobyte",
+      "short_name": "1 KB",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "power": 20,
+      "approximate_value": "1 Million",
+      "full_name": "1 Megabyte",
+      "short_name": "1 MB",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "power": 30,
+      "approximate_value": "1 Billion",
+      "full_name": "1 Gigabyte",
+      "short_name": "1 GB",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "power": 40,
+      "approximate_value": "1 Trillion",
+      "full_name": "1 Terabyte",
+      "short_name": "1 TB",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "power": 50,
+      "approximate_value": "1 Quadrillion",
+      "full_name": "1 Petabyte",
+      "short_name": "1 PB",
+      "source_pages": [
+        35
+      ]
+    }
+  ],
+  "unit_conversions": [
+    {
+      "statement": "1 byte = 8 bits",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "statement": "1 ASCII character uses 1 byte",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "statement": "1 ns = 10^-9 seconds",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "statement": "1 µs = 10^-6 seconds = 1,000 ns",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "statement": "1 ms = 10^-3 seconds = 1,000 µs = 1,000,000 ns",
+      "source_pages": [
+        36
+      ]
+    }
+  ],
+  "latency_reference_2010": [
+    {
+      "operation": "L1 cache reference",
+      "time": "0.5 ns",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "operation": "Branch mispredict",
+      "time": "5 ns",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "operation": "L2 cache reference",
+      "time": "7 ns",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "operation": "Mutex lock/unlock",
+      "time": "100 ns",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "operation": "Main memory reference",
+      "time": "100 ns",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "operation": "Compress 1K bytes with Zippy",
+      "time": "10,000 ns = 10 µs",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "operation": "Send 2K bytes over 1 Gbps network",
+      "time": "20,000 ns = 20 µs",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "operation": "Read 1 MB sequentially from memory",
+      "time": "250,000 ns = 250 µs",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "operation": "Round trip within the same datacenter",
+      "time": "500,000 ns = 500 µs",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "operation": "Disk seek",
+      "time": "10,000,000 ns = 10 ms",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "operation": "Read 1 MB sequentially from the network",
+      "time": "10,000,000 ns = 10 ms",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "operation": "Read 1 MB sequentially from disk",
+      "time": "30,000,000 ns = 30 ms",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "operation": "Send packet CA -> Netherlands -> CA",
+      "time": "150,000,000 ns = 150 ms",
+      "source_pages": [
+        36
+      ]
+    }
+  ],
+  "latency_takeaways": [
+    {
+      "id": "LT1",
+      "takeaway": "Memory is fast but disk is slow.",
+      "source_pages": [
+        37
+      ]
+    },
+    {
+      "id": "LT2",
+      "takeaway": "Avoid disk seeks if possible.",
+      "source_pages": [
+        37
+      ]
+    },
+    {
+      "id": "LT3",
+      "takeaway": "Simple compression algorithms are fast.",
+      "source_pages": [
+        37
+      ]
+    },
+    {
+      "id": "LT4",
+      "takeaway": "Compress data before sending it over the internet if possible.",
+      "source_pages": [
+        37
+      ]
+    },
+    {
+      "id": "LT5",
+      "takeaway": "Data centers are usually in different regions, and sending data between them takes time.",
+      "source_pages": [
+        37
+      ]
+    }
+  ],
+  "availability_reference": [
+    {
+      "availability": "99%",
+      "downtime_per_day": "14.40 minutes",
+      "downtime_per_year": "3.65 days",
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "availability": "99.9%",
+      "downtime_per_day": "1.44 minutes",
+      "downtime_per_year": "8.77 hours",
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "availability": "99.99%",
+      "downtime_per_day": "8.64 seconds",
+      "downtime_per_year": "52.60 minutes",
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "availability": "99.999%",
+      "downtime_per_day": "864.00 milliseconds",
+      "downtime_per_year": "5.26 minutes",
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "availability": "99.9999%",
+      "downtime_per_day": "86.40 milliseconds",
+      "downtime_per_year": "31.56 seconds",
+      "source_pages": [
+        38
+      ]
+    }
+  ],
+  "twitter_estimation_example": {
+    "note": "The chapter explicitly states that these numbers are for the exercise only and are not real Twitter numbers.",
+    "assumptions": [
+      {
+        "assumption": "300 million monthly active users",
+        "source_pages": [
+          39
+        ]
+      },
+      {
+        "assumption": "50% of users use Twitter daily",
+        "source_pages": [
+          39
+        ]
+      },
+      {
+        "assumption": "Users post 2 tweets per day on average",
+        "source_pages": [
+          39
+        ]
+      },
+      {
+        "assumption": "10% of tweets contain media",
+        "source_pages": [
+          39
+        ]
+      },
+      {
+        "assumption": "Data is stored for 5 years",
+        "source_pages": [
+          39
+        ]
+      }
+    ],
+    "calculations": [
+      {
+        "name": "Daily active users",
+        "formula": "300 million * 50%",
+        "result": "150 million DAU",
+        "source_pages": [
+          39
+        ]
+      },
+      {
+        "name": "Tweets QPS",
+        "formula": "150 million * 2 tweets / 24 hours / 3600 seconds",
+        "result": "~3500 QPS",
+        "source_pages": [
+          39
+        ]
+      },
+      {
+        "name": "Doubled QPS estimate",
+        "source_label_in_book": "Peek QPS",
+        "formula": "2 * QPS",
+        "result": "~7000 QPS",
+        "source_pages": [
+          39
+        ]
+      },
+      {
+        "name": "Average tweet size components",
+        "components": {
+          "tweet_id": "64 bytes",
+          "text": "140 bytes",
+          "media": "1 MB"
+        },
+        "source_pages": [
+          39
+        ]
+      },
+      {
+        "name": "Daily media storage",
+        "formula": "150 million * 2 * 10% * 1 MB",
+        "result": "30 TB per day",
+        "source_pages": [
+          39
+        ]
+      },
+      {
+        "name": "Five-year media storage",
+        "formula": "30 TB * 365 * 5",
+        "result": "~55 PB",
+        "source_pages": [
+          39
+        ]
+      }
+    ]
+  },
+  "interview_tips": [
+    {
+      "id": "TIP1",
+      "title": "Rounding and Approximation",
+      "detail": "Exact arithmetic is not expected. Simplify complicated calculations into round numbers that are easier to compute mentally.",
+      "example_from_chapter": "99987 / 9.1 can be simplified to 100,000 / 10.",
+      "source_pages": [
+        40
+      ]
+    },
+    {
+      "id": "TIP2",
+      "title": "Write Down Assumptions",
+      "detail": "Record assumptions so you and the interviewer can refer back to them later.",
+      "source_pages": [
+        40
+      ]
+    },
+    {
+      "id": "TIP3",
+      "title": "Label Units",
+      "detail": "A number without a unit is ambiguous. Distinguish values such as 5 KB and 5 MB explicitly.",
+      "source_pages": [
+        40
+      ]
+    },
+    {
+      "id": "TIP4",
+      "title": "Practice Common Estimates",
+      "detail": "The chapter lists QPS, the doubled QPS estimate, storage, cache, and number of servers as common back-of-the-envelope estimation topics.",
+      "source_pages": [
+        40
+      ]
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "FC01",
+      "front": "What is the purpose of back-of-the-envelope estimation in a system design interview?",
+      "back": "To estimate capacity or performance requirements and develop a good feel for which designs can meet the requirements.",
+      "source_pages": [
+        34
+      ]
+    },
+    {
+      "id": "FC02",
+      "front": "What three foundational areas does Chapter 2 say should be well understood?",
+      "back": "Power of two, latency numbers every programmer should know, and availability numbers.",
+      "source_pages": [
+        34
+      ]
+    },
+    {
+      "id": "FC03",
+      "front": "How many bits are in one byte?",
+      "back": "8 bits.",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "FC04",
+      "front": "How much memory does one ASCII character use according to the chapter?",
+      "back": "1 byte, or 8 bits.",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "FC05",
+      "front": "2^10 is approximately what?",
+      "back": "1 thousand, corresponding to approximately 1 KB in the chapter's table.",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "FC06",
+      "front": "2^20 is approximately what?",
+      "back": "1 million, corresponding to approximately 1 MB.",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "FC07",
+      "front": "2^30 is approximately what?",
+      "back": "1 billion, corresponding to approximately 1 GB.",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "FC08",
+      "front": "2^40 is approximately what?",
+      "back": "1 trillion, corresponding to approximately 1 TB.",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "FC09",
+      "front": "2^50 is approximately what?",
+      "back": "1 quadrillion, corresponding to approximately 1 PB.",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "FC10",
+      "front": "How many nanoseconds are in one microsecond?",
+      "back": "1,000 ns.",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "FC11",
+      "front": "How many microseconds are in one millisecond?",
+      "back": "1,000 µs.",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "FC12",
+      "front": "How many nanoseconds are in one millisecond?",
+      "back": "1,000,000 ns.",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "FC13",
+      "front": "What latency does the chapter's 2010 table give for an L1 cache reference?",
+      "back": "0.5 ns.",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "FC14",
+      "front": "What latency does the table give for a main memory reference?",
+      "back": "100 ns.",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "FC15",
+      "front": "What latency does the table give for compressing 1K bytes with Zippy?",
+      "back": "10 µs.",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "FC16",
+      "front": "What latency does the table give for reading 1 MB sequentially from memory?",
+      "back": "250 µs.",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "FC17",
+      "front": "What latency does the table give for a round trip within the same datacenter?",
+      "back": "500 µs.",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "FC18",
+      "front": "What latency does the table give for a disk seek?",
+      "back": "10 ms.",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "FC19",
+      "front": "What latency does the table give for reading 1 MB sequentially from disk?",
+      "back": "30 ms.",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "FC20",
+      "front": "What latency does the table give for a CA -> Netherlands -> CA packet trip?",
+      "back": "150 ms.",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "FC21",
+      "front": "What is the chapter's first major latency takeaway?",
+      "back": "Memory is fast but disk is slow.",
+      "source_pages": [
+        37
+      ]
+    },
+    {
+      "id": "FC22",
+      "front": "What does the chapter recommend regarding disk seeks?",
+      "back": "Avoid disk seeks if possible.",
+      "source_pages": [
+        37
+      ]
+    },
+    {
+      "id": "FC23",
+      "front": "What does the chapter conclude about simple compression algorithms?",
+      "back": "They are fast.",
+      "source_pages": [
+        37
+      ]
+    },
+    {
+      "id": "FC24",
+      "front": "What network-related optimization does the chapter suggest?",
+      "back": "Compress data before sending it over the internet if possible.",
+      "source_pages": [
+        37
+      ]
+    },
+    {
+      "id": "FC25",
+      "front": "What is high availability?",
+      "back": "The ability of a system to remain continuously operational for a desirably long period of time.",
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "FC26",
+      "front": "What is an SLA?",
+      "back": "A service level agreement that formally defines the level of uptime a service provider will deliver to a customer.",
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "FC27",
+      "front": "What does 'more nines' mean in availability?",
+      "back": "Higher availability and less expected downtime.",
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "FC28",
+      "front": "How much yearly downtime corresponds to 99.9% availability in the chapter's table?",
+      "back": "8.77 hours per year.",
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "FC29",
+      "front": "How much yearly downtime corresponds to 99.99% availability?",
+      "back": "52.60 minutes per year.",
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "FC30",
+      "front": "How much yearly downtime corresponds to 99.999% availability?",
+      "back": "5.26 minutes per year.",
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "FC31",
+      "front": "What monthly active user assumption is used in the Twitter exercise?",
+      "back": "300 million monthly active users.",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "FC32",
+      "front": "What daily usage percentage is assumed in the Twitter exercise?",
+      "back": "50% of monthly active users use Twitter daily.",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "FC33",
+      "front": "What DAU does the exercise calculate?",
+      "back": "150 million daily active users.",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "FC34",
+      "front": "What average tweets-per-user assumption is used?",
+      "back": "2 tweets per day.",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "FC35",
+      "front": "What average Tweets QPS does the exercise estimate?",
+      "back": "Approximately 3,500 QPS.",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "FC36",
+      "front": "What doubled QPS value does the exercise calculate?",
+      "back": "Approximately 7,000 QPS. The book labels this 'Peek QPS'.",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "FC37",
+      "front": "What percentage of tweets are assumed to contain media?",
+      "back": "10%.",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "FC38",
+      "front": "How much daily media storage does the exercise estimate?",
+      "back": "30 TB per day.",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "FC39",
+      "front": "How much media storage is estimated for five years?",
+      "back": "Approximately 55 PB.",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "FC40",
+      "front": "What is more important in a back-of-the-envelope interview exercise: exact results or the process?",
+      "back": "The process. The chapter says solving the problem is more important than obtaining exact results.",
+      "source_pages": [
+        40
+      ]
+    },
+    {
+      "id": "FC41",
+      "front": "Why should you write assumptions down?",
+      "back": "So they can be referenced later during the calculation and discussion.",
+      "source_pages": [
+        40
+      ]
+    },
+    {
+      "id": "FC42",
+      "front": "Why should every estimate have a unit?",
+      "back": "Because a bare number is ambiguous; for example, 5 could mean 5 KB or 5 MB.",
+      "source_pages": [
+        40
+      ]
+    }
+  ],
+  "multiple_choice_questions": [
+    {
+      "id": "MCQ01",
+      "difficulty": "easy",
+      "question": "What is the primary purpose of a back-of-the-envelope estimate?",
+      "choices": {
+        "A": "To prove the final design mathematically",
+        "B": "To get a useful sense of whether a design can meet capacity or performance requirements",
+        "C": "To avoid discussing assumptions",
+        "D": "To produce exact production benchmarks"
+      },
+      "answer": "B",
+      "explanation": "The chapter frames these estimates as a way to reason quickly about which designs can meet requirements.",
+      "source_pages": [
+        34
+      ]
+    },
+    {
+      "id": "MCQ02",
+      "difficulty": "easy",
+      "question": "Which three topics does the chapter identify as scalability basics for estimation?",
+      "choices": {
+        "A": "DNS, TLS, and REST",
+        "B": "Power of two, latency numbers, and availability numbers",
+        "C": "Sharding, caching, and CDNs",
+        "D": "Threads, processes, and containers"
+      },
+      "answer": "B",
+      "source_pages": [
+        34
+      ]
+    },
+    {
+      "id": "MCQ03",
+      "difficulty": "easy",
+      "question": "One byte contains how many bits?",
+      "choices": {
+        "A": "2",
+        "B": "4",
+        "C": "8",
+        "D": "16"
+      },
+      "answer": "C",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "MCQ04",
+      "difficulty": "medium",
+      "question": "In the chapter's power-of-two table, 2^30 corresponds approximately to:",
+      "choices": {
+        "A": "1 MB",
+        "B": "1 GB",
+        "C": "1 TB",
+        "D": "1 PB"
+      },
+      "answer": "B",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "MCQ05",
+      "difficulty": "medium",
+      "question": "In the chapter's table, 2^40 is approximately:",
+      "choices": {
+        "A": "1 billion",
+        "B": "1 trillion",
+        "C": "1 quadrillion",
+        "D": "1 million"
+      },
+      "answer": "B",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "MCQ06",
+      "difficulty": "easy",
+      "question": "How many nanoseconds are in one microsecond?",
+      "choices": {
+        "A": "10",
+        "B": "100",
+        "C": "1,000",
+        "D": "1,000,000"
+      },
+      "answer": "C",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "MCQ07",
+      "difficulty": "medium",
+      "question": "How many nanoseconds are in one millisecond?",
+      "choices": {
+        "A": "1,000",
+        "B": "10,000",
+        "C": "100,000",
+        "D": "1,000,000"
+      },
+      "answer": "D",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "MCQ08",
+      "difficulty": "medium",
+      "question": "Which operation is fastest in the chapter's 2010 latency table?",
+      "choices": {
+        "A": "Disk seek",
+        "B": "Main memory reference",
+        "C": "L1 cache reference",
+        "D": "Round trip within the same datacenter"
+      },
+      "answer": "C",
+      "explanation": "L1 cache reference is listed at 0.5 ns.",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "MCQ09",
+      "difficulty": "medium",
+      "question": "Which operation is listed at approximately 10 ms?",
+      "choices": {
+        "A": "L2 cache reference",
+        "B": "Disk seek",
+        "C": "Main memory reference",
+        "D": "Compress 1K bytes with Zippy"
+      },
+      "answer": "B",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "MCQ10",
+      "difficulty": "hard",
+      "question": "Which pair has the same latency in the chapter's 2010 table?",
+      "choices": {
+        "A": "Disk seek and read 1 MB sequentially from the network",
+        "B": "L1 cache reference and L2 cache reference",
+        "C": "Main memory reference and disk seek",
+        "D": "Read 1 MB from disk and CA-Netherlands-CA packet trip"
+      },
+      "answer": "A",
+      "explanation": "Both are listed as 10 ms.",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "MCQ11",
+      "difficulty": "hard",
+      "question": "How does reading 1 MB sequentially from disk compare with reading 1 MB sequentially from memory in the table?",
+      "choices": {
+        "A": "Disk is faster",
+        "B": "They are equal",
+        "C": "Disk is much slower",
+        "D": "The chapter gives no values for them"
+      },
+      "answer": "C",
+      "explanation": "The table lists 30 ms for disk versus 250 µs for memory.",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "MCQ12",
+      "difficulty": "medium",
+      "question": "Which conclusion does Chapter 2 draw from the latency numbers?",
+      "choices": {
+        "A": "Disk seeks are cheap",
+        "B": "Memory is fast but disk is slow",
+        "C": "Compression should always be avoided",
+        "D": "Cross-region communication has zero meaningful cost"
+      },
+      "answer": "B",
+      "source_pages": [
+        37
+      ]
+    },
+    {
+      "id": "MCQ13",
+      "difficulty": "medium",
+      "question": "What does the chapter recommend before sending data over the internet when possible?",
+      "choices": {
+        "A": "Decompress it",
+        "B": "Write it to disk",
+        "C": "Compress it",
+        "D": "Convert it to ASCII"
+      },
+      "answer": "C",
+      "source_pages": [
+        37
+      ]
+    },
+    {
+      "id": "MCQ14",
+      "difficulty": "easy",
+      "question": "What does 100% availability mean in the chapter's definition?",
+      "choices": {
+        "A": "One hour of downtime per year",
+        "B": "Zero downtime",
+        "C": "Five minutes of downtime per year",
+        "D": "No SLA"
+      },
+      "answer": "B",
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "MCQ15",
+      "difficulty": "easy",
+      "question": "What does SLA stand for?",
+      "choices": {
+        "A": "System Latency Approximation",
+        "B": "Service Level Agreement",
+        "C": "Server Load Analysis",
+        "D": "Storage Limit Allocation"
+      },
+      "answer": "B",
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "MCQ16",
+      "difficulty": "medium",
+      "question": "According to Table 2-3, 99.9% availability permits approximately how much downtime per year?",
+      "choices": {
+        "A": "3.65 days",
+        "B": "8.77 hours",
+        "C": "52.60 minutes",
+        "D": "5.26 minutes"
+      },
+      "answer": "B",
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "MCQ17",
+      "difficulty": "medium",
+      "question": "According to Table 2-3, 99.999% availability corresponds to approximately:",
+      "choices": {
+        "A": "3.65 days per year",
+        "B": "8.77 hours per year",
+        "C": "52.60 minutes per year",
+        "D": "5.26 minutes per year"
+      },
+      "answer": "D",
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "MCQ18",
+      "difficulty": "medium",
+      "question": "The Twitter exercise assumes 300 million MAU and 50% daily usage. What DAU does that produce?",
+      "choices": {
+        "A": "30 million",
+        "B": "75 million",
+        "C": "150 million",
+        "D": "300 million"
+      },
+      "answer": "C",
+      "explanation": "300 million * 50% = 150 million.",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "MCQ19",
+      "difficulty": "hard",
+      "question": "With 150 million DAU and 2 tweets per user per day, what Tweets QPS does the chapter estimate?",
+      "choices": {
+        "A": "~350",
+        "B": "~3,500",
+        "C": "~35,000",
+        "D": "~350,000"
+      },
+      "answer": "B",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "MCQ20",
+      "difficulty": "medium",
+      "question": "What doubled QPS value does the chapter calculate after the average QPS estimate?",
+      "choices": {
+        "A": "~1,750",
+        "B": "~3,500",
+        "C": "~7,000",
+        "D": "~14,000"
+      },
+      "answer": "C",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "MCQ21",
+      "difficulty": "medium",
+      "question": "What percentage of tweets in the exercise are assumed to contain media?",
+      "choices": {
+        "A": "1%",
+        "B": "10%",
+        "C": "25%",
+        "D": "50%"
+      },
+      "answer": "B",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "MCQ22",
+      "difficulty": "hard",
+      "question": "What daily media storage does the chapter estimate?",
+      "choices": {
+        "A": "3 TB/day",
+        "B": "30 TB/day",
+        "C": "300 TB/day",
+        "D": "3 PB/day"
+      },
+      "answer": "B",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "MCQ23",
+      "difficulty": "hard",
+      "question": "What five-year media storage does the chapter estimate?",
+      "choices": {
+        "A": "~5.5 PB",
+        "B": "~55 PB",
+        "C": "~550 PB",
+        "D": "~55 TB"
+      },
+      "answer": "B",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "MCQ24",
+      "difficulty": "medium",
+      "question": "Which interview behavior does Chapter 2 recommend?",
+      "choices": {
+        "A": "Use exact arithmetic even if it consumes most of the interview",
+        "B": "Keep assumptions in your head",
+        "C": "Use rounding and approximation",
+        "D": "Drop units to make equations shorter"
+      },
+      "answer": "C",
+      "source_pages": [
+        40
+      ]
+    },
+    {
+      "id": "MCQ25",
+      "difficulty": "medium",
+      "question": "Why does the chapter recommend labeling units?",
+      "choices": {
+        "A": "It makes numbers larger",
+        "B": "It removes ambiguity",
+        "C": "It guarantees the estimate is exact",
+        "D": "It replaces assumptions"
+      },
+      "answer": "B",
+      "source_pages": [
+        40
+      ]
+    },
+    {
+      "id": "MCQ26",
+      "difficulty": "medium",
+      "question": "Which of the following is listed as a commonly asked back-of-the-envelope estimate?",
+      "choices": {
+        "A": "QPS",
+        "B": "Storage",
+        "C": "Number of servers",
+        "D": "All of the above"
+      },
+      "answer": "D",
+      "source_pages": [
+        40
+      ]
+    }
+  ],
+  "mix_and_match": [
+    {
+      "id": "MM01",
+      "title": "Power of Two",
+      "instructions": "Match the power with the approximate storage unit.",
+      "left": {
+        "A": "2^10",
+        "B": "2^20",
+        "C": "2^30",
+        "D": "2^40",
+        "E": "2^50"
+      },
+      "right": {
+        "1": "1 PB",
+        "2": "1 GB",
+        "3": "1 KB",
+        "4": "1 TB",
+        "5": "1 MB"
+      },
+      "answer_key": {
+        "A": "3",
+        "B": "5",
+        "C": "2",
+        "D": "4",
+        "E": "1"
+      },
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "MM02",
+      "title": "Latency Values",
+      "instructions": "Match each operation with the latency shown in Table 2-2.",
+      "left": {
+        "A": "L1 cache reference",
+        "B": "Main memory reference",
+        "C": "Compress 1K bytes with Zippy",
+        "D": "Read 1 MB sequentially from memory",
+        "E": "Disk seek",
+        "F": "Read 1 MB sequentially from disk",
+        "G": "CA -> Netherlands -> CA packet"
+      },
+      "right": {
+        "1": "100 ns",
+        "2": "30 ms",
+        "3": "0.5 ns",
+        "4": "150 ms",
+        "5": "10 µs",
+        "6": "250 µs",
+        "7": "10 ms"
+      },
+      "answer_key": {
+        "A": "3",
+        "B": "1",
+        "C": "5",
+        "D": "6",
+        "E": "7",
+        "F": "2",
+        "G": "4"
+      },
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "MM03",
+      "title": "Availability Nines",
+      "instructions": "Match each availability target with its annual downtime.",
+      "left": {
+        "A": "99%",
+        "B": "99.9%",
+        "C": "99.99%",
+        "D": "99.999%",
+        "E": "99.9999%"
+      },
+      "right": {
+        "1": "5.26 minutes",
+        "2": "31.56 seconds",
+        "3": "3.65 days",
+        "4": "52.60 minutes",
+        "5": "8.77 hours"
+      },
+      "answer_key": {
+        "A": "3",
+        "B": "5",
+        "C": "4",
+        "D": "1",
+        "E": "2"
+      },
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "MM04",
+      "title": "Twitter Exercise",
+      "instructions": "Match each quantity with the value calculated or assumed in the chapter.",
+      "left": {
+        "A": "Monthly active users",
+        "B": "Daily active users",
+        "C": "Tweets per user per day",
+        "D": "Tweets QPS",
+        "E": "Doubled QPS estimate",
+        "F": "Daily media storage",
+        "G": "Five-year media storage"
+      },
+      "right": {
+        "1": "~55 PB",
+        "2": "150 million",
+        "3": "~3,500",
+        "4": "2",
+        "5": "300 million",
+        "6": "30 TB",
+        "7": "~7,000"
+      },
+      "answer_key": {
+        "A": "5",
+        "B": "2",
+        "C": "4",
+        "D": "3",
+        "E": "7",
+        "F": "6",
+        "G": "1"
+      },
+      "source_pages": [
+        39
+      ]
+    }
+  ],
+  "true_false": [
+    {
+      "id": "TF01",
+      "statement": "Back-of-the-envelope estimation is intended to produce exact production benchmarks.",
+      "answer": false,
+      "explanation": "The chapter emphasizes estimation, process, rounding, and approximation rather than exact precision.",
+      "source_pages": [
+        34,
+        40
+      ]
+    },
+    {
+      "id": "TF02",
+      "statement": "One byte contains eight bits.",
+      "answer": true,
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "TF03",
+      "statement": "2^30 is approximately associated with 1 GB in the chapter's table.",
+      "answer": true,
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "TF04",
+      "statement": "One millisecond equals 1,000 nanoseconds.",
+      "answer": false,
+      "explanation": "One millisecond equals 1,000,000 nanoseconds.",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "TF05",
+      "statement": "The latency table lists a main memory reference at 100 ns.",
+      "answer": true,
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "TF06",
+      "statement": "The table lists reading 1 MB sequentially from disk as faster than reading 1 MB sequentially from memory.",
+      "answer": false,
+      "explanation": "Disk is listed at 30 ms, while memory is 250 µs.",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "TF07",
+      "statement": "The chapter recommends avoiding disk seeks if possible.",
+      "answer": true,
+      "source_pages": [
+        37
+      ]
+    },
+    {
+      "id": "TF08",
+      "statement": "The chapter says simple compression algorithms are slow.",
+      "answer": false,
+      "explanation": "It says simple compression algorithms are fast.",
+      "source_pages": [
+        37
+      ]
+    },
+    {
+      "id": "TF09",
+      "statement": "Higher numbers of 'nines' correspond to lower expected downtime.",
+      "answer": true,
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "TF10",
+      "statement": "99.9% availability corresponds to 52.60 minutes of downtime per year in the chapter's table.",
+      "answer": false,
+      "explanation": "99.9% corresponds to 8.77 hours per year; 99.99% corresponds to 52.60 minutes.",
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "TF11",
+      "statement": "The Twitter exercise uses real production numbers supplied by Twitter.",
+      "answer": false,
+      "explanation": "The chapter explicitly says the values are only for the exercise and are not real Twitter numbers.",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "TF12",
+      "statement": "The Twitter exercise assumes 150 million daily active users after applying the 50% daily-use assumption.",
+      "answer": true,
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "TF13",
+      "statement": "The exercise estimates 30 TB of media storage per day.",
+      "answer": true,
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "TF14",
+      "statement": "The chapter recommends spending interview time calculating 99987 / 9.1 exactly.",
+      "answer": false,
+      "explanation": "It recommends simplifying it to approximately 100,000 / 10.",
+      "source_pages": [
+        40
+      ]
+    },
+    {
+      "id": "TF15",
+      "statement": "Writing assumptions and labeling units are explicitly recommended.",
+      "answer": true,
+      "source_pages": [
+        40
+      ]
+    }
+  ],
+  "fill_in_the_blank": [
+    {
+      "id": "FIB01",
+      "prompt": "A byte contains ______ bits.",
+      "answer": "8",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "FIB02",
+      "prompt": "2^20 is approximately 1 ______.",
+      "answer": "MB",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "FIB03",
+      "prompt": "2^40 is approximately 1 ______.",
+      "answer": "TB",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "FIB04",
+      "prompt": "1 µs equals ______ ns.",
+      "answer": "1,000",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "FIB05",
+      "prompt": "1 ms equals ______ µs.",
+      "answer": "1,000",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "FIB06",
+      "prompt": "A disk seek is listed as approximately ______ ms.",
+      "answer": "10",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "FIB07",
+      "prompt": "A CA -> Netherlands -> CA packet trip is listed as approximately ______ ms.",
+      "answer": "150",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "FIB08",
+      "prompt": "The chapter says memory is fast but ______ is slow.",
+      "answer": "disk",
+      "source_pages": [
+        37
+      ]
+    },
+    {
+      "id": "FIB09",
+      "prompt": "An agreement formally defining promised uptime is called an ______.",
+      "answer": "SLA",
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "FIB10",
+      "prompt": "99.999% availability corresponds to about ______ minutes of annual downtime.",
+      "answer": "5.26",
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "FIB11",
+      "prompt": "The Twitter exercise calculates ______ million daily active users.",
+      "answer": "150",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "FIB12",
+      "prompt": "The exercise estimates approximately ______ Tweets QPS.",
+      "answer": "3,500",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "FIB13",
+      "prompt": "The exercise estimates ______ TB of media storage per day.",
+      "answer": "30",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "FIB14",
+      "prompt": "The five-year media storage estimate is approximately ______ PB.",
+      "answer": "55",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "FIB15",
+      "prompt": "The chapter recommends rounding and ______ instead of performing unnecessarily complicated arithmetic.",
+      "answer": "approximation",
+      "source_pages": [
+        40
+      ]
+    }
+  ],
+  "ordering_exercises": [
+    {
+      "id": "ORD01",
+      "title": "Twitter QPS Estimation",
+      "items_scrambled": [
+        "Divide total daily tweets by seconds per day",
+        "Calculate daily active users",
+        "Multiply DAU by tweets per user per day",
+        "Start from monthly active users and daily-use percentage"
+      ],
+      "correct_order": [
+        "Start from monthly active users and daily-use percentage",
+        "Calculate daily active users",
+        "Multiply DAU by tweets per user per day",
+        "Divide total daily tweets by seconds per day"
+      ],
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "ORD02",
+      "title": "Media Storage Estimation",
+      "items_scrambled": [
+        "Multiply daily storage by 365 and 5 years",
+        "Calculate number of tweets per day",
+        "Apply the percentage containing media",
+        "Multiply media tweets by media size"
+      ],
+      "correct_order": [
+        "Calculate number of tweets per day",
+        "Apply the percentage containing media",
+        "Multiply media tweets by media size",
+        "Multiply daily storage by 365 and 5 years"
+      ],
+      "source_pages": [
+        39
+      ]
+    }
+  ],
+  "calculation_drills": [
+    {
+      "id": "CALC01",
+      "difficulty": "easy",
+      "prompt": "A service has 200 million MAU and 25% of them are active daily. Estimate DAU.",
+      "method": "MAU * daily active percentage",
+      "answer": "50 million DAU",
+      "chapter_skill": "Apply the DAU calculation pattern from the Twitter example.",
+      "based_on_source_pages": [
+        39
+      ],
+      "note": "The numbers in this drill are newly constructed for practice; the calculation method is based on the chapter."
+    },
+    {
+      "id": "CALC02",
+      "difficulty": "medium",
+      "prompt": "Using 50 million DAU and 4 posts per user per day, estimate average posts per second. Use 100,000 seconds/day as a rough interview approximation.",
+      "method": "(50 million * 4) / 100,000",
+      "answer": "~2,000 posts/second",
+      "chapter_skill": "Use rounding and approximation to estimate QPS.",
+      "based_on_source_pages": [
+        39,
+        40
+      ],
+      "note": "The numbers in this drill are newly constructed for practice."
+    },
+    {
+      "id": "CALC03",
+      "difficulty": "medium",
+      "prompt": "If average QPS is approximately 2,000 and you use the same doubling pattern as the chapter's exercise, what is the doubled QPS estimate?",
+      "method": "2 * average QPS",
+      "answer": "~4,000 QPS",
+      "chapter_skill": "Apply the chapter's 2 * QPS calculation pattern.",
+      "based_on_source_pages": [
+        39
+      ],
+      "note": "The numbers in this drill are newly constructed for practice."
+    },
+    {
+      "id": "CALC04",
+      "difficulty": "medium",
+      "prompt": "A system creates 20 million media objects per day at 2 MB each. Estimate daily storage.",
+      "method": "20 million * 2 MB",
+      "answer": "~40 TB/day using the chapter's approximate unit style",
+      "chapter_skill": "Estimate storage from object count and object size.",
+      "based_on_source_pages": [
+        35,
+        39
+      ],
+      "note": "The numbers in this drill are newly constructed for practice."
+    },
+    {
+      "id": "CALC05",
+      "difficulty": "hard",
+      "prompt": "If a system stores 40 TB/day for 3 years, estimate total storage.",
+      "method": "40 TB * 365 * 3",
+      "answer": "~43.8 PB using decimal-scale approximation",
+      "chapter_skill": "Scale daily storage into multi-year storage.",
+      "based_on_source_pages": [
+        39,
+        40
+      ],
+      "note": "The numbers in this drill are newly constructed for practice."
+    }
+  ],
+  "scenario_questions": [
+    {
+      "id": "SC01",
+      "difficulty": "medium",
+      "scenario": "During an interview, you need to divide 99,987 requests by 9.1 servers-equivalent units.",
+      "question": "How should you approach the arithmetic according to Chapter 2?",
+      "expected_answer": "Round the expression to approximately 100,000 / 10 rather than spending time on exact arithmetic.",
+      "source_pages": [
+        40
+      ]
+    },
+    {
+      "id": "SC02",
+      "difficulty": "medium",
+      "scenario": "You write '5' as a storage estimate on the whiteboard and continue calculating.",
+      "question": "What is wrong with this?",
+      "expected_answer": "The unit is missing. The chapter recommends writing values such as 5 KB or 5 MB to remove ambiguity.",
+      "source_pages": [
+        40
+      ]
+    },
+    {
+      "id": "SC03",
+      "difficulty": "hard",
+      "scenario": "You are deciding whether to repeatedly perform disk seeks or keep frequently accessed information in memory.",
+      "question": "What latency intuition from the chapter should influence the design discussion?",
+      "expected_answer": "Memory is fast while disk is slow, and disk seeks should be avoided when possible.",
+      "source_pages": [
+        36,
+        37
+      ]
+    },
+    {
+      "id": "SC04",
+      "difficulty": "hard",
+      "scenario": "A design transmits large data across the internet and compression is inexpensive.",
+      "question": "What optimization does the chapter's latency analysis suggest?",
+      "expected_answer": "Compress the data before sending it over the internet when possible.",
+      "source_pages": [
+        37
+      ]
+    },
+    {
+      "id": "SC05",
+      "difficulty": "medium",
+      "scenario": "A service promises 99.999% availability.",
+      "question": "Approximately how much annual downtime does Table 2-3 associate with that target?",
+      "expected_answer": "5.26 minutes per year.",
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "SC06",
+      "difficulty": "hard",
+      "scenario": "An interviewer gives you MAU, daily-use percentage, posts per user, media percentage, media size, and retention period.",
+      "question": "What estimates from the chapter's Twitter example can you derive?",
+      "expected_answer": "DAU, average QPS, the chapter's doubled QPS estimate, daily media storage, and multi-year media storage.",
+      "source_pages": [
+        39
+      ]
+    }
+  ],
+  "short_answer_questions": [
+    {
+      "id": "SA01",
+      "question": "Why does Chapter 2 emphasize the process over the exact answer?",
+      "model_answer": "Back-of-the-envelope estimation is used to expose problem-solving ability and provide a useful sense of scale. The chapter explicitly says solving the problem is more important than obtaining exact results, so reasonable assumptions, approximations, and clear units matter more than unnecessary precision.",
+      "source_pages": [
+        40
+      ]
+    },
+    {
+      "id": "SA02",
+      "question": "What does the power-of-two table help you do in a system design interview?",
+      "model_answer": "It provides quick mental reference points for converting large data quantities into familiar storage units: approximately 2^10 for KB, 2^20 for MB, 2^30 for GB, 2^40 for TB, and 2^50 for PB.",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "SA03",
+      "question": "Summarize the chapter's main latency lessons.",
+      "model_answer": "Memory is fast relative to disk; disk seeks should be avoided when possible; simple compression can be fast; compression before internet transfer can be worthwhile; and communication between geographically separated data centers incurs meaningful latency.",
+      "source_pages": [
+        37
+      ]
+    },
+    {
+      "id": "SA04",
+      "question": "Explain what 'nines' mean in availability.",
+      "model_answer": "Availability is expressed as an uptime percentage. More nines indicate higher uptime and lower expected downtime. For example, the chapter's table shows 99.9% at 8.77 hours of annual downtime and 99.999% at 5.26 minutes.",
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "SA05",
+      "question": "Walk through the Twitter QPS estimate used in Chapter 2.",
+      "model_answer": "The exercise begins with 300 million MAU and assumes 50% are active daily, producing 150 million DAU. At 2 tweets per user per day, the total daily tweets are divided by 24 hours and 3600 seconds to produce approximately 3,500 Tweets QPS. The chapter then doubles that estimate to approximately 7,000.",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "SA06",
+      "question": "Walk through the Twitter media storage estimate.",
+      "model_answer": "The exercise uses 150 million DAU, 2 tweets per user per day, 10% of tweets containing media, and 1 MB per media item. That yields 30 TB per day. Multiplying by 365 days and 5 years gives approximately 55 PB.",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "SA07",
+      "question": "Why should assumptions be written down?",
+      "model_answer": "The chapter recommends recording assumptions so they remain explicit and can be referenced later as calculations and design discussion continue.",
+      "source_pages": [
+        40
+      ]
+    },
+    {
+      "id": "SA08",
+      "question": "Which back-of-the-envelope estimates should you practice?",
+      "model_answer": "The chapter specifically lists QPS, the doubled QPS estimate, storage, cache, and number of servers.",
+      "source_pages": [
+        40
+      ]
+    }
+  ],
+  "active_recall_prompts": [
+    {
+      "id": "AR01",
+      "prompt": "Recite the power-of-two ladder from 2^10 through 2^50.",
+      "target_points": [
+        "2^10 -> KB -> approximately thousand",
+        "2^20 -> MB -> approximately million",
+        "2^30 -> GB -> approximately billion",
+        "2^40 -> TB -> approximately trillion",
+        "2^50 -> PB -> approximately quadrillion"
+      ],
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "AR02",
+      "prompt": "Without looking, convert ns, µs, and ms.",
+      "target_points": [
+        "1 µs = 1,000 ns",
+        "1 ms = 1,000 µs",
+        "1 ms = 1,000,000 ns"
+      ],
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "AR03",
+      "prompt": "Name at least five latency values from Table 2-2.",
+      "target_points": [
+        "L1 cache reference: 0.5 ns",
+        "Main memory reference: 100 ns",
+        "Compress 1K: 10 µs",
+        "Read 1 MB from memory: 250 µs",
+        "Same-datacenter round trip: 500 µs",
+        "Disk seek: 10 ms",
+        "Read 1 MB from disk: 30 ms",
+        "CA-Netherlands-CA packet: 150 ms"
+      ],
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "AR04",
+      "prompt": "Recite the five conclusions the chapter draws from the latency visualization.",
+      "target_points": [
+        "Memory is fast; disk is slow",
+        "Avoid disk seeks",
+        "Simple compression algorithms are fast",
+        "Compress before internet transfer if possible",
+        "Cross-region data-center communication takes time"
+      ],
+      "source_pages": [
+        37
+      ]
+    },
+    {
+      "id": "AR05",
+      "prompt": "Recite annual downtime for 99%, 99.9%, 99.99%, 99.999%, and 99.9999%.",
+      "target_points": [
+        "99% -> 3.65 days",
+        "99.9% -> 8.77 hours",
+        "99.99% -> 52.60 minutes",
+        "99.999% -> 5.26 minutes",
+        "99.9999% -> 31.56 seconds"
+      ],
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "AR06",
+      "prompt": "Reconstruct all assumptions in the Twitter exercise.",
+      "target_points": [
+        "300 million MAU",
+        "50% daily usage",
+        "2 tweets per user per day",
+        "10% of tweets contain media",
+        "5-year retention"
+      ],
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "AR07",
+      "prompt": "Reconstruct the Twitter estimates without looking.",
+      "target_points": [
+        "150 million DAU",
+        "~3,500 Tweets QPS",
+        "~7,000 doubled QPS estimate",
+        "30 TB media/day",
+        "~55 PB media/5 years"
+      ],
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "AR08",
+      "prompt": "Name all four interview tips at the end of Chapter 2.",
+      "target_points": [
+        "Rounding and approximation",
+        "Write down assumptions",
+        "Label units",
+        "Practice common estimates"
+      ],
+      "source_pages": [
+        40
+      ]
+    }
+  ],
+  "interview_style_questions": [
+    {
+      "id": "INT01",
+      "question": "An interviewer gives you 300 million monthly active users and says half are active daily. Show how you would proceed toward a QPS estimate.",
+      "strong_answer_outline": [
+        "Write down the assumptions.",
+        "Calculate DAU = 300 million * 50% = 150 million.",
+        "Apply the assumed requests/posts per user per day.",
+        "Convert daily operations to operations per second by dividing by 24 * 3600.",
+        "Use rounded numbers if convenient.",
+        "Label the final result in QPS."
+      ],
+      "source_pages": [
+        39,
+        40
+      ]
+    },
+    {
+      "id": "INT02",
+      "question": "How would you quickly estimate long-term storage requirements?",
+      "strong_answer_outline": [
+        "Estimate objects generated per day.",
+        "Estimate average object size.",
+        "Multiply to get daily storage.",
+        "Multiply by retention in days or years.",
+        "Convert into GB, TB, or PB using familiar magnitude references.",
+        "Write assumptions and units explicitly."
+      ],
+      "source_pages": [
+        35,
+        39,
+        40
+      ]
+    },
+    {
+      "id": "INT03",
+      "question": "Why are latency numbers useful during system design?",
+      "strong_answer_outline": [
+        "They help compare orders of magnitude between operations.",
+        "They build intuition that memory is fast relative to disk.",
+        "They reinforce the cost of disk seeks.",
+        "They show that network and especially long-distance network communication have nontrivial cost.",
+        "They can motivate compression before transfer."
+      ],
+      "source_pages": [
+        36,
+        37
+      ]
+    },
+    {
+      "id": "INT04",
+      "question": "A candidate produces a very precise answer but never states assumptions or units. What does Chapter 2 suggest is wrong with that approach?",
+      "strong_answer_outline": [
+        "Exact precision is not the main goal.",
+        "The process matters more than the exact numerical result.",
+        "Assumptions should be written down.",
+        "Units should be labeled to remove ambiguity.",
+        "Rounding and approximation are encouraged."
+      ],
+      "source_pages": [
+        40
+      ]
+    }
+  ],
+  "common_confusions": [
+    {
+      "confusion": "Back-of-the-envelope estimation means guessing randomly.",
+      "correction": "The chapter describes it as structured estimation using thought experiments, common performance numbers, explicit assumptions, and approximations.",
+      "source_pages": [
+        34,
+        40
+      ]
+    },
+    {
+      "confusion": "The objective is exact arithmetic.",
+      "correction": "The chapter explicitly prioritizes the problem-solving process and recommends rounding and approximation.",
+      "source_pages": [
+        40
+      ]
+    },
+    {
+      "confusion": "A number without a unit is sufficient if the interviewer knows the context.",
+      "correction": "The chapter recommends labeling units because values such as '5' are ambiguous.",
+      "source_pages": [
+        40
+      ]
+    },
+    {
+      "confusion": "99.9% and 99.999% availability are almost equivalent operationally.",
+      "correction": "The table shows a large downtime difference: 8.77 hours per year for 99.9% versus 5.26 minutes for 99.999%.",
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "confusion": "The Twitter numbers are actual Twitter production values.",
+      "correction": "The book states that the numbers are only for the exercise and are not real Twitter numbers.",
+      "source_pages": [
+        39
+      ]
+    }
+  ],
+  "mastery_check": {
+    "beginner": [
+      "Can define back-of-the-envelope estimation.",
+      "Can recall KB, MB, GB, TB, and PB power-of-two reference points.",
+      "Can convert ns, µs, and ms.",
+      "Can define availability and SLA."
+    ],
+    "intermediate": [
+      "Can explain why memory, disk, and network latency intuition matters.",
+      "Can recall the annual downtime associated with common availability percentages.",
+      "Can calculate DAU from MAU and daily usage percentage.",
+      "Can calculate average QPS from daily activity.",
+      "Can estimate daily storage."
+    ],
+    "advanced": [
+      "Can perform a complete QPS and storage estimate aloud using assumptions and units.",
+      "Can use rounding strategically without losing the order of magnitude.",
+      "Can reason about whether compression, memory access, disk access, or network transfer is likely to dominate a design.",
+      "Can translate an uptime target into an intuitive downtime budget.",
+      "Can explain each calculation clearly enough for an interviewer to follow."
+    ]
+  },
+  "chapter_two_final_review": {
+    "must_memorize": [
+      "1 byte = 8 bits.",
+      "2^10 ≈ 1 KB.",
+      "2^20 ≈ 1 MB.",
+      "2^30 ≈ 1 GB.",
+      "2^40 ≈ 1 TB.",
+      "2^50 ≈ 1 PB.",
+      "1 µs = 1,000 ns.",
+      "1 ms = 1,000 µs = 1,000,000 ns.",
+      "Memory is fast; disk is slow.",
+      "Avoid disk seeks if possible.",
+      "Simple compression algorithms are fast.",
+      "Compress before internet transfer if possible.",
+      "Cross-region communication takes time.",
+      "99.9% availability ≈ 8.77 hours downtime/year.",
+      "99.99% availability ≈ 52.60 minutes downtime/year.",
+      "99.999% availability ≈ 5.26 minutes downtime/year.",
+      "Twitter exercise: 300M MAU -> 150M DAU -> ~3,500 Tweets QPS -> ~7,000 doubled QPS estimate.",
+      "Twitter exercise: 30 TB media/day -> ~55 PB over 5 years.",
+      "Round and approximate.",
+      "Write assumptions down.",
+      "Always label units."
+    ],
+    "calculation_template": [
+      "1. State assumptions.",
+      "2. Convert users into active users for the relevant time period.",
+      "3. Estimate operations per user.",
+      "4. Convert total operations into QPS when needed.",
+      "5. Estimate object size and storage when needed.",
+      "6. Apply retention period.",
+      "7. Round aggressively enough to make mental arithmetic manageable.",
+      "8. Keep units visible at every step."
+    ],
+    "one_sentence_takeaway": "Back-of-the-envelope estimation is less about arithmetic precision and more about using assumptions, units, magnitude intuition, and simple calculations to determine whether a system design is plausible."
+  }
+}

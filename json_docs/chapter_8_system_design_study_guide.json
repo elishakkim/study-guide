@@ -1,0 +1,3117 @@
+{
+  "chapter": {
+    "number": 8,
+    "title": "Design a URL Shortener",
+    "source": "System Design Interview: An Insider's Guide by Alex Xu",
+    "pdf_pages": {
+      "chapter_start": 119,
+      "chapter_end": 130,
+      "references_page": 131
+    },
+    "primary_goal": "Design a highly available, scalable, fault-tolerant URL shortening service that converts long URLs into short aliases and redirects short aliases back to their original URLs."
+  },
+  "chapter_summary": {
+    "overview": "Chapter 8 walks through the design of a URL shortening service such as TinyURL. The system must support two primary functions: URL shortening and URL redirecting. The chapter begins with requirements and back-of-the-envelope estimates, then defines REST-style POST and GET endpoints, compares 301 versus 302 redirects, and initially models shortURL-to-longURL lookups with a hash table. In the deep dive, the design moves the mapping into a relational database, derives a 7-character short-code length from a 62-character alphabet, compares hash-plus-collision-resolution with Base62 conversion, and selects Base62 conversion backed by a distributed unique-ID generator. The read-heavy redirect path is optimized with a cache in front of the database. The chapter closes with rate limiting, stateless web-tier scaling, database replication/sharding, analytics, and availability, consistency, and reliability as additional discussion topics.",
+    "core_use_cases": [
+      "URL shortening: given a long URL, return a much shorter URL.",
+      "URL redirecting: given a short URL, redirect to the original long URL.",
+      "Design for high availability, scalability, and fault tolerance."
+    ],
+    "selected_hash_strategy": "Base62 conversion using a globally unique numeric ID.",
+    "source_pages": [
+      119,
+      120,
+      121,
+      122,
+      123,
+      124,
+      125,
+      126,
+      127,
+      128,
+      129,
+      130
+    ]
+  },
+  "learning_objectives": [
+    {
+      "id": "LO1",
+      "objective": "State the functional and non-functional requirements of the URL shortener.",
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "LO2",
+      "objective": "Reproduce the chapter's back-of-the-envelope traffic, record-count, and storage estimates.",
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "LO3",
+      "objective": "Describe the REST-style URL-shortening and redirect endpoints.",
+      "source_pages": [
+        121
+      ]
+    },
+    {
+      "id": "LO4",
+      "objective": "Compare HTTP 301 and 302 redirects and explain the load-versus-analytics tradeoff.",
+      "source_pages": [
+        121,
+        122
+      ]
+    },
+    {
+      "id": "LO5",
+      "objective": "Explain the shortURL-to-longURL lookup model using a hash table.",
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "LO6",
+      "objective": "Explain why the deep-dive data model moves from an in-memory hash table to a relational database.",
+      "source_pages": [
+        124
+      ]
+    },
+    {
+      "id": "LO7",
+      "objective": "Derive the minimum short-code length from the 62-character alphabet and the target record count.",
+      "source_pages": [
+        124,
+        125
+      ]
+    },
+    {
+      "id": "LO8",
+      "objective": "Explain hash-plus-collision-resolution and its database-lookup cost.",
+      "source_pages": [
+        125,
+        126
+      ]
+    },
+    {
+      "id": "LO9",
+      "objective": "Explain how a Bloom filter can improve collision-check performance.",
+      "source_pages": [
+        126
+      ]
+    },
+    {
+      "id": "LO10",
+      "objective": "Explain Base62 conversion and the character mapping used by the chapter.",
+      "source_pages": [
+        126,
+        127
+      ]
+    },
+    {
+      "id": "LO11",
+      "objective": "Compare hash-plus-collision-resolution with Base62 conversion.",
+      "source_pages": [
+        127
+      ]
+    },
+    {
+      "id": "LO12",
+      "objective": "Explain the complete URL-shortening flow selected by the chapter.",
+      "source_pages": [
+        127,
+        128
+      ]
+    },
+    {
+      "id": "LO13",
+      "objective": "Explain the redirect path and why a cache is useful.",
+      "source_pages": [
+        129
+      ]
+    },
+    {
+      "id": "LO14",
+      "objective": "Discuss rate limiting, stateless web scaling, database scaling, analytics, availability, consistency, and reliability as follow-up topics.",
+      "source_pages": [
+        130
+      ]
+    }
+  ],
+  "requirements_and_scope": {
+    "clarification_dialogue": [
+      {
+        "candidate_question": "Can you give an example of how a URL shortener works?",
+        "interviewer_answer": "The service converts a long URL such as https://www.systeminterview.com/q=chatsystem&c=loggedin&v=v3&l=long into a short alias such as https://tinyurl.com/y7keocwj, which redirects to the original URL.",
+        "source_pages": [
+          120
+        ]
+      },
+      {
+        "candidate_question": "What is the traffic volume?",
+        "interviewer_answer": "100 million URLs are generated per day.",
+        "source_pages": [
+          120
+        ]
+      },
+      {
+        "candidate_question": "How long is the shortened URL?",
+        "interviewer_answer": "As short as possible.",
+        "source_pages": [
+          120
+        ]
+      },
+      {
+        "candidate_question": "What characters are allowed?",
+        "interviewer_answer": "0-9, a-z, and A-Z.",
+        "source_pages": [
+          120
+        ]
+      },
+      {
+        "candidate_question": "Can shortened URLs be deleted or updated?",
+        "interviewer_answer": "For simplicity, assume they cannot be deleted or updated.",
+        "source_pages": [
+          120
+        ]
+      }
+    ],
+    "use_cases": [
+      "Long URL -> short URL.",
+      "Short URL -> original URL redirect.",
+      "High availability, scalability, and fault tolerance."
+    ],
+    "source_pages": [
+      120
+    ]
+  },
+  "back_of_envelope_estimation": {
+    "writes_per_day": 100000000,
+    "writes_per_second": {
+      "formula": "100,000,000 / 24 / 3600",
+      "chapter_result": 1160
+    },
+    "read_write_ratio": "10:1",
+    "reads_per_second": {
+      "formula": "1160 * 10",
+      "chapter_result": 11600
+    },
+    "service_lifetime": "10 years",
+    "record_count": {
+      "formula": "100 million * 365 * 10",
+      "chapter_result": "365 billion records"
+    },
+    "average_url_length": "100 bytes",
+    "storage": {
+      "chapter_expression": "365 billion * 100 bytes * 10 years = 365 TB",
+      "chapter_result": "365 TB",
+      "source_consistency_note": "The source first computes 365 billion records as the 10-year record count and then prints an additional '* 10 years' in the storage expression. This guide preserves the chapter's stated 365 TB estimate rather than silently correcting or reconciling that arithmetic."
+    },
+    "interview_lesson": "Walk through assumptions and calculations with the interviewer so both sides agree on the scale model.",
+    "source_pages": [
+      120
+    ]
+  },
+  "api_design": {
+    "style": "REST-style",
+    "endpoints": [
+      {
+        "operation": "URL shortening",
+        "method": "POST",
+        "endpoint": "api/v1/data/shorten",
+        "request_parameter": {
+          "longUrl": "longURLString"
+        },
+        "response": "shortURL",
+        "source_pages": [
+          121
+        ]
+      },
+      {
+        "operation": "URL redirecting",
+        "method": "GET",
+        "endpoint": "api/v1/shortUrl",
+        "response": "longURL for HTTP redirection",
+        "source_pages": [
+          121
+        ]
+      }
+    ],
+    "source_pages": [
+      121
+    ]
+  },
+  "redirects": {
+    "301": {
+      "meaning": "Permanent redirect.",
+      "behavior": "The browser caches the redirect. Subsequent requests for the same short URL go directly to the long-URL server instead of returning to the URL-shortening service.",
+      "best_when": "Reducing URL-shortener server load is the priority.",
+      "source_pages": [
+        121,
+        122
+      ]
+    },
+    "302": {
+      "meaning": "Temporary redirect.",
+      "behavior": "Subsequent requests still go through the URL-shortening service before being redirected to the long URL.",
+      "best_when": "Analytics such as click rate and click source are important.",
+      "source_pages": [
+        122
+      ]
+    },
+    "tradeoff": "301 reduces service load through browser caching; 302 gives the service more visibility into each redirect request and therefore supports analytics more directly.",
+    "source_pages": [
+      122
+    ]
+  },
+  "high_level_redirect_design": {
+    "mapping": "<shortURL, longURL>",
+    "initial_data_structure": "Hash table",
+    "lookup_steps": [
+      "longURL = hashTable.get(shortURL)",
+      "Perform HTTP redirect to longURL."
+    ],
+    "source_pages": [
+      122
+    ]
+  },
+  "hash_function_requirements": {
+    "short_url_shape": "www.tinyurl.com/{hashValue}",
+    "requirements": [
+      "Each longURL must map to one hashValue.",
+      "Each hashValue must map back to the longURL."
+    ],
+    "source_pages": [
+      122,
+      123
+    ]
+  },
+  "data_model": {
+    "high_level_model": "In-memory hash table",
+    "high_level_problem": "Memory is limited and expensive for a real-world system.",
+    "selected_model": "Relational database",
+    "table_columns": [
+      "id",
+      "shortURL",
+      "longURL"
+    ],
+    "source_pages": [
+      124
+    ]
+  },
+  "short_code_length": {
+    "alphabet": "[0-9, a-z, A-Z]",
+    "alphabet_size": 62,
+    "derivation": "Find the smallest n such that 62^n >= 365 billion.",
+    "capacity_table": [
+      {
+        "n": 1,
+        "capacity": "62"
+      },
+      {
+        "n": 2,
+        "capacity": "3,844"
+      },
+      {
+        "n": 3,
+        "capacity": "238,328"
+      },
+      {
+        "n": 4,
+        "capacity": "14,776,336"
+      },
+      {
+        "n": 5,
+        "capacity": "916,132,832"
+      },
+      {
+        "n": 6,
+        "capacity": "56,800,235,584"
+      },
+      {
+        "n": 7,
+        "capacity": "3,521,614,606,208 (~3.5 trillion)"
+      }
+    ],
+    "selected_length": 7,
+    "reason": "62^7 is greater than the estimated 365 billion URLs.",
+    "source_pages": [
+      124,
+      125
+    ]
+  },
+  "hash_plus_collision_resolution": {
+    "goal": "Map a long URL to a fixed 7-character short value.",
+    "candidate_hash_functions": [
+      "CRC32",
+      "MD5",
+      "SHA-1"
+    ],
+    "problem": "The direct hexadecimal output of these well-known hash functions is longer than the required 7-character value.",
+    "naive_truncation": "Take the first 7 characters of the hash.",
+    "truncation_problem": "Hash collisions can occur.",
+    "collision_resolution_flow": [
+      "Input longURL.",
+      "Hash the longURL.",
+      "Generate shortURL.",
+      "Check whether shortURL already exists in the database.",
+      "If no collision, save the mapping.",
+      "If collision exists, append a predefined string to the longURL and hash again.",
+      "Repeat until a non-colliding shortURL is found."
+    ],
+    "main_cost": "A database existence check for each shortening attempt is expensive.",
+    "optimization": "Use a Bloom filter, a space-efficient probabilistic membership test, to improve collision-check performance.",
+    "source_pages": [
+      125,
+      126
+    ]
+  },
+  "base62_conversion": {
+    "why_base62": "There are 62 allowed characters in the short-code alphabet.",
+    "mapping": {
+      "0-9": "0 through 9",
+      "10-35": "a through z",
+      "36-61": "A through Z"
+    },
+    "chapter_example": {
+      "base10_number": 11157,
+      "decomposition": "11157 = 2 * 62^2 + 55 * 62^1 + 59 * 62^0",
+      "base62_digits": [
+        2,
+        55,
+        59
+      ],
+      "base62_characters": [
+        "2",
+        "T",
+        "X"
+      ],
+      "encoded_value": "2TX",
+      "short_url": "https://tinyurl.com/2TX"
+    },
+    "source_pages": [
+      126,
+      127
+    ]
+  },
+  "hash_strategy_comparison": [
+    {
+      "dimension": "Short URL length",
+      "hash_plus_collision_resolution": "Fixed short URL length.",
+      "base62_conversion": "Not fixed; length grows with the numeric ID.",
+      "source_pages": [
+        127
+      ]
+    },
+    {
+      "dimension": "Unique ID generator",
+      "hash_plus_collision_resolution": "Does not require one.",
+      "base62_conversion": "Depends on a unique ID generator.",
+      "source_pages": [
+        127
+      ]
+    },
+    {
+      "dimension": "Collision",
+      "hash_plus_collision_resolution": "Possible; must be resolved.",
+      "base62_conversion": "Impossible if the input numeric ID is globally unique.",
+      "source_pages": [
+        127
+      ]
+    },
+    {
+      "dimension": "Predicting next available short URL",
+      "hash_plus_collision_resolution": "Not possible because output does not depend directly on a numeric ID.",
+      "base62_conversion": "Easy if IDs increment predictably; the next ID maps to the next Base62 value.",
+      "source_pages": [
+        127
+      ]
+    }
+  ],
+  "selected_url_shortening_flow": {
+    "strategy": "Base62 conversion",
+    "steps": [
+      "Receive longURL.",
+      "Check whether longURL already exists in the database.",
+      "If it exists, return the existing shortURL.",
+      "If it does not exist, request a globally unique numeric ID from the distributed ID generator.",
+      "Convert the ID to Base62 to produce shortURL.",
+      "Store id, shortURL, and longURL in the database.",
+      "Return shortURL."
+    ],
+    "chapter_example": {
+      "longURL": "https://en.wikipedia.org/wiki/Systems_design",
+      "generated_id": 2009215674938,
+      "base62_shortURL": "zn9edcu",
+      "stored_row": {
+        "id": 2009215674938,
+        "shortURL": "zn9edcu",
+        "longURL": "https://en.wikipedia.org/wiki/Systems_design"
+      }
+    },
+    "dependency": "A distributed unique-ID generator is required to generate globally unique IDs used as Base62 inputs.",
+    "source_pages": [
+      127,
+      128,
+      129
+    ]
+  },
+  "url_redirecting_deep_dive": {
+    "read_heavy_observation": "There are more reads than writes.",
+    "optimization": "Store <shortURL, longURL> mappings in cache.",
+    "components": [
+      "User/client",
+      "Load balancer",
+      "Web servers",
+      "Cache",
+      "Database"
+    ],
+    "flow": [
+      "User clicks a short URL.",
+      "Load balancer forwards the request to web servers.",
+      "If shortURL is in cache, return longURL directly.",
+      "If shortURL is not in cache, fetch longURL from the database.",
+      "If the shortURL is absent from the database, it is likely invalid.",
+      "Return longURL to the user for redirection."
+    ],
+    "chapter_example_short_url": "https://tinyurl.com/zn9edcu",
+    "source_pages": [
+      129
+    ]
+  },
+  "wrap_up_topics": [
+    {
+      "topic": "Rate limiter",
+      "reason": "Malicious users might send an overwhelmingly large number of URL-shortening requests.",
+      "approach": "Filter requests using IP address or other rate-limiting rules.",
+      "source_pages": [
+        130
+      ]
+    },
+    {
+      "topic": "Web server scaling",
+      "reason": "The web tier is stateless.",
+      "approach": "Add or remove web servers easily.",
+      "source_pages": [
+        130
+      ]
+    },
+    {
+      "topic": "Database scaling",
+      "approach": "Database replication and sharding.",
+      "source_pages": [
+        130
+      ]
+    },
+    {
+      "topic": "Analytics",
+      "questions": [
+        "How many people click a link?",
+        "When do they click it?"
+      ],
+      "source_pages": [
+        130
+      ]
+    },
+    {
+      "topic": "Availability, consistency, reliability",
+      "reason": "These are core concerns for large systems.",
+      "source_pages": [
+        130
+      ]
+    }
+  ],
+  "key_concepts": [
+    {
+      "term": "URL Shortening",
+      "definition": "Converting a long URL into a much shorter alias.",
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "term": "URL Redirecting",
+      "definition": "Resolving a short URL to its original long URL and issuing an HTTP redirect.",
+      "source_pages": [
+        120,
+        121
+      ]
+    },
+    {
+      "term": "301 Redirect",
+      "definition": "Permanent redirect whose response is cached by the browser.",
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "term": "302 Redirect",
+      "definition": "Temporary redirect that causes future requests to continue passing through the URL-shortening service.",
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "term": "Hash Value",
+      "definition": "The short-code portion placed after the URL-shortener domain.",
+      "source_pages": [
+        122,
+        123
+      ]
+    },
+    {
+      "term": "Base62",
+      "definition": "Encoding using 62 symbols: 0-9, a-z, and A-Z.",
+      "source_pages": [
+        124,
+        126
+      ]
+    },
+    {
+      "term": "Hash Collision",
+      "definition": "Two different long URLs generating the same truncated short hash value.",
+      "source_pages": [
+        125,
+        126
+      ]
+    },
+    {
+      "term": "Bloom Filter",
+      "definition": "A space-efficient probabilistic technique used to test set membership and improve collision-check performance.",
+      "source_pages": [
+        126
+      ]
+    },
+    {
+      "term": "Unique ID Generator",
+      "definition": "A distributed component that generates globally unique numeric IDs used as input to Base62 conversion.",
+      "source_pages": [
+        128,
+        129
+      ]
+    },
+    {
+      "term": "Stateless Web Tier",
+      "definition": "A web tier whose servers do not depend on local session/state for correctness, allowing servers to be added or removed easily.",
+      "source_pages": [
+        130
+      ]
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "FC01",
+      "front": "What system does Chapter 8 design?",
+      "back": "A URL-shortening service similar to TinyURL.",
+      "source_pages": [
+        119
+      ]
+    },
+    {
+      "id": "FC02",
+      "front": "What are the two primary functional use cases?",
+      "back": "Shorten a long URL and redirect a short URL to its original long URL.",
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "FC03",
+      "front": "What non-functional concerns are explicitly included?",
+      "back": "High availability, scalability, and fault tolerance.",
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "FC04",
+      "front": "How many URLs are generated per day in the chapter's assumptions?",
+      "back": "100 million.",
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "FC05",
+      "front": "What characters are allowed in a short URL?",
+      "back": "0-9, a-z, and A-Z.",
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "FC06",
+      "front": "Can short URLs be deleted or updated in the simplified scope?",
+      "back": "No.",
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "FC07",
+      "front": "What is the write QPS estimate?",
+      "back": "About 1,160 writes/second.",
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "FC08",
+      "front": "What read/write ratio is assumed?",
+      "back": "10:1.",
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "FC09",
+      "front": "What is the resulting read QPS estimate?",
+      "back": "About 11,600 reads/second.",
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "FC10",
+      "front": "How many records are estimated over 10 years?",
+      "back": "365 billion.",
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "FC11",
+      "front": "What average URL length is assumed?",
+      "back": "100 bytes.",
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "FC12",
+      "front": "What storage figure does the chapter state?",
+      "back": "365 TB over 10 years.",
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "FC13",
+      "front": "What is the POST endpoint?",
+      "back": "POST api/v1/data/shorten.",
+      "source_pages": [
+        121
+      ]
+    },
+    {
+      "id": "FC14",
+      "front": "What parameter does the shortening API accept?",
+      "back": "{longUrl: longURLString}.",
+      "source_pages": [
+        121
+      ]
+    },
+    {
+      "id": "FC15",
+      "front": "What does the shortening API return?",
+      "back": "shortURL.",
+      "source_pages": [
+        121
+      ]
+    },
+    {
+      "id": "FC16",
+      "front": "What is the redirect endpoint?",
+      "back": "GET api/v1/shortUrl.",
+      "source_pages": [
+        121
+      ]
+    },
+    {
+      "id": "FC17",
+      "front": "What does the GET endpoint return for redirection?",
+      "back": "The corresponding longURL.",
+      "source_pages": [
+        121
+      ]
+    },
+    {
+      "id": "FC18",
+      "front": "What does a 301 redirect mean?",
+      "back": "The requested URL has permanently moved.",
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "FC19",
+      "front": "What important browser behavior follows a 301 redirect?",
+      "back": "The browser caches it, so later requests can go directly to the long-URL server.",
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "FC20",
+      "front": "What is the advantage of 301 for the URL-shortener service?",
+      "back": "Lower server load because repeated redirects bypass the shortening service.",
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "FC21",
+      "front": "What does a 302 redirect mean?",
+      "back": "Temporary redirect.",
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "FC22",
+      "front": "What happens on repeated requests after a 302?",
+      "back": "They return to the URL-shortening service before redirecting.",
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "FC23",
+      "front": "Why is 302 useful for analytics?",
+      "back": "The URL-shortening service sees repeat requests, making click rate and source easier to track.",
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "FC24",
+      "front": "What initial structure is proposed for redirect mappings?",
+      "back": "A hash table storing <shortURL,longURL>.",
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "FC25",
+      "front": "How is redirect lookup expressed?",
+      "back": "longURL = hashTable.get(shortURL), then perform the redirect.",
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "FC26",
+      "front": "What must a shortening hash function satisfy?",
+      "back": "Each longURL maps to one hashValue, and each hashValue maps back to the longURL.",
+      "source_pages": [
+        123
+      ]
+    },
+    {
+      "id": "FC27",
+      "front": "Why is the in-memory hash table not enough in the deep dive?",
+      "back": "Memory resources are limited and expensive.",
+      "source_pages": [
+        124
+      ]
+    },
+    {
+      "id": "FC28",
+      "front": "What storage model replaces the hash table?",
+      "back": "A relational database.",
+      "source_pages": [
+        124
+      ]
+    },
+    {
+      "id": "FC29",
+      "front": "What are the three columns in the simplified table?",
+      "back": "id, shortURL, longURL.",
+      "source_pages": [
+        124
+      ]
+    },
+    {
+      "id": "FC30",
+      "front": "How many characters are in the Base62 alphabet?",
+      "back": "62.",
+      "source_pages": [
+        124
+      ]
+    },
+    {
+      "id": "FC31",
+      "front": "How is 62 derived?",
+      "back": "10 digits + 26 lowercase letters + 26 uppercase letters.",
+      "source_pages": [
+        124
+      ]
+    },
+    {
+      "id": "FC32",
+      "front": "What inequality determines the short-code length?",
+      "back": "Find the smallest n such that 62^n >= 365 billion.",
+      "source_pages": [
+        124
+      ]
+    },
+    {
+      "id": "FC33",
+      "front": "What is 62^6 according to Table 8-1?",
+      "back": "56,800,235,584.",
+      "source_pages": [
+        125
+      ]
+    },
+    {
+      "id": "FC34",
+      "front": "What is 62^7 according to Table 8-1?",
+      "back": "3,521,614,606,208, about 3.5 trillion.",
+      "source_pages": [
+        125
+      ]
+    },
+    {
+      "id": "FC35",
+      "front": "What short-code length is selected?",
+      "back": "7 characters.",
+      "source_pages": [
+        125
+      ]
+    },
+    {
+      "id": "FC36",
+      "front": "What two shortening strategies are compared?",
+      "back": "Hash + collision resolution and Base62 conversion.",
+      "source_pages": [
+        125
+      ]
+    },
+    {
+      "id": "FC37",
+      "front": "Which well-known hash functions are mentioned?",
+      "back": "CRC32, MD5, and SHA-1.",
+      "source_pages": [
+        125
+      ]
+    },
+    {
+      "id": "FC38",
+      "front": "Why not directly use their hash outputs?",
+      "back": "Even the shortest shown output is longer than 7 characters.",
+      "source_pages": [
+        125
+      ]
+    },
+    {
+      "id": "FC39",
+      "front": "What is the simple truncation approach?",
+      "back": "Take the first 7 characters of the hash value.",
+      "source_pages": [
+        125
+      ]
+    },
+    {
+      "id": "FC40",
+      "front": "What problem can truncation create?",
+      "back": "Hash collisions.",
+      "source_pages": [
+        125
+      ]
+    },
+    {
+      "id": "FC41",
+      "front": "How does the chapter resolve collisions?",
+      "back": "Append a predefined string to the longURL and hash again until no collision is found.",
+      "source_pages": [
+        125,
+        126
+      ]
+    },
+    {
+      "id": "FC42",
+      "front": "Why is collision resolution potentially expensive?",
+      "back": "It requires checking the database to see whether each candidate shortURL already exists.",
+      "source_pages": [
+        126
+      ]
+    },
+    {
+      "id": "FC43",
+      "front": "What optimization is suggested for collision checking?",
+      "back": "A Bloom filter.",
+      "source_pages": [
+        126
+      ]
+    },
+    {
+      "id": "FC44",
+      "front": "What is a Bloom filter?",
+      "back": "A space-efficient probabilistic technique for testing whether an element is a member of a set.",
+      "source_pages": [
+        126
+      ]
+    },
+    {
+      "id": "FC45",
+      "front": "Why is Base62 used?",
+      "back": "The short-code alphabet has 62 possible characters.",
+      "source_pages": [
+        126
+      ]
+    },
+    {
+      "id": "FC46",
+      "front": "What numeric ranges map to lowercase letters?",
+      "back": "10 through 35 map to a through z.",
+      "source_pages": [
+        126
+      ]
+    },
+    {
+      "id": "FC47",
+      "front": "What numeric ranges map to uppercase letters?",
+      "back": "36 through 61 map to A through Z.",
+      "source_pages": [
+        126
+      ]
+    },
+    {
+      "id": "FC48",
+      "front": "What does decimal 11157 encode to in the chapter's Base62 example?",
+      "back": "2TX.",
+      "source_pages": [
+        126,
+        127
+      ]
+    },
+    {
+      "id": "FC49",
+      "front": "What short URL is shown for that example?",
+      "back": "https://tinyurl.com/2TX.",
+      "source_pages": [
+        127
+      ]
+    },
+    {
+      "id": "FC50",
+      "front": "Which shortening method has fixed output length in Table 8-3?",
+      "back": "Hash + collision resolution.",
+      "source_pages": [
+        127
+      ]
+    },
+    {
+      "id": "FC51",
+      "front": "Which shortening method depends on a unique ID generator?",
+      "back": "Base62 conversion.",
+      "source_pages": [
+        127
+      ]
+    },
+    {
+      "id": "FC52",
+      "front": "Why is collision impossible in the Base62 approach described?",
+      "back": "Because the numeric ID is globally unique, so its Base62 representation is unique.",
+      "source_pages": [
+        127
+      ]
+    },
+    {
+      "id": "FC53",
+      "front": "Which approach does the final design use?",
+      "back": "Base62 conversion.",
+      "source_pages": [
+        127
+      ]
+    },
+    {
+      "id": "FC54",
+      "front": "What is the first database check in the shortening flow?",
+      "back": "Check whether the longURL already exists.",
+      "source_pages": [
+        128
+      ]
+    },
+    {
+      "id": "FC55",
+      "front": "What happens if the longURL already exists?",
+      "back": "Return its existing shortURL.",
+      "source_pages": [
+        128
+      ]
+    },
+    {
+      "id": "FC56",
+      "front": "What happens if the longURL is new?",
+      "back": "Generate a new globally unique ID, convert it to Base62, save the mapping, and return the shortURL.",
+      "source_pages": [
+        128
+      ]
+    },
+    {
+      "id": "FC57",
+      "front": "What unique ID is used in the concrete shortening example?",
+      "back": "2009215674938.",
+      "source_pages": [
+        128
+      ]
+    },
+    {
+      "id": "FC58",
+      "front": "What short code does that ID become?",
+      "back": "zn9edcu.",
+      "source_pages": [
+        128
+      ]
+    },
+    {
+      "id": "FC59",
+      "front": "Why is a distributed unique-ID generator needed?",
+      "back": "Base62 conversion depends on globally unique numeric IDs for creating unique short URLs.",
+      "source_pages": [
+        128,
+        129
+      ]
+    },
+    {
+      "id": "FC60",
+      "front": "Why is a cache useful in redirecting?",
+      "back": "The workload has more reads than writes, so caching <shortURL,longURL> mappings improves lookup performance.",
+      "source_pages": [
+        129
+      ]
+    },
+    {
+      "id": "FC61",
+      "front": "What components appear in the redirect deep dive?",
+      "back": "User, load balancer, web servers, cache, and database.",
+      "source_pages": [
+        129
+      ]
+    },
+    {
+      "id": "FC62",
+      "front": "What happens on a redirect cache hit?",
+      "back": "Return the longURL directly.",
+      "source_pages": [
+        129
+      ]
+    },
+    {
+      "id": "FC63",
+      "front": "What happens on a redirect cache miss?",
+      "back": "Fetch the longURL from the database.",
+      "source_pages": [
+        129
+      ]
+    },
+    {
+      "id": "FC64",
+      "front": "What does it imply if the shortURL is not in the database?",
+      "back": "The user likely entered an invalid shortURL.",
+      "source_pages": [
+        129
+      ]
+    },
+    {
+      "id": "FC65",
+      "front": "What security topic is suggested in the wrap-up?",
+      "back": "Rate limiting to defend against abusive URL-shortening requests.",
+      "source_pages": [
+        130
+      ]
+    },
+    {
+      "id": "FC66",
+      "front": "Why is the web tier easy to scale?",
+      "back": "It is stateless, so web servers can be added or removed.",
+      "source_pages": [
+        130
+      ]
+    },
+    {
+      "id": "FC67",
+      "front": "What database-scaling techniques are mentioned?",
+      "back": "Replication and sharding.",
+      "source_pages": [
+        130
+      ]
+    },
+    {
+      "id": "FC68",
+      "front": "What analytics examples are given?",
+      "back": "How many people click a link and when they click it.",
+      "source_pages": [
+        130
+      ]
+    },
+    {
+      "id": "FC69",
+      "front": "What three large-system qualities close the chapter?",
+      "back": "Availability, consistency, and reliability.",
+      "source_pages": [
+        130
+      ]
+    }
+  ],
+  "multiple_choice_questions": [
+    {
+      "id": "MCQ01",
+      "difficulty": "easy",
+      "question": "What are the two main functions of the service?",
+      "choices": {
+        "A": "Shorten and redirect URLs",
+        "B": "Index and rank pages",
+        "C": "Send notifications and emails",
+        "D": "Upload and transcode video"
+      },
+      "answer": "A",
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "MCQ02",
+      "difficulty": "medium",
+      "question": "How many URLs are assumed to be created per day?",
+      "choices": {
+        "A": "1 million",
+        "B": "10 million",
+        "C": "100 million",
+        "D": "1 billion"
+      },
+      "answer": "C",
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "MCQ03",
+      "difficulty": "medium",
+      "question": "What short-code characters are allowed?",
+      "choices": {
+        "A": "Digits only",
+        "B": "a-z only",
+        "C": "0-9, a-z, A-Z",
+        "D": "Unicode only"
+      },
+      "answer": "C",
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "MCQ04",
+      "difficulty": "medium",
+      "question": "What write QPS does the chapter estimate?",
+      "choices": {
+        "A": "116",
+        "B": "1,160",
+        "C": "11,600",
+        "D": "116,000"
+      },
+      "answer": "B",
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "MCQ05",
+      "difficulty": "medium",
+      "question": "What read QPS does the chapter estimate?",
+      "choices": {
+        "A": "1,160",
+        "B": "5,800",
+        "C": "11,600",
+        "D": "116,000"
+      },
+      "answer": "C",
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "MCQ06",
+      "difficulty": "medium",
+      "question": "What read/write ratio is assumed?",
+      "choices": {
+        "A": "1:1",
+        "B": "2:1",
+        "C": "10:1",
+        "D": "100:1"
+      },
+      "answer": "C",
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "MCQ07",
+      "difficulty": "medium",
+      "question": "How many records are estimated over 10 years?",
+      "choices": {
+        "A": "36.5 billion",
+        "B": "100 billion",
+        "C": "365 billion",
+        "D": "3.65 trillion"
+      },
+      "answer": "C",
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "MCQ08",
+      "difficulty": "easy",
+      "question": "Which HTTP method creates a short URL?",
+      "choices": {
+        "A": "GET",
+        "B": "POST",
+        "C": "PUT",
+        "D": "DELETE"
+      },
+      "answer": "B",
+      "source_pages": [
+        121
+      ]
+    },
+    {
+      "id": "MCQ09",
+      "difficulty": "easy",
+      "question": "Which HTTP method is used for redirect lookup?",
+      "choices": {
+        "A": "GET",
+        "B": "POST",
+        "C": "PATCH",
+        "D": "DELETE"
+      },
+      "answer": "A",
+      "source_pages": [
+        121
+      ]
+    },
+    {
+      "id": "MCQ10",
+      "difficulty": "medium",
+      "question": "What does a 301 redirect indicate?",
+      "choices": {
+        "A": "Temporary move",
+        "B": "Permanent move",
+        "C": "Server error",
+        "D": "Unauthorized"
+      },
+      "answer": "B",
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "MCQ11",
+      "difficulty": "hard",
+      "question": "Why can 301 reduce load on the shortening service?",
+      "choices": {
+        "A": "The browser caches the redirect",
+        "B": "It deletes the mapping",
+        "C": "It avoids DNS",
+        "D": "It disables analytics"
+      },
+      "answer": "A",
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "MCQ12",
+      "difficulty": "medium",
+      "question": "Which redirect is better if click analytics is important?",
+      "choices": {
+        "A": "301",
+        "B": "302",
+        "C": "404",
+        "D": "500"
+      },
+      "answer": "B",
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "MCQ13",
+      "difficulty": "medium",
+      "question": "What does the high-level redirect hash table store?",
+      "choices": {
+        "A": "<user,password>",
+        "B": "<shortURL,longURL>",
+        "C": "<ID,timestamp>",
+        "D": "<IP,count>"
+      },
+      "answer": "B",
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "MCQ14",
+      "difficulty": "hard",
+      "question": "Why does the deep dive move mappings to a relational database?",
+      "choices": {
+        "A": "Memory is limited and expensive",
+        "B": "Hash tables cannot map keys",
+        "C": "HTTP requires SQL",
+        "D": "Base62 only works in databases"
+      },
+      "answer": "A",
+      "source_pages": [
+        124
+      ]
+    },
+    {
+      "id": "MCQ15",
+      "difficulty": "medium",
+      "question": "How many symbols are available in the short-code alphabet?",
+      "choices": {
+        "A": "26",
+        "B": "36",
+        "C": "52",
+        "D": "62"
+      },
+      "answer": "D",
+      "source_pages": [
+        124
+      ]
+    },
+    {
+      "id": "MCQ16",
+      "difficulty": "hard",
+      "question": "What inequality is used to determine code length?",
+      "choices": {
+        "A": "10^n >= 365B",
+        "B": "62^n >= 365B",
+        "C": "2^n >= 365B",
+        "D": "26^n >= 365B"
+      },
+      "answer": "B",
+      "source_pages": [
+        124
+      ]
+    },
+    {
+      "id": "MCQ17",
+      "difficulty": "medium",
+      "question": "What short-code length is selected?",
+      "choices": {
+        "A": "5",
+        "B": "6",
+        "C": "7",
+        "D": "8"
+      },
+      "answer": "C",
+      "source_pages": [
+        125
+      ]
+    },
+    {
+      "id": "MCQ18",
+      "difficulty": "hard",
+      "question": "Why is 6 characters insufficient?",
+      "choices": {
+        "A": "62^6 supports only about 56.8 billion values",
+        "B": "6 characters cannot contain letters",
+        "C": "CRC32 requires 7 bits",
+        "D": "Browsers reject 6-character URLs"
+      },
+      "answer": "A",
+      "source_pages": [
+        125
+      ]
+    },
+    {
+      "id": "MCQ19",
+      "difficulty": "medium",
+      "question": "What is 62^7 approximately?",
+      "choices": {
+        "A": "56.8 billion",
+        "B": "365 billion",
+        "C": "3.5 trillion",
+        "D": "35 trillion"
+      },
+      "answer": "C",
+      "source_pages": [
+        125
+      ]
+    },
+    {
+      "id": "MCQ20",
+      "difficulty": "medium",
+      "question": "Which hash functions are mentioned for hash-plus-collision-resolution?",
+      "choices": {
+        "A": "CRC32, MD5, SHA-1",
+        "B": "Base64, RSA, AES",
+        "C": "Bcrypt, Argon2, scrypt",
+        "D": "Murmur only"
+      },
+      "answer": "A",
+      "source_pages": [
+        125
+      ]
+    },
+    {
+      "id": "MCQ21",
+      "difficulty": "hard",
+      "question": "What problem arises from taking only the first 7 hash characters?",
+      "choices": {
+        "A": "Collision",
+        "B": "No database required",
+        "C": "No possible short URL",
+        "D": "All outputs are numeric"
+      },
+      "answer": "A",
+      "source_pages": [
+        125
+      ]
+    },
+    {
+      "id": "MCQ22",
+      "difficulty": "hard",
+      "question": "How does the chapter resolve a collision?",
+      "choices": {
+        "A": "Append a predefined string and rehash",
+        "B": "Delete the old URL",
+        "C": "Return 404",
+        "D": "Add more web servers"
+      },
+      "answer": "A",
+      "source_pages": [
+        125,
+        126
+      ]
+    },
+    {
+      "id": "MCQ23",
+      "difficulty": "hard",
+      "question": "Why can collision checking be expensive?",
+      "choices": {
+        "A": "A database existence query may be needed for every candidate",
+        "B": "Base62 requires disk sorting",
+        "C": "301 causes writes",
+        "D": "UUID is too small"
+      },
+      "answer": "A",
+      "source_pages": [
+        126
+      ]
+    },
+    {
+      "id": "MCQ24",
+      "difficulty": "medium",
+      "question": "What does the chapter suggest to improve collision-check performance?",
+      "choices": {
+        "A": "Bloom filter",
+        "B": "Vector clock",
+        "C": "Merkle tree",
+        "D": "Gossip"
+      },
+      "answer": "A",
+      "source_pages": [
+        126
+      ]
+    },
+    {
+      "id": "MCQ25",
+      "difficulty": "medium",
+      "question": "Why Base62?",
+      "choices": {
+        "A": "62 allowed characters",
+        "B": "62 database shards",
+        "C": "62 web servers",
+        "D": "62 redirects"
+      },
+      "answer": "A",
+      "source_pages": [
+        126
+      ]
+    },
+    {
+      "id": "MCQ26",
+      "difficulty": "medium",
+      "question": "What does decimal 11157 encode to in the chapter?",
+      "choices": {
+        "A": "2TX",
+        "B": "abc",
+        "C": "y7keocwj",
+        "D": "zn9edcu"
+      },
+      "answer": "A",
+      "source_pages": [
+        126,
+        127
+      ]
+    },
+    {
+      "id": "MCQ27",
+      "difficulty": "hard",
+      "question": "Which approach requires a unique ID generator?",
+      "choices": {
+        "A": "Hash + collision resolution",
+        "B": "Base62 conversion",
+        "C": "301 redirect",
+        "D": "Cache lookup"
+      },
+      "answer": "B",
+      "source_pages": [
+        127
+      ]
+    },
+    {
+      "id": "MCQ28",
+      "difficulty": "hard",
+      "question": "Which approach can still collide and requires explicit resolution?",
+      "choices": {
+        "A": "Base62 of a unique ID",
+        "B": "Hash + collision resolution",
+        "C": "Relational database",
+        "D": "302 redirect"
+      },
+      "answer": "B",
+      "source_pages": [
+        127
+      ]
+    },
+    {
+      "id": "MCQ29",
+      "difficulty": "hard",
+      "question": "Why is the Base62 method collision-free in the chapter's design?",
+      "choices": {
+        "A": "The source ID is unique",
+        "B": "Browsers reject duplicates",
+        "C": "Base62 uses 128 bits",
+        "D": "It hashes the long URL twice"
+      },
+      "answer": "A",
+      "source_pages": [
+        127
+      ]
+    },
+    {
+      "id": "MCQ30",
+      "difficulty": "medium",
+      "question": "What happens first in the selected shortening flow?",
+      "choices": {
+        "A": "Generate a new ID immediately",
+        "B": "Check whether longURL already exists",
+        "C": "Redirect with 301",
+        "D": "Read cache"
+      },
+      "answer": "B",
+      "source_pages": [
+        128
+      ]
+    },
+    {
+      "id": "MCQ31",
+      "difficulty": "hard",
+      "question": "If the longURL already exists, what happens?",
+      "choices": {
+        "A": "Generate another shortURL",
+        "B": "Return the existing shortURL",
+        "C": "Delete it",
+        "D": "Return 404"
+      },
+      "answer": "B",
+      "source_pages": [
+        128
+      ]
+    },
+    {
+      "id": "MCQ32",
+      "difficulty": "medium",
+      "question": "What short code is generated from ID 2009215674938 in the example?",
+      "choices": {
+        "A": "2TX",
+        "B": "zn9edcu",
+        "C": "y7keocwj",
+        "D": "systemdesign"
+      },
+      "answer": "B",
+      "source_pages": [
+        128
+      ]
+    },
+    {
+      "id": "MCQ33",
+      "difficulty": "medium",
+      "question": "Why is cache added to the redirect path?",
+      "choices": {
+        "A": "Reads exceed writes",
+        "B": "Writes exceed reads",
+        "C": "It generates IDs",
+        "D": "It performs Base62 conversion"
+      },
+      "answer": "A",
+      "source_pages": [
+        129
+      ]
+    },
+    {
+      "id": "MCQ34",
+      "difficulty": "medium",
+      "question": "What happens after a cache miss during redirect?",
+      "choices": {
+        "A": "Query the database",
+        "B": "Generate a new ID",
+        "C": "Delete shortURL",
+        "D": "Return 301 without lookup"
+      },
+      "answer": "A",
+      "source_pages": [
+        129
+      ]
+    },
+    {
+      "id": "MCQ35",
+      "difficulty": "medium",
+      "question": "What does a missing database mapping most likely mean?",
+      "choices": {
+        "A": "Invalid shortURL",
+        "B": "Cache is full",
+        "C": "Long URL is too short",
+        "D": "The ID generator failed"
+      },
+      "answer": "A",
+      "source_pages": [
+        129
+      ]
+    },
+    {
+      "id": "MCQ36",
+      "difficulty": "medium",
+      "question": "Why is the web tier easy to scale?",
+      "choices": {
+        "A": "It is stateless",
+        "B": "It stores every URL in local memory",
+        "C": "It uses no load balancer",
+        "D": "It has one server"
+      },
+      "answer": "A",
+      "source_pages": [
+        130
+      ]
+    },
+    {
+      "id": "MCQ37",
+      "difficulty": "medium",
+      "question": "What database-scaling techniques are mentioned?",
+      "choices": {
+        "A": "Replication and sharding",
+        "B": "Only compression",
+        "C": "Only vertical scaling",
+        "D": "No scaling"
+      },
+      "answer": "A",
+      "source_pages": [
+        130
+      ]
+    },
+    {
+      "id": "MCQ38",
+      "difficulty": "medium",
+      "question": "What protects the shortening endpoint from abusive request volume?",
+      "choices": {
+        "A": "Rate limiter",
+        "B": "Bloom filter only",
+        "C": "301 redirect",
+        "D": "Base62"
+      },
+      "answer": "A",
+      "source_pages": [
+        130
+      ]
+    },
+    {
+      "id": "MCQ39",
+      "difficulty": "medium",
+      "question": "Which question is explicitly suggested for analytics?",
+      "choices": {
+        "A": "How many people click on a link?",
+        "B": "What CPU brand is used?",
+        "C": "What compiler builds the server?",
+        "D": "How many bits are in IPv6?"
+      },
+      "answer": "A",
+      "source_pages": [
+        130
+      ]
+    },
+    {
+      "id": "MCQ40",
+      "difficulty": "hard",
+      "question": "Which design choice best matches a system whose priority is minimizing repeat traffic to URL-shortener servers?",
+      "choices": {
+        "A": "301 redirect",
+        "B": "302 redirect",
+        "C": "Always bypass cache",
+        "D": "Always query database"
+      },
+      "answer": "A",
+      "source_pages": [
+        122
+      ]
+    }
+  ],
+  "mix_and_match": [
+    {
+      "id": "MM01",
+      "title": "HTTP Behavior",
+      "instructions": "Match each item with its role.",
+      "left": {
+        "A": "POST api/v1/data/shorten",
+        "B": "GET api/v1/shortUrl",
+        "C": "301",
+        "D": "302"
+      },
+      "right": {
+        "1": "Permanent redirect cached by browser",
+        "2": "Create short URL",
+        "3": "Temporary redirect that returns through shortener",
+        "4": "Resolve short URL for redirect"
+      },
+      "answer_key": {
+        "A": "2",
+        "B": "4",
+        "C": "1",
+        "D": "3"
+      },
+      "source_pages": [
+        121,
+        122
+      ]
+    },
+    {
+      "id": "MM02",
+      "title": "Estimate to Value",
+      "left": {
+        "A": "Writes/day",
+        "B": "Writes/sec",
+        "C": "Reads/sec",
+        "D": "10-year records",
+        "E": "Short-code alphabet size"
+      },
+      "right": {
+        "1": "365 billion",
+        "2": "62",
+        "3": "100 million",
+        "4": "11,600",
+        "5": "1,160"
+      },
+      "answer_key": {
+        "A": "3",
+        "B": "5",
+        "C": "4",
+        "D": "1",
+        "E": "2"
+      },
+      "source_pages": [
+        120,
+        124
+      ]
+    },
+    {
+      "id": "MM03",
+      "title": "Technique to Tradeoff",
+      "left": {
+        "A": "301 redirect",
+        "B": "302 redirect",
+        "C": "Hash + collision resolution",
+        "D": "Base62 conversion",
+        "E": "Cache"
+      },
+      "right": {
+        "1": "Better analytics visibility",
+        "2": "Lower repeat load via browser caching",
+        "3": "Read-performance optimization",
+        "4": "Collision possible; no unique ID generator required",
+        "5": "Collision-free with unique numeric ID; depends on ID generator"
+      },
+      "answer_key": {
+        "A": "2",
+        "B": "1",
+        "C": "4",
+        "D": "5",
+        "E": "3"
+      },
+      "source_pages": [
+        122,
+        127,
+        129
+      ]
+    },
+    {
+      "id": "MM04",
+      "title": "Base62 Numeric Mapping",
+      "left": {
+        "A": "0-9",
+        "B": "10-35",
+        "C": "36-61",
+        "D": "10",
+        "E": "61"
+      },
+      "right": {
+        "1": "a-z",
+        "2": "Z",
+        "3": "digits",
+        "4": "A-Z",
+        "5": "a"
+      },
+      "answer_key": {
+        "A": "3",
+        "B": "1",
+        "C": "4",
+        "D": "5",
+        "E": "2"
+      },
+      "source_pages": [
+        126
+      ]
+    },
+    {
+      "id": "MM05",
+      "title": "Wrap-up Concern to Technique",
+      "left": {
+        "A": "Malicious shortening traffic",
+        "B": "Web-tier growth",
+        "C": "Database growth",
+        "D": "Click behavior",
+        "E": "Large-system correctness"
+      },
+      "right": {
+        "1": "Analytics",
+        "2": "Availability, consistency, reliability",
+        "3": "Rate limiter",
+        "4": "Replication and sharding",
+        "5": "Add/remove stateless web servers"
+      },
+      "answer_key": {
+        "A": "3",
+        "B": "5",
+        "C": "4",
+        "D": "1",
+        "E": "2"
+      },
+      "source_pages": [
+        130
+      ]
+    }
+  ],
+  "true_false": [
+    {
+      "id": "TF01",
+      "statement": "The design assumes short URLs can be freely updated and deleted.",
+      "answer": false,
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "TF02",
+      "statement": "100 million URLs per day is the write-volume assumption.",
+      "answer": true,
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "TF03",
+      "statement": "The assumed read/write ratio is 10:1.",
+      "answer": true,
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "TF04",
+      "statement": "The chapter estimates about 1,160 write operations per second.",
+      "answer": true,
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "TF05",
+      "statement": "The chapter estimates about 11,600 read operations per second.",
+      "answer": true,
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "TF06",
+      "statement": "The short-code alphabet contains 62 possible characters.",
+      "answer": true,
+      "source_pages": [
+        120,
+        124
+      ]
+    },
+    {
+      "id": "TF07",
+      "statement": "The shortening endpoint uses GET.",
+      "answer": false,
+      "source_pages": [
+        121
+      ]
+    },
+    {
+      "id": "TF08",
+      "statement": "The redirect endpoint uses GET.",
+      "answer": true,
+      "source_pages": [
+        121
+      ]
+    },
+    {
+      "id": "TF09",
+      "statement": "A 301 response is cached by the browser.",
+      "answer": true,
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "TF10",
+      "statement": "A 302 redirect is ideal when you want repeated requests to bypass the URL-shortener service.",
+      "answer": false,
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "TF11",
+      "statement": "302 makes click analytics easier because requests return through the shortener.",
+      "answer": true,
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "TF12",
+      "statement": "The high-level redirect design uses <shortURL,longURL> mappings.",
+      "answer": true,
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "TF13",
+      "statement": "The deep dive keeps all mappings only in an in-memory hash table.",
+      "answer": false,
+      "source_pages": [
+        124
+      ]
+    },
+    {
+      "id": "TF14",
+      "statement": "The simplified relational table contains id, shortURL, and longURL.",
+      "answer": true,
+      "source_pages": [
+        124
+      ]
+    },
+    {
+      "id": "TF15",
+      "statement": "62^6 is enough for 365 billion URLs.",
+      "answer": false,
+      "source_pages": [
+        125
+      ]
+    },
+    {
+      "id": "TF16",
+      "statement": "62^7 is approximately 3.5 trillion.",
+      "answer": true,
+      "source_pages": [
+        125
+      ]
+    },
+    {
+      "id": "TF17",
+      "statement": "The chapter chooses a 7-character hashValue length.",
+      "answer": true,
+      "source_pages": [
+        125
+      ]
+    },
+    {
+      "id": "TF18",
+      "statement": "CRC32, MD5, and SHA-1 are mentioned.",
+      "answer": true,
+      "source_pages": [
+        125
+      ]
+    },
+    {
+      "id": "TF19",
+      "statement": "Taking the first 7 characters of a hash guarantees no collisions.",
+      "answer": false,
+      "source_pages": [
+        125
+      ]
+    },
+    {
+      "id": "TF20",
+      "statement": "A Bloom filter is suggested as a collision-check optimization.",
+      "answer": true,
+      "source_pages": [
+        126
+      ]
+    },
+    {
+      "id": "TF21",
+      "statement": "Base62 uses digits, lowercase letters, and uppercase letters.",
+      "answer": true,
+      "source_pages": [
+        126
+      ]
+    },
+    {
+      "id": "TF22",
+      "statement": "Decimal 11157 maps to 2TX in the chapter.",
+      "answer": true,
+      "source_pages": [
+        126,
+        127
+      ]
+    },
+    {
+      "id": "TF23",
+      "statement": "Base62 conversion in the selected design requires a unique ID generator.",
+      "answer": true,
+      "source_pages": [
+        127,
+        128
+      ]
+    },
+    {
+      "id": "TF24",
+      "statement": "Hash + collision resolution has no possibility of collision.",
+      "answer": false,
+      "source_pages": [
+        127
+      ]
+    },
+    {
+      "id": "TF25",
+      "statement": "The selected shortening flow first checks whether the long URL already exists.",
+      "answer": true,
+      "source_pages": [
+        128
+      ]
+    },
+    {
+      "id": "TF26",
+      "statement": "If the long URL already exists, the design creates another unique short URL.",
+      "answer": false,
+      "source_pages": [
+        128
+      ]
+    },
+    {
+      "id": "TF27",
+      "statement": "The redirect path is optimized with cache because reads outnumber writes.",
+      "answer": true,
+      "source_pages": [
+        129
+      ]
+    },
+    {
+      "id": "TF28",
+      "statement": "A cache miss immediately means the short URL is invalid.",
+      "answer": false,
+      "explanation": "The database is checked after a cache miss.",
+      "source_pages": [
+        129
+      ]
+    },
+    {
+      "id": "TF29",
+      "statement": "The web tier is stateless.",
+      "answer": true,
+      "source_pages": [
+        130
+      ]
+    },
+    {
+      "id": "TF30",
+      "statement": "Database replication and sharding are mentioned as scaling techniques.",
+      "answer": true,
+      "source_pages": [
+        130
+      ]
+    }
+  ],
+  "fill_in_the_blank": [
+    {
+      "id": "FIB01",
+      "prompt": "The system generates ______ million URLs per day.",
+      "answer": "100",
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "FIB02",
+      "prompt": "Estimated write QPS is about ______.",
+      "answer": "1,160",
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "FIB03",
+      "prompt": "Estimated read QPS is about ______.",
+      "answer": "11,600",
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "FIB04",
+      "prompt": "The read/write ratio is ______:1.",
+      "answer": "10",
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "FIB05",
+      "prompt": "The estimated 10-year record count is ______ billion.",
+      "answer": "365",
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "FIB06",
+      "prompt": "The shortening endpoint uses HTTP ______.",
+      "answer": "POST",
+      "source_pages": [
+        121
+      ]
+    },
+    {
+      "id": "FIB07",
+      "prompt": "The redirect endpoint uses HTTP ______.",
+      "answer": "GET",
+      "source_pages": [
+        121
+      ]
+    },
+    {
+      "id": "FIB08",
+      "prompt": "A permanent redirect uses status ______.",
+      "answer": "301",
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "FIB09",
+      "prompt": "A temporary redirect uses status ______.",
+      "answer": "302",
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "FIB10",
+      "prompt": "The alphabet has ______ possible characters.",
+      "answer": "62",
+      "source_pages": [
+        124
+      ]
+    },
+    {
+      "id": "FIB11",
+      "prompt": "The smallest chosen hashValue length is ______ characters.",
+      "answer": "7",
+      "source_pages": [
+        125
+      ]
+    },
+    {
+      "id": "FIB12",
+      "prompt": "The two shortening methods compared are hash + collision resolution and base ______ conversion.",
+      "answer": "62",
+      "source_pages": [
+        125
+      ]
+    },
+    {
+      "id": "FIB13",
+      "prompt": "A space-efficient probabilistic membership test is a ______ filter.",
+      "answer": "Bloom",
+      "source_pages": [
+        126
+      ]
+    },
+    {
+      "id": "FIB14",
+      "prompt": "Decimal 11157 converts to ______ in Base62.",
+      "answer": "2TX",
+      "source_pages": [
+        126,
+        127
+      ]
+    },
+    {
+      "id": "FIB15",
+      "prompt": "The selected shortening design depends on a globally unique ______ generator.",
+      "answer": "ID",
+      "source_pages": [
+        127,
+        128
+      ]
+    },
+    {
+      "id": "FIB16",
+      "prompt": "The example ID 2009215674938 becomes short code ______.",
+      "answer": "zn9edcu",
+      "source_pages": [
+        128
+      ]
+    },
+    {
+      "id": "FIB17",
+      "prompt": "The redirect path stores hot <shortURL,longURL> mappings in a ______.",
+      "answer": "cache",
+      "source_pages": [
+        129
+      ]
+    },
+    {
+      "id": "FIB18",
+      "prompt": "The web tier is ______, making horizontal scaling easier.",
+      "answer": "stateless",
+      "source_pages": [
+        130
+      ]
+    }
+  ],
+  "ordering_exercises": [
+    {
+      "id": "ORD01",
+      "title": "URL Shortening Flow",
+      "items_scrambled": [
+        "Convert ID to Base62",
+        "Check if longURL exists",
+        "Store id, shortURL, longURL",
+        "Receive longURL",
+        "Generate unique ID",
+        "Return existing shortURL if found"
+      ],
+      "correct_order": [
+        "Receive longURL",
+        "Check if longURL exists",
+        "Return existing shortURL if found OR continue if new",
+        "Generate unique ID",
+        "Convert ID to Base62",
+        "Store id, shortURL, longURL"
+      ],
+      "source_pages": [
+        128
+      ]
+    },
+    {
+      "id": "ORD02",
+      "title": "URL Redirect Flow",
+      "items_scrambled": [
+        "Query database on miss",
+        "Load balancer forwards request",
+        "User clicks short URL",
+        "Check cache",
+        "Return longURL"
+      ],
+      "correct_order": [
+        "User clicks short URL",
+        "Load balancer forwards request",
+        "Check cache",
+        "Query database on miss",
+        "Return longURL"
+      ],
+      "source_pages": [
+        129
+      ]
+    },
+    {
+      "id": "ORD03",
+      "title": "Hash Collision Resolution",
+      "items_scrambled": [
+        "Check candidate in DB",
+        "Hash longURL",
+        "Append predefined string if collision",
+        "Save if no collision",
+        "Generate shortURL"
+      ],
+      "correct_order": [
+        "Hash longURL",
+        "Generate shortURL",
+        "Check candidate in DB",
+        "Append predefined string if collision and rehash",
+        "Save if no collision"
+      ],
+      "source_pages": [
+        125,
+        126
+      ]
+    },
+    {
+      "id": "ORD04",
+      "title": "Base62 Encoding Concept",
+      "items_scrambled": [
+        "Map remainders to Base62 characters",
+        "Start with numeric ID",
+        "Repeatedly divide by 62 / derive base-62 digits",
+        "Construct short code"
+      ],
+      "correct_order": [
+        "Start with numeric ID",
+        "Repeatedly divide by 62 / derive base-62 digits",
+        "Map remainders to Base62 characters",
+        "Construct short code"
+      ],
+      "source_pages": [
+        126,
+        127
+      ]
+    }
+  ],
+  "scenario_questions": [
+    {
+      "id": "SC01",
+      "difficulty": "medium",
+      "scenario": "Your main goal is to minimize repeated requests to the URL-shortener service after the first redirect.",
+      "question": "Would the chapter favor 301 or 302?",
+      "expected_answer": "301, because the browser caches the permanent redirect and later requests can go directly to the long URL.",
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "SC02",
+      "difficulty": "medium",
+      "scenario": "Your product team needs click counts and click-source analytics for every visit.",
+      "question": "Which redirect does the chapter favor?",
+      "expected_answer": "302, because repeat requests continue to go through the URL-shortening service.",
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "SC03",
+      "difficulty": "hard",
+      "scenario": "The service must support 365 billion stored URLs using only 0-9, a-z, and A-Z.",
+      "question": "Why is a 7-character code selected?",
+      "expected_answer": "Because 62^6 is only about 56.8 billion, while 62^7 is about 3.5 trillion and exceeds 365 billion.",
+      "source_pages": [
+        124,
+        125
+      ]
+    },
+    {
+      "id": "SC04",
+      "difficulty": "hard",
+      "scenario": "You hash long URLs and truncate each hash to 7 characters.",
+      "question": "What problem must you handle?",
+      "expected_answer": "Hash collisions.",
+      "source_pages": [
+        125
+      ]
+    },
+    {
+      "id": "SC05",
+      "difficulty": "hard",
+      "scenario": "Every collision attempt requires checking whether the short code already exists in the database.",
+      "question": "What optimization does the chapter mention?",
+      "expected_answer": "A Bloom filter.",
+      "source_pages": [
+        126
+      ]
+    },
+    {
+      "id": "SC06",
+      "difficulty": "hard",
+      "scenario": "You already have a globally unique numeric ID generator.",
+      "question": "Which shortening strategy is attractive and why?",
+      "expected_answer": "Base62 conversion, because a unique numeric ID maps to a unique Base62 value without hash collisions.",
+      "source_pages": [
+        127,
+        128
+      ]
+    },
+    {
+      "id": "SC07",
+      "difficulty": "medium",
+      "scenario": "A user submits the exact same long URL that was shortened previously.",
+      "question": "What should the selected shortening flow do?",
+      "expected_answer": "Fetch and return the existing shortURL rather than generating a new ID.",
+      "source_pages": [
+        128
+      ]
+    },
+    {
+      "id": "SC08",
+      "difficulty": "medium",
+      "scenario": "The redirect workload is ten times heavier than the shortening workload.",
+      "question": "What optimization appears in the chapter's deep dive?",
+      "expected_answer": "Cache the <shortURL,longURL> mapping.",
+      "source_pages": [
+        129
+      ]
+    },
+    {
+      "id": "SC09",
+      "difficulty": "medium",
+      "scenario": "A short URL is absent from cache but present in the database.",
+      "question": "What happens?",
+      "expected_answer": "The web server fetches the longURL from the database and returns it for redirection.",
+      "source_pages": [
+        129
+      ]
+    },
+    {
+      "id": "SC10",
+      "difficulty": "medium",
+      "scenario": "A short URL is absent from both cache and database.",
+      "question": "What does the chapter infer?",
+      "expected_answer": "It is likely an invalid shortURL entered by the user.",
+      "source_pages": [
+        129
+      ]
+    },
+    {
+      "id": "SC11",
+      "difficulty": "medium",
+      "scenario": "Attackers flood the shortening endpoint with requests.",
+      "question": "What follow-up component should you add?",
+      "expected_answer": "A rate limiter based on IP address or other filtering rules.",
+      "source_pages": [
+        130
+      ]
+    },
+    {
+      "id": "SC12",
+      "difficulty": "medium",
+      "scenario": "Traffic doubles and the existing web servers are saturated.",
+      "question": "Why is horizontal scaling straightforward in the chapter's design?",
+      "expected_answer": "The web tier is stateless, so web servers can be added or removed.",
+      "source_pages": [
+        130
+      ]
+    },
+    {
+      "id": "SC13",
+      "difficulty": "hard",
+      "scenario": "The URL mapping table grows beyond one database machine's practical capacity.",
+      "question": "Which scaling techniques does the chapter mention?",
+      "expected_answer": "Database replication and sharding.",
+      "source_pages": [
+        130
+      ]
+    }
+  ],
+  "short_answer_questions": [
+    {
+      "id": "SA01",
+      "question": "Why is the URL-shortener workload considered read-heavy?",
+      "model_answer": "The chapter assumes a 10:1 read-to-write ratio, producing about 11,600 redirects per second versus about 1,160 new shortened URLs per second.",
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "SA02",
+      "question": "Explain the 301-versus-302 tradeoff.",
+      "model_answer": "301 is permanent and browser-cacheable, so repeated requests can bypass the shortener and reduce server load. 302 is temporary, so repeated requests continue through the shortener, which makes click analytics easier.",
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "SA03",
+      "question": "Why is the high-level hash-table data model replaced?",
+      "model_answer": "An in-memory hash table is a useful conceptual model, but memory is limited and expensive at the target scale. The deep dive therefore stores mappings in a relational database.",
+      "source_pages": [
+        124
+      ]
+    },
+    {
+      "id": "SA04",
+      "question": "How is the 7-character code length derived?",
+      "model_answer": "The alphabet contains 62 characters. The design finds the smallest n with 62^n >= 365 billion. Six characters support about 56.8 billion values, while seven support about 3.5 trillion, so n=7.",
+      "source_pages": [
+        124,
+        125
+      ]
+    },
+    {
+      "id": "SA05",
+      "question": "Explain hash-plus-collision-resolution.",
+      "model_answer": "Hash the long URL, truncate or otherwise generate a 7-character candidate, check whether that shortURL already exists, and if it collides, append a predefined string to the input and hash again until a free shortURL is found.",
+      "source_pages": [
+        125,
+        126
+      ]
+    },
+    {
+      "id": "SA06",
+      "question": "Why can a Bloom filter help the collision approach?",
+      "model_answer": "The expensive part is repeatedly querying the database to determine whether a candidate shortURL exists. The chapter suggests a Bloom filter as a space-efficient probabilistic membership test to improve that check.",
+      "source_pages": [
+        126
+      ]
+    },
+    {
+      "id": "SA07",
+      "question": "How does Base62 conversion work conceptually?",
+      "model_answer": "Treat a globally unique numeric ID as a base-10 number and represent that same number using a 62-symbol alphabet made from digits, lowercase letters, and uppercase letters.",
+      "source_pages": [
+        126,
+        127
+      ]
+    },
+    {
+      "id": "SA08",
+      "question": "Why does the chapter select Base62 over hash-plus-collision-resolution?",
+      "model_answer": "The selected design can rely on a distributed unique-ID generator. Base62 then maps each unique ID to a unique short code without collision-resolution queries, although the short-code length is not fixed.",
+      "source_pages": [
+        127,
+        128
+      ]
+    },
+    {
+      "id": "SA09",
+      "question": "Walk through the selected shortening flow.",
+      "model_answer": "Check whether the long URL already exists. If it does, return the existing short URL. Otherwise generate a globally unique ID, convert it to Base62, store id/shortURL/longURL, and return the short URL.",
+      "source_pages": [
+        128
+      ]
+    },
+    {
+      "id": "SA10",
+      "question": "Walk through the redirect flow.",
+      "model_answer": "The user requests a short URL, the load balancer forwards it to web servers, the web tier checks cache first, falls back to the database on a miss, treats an absent database mapping as likely invalid, and returns the long URL for redirection.",
+      "source_pages": [
+        129
+      ]
+    },
+    {
+      "id": "SA11",
+      "question": "What follow-up improvements should be mentioned in an interview?",
+      "model_answer": "Rate limiting, stateless web-tier scaling, database replication and sharding, analytics, and the broader availability, consistency, and reliability tradeoffs.",
+      "source_pages": [
+        130
+      ]
+    }
+  ],
+  "active_recall_prompts": [
+    {
+      "id": "AR01",
+      "prompt": "Recite the URL-shortener requirements and assumptions.",
+      "target_points": [
+        "100M URLs/day",
+        "Short as possible",
+        "0-9/a-z/A-Z",
+        "No update/delete",
+        "Shorten",
+        "Redirect",
+        "HA/scalability/fault tolerance"
+      ],
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "AR02",
+      "prompt": "Reconstruct the back-of-envelope numbers.",
+      "target_points": [
+        "100M writes/day",
+        "~1160 writes/sec",
+        "10:1 read/write",
+        "~11,600 reads/sec",
+        "365B records/10 years",
+        "100-byte average URL",
+        "Chapter states 365 TB"
+      ],
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "AR03",
+      "prompt": "Recite both REST endpoints.",
+      "target_points": [
+        "POST api/v1/data/shorten with longUrl",
+        "GET api/v1/shortUrl"
+      ],
+      "source_pages": [
+        121
+      ]
+    },
+    {
+      "id": "AR04",
+      "prompt": "Explain 301 versus 302 without looking.",
+      "target_points": [
+        "301 permanent",
+        "Browser caches",
+        "Lower shortener load",
+        "302 temporary",
+        "Requests return through shortener",
+        "Better analytics"
+      ],
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "AR05",
+      "prompt": "Derive the 7-character code length.",
+      "target_points": [
+        "62 symbols",
+        "62^6=56.8B",
+        "62^7≈3.5T",
+        "Need 365B",
+        "Choose 7"
+      ],
+      "source_pages": [
+        124,
+        125
+      ]
+    },
+    {
+      "id": "AR06",
+      "prompt": "Compare the two shortening algorithms.",
+      "target_points": [
+        "Hash+collision: fixed length, no ID generator, collisions possible, DB checks",
+        "Base62: variable length, requires unique ID, no collisions when ID unique, predictable from ID"
+      ],
+      "source_pages": [
+        127
+      ]
+    },
+    {
+      "id": "AR07",
+      "prompt": "Reconstruct the Base62 character mapping.",
+      "target_points": [
+        "0-9 => 0-9",
+        "10-35 => a-z",
+        "36-61 => A-Z"
+      ],
+      "source_pages": [
+        126
+      ]
+    },
+    {
+      "id": "AR08",
+      "prompt": "Reconstruct the selected shortening flow.",
+      "target_points": [
+        "Input longURL",
+        "Check DB",
+        "Return existing if found",
+        "Generate unique ID",
+        "Base62 encode",
+        "Store mapping"
+      ],
+      "source_pages": [
+        128
+      ]
+    },
+    {
+      "id": "AR09",
+      "prompt": "Reconstruct the redirect flow.",
+      "target_points": [
+        "User",
+        "Load balancer",
+        "Web servers",
+        "Cache",
+        "Database fallback",
+        "Invalid if absent",
+        "Return longURL"
+      ],
+      "source_pages": [
+        129
+      ]
+    },
+    {
+      "id": "AR10",
+      "prompt": "Name all wrap-up topics.",
+      "target_points": [
+        "Rate limiter",
+        "Web server scaling",
+        "Database replication/sharding",
+        "Analytics",
+        "Availability",
+        "Consistency",
+        "Reliability"
+      ],
+      "source_pages": [
+        130
+      ]
+    }
+  ],
+  "diagram_reconstruction_drills": [
+    {
+      "id": "DR01",
+      "name": "Figure 8-2 Redirect Sequence",
+      "task": "Draw client -> TinyURL server -> 301/longURL -> long-URL destination server.",
+      "source_pages": [
+        121,
+        122
+      ]
+    },
+    {
+      "id": "DR02",
+      "name": "Figure 8-3 Hash Function",
+      "task": "Draw longURL -> fx -> hashValue/shortURL.",
+      "source_pages": [
+        122,
+        123
+      ]
+    },
+    {
+      "id": "DR03",
+      "name": "Figure 8-4 Data Model",
+      "task": "Draw the relational mapping table with id, shortURL, and longURL.",
+      "source_pages": [
+        124
+      ]
+    },
+    {
+      "id": "DR04",
+      "name": "Figure 8-5 Hash Collision Resolution",
+      "task": "Draw longURL -> hash function -> shortURL -> exists in DB?; on collision append predefined string and loop.",
+      "source_pages": [
+        125,
+        126
+      ]
+    },
+    {
+      "id": "DR05",
+      "name": "Figure 8-6 Base62 Conversion",
+      "task": "Show 11157 divided into Base62 digits [2,55,59] -> [2,T,X] -> 2TX.",
+      "source_pages": [
+        126,
+        127
+      ]
+    },
+    {
+      "id": "DR06",
+      "name": "Figure 8-7 URL Shortening",
+      "task": "Draw input longURL -> DB existence check -> existing shortURL OR unique ID -> Base62 -> save mapping.",
+      "source_pages": [
+        127,
+        128
+      ]
+    },
+    {
+      "id": "DR07",
+      "name": "Figure 8-8 URL Redirecting",
+      "task": "Draw user -> load balancer -> web servers -> cache; cache miss -> database; return longURL to user.",
+      "source_pages": [
+        129
+      ]
+    }
+  ],
+  "interview_style_questions": [
+    {
+      "id": "INT01",
+      "question": "What requirements would you clarify for a URL shortener?",
+      "strong_answer_outline": [
+        "Traffic volume",
+        "Allowed short-code characters",
+        "Desired length",
+        "Update/delete semantics",
+        "Shortening",
+        "Redirecting",
+        "Availability/scalability/fault tolerance"
+      ],
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "INT02",
+      "question": "What scale estimates would you calculate?",
+      "strong_answer_outline": [
+        "Writes/day",
+        "Writes/sec",
+        "Read/write ratio",
+        "Reads/sec",
+        "10-year record count",
+        "Average URL size",
+        "Storage"
+      ],
+      "source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "INT03",
+      "question": "How would you choose between 301 and 302 redirects?",
+      "strong_answer_outline": [
+        "301 permanent and browser-cacheable",
+        "301 reduces shortener load",
+        "302 sends repeat requests through shortener",
+        "302 makes analytics easier"
+      ],
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "INT04",
+      "question": "How do you derive a safe short-code length?",
+      "strong_answer_outline": [
+        "62-character alphabet",
+        "Need capacity >= expected record count",
+        "62^6 too small",
+        "62^7 sufficient",
+        "Choose 7"
+      ],
+      "source_pages": [
+        124,
+        125
+      ]
+    },
+    {
+      "id": "INT05",
+      "question": "Compare hash+collision resolution with Base62.",
+      "strong_answer_outline": [
+        "Hash method has fixed length",
+        "Hash collisions require checking/resolution",
+        "Bloom filter can optimize checks",
+        "Base62 needs unique ID generator",
+        "Base62 short-code length grows with ID",
+        "Unique source ID eliminates collisions"
+      ],
+      "source_pages": [
+        125,
+        126,
+        127
+      ]
+    },
+    {
+      "id": "INT06",
+      "question": "Describe the production redirect path.",
+      "strong_answer_outline": [
+        "Load balancer",
+        "Stateless web servers",
+        "Cache-first lookup",
+        "Database fallback",
+        "Invalid-shortURL handling",
+        "HTTP redirect"
+      ],
+      "source_pages": [
+        129,
+        130
+      ]
+    },
+    {
+      "id": "INT07",
+      "question": "What would you discuss if extra interview time remained?",
+      "strong_answer_outline": [
+        "Rate limiter",
+        "Web-tier horizontal scaling",
+        "Database replication/sharding",
+        "Analytics",
+        "Availability/consistency/reliability"
+      ],
+      "source_pages": [
+        130
+      ]
+    }
+  ],
+  "common_confusions": [
+    {
+      "confusion": "301 and 302 have the same effect on repeated requests.",
+      "correction": "301 can be cached by the browser so repeat requests bypass the shortener; 302 keeps repeat requests flowing through the shortener.",
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "confusion": "A 301 redirect is always best.",
+      "correction": "It is best when reducing server load is the priority; 302 is better when click analytics is important.",
+      "source_pages": [
+        122
+      ]
+    },
+    {
+      "confusion": "The high-level in-memory hash table is the final storage design.",
+      "correction": "The deep dive replaces it with a relational database because memory is limited and expensive.",
+      "source_pages": [
+        124
+      ]
+    },
+    {
+      "confusion": "Six Base62 characters are sufficient for 365 billion URLs.",
+      "correction": "62^6 is only about 56.8 billion; 62^7 is about 3.5 trillion, so seven characters are selected.",
+      "source_pages": [
+        125
+      ]
+    },
+    {
+      "confusion": "Truncating a cryptographic or CRC hash to seven characters guarantees uniqueness.",
+      "correction": "The chapter explicitly says collisions can occur and must be resolved.",
+      "source_pages": [
+        125
+      ]
+    },
+    {
+      "confusion": "Base62 itself generates uniqueness.",
+      "correction": "In the selected design, uniqueness comes from the distributed unique-ID generator; Base62 converts that unique numeric ID into a compact string.",
+      "source_pages": [
+        127,
+        128
+      ]
+    },
+    {
+      "confusion": "A cache miss proves the short URL is invalid.",
+      "correction": "The system checks the database after a cache miss. Only if the database also has no mapping is the shortURL likely invalid.",
+      "source_pages": [
+        129
+      ]
+    },
+    {
+      "confusion": "The storage calculation printed in the chapter is internally straightforward.",
+      "correction": "The source states 365 billion records over 10 years and then prints '365 billion * 100 bytes * 10 years = 365 TB.' This guide preserves that source arithmetic and flags the inconsistency instead of silently changing it.",
+      "source_pages": [
+        120
+      ]
+    }
+  ],
+  "practice_problems": [
+    {
+      "id": "PRACTICE01",
+      "type": "qps",
+      "prompt": "If 200 million URLs are generated per day, estimate writes/second using the same method as the chapter.",
+      "solution": "200,000,000 / 86,400 ≈ 2,315 writes/second.",
+      "note": "New practice calculation based on the chapter's estimation method.",
+      "based_on_source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "PRACTICE02",
+      "type": "read_qps",
+      "prompt": "If writes are 2,315/sec and reads are 10 times writes, estimate read QPS.",
+      "solution": "23,150 reads/second.",
+      "note": "New practice calculation based on the chapter's 10:1 read/write assumption.",
+      "based_on_source_pages": [
+        120
+      ]
+    },
+    {
+      "id": "PRACTICE03",
+      "type": "base62_capacity",
+      "prompt": "Why is 7 Base62 characters enough for 365 billion records?",
+      "solution": "62^7 = 3,521,614,606,208, which exceeds 365 billion.",
+      "based_on_source_pages": [
+        124,
+        125
+      ]
+    },
+    {
+      "id": "PRACTICE04",
+      "type": "base62_capacity",
+      "prompt": "Would 6 Base62 characters be enough for 100 billion records?",
+      "solution": "No. 62^6 = 56,800,235,584, which is less than 100 billion.",
+      "note": "New practice comparison based on Table 8-1.",
+      "based_on_source_pages": [
+        125
+      ]
+    },
+    {
+      "id": "PRACTICE05",
+      "type": "redirect_choice",
+      "prompt": "A service values precise redirect analytics more than minimizing URL-shortener traffic. Choose 301 or 302.",
+      "solution": "302.",
+      "based_on_source_pages": [
+        122
+      ]
+    },
+    {
+      "id": "PRACTICE06",
+      "type": "algorithm_tradeoff",
+      "prompt": "You have no distributed unique-ID generator and require exactly 7-character codes. Which of the two chapter approaches is more naturally aligned?",
+      "solution": "Hash + collision resolution, because Table 8-3 says it has fixed short URL length and does not require a unique ID generator; collisions must be resolved.",
+      "based_on_source_pages": [
+        127
+      ]
+    },
+    {
+      "id": "PRACTICE07",
+      "type": "algorithm_tradeoff",
+      "prompt": "You already have a robust globally unique numeric ID service and want to avoid collision-resolution database checks. Which approach fits?",
+      "solution": "Base62 conversion.",
+      "based_on_source_pages": [
+        127,
+        128
+      ]
+    }
+  ],
+  "mastery_check": {
+    "beginner": [
+      "Can define URL shortening and redirecting.",
+      "Can state the traffic assumptions.",
+      "Can name the two API endpoints.",
+      "Can distinguish 301 and 302.",
+      "Can explain why the alphabet size is 62."
+    ],
+    "intermediate": [
+      "Can reproduce the QPS and record-count estimates.",
+      "Can derive the 7-character code length.",
+      "Can explain hash collisions and the Bloom-filter optimization.",
+      "Can perform the chapter's Base62 example.",
+      "Can describe the selected shortening and redirect flows."
+    ],
+    "advanced": [
+      "Can explain the tradeoff between 301 server-load reduction and 302 analytics.",
+      "Can compare hash+collision-resolution versus Base62 from all Table 8-3 dimensions.",
+      "Can explain why the Base62 design depends on a distributed unique-ID generator.",
+      "Can reason about cache placement in a read-heavy redirect path.",
+      "Can discuss stateless web scaling, database replication/sharding, rate limiting, analytics, and reliability.",
+      "Can identify and explicitly preserve source inconsistencies rather than silently rewriting the chapter."
+    ]
+  },
+  "chapter_eight_final_review": {
+    "must_memorize": [
+      "Core functions: long URL -> short URL; short URL -> redirect.",
+      "Traffic: 100M new URLs/day, about 1,160 writes/sec.",
+      "Reads are assumed 10x writes: about 11,600 reads/sec.",
+      "10-year estimate: 365B records.",
+      "Allowed characters: 0-9, a-z, A-Z = 62 symbols.",
+      "POST api/v1/data/shorten creates short URLs.",
+      "GET api/v1/shortUrl resolves short URLs.",
+      "301 = permanent/cacheable/lower server load.",
+      "302 = temporary/repeat traffic through shortener/better analytics.",
+      "High-level redirect mapping: <shortURL,longURL>.",
+      "Final data model uses a relational database with id, shortURL, longURL.",
+      "Need smallest n where 62^n >= 365B.",
+      "62^6 ≈ 56.8B; 62^7 ≈ 3.5T; choose 7 characters.",
+      "Two shortening approaches: hash+collision resolution and Base62 conversion.",
+      "Hash truncation can collide; append predefined string and retry.",
+      "Bloom filter can reduce collision-check cost.",
+      "Base62 mapping: 0-9, a-z, A-Z.",
+      "11157 decimal -> 2TX Base62 in the chapter example.",
+      "Selected design uses globally unique ID -> Base62.",
+      "Example ID 2009215674938 -> zn9edcu.",
+      "Redirect path is cache-first because reads exceed writes.",
+      "Stateless web tier scales horizontally.",
+      "Database scaling: replication and sharding.",
+      "Security: rate limiting.",
+      "Additional concerns: analytics, availability, consistency, reliability."
+    ],
+    "memory_chain": "REQUIREMENTS -> ESTIMATE -> POST/GET APIs -> 301 vs 302 -> DATA MODEL -> 62-CHAR ALPHABET -> 7-CHAR CAPACITY -> HASH+COLLISION vs BASE62 -> UNIQUE ID -> BASE62 SHORTENING -> CACHE-FIRST REDIRECT -> RATE LIMIT + STATELESS WEB + DB SCALE + ANALYTICS",
+    "one_sentence_takeaway": "The selected URL-shortener design generates a globally unique numeric ID, Base62-encodes it into a compact short code, stores the mapping in a relational database, and serves the read-heavy redirect path through a cache-backed stateless web tier."
+  }
+}

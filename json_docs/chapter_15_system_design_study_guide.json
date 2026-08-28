@@ -1,0 +1,4124 @@
+{
+  "chapter": {
+    "number": 15,
+    "title": "Design Google Drive",
+    "source": "System Design Interview: An Insider's Guide by Alex Xu",
+    "pdf_pages": {
+      "chapter_start": 244,
+      "chapter_end": 262,
+      "references_page": 263
+    },
+    "primary_goal": "Design a reliable, highly available, scalable cloud file storage and synchronization system supporting upload/download, multi-device synchronization, file revisions, sharing, notifications, strong metadata consistency, low bandwidth usage, and efficient storage."
+  },
+  "chapter_summary": {
+    "overview": "Chapter 15 designs a Google Drive-like cloud storage system. The scoped product supports file upload and download, multi-device synchronization, revision history, file sharing, and notifications for edits, deletions, and shares. It supports web and mobile clients, any file type, encrypted storage, files up to 10 GB, and 10 million DAU. The non-functional requirements emphasize reliability, fast sync, bandwidth efficiency, scalability, and high availability. The chapter starts from a single-server architecture and evolves it into a distributed design using load balancers, horizontally scalable web/API servers, a replicated/sharded metadata database, object storage with cross-region replication, block servers, metadata caching, a notification service, and an offline backup queue. Files are split into blocks, compressed, encrypted, and uploaded to cloud storage. Delta sync sends only modified blocks. Strong consistency is required for metadata, so cache invalidation and relational ACID semantics are emphasized. Upload and download flows coordinate metadata changes with block transfer and notification delivery. Long polling is selected for notifications because updates are infrequent and mostly server-to-client. Storage is reduced through block-level deduplication, intelligent revision retention, and cold storage. The chapter closes with a failure-handling playbook and discusses the tradeoff between centralized block servers and direct client-to-cloud uploads.",
+    "core_flows": [
+      "Manage file metadata",
+      "File synchronization"
+    ],
+    "key_components": [
+      "Block servers",
+      "Cloud storage",
+      "Cold storage",
+      "Load balancer",
+      "API servers",
+      "Metadata database",
+      "Metadata cache",
+      "Notification service",
+      "Offline backup queue"
+    ],
+    "source_pages": [
+      244,
+      245,
+      246,
+      247,
+      248,
+      249,
+      250,
+      251,
+      252,
+      253,
+      254,
+      255,
+      256,
+      257,
+      258,
+      259,
+      260,
+      261,
+      262
+    ]
+  },
+  "learning_objectives": [
+    {
+      "id": "LO01",
+      "objective": "Define the scoped Google Drive product and supported features.",
+      "source_pages": [
+        244,
+        246
+      ]
+    },
+    {
+      "id": "LO02",
+      "objective": "State all functional and non-functional requirements.",
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "LO03",
+      "objective": "Reproduce capacity estimates for allocated storage and upload QPS.",
+      "source_pages": [
+        246,
+        247
+      ]
+    },
+    {
+      "id": "LO04",
+      "objective": "Explain the single-server starting point and its limitations.",
+      "source_pages": [
+        248,
+        249,
+        250
+      ]
+    },
+    {
+      "id": "LO05",
+      "objective": "Describe simple and resumable uploads and the three primary APIs.",
+      "source_pages": [
+        248,
+        249
+      ]
+    },
+    {
+      "id": "LO06",
+      "objective": "Explain how HTTPS/SSL protects client-server transfer.",
+      "source_pages": [
+        249
+      ]
+    },
+    {
+      "id": "LO07",
+      "objective": "Explain the transition from local storage to sharded/object storage.",
+      "source_pages": [
+        249,
+        250
+      ]
+    },
+    {
+      "id": "LO08",
+      "objective": "Explain same-region/cross-region replication and why it improves durability/availability.",
+      "source_pages": [
+        250
+      ]
+    },
+    {
+      "id": "LO09",
+      "objective": "Explain how the load balancer, web servers, metadata DB, and file storage are decoupled.",
+      "source_pages": [
+        250,
+        251
+      ]
+    },
+    {
+      "id": "LO10",
+      "objective": "Explain the chapter's sync-conflict resolution strategy.",
+      "source_pages": [
+        251,
+        252
+      ]
+    },
+    {
+      "id": "LO11",
+      "objective": "Describe every component in the high-level distributed design.",
+      "source_pages": [
+        252,
+        253,
+        254
+      ]
+    },
+    {
+      "id": "LO12",
+      "objective": "Explain block-level storage and reconstructing a file from ordered blocks.",
+      "source_pages": [
+        253
+      ]
+    },
+    {
+      "id": "LO13",
+      "objective": "Explain delta sync and compression as bandwidth optimizations.",
+      "source_pages": [
+        255,
+        256
+      ]
+    },
+    {
+      "id": "LO14",
+      "objective": "Explain the block-server pipeline: split, compress, encrypt, upload.",
+      "source_pages": [
+        255
+      ]
+    },
+    {
+      "id": "LO15",
+      "objective": "Explain why metadata requires strong consistency.",
+      "source_pages": [
+        256
+      ]
+    },
+    {
+      "id": "LO16",
+      "objective": "Explain cache invalidation requirements for strong consistency.",
+      "source_pages": [
+        256
+      ]
+    },
+    {
+      "id": "LO17",
+      "objective": "Explain why the chapter selects a relational metadata database.",
+      "source_pages": [
+        256
+      ]
+    },
+    {
+      "id": "LO18",
+      "objective": "Describe the simplified metadata schema: User, Device, Namespace, File, File_version, Block.",
+      "source_pages": [
+        256,
+        257
+      ]
+    },
+    {
+      "id": "LO19",
+      "objective": "Reconstruct the two parallel upload flows.",
+      "source_pages": [
+        257,
+        258
+      ]
+    },
+    {
+      "id": "LO20",
+      "objective": "Reconstruct the download/synchronization flow.",
+      "source_pages": [
+        258,
+        259
+      ]
+    },
+    {
+      "id": "LO21",
+      "objective": "Compare long polling and WebSocket for notification delivery.",
+      "source_pages": [
+        259,
+        260
+      ]
+    },
+    {
+      "id": "LO22",
+      "objective": "Explain why long polling is selected.",
+      "source_pages": [
+        259,
+        260
+      ]
+    },
+    {
+      "id": "LO23",
+      "objective": "Explain block deduplication, revision retention, and cold storage.",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "LO24",
+      "objective": "Explain failure recovery for load balancer, block server, storage, API, cache, DB, notification, and queues.",
+      "source_pages": [
+        260,
+        261
+      ]
+    },
+    {
+      "id": "LO25",
+      "objective": "Discuss the direct-client-upload alternative and its tradeoffs.",
+      "source_pages": [
+        262
+      ]
+    },
+    {
+      "id": "LO26",
+      "objective": "Explain the optional evolution toward a separate presence service.",
+      "source_pages": [
+        262
+      ]
+    }
+  ],
+  "requirements_and_scope": {
+    "important_features": [
+      "Upload files",
+      "Download files",
+      "Sync files across multiple devices",
+      "See file revisions",
+      "Share files",
+      "Notify users when a file is edited, deleted, or shared"
+    ],
+    "clients": [
+      "Mobile app",
+      "Web app"
+    ],
+    "file_types": "Any file type",
+    "storage_encryption": true,
+    "maximum_file_size": "10 GB",
+    "daily_active_users": 10000000,
+    "out_of_scope": [
+      "Google Docs-style real-time collaborative document editing"
+    ],
+    "source_pages": [
+      246
+    ]
+  },
+  "non_functional_requirements": [
+    {
+      "requirement": "Reliability",
+      "details": "Data loss is unacceptable.",
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "requirement": "Fast sync speed",
+      "details": "Slow synchronization can cause users to abandon the product.",
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "requirement": "Bandwidth efficiency",
+      "details": "Avoid unnecessary network use, especially for mobile users.",
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "requirement": "Scalability",
+      "details": "Handle high traffic volume.",
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "requirement": "High availability",
+      "details": "Remain usable despite slow/offline servers or network errors.",
+      "source_pages": [
+        246
+      ]
+    }
+  ],
+  "back_of_envelope_estimation": {
+    "signed_up_users": 50000000,
+    "daily_active_users": 10000000,
+    "free_space_per_user": "10 GB",
+    "uploads_per_user_per_day": 2,
+    "average_file_size": "500 KB",
+    "read_write_ratio": "1:1",
+    "allocated_space": {
+      "formula": "50 million * 10 GB",
+      "chapter_result": "500 PB"
+    },
+    "upload_qps": {
+      "formula": "10 million * 2 / 24 / 3600",
+      "chapter_result": "~240 QPS"
+    },
+    "peak_upload_qps": {
+      "formula": "2 * average QPS",
+      "chapter_result": "480 QPS"
+    },
+    "source_pages": [
+      246,
+      247
+    ]
+  },
+  "single_server_design": {
+    "components": [
+      "Web server for upload/download",
+      "Database for user/login/file metadata",
+      "1 TB local storage system"
+    ],
+    "example_stack": [
+      "Apache web server",
+      "MySQL",
+      "drive/ root directory"
+    ],
+    "namespace_model": "Each user has a namespace directory containing uploaded files. A file/folder can be uniquely identified by combining the namespace with its relative path.",
+    "source_pages": [
+      248
+    ]
+  },
+  "apis": {
+    "upload": {
+      "types": {
+        "simple_upload": "Use for small files.",
+        "resumable_upload": "Use for large files or when network interruption is likely."
+      },
+      "example_endpoint": "/files/upload?uploadType=resumable",
+      "parameters": [
+        "uploadType=resumable",
+        "data"
+      ],
+      "resumable_steps": [
+        "Send initial request to retrieve a resumable URL.",
+        "Upload data and monitor upload state.",
+        "If interrupted, resume the upload."
+      ],
+      "source_pages": [
+        248,
+        249
+      ]
+    },
+    "download": {
+      "example_endpoint": "/files/download",
+      "parameter": "path",
+      "example_path": "/recipes/soup/best_soup.txt",
+      "source_pages": [
+        249
+      ]
+    },
+    "list_revisions": {
+      "example_endpoint": "/files/list_revisions",
+      "parameters": [
+        "path",
+        "limit"
+      ],
+      "source_pages": [
+        249
+      ]
+    },
+    "security": {
+      "authentication_required": true,
+      "transport": "HTTPS",
+      "note": "SSL protects data transfer between client and backend servers.",
+      "source_pages": [
+        249
+      ]
+    }
+  },
+  "evolution_from_single_server": {
+    "first_problem": "Local storage fills up as more files are uploaded.",
+    "first_scaling_response": "Shard storage across multiple servers, e.g. by user_id.",
+    "durability_concern": "A storage-server outage can cause data loss/unavailability.",
+    "cloud_storage_choice": "Amazon S3",
+    "s3_capabilities_highlighted": [
+      "Scalability",
+      "Data availability",
+      "Security",
+      "Performance",
+      "Same-region replication",
+      "Cross-region replication"
+    ],
+    "replication_goal": "Store redundant files in multiple regions to guard against data loss and ensure availability.",
+    "source_pages": [
+      249,
+      250
+    ]
+  },
+  "distributed_improvements": [
+    {
+      "component": "Load balancer",
+      "improvement": "Evenly distribute traffic and reroute traffic if a web server fails.",
+      "source_pages": [
+        250,
+        251
+      ]
+    },
+    {
+      "component": "Web servers",
+      "improvement": "Add/remove servers easily based on traffic load.",
+      "source_pages": [
+        251
+      ]
+    },
+    {
+      "component": "Metadata database",
+      "improvement": "Move off the web server, replicate and shard to eliminate the single point of failure and improve scale.",
+      "source_pages": [
+        251
+      ]
+    },
+    {
+      "component": "File storage",
+      "improvement": "Use S3 and replicate files in two separate geographic regions.",
+      "source_pages": [
+        251
+      ]
+    }
+  ],
+  "sync_conflicts": {
+    "when_conflict_occurs": "Two users modify the same file or folder at the same time.",
+    "resolution_rule": "The first version processed wins; the later version receives a conflict.",
+    "user_experience": "Present both the user's local copy and the latest server version. The user can merge the files or override one version with the other.",
+    "source_pages": [
+      251,
+      252
+    ]
+  },
+  "high_level_design_components": [
+    {
+      "component": "User",
+      "role": "Uses the product from a browser or mobile application.",
+      "source_pages": [
+        253
+      ]
+    },
+    {
+      "component": "Block servers",
+      "role": "Upload file blocks to cloud storage. Split files into blocks; each block has a unique hash and is an independent object. Reconstruct files by joining blocks in order.",
+      "reference_block_size": "Dropbox maximum block size: 4 MB",
+      "source_pages": [
+        253
+      ]
+    },
+    {
+      "component": "Cloud storage",
+      "role": "Stores smaller file blocks.",
+      "source_pages": [
+        253
+      ]
+    },
+    {
+      "component": "Cold storage",
+      "role": "Stores inactive data that has not been accessed for a long time.",
+      "source_pages": [
+        253
+      ]
+    },
+    {
+      "component": "Load balancer",
+      "role": "Evenly distributes requests among API servers.",
+      "source_pages": [
+        253
+      ]
+    },
+    {
+      "component": "API servers",
+      "role": "Handle nearly everything except the upload flow: authentication, profiles, metadata updates, etc.",
+      "source_pages": [
+        253
+      ]
+    },
+    {
+      "component": "Metadata database",
+      "role": "Stores user, file, block, version, and related metadata; actual file contents stay in cloud storage.",
+      "source_pages": [
+        253
+      ]
+    },
+    {
+      "component": "Metadata cache",
+      "role": "Caches some metadata for fast retrieval.",
+      "source_pages": [
+        253
+      ]
+    },
+    {
+      "component": "Notification service",
+      "role": "Publisher/subscriber service that notifies clients when files are added, edited, or removed elsewhere so clients can pull the latest changes.",
+      "source_pages": [
+        253
+      ]
+    },
+    {
+      "component": "Offline backup queue",
+      "role": "Stores change information for offline clients until they reconnect.",
+      "source_pages": [
+        253,
+        254
+      ]
+    }
+  ],
+  "block_server_design": {
+    "problem": "Sending an entire large file after every edit consumes excessive bandwidth.",
+    "optimizations": [
+      {
+        "name": "Delta sync",
+        "details": "Transfer only modified blocks rather than the whole file.",
+        "source_pages": [
+          255
+        ]
+      },
+      {
+        "name": "Compression",
+        "details": "Compress blocks before upload. Compression algorithm depends on file type; gzip and bzip2 are examples for text files.",
+        "source_pages": [
+          255
+        ]
+      }
+    ],
+    "processing_pipeline": [
+      "Split file into blocks.",
+      "Compress each block.",
+      "Encrypt each block.",
+      "Upload blocks to cloud storage."
+    ],
+    "modified_file_behavior": "Only modified blocks are transferred.",
+    "benefit": "Reduces network traffic.",
+    "source_pages": [
+      255,
+      256
+    ]
+  },
+  "consistency_model": {
+    "requirement": "Strong consistency by default.",
+    "reason": "It is unacceptable for different clients to see different versions of a file at the same time.",
+    "layers_requiring_consistency": [
+      "Metadata cache",
+      "Metadata database"
+    ],
+    "cache_requirements": [
+      "Keep cache replicas consistent with the master.",
+      "Invalidate caches on database writes."
+    ],
+    "database_choice": "Relational database",
+    "why_relational": "ACID is natively supported.",
+    "nosql_note": "NoSQL systems do not provide ACID by default in the chapter's framing, so synchronization logic would need to add the required guarantees programmatically.",
+    "source_pages": [
+      256
+    ]
+  },
+  "metadata_schema": [
+    {
+      "table": "User",
+      "purpose": "Basic information such as username, email, and profile photo.",
+      "source_pages": [
+        257
+      ]
+    },
+    {
+      "table": "Device",
+      "purpose": "Device information; push_id supports mobile push notifications. One user may have multiple devices.",
+      "source_pages": [
+        257
+      ]
+    },
+    {
+      "table": "Namespace",
+      "purpose": "Root directory of a user.",
+      "source_pages": [
+        257
+      ]
+    },
+    {
+      "table": "File",
+      "purpose": "Everything related to the latest file state.",
+      "source_pages": [
+        257
+      ]
+    },
+    {
+      "table": "File_version",
+      "purpose": "File revision history. Existing rows are read-only to preserve integrity.",
+      "source_pages": [
+        257
+      ]
+    },
+    {
+      "table": "Block",
+      "purpose": "File-block metadata. Any file version can be reconstructed by joining blocks in correct order.",
+      "source_pages": [
+        257
+      ]
+    }
+  ],
+  "upload_flow": {
+    "parallel_requests": [
+      "Add file metadata",
+      "Upload file content to cloud storage"
+    ],
+    "metadata_branch": [
+      "Client sends request to add new-file metadata.",
+      "Store metadata in Metadata DB and mark upload status as pending.",
+      "Notify Notification Service that a new file is being added.",
+      "Notification Service informs relevant clients that a file is being uploaded."
+    ],
+    "content_branch": [
+      "Client uploads file content to Block Servers.",
+      "Block Servers split, compress, encrypt, and upload blocks to cloud storage.",
+      "Cloud storage triggers an upload-completion callback to API servers.",
+      "API servers change file status to uploaded in Metadata DB.",
+      "Notify Notification Service that file status is uploaded.",
+      "Notification Service informs relevant clients that the file is fully uploaded."
+    ],
+    "edit_flow_note": "Editing a file follows a similar flow.",
+    "source_pages": [
+      257,
+      258
+    ]
+  },
+  "download_flow": {
+    "trigger": "A file is added or edited elsewhere.",
+    "online_client": "Notification Service informs the online client that changes exist.",
+    "offline_client": "Change data is saved and the client pulls latest changes when it reconnects.",
+    "steps": [
+      "Notification Service tells client that a file changed.",
+      "Client requests metadata.",
+      "API servers fetch metadata from Metadata DB.",
+      "Metadata returns through API servers to client.",
+      "Client requests blocks from Block Servers.",
+      "Block Servers fetch blocks from cloud storage.",
+      "Cloud storage returns blocks to Block Servers.",
+      "Client downloads new blocks and reconstructs the file."
+    ],
+    "source_pages": [
+      258,
+      259
+    ]
+  },
+  "notification_service": {
+    "purpose": "Inform other clients about file mutations so they can pull latest changes and reduce conflicts.",
+    "options_considered": [
+      "Long polling",
+      "WebSocket"
+    ],
+    "selected": "Long polling",
+    "reasons": [
+      "Notification communication is not bidirectional; server sends change information to client.",
+      "Notifications are infrequent and do not arrive in large bursts.",
+      "WebSocket is more suitable for real-time bidirectional communication such as chat."
+    ],
+    "long_poll_behavior": "Each client keeps a long-poll connection open. When a file change is detected, the connection closes, the client fetches latest metadata/changes, then immediately opens a new long-poll request after receiving a response or reaching timeout.",
+    "source_pages": [
+      259,
+      260
+    ]
+  },
+  "storage_space_optimization": {
+    "why_needed": "Revision history and replication across data centers create many copies and can fill storage rapidly.",
+    "techniques": [
+      {
+        "name": "Block-level deduplication",
+        "details": "Remove duplicate blocks at the account level; equal hashes indicate identical blocks.",
+        "source_pages": [
+          260
+        ]
+      },
+      {
+        "name": "Limit number of file versions",
+        "details": "When the revision limit is reached, replace the oldest version with the newest.",
+        "source_pages": [
+          260
+        ]
+      },
+      {
+        "name": "Keep valuable versions only",
+        "details": "For frequently edited files, retain fewer revisions and give more weight to recent versions.",
+        "source_pages": [
+          260
+        ]
+      },
+      {
+        "name": "Cold storage",
+        "details": "Move data inactive for months or years to cheaper cold storage such as Amazon S3 Glacier.",
+        "source_pages": [
+          260
+        ]
+      }
+    ]
+  },
+  "failure_handling": [
+    {
+      "failure": "Load balancer failure",
+      "recovery": "Secondary load balancer becomes active. Load balancers monitor each other with heartbeat signals.",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "failure": "Block server failure",
+      "recovery": "Other block servers pick up unfinished or pending jobs.",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "failure": "Cloud storage failure",
+      "recovery": "Fetch files from replicated copies in other regions.",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "failure": "API server failure",
+      "recovery": "Load balancer redirects traffic to another stateless API server.",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "failure": "Metadata cache failure",
+      "recovery": "Read from other replicated cache nodes and bring up a replacement node.",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "failure": "Metadata DB master failure",
+      "recovery": "Promote a slave to become the new master and add a new slave.",
+      "source_pages": [
+        260,
+        261
+      ]
+    },
+    {
+      "failure": "Metadata DB slave failure",
+      "recovery": "Use another slave for reads and bring up a replacement DB server.",
+      "source_pages": [
+        260,
+        261
+      ]
+    },
+    {
+      "failure": "Notification server failure",
+      "recovery": "Clients lose long-poll connections and reconnect to another notification server. Reconnecting a very large number of clients can be slow.",
+      "source_pages": [
+        261
+      ]
+    },
+    {
+      "failure": "Offline backup queue failure",
+      "recovery": "Queues are replicated; consumers may re-subscribe to a backup queue.",
+      "source_pages": [
+        261
+      ]
+    }
+  ],
+  "wrap_up_tradeoffs": {
+    "design_summary": "The design combines strong consistency, low network bandwidth, fast synchronization, metadata management, file sync, and long-poll notifications.",
+    "direct_client_to_cloud_alternative": {
+      "advantage": "Faster upload because the file is transferred only once, directly from client to cloud storage.",
+      "drawbacks": [
+        "Chunking, compression, and encryption logic must be implemented separately on iOS, Android, and web.",
+        "Duplicated client-side logic is error-prone and requires substantial engineering effort.",
+        "Client devices are easier to manipulate, so client-side encryption logic is not ideal."
+      ],
+      "chapter_design_advantage": "Centralized block servers keep chunking, compression, and encryption logic in one controlled place."
+    },
+    "possible_evolution": "Move online/offline logic into a separate presence service so other services can reuse it.",
+    "source_pages": [
+      262
+    ]
+  },
+  "key_concepts": [
+    {
+      "term": "Namespace",
+      "definition": "A user's root directory; combined with relative path to uniquely identify files/folders.",
+      "source_pages": [
+        248,
+        257
+      ]
+    },
+    {
+      "term": "Resumable Upload",
+      "definition": "Upload method that can resume after interruption instead of restarting the entire transfer.",
+      "source_pages": [
+        248,
+        249
+      ]
+    },
+    {
+      "term": "Block Server",
+      "definition": "Service that splits, compresses, encrypts, and uploads file blocks.",
+      "source_pages": [
+        253,
+        255
+      ]
+    },
+    {
+      "term": "Block Hash",
+      "definition": "Unique hash associated with a block; also used to detect identical blocks for deduplication.",
+      "source_pages": [
+        253,
+        260
+      ]
+    },
+    {
+      "term": "Delta Sync",
+      "definition": "Synchronize only modified blocks instead of transferring the entire file.",
+      "source_pages": [
+        255
+      ]
+    },
+    {
+      "term": "Strong Consistency",
+      "definition": "All clients should observe the same file/metadata state at the same time.",
+      "source_pages": [
+        256
+      ]
+    },
+    {
+      "term": "Cache Invalidation",
+      "definition": "Invalidate metadata cache entries when the database is written so cache and DB stay aligned.",
+      "source_pages": [
+        256
+      ]
+    },
+    {
+      "term": "File_version",
+      "definition": "Read-only revision-history rows used to preserve file history integrity.",
+      "source_pages": [
+        257
+      ]
+    },
+    {
+      "term": "Notification Service",
+      "definition": "Pub/sub service that informs clients of file changes so they can pull updates.",
+      "source_pages": [
+        253,
+        259
+      ]
+    },
+    {
+      "term": "Offline Backup Queue",
+      "definition": "Stores update information for clients that are offline.",
+      "source_pages": [
+        253,
+        254
+      ]
+    },
+    {
+      "term": "Long Polling",
+      "definition": "Client holds a request open until change/timeout, then reconnects after fetching updates.",
+      "source_pages": [
+        259,
+        260
+      ]
+    },
+    {
+      "term": "Deduplication",
+      "definition": "Save storage by eliminating identical blocks with the same hash.",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "term": "Cold Storage",
+      "definition": "Low-cost storage for data inactive for months or years.",
+      "source_pages": [
+        253,
+        260
+      ]
+    },
+    {
+      "term": "Presence Service",
+      "definition": "Optional separate service for reusable online/offline state management.",
+      "source_pages": [
+        262
+      ]
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "FC001",
+      "front": "What is Google Drive in the chapter?",
+      "back": "A cloud file storage and synchronization service.",
+      "source_pages": [
+        244
+      ]
+    },
+    {
+      "id": "FC002",
+      "front": "What client platforms are in scope?",
+      "back": "Mobile and web.",
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "FC003",
+      "front": "What file types are supported?",
+      "back": "Any file type.",
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "FC004",
+      "front": "Must stored files be encrypted?",
+      "back": "Yes.",
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "FC005",
+      "front": "What is the maximum file size?",
+      "back": "10 GB.",
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "FC006",
+      "front": "What DAU is assumed?",
+      "back": "10 million.",
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "FC007",
+      "front": "What are the core file operations?",
+      "back": "Upload, download, sync, revisions, sharing, notifications.",
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "FC008",
+      "front": "What collaborative feature is out of scope?",
+      "back": "Real-time Google Docs-style collaborative editing.",
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "FC009",
+      "front": "Why is reliability critical?",
+      "back": "Data loss is unacceptable.",
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "FC010",
+      "front": "Why does sync speed matter?",
+      "back": "Slow sync frustrates users and can cause abandonment.",
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "FC011",
+      "front": "Why is bandwidth usage important?",
+      "back": "Unnecessary bandwidth is costly/annoying, especially on mobile data.",
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "FC012",
+      "front": "What signed-up user count is assumed?",
+      "back": "50 million.",
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "FC013",
+      "front": "How much free space per user is assumed?",
+      "back": "10 GB.",
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "FC014",
+      "front": "How many files per day does a user upload in the estimate?",
+      "back": "2.",
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "FC015",
+      "front": "What is the average file size?",
+      "back": "500 KB.",
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "FC016",
+      "front": "What read/write ratio is assumed?",
+      "back": "1:1.",
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "FC017",
+      "front": "What total allocated storage is estimated?",
+      "back": "500 PB.",
+      "source_pages": [
+        247
+      ]
+    },
+    {
+      "id": "FC018",
+      "front": "What average upload QPS is estimated?",
+      "back": "About 240 QPS.",
+      "source_pages": [
+        247
+      ]
+    },
+    {
+      "id": "FC019",
+      "front": "What peak upload QPS is estimated?",
+      "back": "480 QPS.",
+      "source_pages": [
+        247
+      ]
+    },
+    {
+      "id": "FC020",
+      "front": "What does the single-server starting design contain?",
+      "back": "Web server, metadata DB, and 1 TB file storage.",
+      "source_pages": [
+        248
+      ]
+    },
+    {
+      "id": "FC021",
+      "front": "What does a namespace represent?",
+      "back": "A user's root directory.",
+      "source_pages": [
+        248,
+        257
+      ]
+    },
+    {
+      "id": "FC022",
+      "front": "How is a file uniquely identified in the simple design?",
+      "back": "Namespace plus relative path.",
+      "source_pages": [
+        248
+      ]
+    },
+    {
+      "id": "FC023",
+      "front": "What three APIs are primarily needed?",
+      "back": "Upload, download, and list revisions.",
+      "source_pages": [
+        248
+      ]
+    },
+    {
+      "id": "FC024",
+      "front": "When is simple upload used?",
+      "back": "For small files.",
+      "source_pages": [
+        248
+      ]
+    },
+    {
+      "id": "FC025",
+      "front": "When is resumable upload used?",
+      "back": "For large files or likely network interruption.",
+      "source_pages": [
+        248
+      ]
+    },
+    {
+      "id": "FC026",
+      "front": "What are the three resumable upload steps?",
+      "back": "Get resumable URL, upload/monitor, resume if interrupted.",
+      "source_pages": [
+        249
+      ]
+    },
+    {
+      "id": "FC027",
+      "front": "What parameter identifies a download target?",
+      "back": "path.",
+      "source_pages": [
+        249
+      ]
+    },
+    {
+      "id": "FC028",
+      "front": "What list-revisions parameters are shown?",
+      "back": "path and limit.",
+      "source_pages": [
+        249
+      ]
+    },
+    {
+      "id": "FC029",
+      "front": "What transport security is used?",
+      "back": "HTTPS/SSL.",
+      "source_pages": [
+        249
+      ]
+    },
+    {
+      "id": "FC030",
+      "front": "What problem forces leaving the single-server storage design?",
+      "back": "Storage fills up.",
+      "source_pages": [
+        249
+      ]
+    },
+    {
+      "id": "FC031",
+      "front": "What first scaling technique is suggested for storage?",
+      "back": "Shard data across storage servers, e.g. by user_id.",
+      "source_pages": [
+        249
+      ]
+    },
+    {
+      "id": "FC032",
+      "front": "Why move to S3?",
+      "back": "For scalable, durable, highly available object storage.",
+      "source_pages": [
+        250
+      ]
+    },
+    {
+      "id": "FC033",
+      "front": "What replication types does S3 support in the chapter?",
+      "back": "Same-region and cross-region replication.",
+      "source_pages": [
+        250
+      ]
+    },
+    {
+      "id": "FC034",
+      "front": "Why replicate files across regions?",
+      "back": "Guard against data loss and improve availability.",
+      "source_pages": [
+        250
+      ]
+    },
+    {
+      "id": "FC035",
+      "front": "What is an S3 bucket compared to?",
+      "back": "A folder in a file system.",
+      "source_pages": [
+        250
+      ]
+    },
+    {
+      "id": "FC036",
+      "front": "What does the load balancer do?",
+      "back": "Distributes traffic and reroutes when a web server fails.",
+      "source_pages": [
+        250,
+        251
+      ]
+    },
+    {
+      "id": "FC037",
+      "front": "How do web servers scale after adding a load balancer?",
+      "back": "They can be added or removed based on traffic.",
+      "source_pages": [
+        251
+      ]
+    },
+    {
+      "id": "FC038",
+      "front": "How is Metadata DB improved?",
+      "back": "Move it off the web server; add replication and sharding.",
+      "source_pages": [
+        251
+      ]
+    },
+    {
+      "id": "FC039",
+      "front": "How many geographic regions are used for file replication in the improved design?",
+      "back": "Two separate regions.",
+      "source_pages": [
+        251
+      ]
+    },
+    {
+      "id": "FC040",
+      "front": "When does a sync conflict occur?",
+      "back": "When two users modify the same file/folder at the same time.",
+      "source_pages": [
+        251
+      ]
+    },
+    {
+      "id": "FC041",
+      "front": "What conflict rule is used?",
+      "back": "First processed version wins; later version conflicts.",
+      "source_pages": [
+        251
+      ]
+    },
+    {
+      "id": "FC042",
+      "front": "What does the conflicted user see?",
+      "back": "Local copy and latest server copy.",
+      "source_pages": [
+        252
+      ]
+    },
+    {
+      "id": "FC043",
+      "front": "What can the conflicted user do?",
+      "back": "Merge copies or override one with the other.",
+      "source_pages": [
+        252
+      ]
+    },
+    {
+      "id": "FC044",
+      "front": "What do block servers do at high level?",
+      "back": "Upload blocks to cloud storage and manage block-level processing.",
+      "source_pages": [
+        253
+      ]
+    },
+    {
+      "id": "FC045",
+      "front": "What block size does Dropbox use as a reference?",
+      "back": "Maximum 4 MB.",
+      "source_pages": [
+        253
+      ]
+    },
+    {
+      "id": "FC046",
+      "front": "How is a file reconstructed from blocks?",
+      "back": "Join blocks in a specific order.",
+      "source_pages": [
+        253
+      ]
+    },
+    {
+      "id": "FC047",
+      "front": "What is cold storage?",
+      "back": "Storage for data not accessed for a long time.",
+      "source_pages": [
+        253
+      ]
+    },
+    {
+      "id": "FC048",
+      "front": "What do API servers handle?",
+      "back": "Almost everything except the upload flow.",
+      "source_pages": [
+        253
+      ]
+    },
+    {
+      "id": "FC049",
+      "front": "What does Metadata DB contain?",
+      "back": "User/file/block/version metadata, not file content.",
+      "source_pages": [
+        253
+      ]
+    },
+    {
+      "id": "FC050",
+      "front": "What does Notification Service do?",
+      "back": "Notifies clients of file changes so they can pull latest changes.",
+      "source_pages": [
+        253
+      ]
+    },
+    {
+      "id": "FC051",
+      "front": "What does Offline Backup Queue do?",
+      "back": "Stores change info for offline clients.",
+      "source_pages": [
+        253,
+        254
+      ]
+    },
+    {
+      "id": "FC052",
+      "front": "What is delta sync?",
+      "back": "Upload/sync only modified blocks.",
+      "source_pages": [
+        255
+      ]
+    },
+    {
+      "id": "FC053",
+      "front": "Why compress blocks?",
+      "back": "Reduce transferred data size.",
+      "source_pages": [
+        255
+      ]
+    },
+    {
+      "id": "FC054",
+      "front": "Which text compression algorithms are named?",
+      "back": "gzip and bzip2.",
+      "source_pages": [
+        255
+      ]
+    },
+    {
+      "id": "FC055",
+      "front": "What does a block server do to a new file?",
+      "back": "Split, compress, encrypt, then upload blocks.",
+      "source_pages": [
+        255
+      ]
+    },
+    {
+      "id": "FC056",
+      "front": "What is the primary benefit of delta sync and compression?",
+      "back": "Save network traffic.",
+      "source_pages": [
+        255,
+        256
+      ]
+    },
+    {
+      "id": "FC057",
+      "front": "What consistency model is required?",
+      "back": "Strong consistency.",
+      "source_pages": [
+        256
+      ]
+    },
+    {
+      "id": "FC058",
+      "front": "Why is strong consistency required?",
+      "back": "Different clients should not see different file states at the same time.",
+      "source_pages": [
+        256
+      ]
+    },
+    {
+      "id": "FC059",
+      "front": "What must happen to caches on DB writes?",
+      "back": "Invalidate relevant caches.",
+      "source_pages": [
+        256
+      ]
+    },
+    {
+      "id": "FC060",
+      "front": "Why choose a relational metadata DB?",
+      "back": "ACID is natively supported.",
+      "source_pages": [
+        256
+      ]
+    },
+    {
+      "id": "FC061",
+      "front": "What does the User table store?",
+      "back": "Username, email, profile photo, etc.",
+      "source_pages": [
+        257
+      ]
+    },
+    {
+      "id": "FC062",
+      "front": "What does the Device table store?",
+      "back": "Device information and push_id.",
+      "source_pages": [
+        257
+      ]
+    },
+    {
+      "id": "FC063",
+      "front": "Can one user have multiple devices?",
+      "back": "Yes.",
+      "source_pages": [
+        257
+      ]
+    },
+    {
+      "id": "FC064",
+      "front": "What does the File table represent?",
+      "back": "The latest file state.",
+      "source_pages": [
+        257
+      ]
+    },
+    {
+      "id": "FC065",
+      "front": "What does File_version store?",
+      "back": "Revision history; existing rows are read-only.",
+      "source_pages": [
+        257
+      ]
+    },
+    {
+      "id": "FC066",
+      "front": "What does Block store?",
+      "back": "Block metadata for reconstructing file versions.",
+      "source_pages": [
+        257
+      ]
+    },
+    {
+      "id": "FC067",
+      "front": "What are the two parallel upload requests?",
+      "back": "Add file metadata and upload file content.",
+      "source_pages": [
+        258
+      ]
+    },
+    {
+      "id": "FC068",
+      "front": "What initial status is stored for a new file?",
+      "back": "pending.",
+      "source_pages": [
+        258
+      ]
+    },
+    {
+      "id": "FC069",
+      "front": "What does cloud storage trigger after upload completes?",
+      "back": "An upload-completion callback to API servers.",
+      "source_pages": [
+        258
+      ]
+    },
+    {
+      "id": "FC070",
+      "front": "What final status is written after completion?",
+      "back": "uploaded.",
+      "source_pages": [
+        258
+      ]
+    },
+    {
+      "id": "FC071",
+      "front": "How does an online client learn about another client's file change?",
+      "back": "Notification Service informs it.",
+      "source_pages": [
+        258,
+        259
+      ]
+    },
+    {
+      "id": "FC072",
+      "front": "How does an offline client catch up?",
+      "back": "Change info is retained; it pulls latest changes after reconnecting.",
+      "source_pages": [
+        259
+      ]
+    },
+    {
+      "id": "FC073",
+      "front": "What does the client request before downloading blocks?",
+      "back": "Metadata.",
+      "source_pages": [
+        259
+      ]
+    },
+    {
+      "id": "FC074",
+      "front": "Where do Block Servers fetch blocks from during download?",
+      "back": "Cloud storage.",
+      "source_pages": [
+        259
+      ]
+    },
+    {
+      "id": "FC075",
+      "front": "What notification mechanisms are considered?",
+      "back": "Long polling and WebSocket.",
+      "source_pages": [
+        259
+      ]
+    },
+    {
+      "id": "FC076",
+      "front": "Which notification mechanism is selected?",
+      "back": "Long polling.",
+      "source_pages": [
+        259,
+        260
+      ]
+    },
+    {
+      "id": "FC077",
+      "front": "Why not WebSocket here?",
+      "back": "Notifications are infrequent and mostly one-way, not real-time bidirectional chat-like traffic.",
+      "source_pages": [
+        259,
+        260
+      ]
+    },
+    {
+      "id": "FC078",
+      "front": "What happens after long polling returns or times out?",
+      "back": "Client immediately opens a new long-poll request.",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "FC079",
+      "front": "What does block-level deduplication use to detect duplicates?",
+      "back": "Matching hash values.",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "FC080",
+      "front": "What are the three storage-saving categories?",
+      "back": "Deduplication, smarter version retention, and cold storage.",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "FC081",
+      "front": "What happens when a revision-count limit is reached?",
+      "back": "Oldest version is replaced with the new version.",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "FC082",
+      "front": "Which versions should get more weight?",
+      "back": "Recent versions.",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "FC083",
+      "front": "What cold-storage product is named?",
+      "back": "Amazon S3 Glacier.",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "FC084",
+      "front": "How do load balancers detect peer failure?",
+      "back": "Heartbeats.",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "FC085",
+      "front": "What happens if a block server fails?",
+      "back": "Other block servers pick up unfinished/pending jobs.",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "FC086",
+      "front": "What happens if one storage region fails?",
+      "back": "Fetch from replicated copies in another region.",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "FC087",
+      "front": "Why is API-server failure easy to handle?",
+      "back": "API servers are stateless.",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "FC088",
+      "front": "How is Metadata Cache failure handled?",
+      "back": "Use replicas and replace the failed node.",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "FC089",
+      "front": "How is DB master failure handled?",
+      "back": "Promote a slave and bring up a new slave.",
+      "source_pages": [
+        260,
+        261
+      ]
+    },
+    {
+      "id": "FC090",
+      "front": "What happens when Notification Service fails?",
+      "back": "Clients lose long-poll connections and reconnect elsewhere.",
+      "source_pages": [
+        261
+      ]
+    },
+    {
+      "id": "FC091",
+      "front": "Why is Notification Service recovery not instant?",
+      "back": "Reconnecting a huge number of long-poll clients is relatively slow.",
+      "source_pages": [
+        261
+      ]
+    },
+    {
+      "id": "FC092",
+      "front": "How is Offline Backup Queue failure handled?",
+      "back": "Use replicated queues and re-subscribe consumers to a backup queue.",
+      "source_pages": [
+        261
+      ]
+    },
+    {
+      "id": "FC093",
+      "front": "What is the advantage of direct client-to-cloud upload?",
+      "back": "File is transferred only once, so upload can be faster.",
+      "source_pages": [
+        262
+      ]
+    },
+    {
+      "id": "FC094",
+      "front": "What is one drawback of direct client-to-cloud upload?",
+      "back": "Chunking/compression/encryption logic must be duplicated across clients.",
+      "source_pages": [
+        262
+      ]
+    },
+    {
+      "id": "FC095",
+      "front": "Why is centralized block-server logic attractive?",
+      "back": "One controlled place implements chunking, compression, and encryption.",
+      "source_pages": [
+        262
+      ]
+    },
+    {
+      "id": "FC096",
+      "front": "What optional service evolution is suggested?",
+      "back": "Separate online/offline logic into a presence service.",
+      "source_pages": [
+        262
+      ]
+    }
+  ],
+  "multiple_choice_questions": [
+    {
+      "id": "MCQ001",
+      "difficulty": "medium",
+      "question": "What is the maximum supported file size?",
+      "choices": {
+        "A": "1 GB",
+        "B": "5 GB",
+        "C": "10 GB",
+        "D": "100 GB"
+      },
+      "answer": "C",
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "MCQ002",
+      "difficulty": "medium",
+      "question": "What DAU is assumed?",
+      "choices": {
+        "A": "1M",
+        "B": "10M",
+        "C": "50M",
+        "D": "100M"
+      },
+      "answer": "B",
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "MCQ003",
+      "difficulty": "medium",
+      "question": "Which feature is out of scope?",
+      "choices": {
+        "A": "File revisions",
+        "B": "File sharing",
+        "C": "Real-time Docs collaboration",
+        "D": "File download"
+      },
+      "answer": "C",
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "MCQ004",
+      "difficulty": "medium",
+      "question": "What is the read/write ratio?",
+      "choices": {
+        "A": "10:1",
+        "B": "1:10",
+        "C": "1:1",
+        "D": "100:1"
+      },
+      "answer": "C",
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "MCQ005",
+      "difficulty": "medium",
+      "question": "How much total storage is allocated in the estimate?",
+      "choices": {
+        "A": "50 PB",
+        "B": "500 PB",
+        "C": "5 EB",
+        "D": "500 TB"
+      },
+      "answer": "B",
+      "source_pages": [
+        247
+      ]
+    },
+    {
+      "id": "MCQ006",
+      "difficulty": "medium",
+      "question": "What is upload QPS?",
+      "choices": {
+        "A": "~24",
+        "B": "~240",
+        "C": "~2,400",
+        "D": "~24,000"
+      },
+      "answer": "B",
+      "source_pages": [
+        247
+      ]
+    },
+    {
+      "id": "MCQ007",
+      "difficulty": "medium",
+      "question": "What is peak upload QPS?",
+      "choices": {
+        "A": "240",
+        "B": "480",
+        "C": "960",
+        "D": "4,800"
+      },
+      "answer": "B",
+      "source_pages": [
+        247
+      ]
+    },
+    {
+      "id": "MCQ008",
+      "difficulty": "medium",
+      "question": "When should resumable upload be used?",
+      "choices": {
+        "A": "Small stable upload only",
+        "B": "Large/interruption-prone upload",
+        "C": "Metadata requests",
+        "D": "Revision reads"
+      },
+      "answer": "B",
+      "source_pages": [
+        248
+      ]
+    },
+    {
+      "id": "MCQ009",
+      "difficulty": "medium",
+      "question": "What is the first resumable-upload step?",
+      "choices": {
+        "A": "Delete old file",
+        "B": "Request resumable URL",
+        "C": "Fetch revisions",
+        "D": "Encrypt metadata"
+      },
+      "answer": "B",
+      "source_pages": [
+        249
+      ]
+    },
+    {
+      "id": "MCQ010",
+      "difficulty": "medium",
+      "question": "What transport protocol is required?",
+      "choices": {
+        "A": "HTTP only",
+        "B": "FTP",
+        "C": "HTTPS",
+        "D": "SMTP"
+      },
+      "answer": "C",
+      "source_pages": [
+        249
+      ]
+    },
+    {
+      "id": "MCQ011",
+      "difficulty": "medium",
+      "question": "What first scaling solution is proposed when local storage fills?",
+      "choices": {
+        "A": "Shard storage",
+        "B": "Add comments",
+        "C": "Use one bigger folder",
+        "D": "Disable upload"
+      },
+      "answer": "A",
+      "source_pages": [
+        249
+      ]
+    },
+    {
+      "id": "MCQ012",
+      "difficulty": "medium",
+      "question": "What object store is selected?",
+      "choices": {
+        "A": "S3",
+        "B": "HBase",
+        "C": "Cassandra",
+        "D": "Redis"
+      },
+      "answer": "A",
+      "source_pages": [
+        250
+      ]
+    },
+    {
+      "id": "MCQ013",
+      "difficulty": "medium",
+      "question": "Why replicate across regions?",
+      "choices": {
+        "A": "Reduce file names",
+        "B": "Improve durability/availability",
+        "C": "Avoid metadata",
+        "D": "Remove hashes"
+      },
+      "answer": "B",
+      "source_pages": [
+        250
+      ]
+    },
+    {
+      "id": "MCQ014",
+      "difficulty": "medium",
+      "question": "What does the load balancer do?",
+      "choices": {
+        "A": "Store files",
+        "B": "Distribute/reroute traffic",
+        "C": "Encrypt blocks",
+        "D": "Create versions"
+      },
+      "answer": "B",
+      "source_pages": [
+        250,
+        251
+      ]
+    },
+    {
+      "id": "MCQ015",
+      "difficulty": "medium",
+      "question": "How is Metadata DB scaled?",
+      "choices": {
+        "A": "Replication and sharding",
+        "B": "Client caching only",
+        "C": "One node only",
+        "D": "CDN"
+      },
+      "answer": "A",
+      "source_pages": [
+        251
+      ]
+    },
+    {
+      "id": "MCQ016",
+      "difficulty": "medium",
+      "question": "What happens in a sync conflict?",
+      "choices": {
+        "A": "Later version always wins",
+        "B": "First processed version wins",
+        "C": "Both silently merge",
+        "D": "Both deleted"
+      },
+      "answer": "B",
+      "source_pages": [
+        251
+      ]
+    },
+    {
+      "id": "MCQ017",
+      "difficulty": "medium",
+      "question": "What is shown to the conflicted user?",
+      "choices": {
+        "A": "Only server copy",
+        "B": "Only local copy",
+        "C": "Local and server copies",
+        "D": "No copies"
+      },
+      "answer": "C",
+      "source_pages": [
+        252
+      ]
+    },
+    {
+      "id": "MCQ018",
+      "difficulty": "medium",
+      "question": "What component splits files into blocks?",
+      "choices": {
+        "A": "Block servers",
+        "B": "Notification service",
+        "C": "Load balancer",
+        "D": "Metadata cache"
+      },
+      "answer": "A",
+      "source_pages": [
+        253
+      ]
+    },
+    {
+      "id": "MCQ019",
+      "difficulty": "medium",
+      "question": "What maximum block size is cited from Dropbox?",
+      "choices": {
+        "A": "1 MB",
+        "B": "4 MB",
+        "C": "16 MB",
+        "D": "64 MB"
+      },
+      "answer": "B",
+      "source_pages": [
+        253
+      ]
+    },
+    {
+      "id": "MCQ020",
+      "difficulty": "hard",
+      "question": "Where are actual file contents stored?",
+      "choices": {
+        "A": "Metadata DB",
+        "B": "Cloud storage",
+        "C": "Notification service",
+        "D": "Offline queue"
+      },
+      "answer": "B",
+      "source_pages": [
+        253
+      ]
+    },
+    {
+      "id": "MCQ021",
+      "difficulty": "hard",
+      "question": "What is cold storage for?",
+      "choices": {
+        "A": "Hot metadata",
+        "B": "Inactive data",
+        "C": "Only user profiles",
+        "D": "API sessions"
+      },
+      "answer": "B",
+      "source_pages": [
+        253
+      ]
+    },
+    {
+      "id": "MCQ022",
+      "difficulty": "hard",
+      "question": "What is delta sync?",
+      "choices": {
+        "A": "Upload entire file",
+        "B": "Upload only modified blocks",
+        "C": "Delete duplicate users",
+        "D": "Compress only metadata"
+      },
+      "answer": "B",
+      "source_pages": [
+        255
+      ]
+    },
+    {
+      "id": "MCQ023",
+      "difficulty": "hard",
+      "question": "Which compression algorithms are named for text?",
+      "choices": {
+        "A": "gzip and bzip2",
+        "B": "H.264 and HEVC",
+        "C": "AES and RSA",
+        "D": "LZ4 only"
+      },
+      "answer": "A",
+      "source_pages": [
+        255
+      ]
+    },
+    {
+      "id": "MCQ024",
+      "difficulty": "hard",
+      "question": "What processing order is used by Block Servers?",
+      "choices": {
+        "A": "Encrypt, delete, notify",
+        "B": "Split, compress, encrypt, upload",
+        "C": "Upload, split, decrypt, notify",
+        "D": "Cache, shard, notify, delete"
+      },
+      "answer": "B",
+      "source_pages": [
+        255
+      ]
+    },
+    {
+      "id": "MCQ025",
+      "difficulty": "hard",
+      "question": "What consistency model is required?",
+      "choices": {
+        "A": "Eventual only",
+        "B": "Strong",
+        "C": "Best effort",
+        "D": "None"
+      },
+      "answer": "B",
+      "source_pages": [
+        256
+      ]
+    },
+    {
+      "id": "MCQ026",
+      "difficulty": "hard",
+      "question": "What must happen on DB write to maintain cache consistency?",
+      "choices": {
+        "A": "Leave cache untouched",
+        "B": "Invalidate cache",
+        "C": "Delete DB",
+        "D": "Use CDN"
+      },
+      "answer": "B",
+      "source_pages": [
+        256
+      ]
+    },
+    {
+      "id": "MCQ027",
+      "difficulty": "hard",
+      "question": "Why is a relational DB selected?",
+      "choices": {
+        "A": "Native ACID support",
+        "B": "No schemas",
+        "C": "No transactions",
+        "D": "Only because it is cheaper"
+      },
+      "answer": "A",
+      "source_pages": [
+        256
+      ]
+    },
+    {
+      "id": "MCQ028",
+      "difficulty": "hard",
+      "question": "What does File_version store?",
+      "choices": {
+        "A": "Latest file only",
+        "B": "Revision history",
+        "C": "Device tokens",
+        "D": "User profile"
+      },
+      "answer": "B",
+      "source_pages": [
+        257
+      ]
+    },
+    {
+      "id": "MCQ029",
+      "difficulty": "hard",
+      "question": "Why are existing File_version rows read-only?",
+      "choices": {
+        "A": "Save bandwidth",
+        "B": "Preserve revision-history integrity",
+        "C": "Avoid encryption",
+        "D": "Enable long polling"
+      },
+      "answer": "B",
+      "source_pages": [
+        257
+      ]
+    },
+    {
+      "id": "MCQ030",
+      "difficulty": "hard",
+      "question": "Which upload status is written first?",
+      "choices": {
+        "A": "uploaded",
+        "B": "pending",
+        "C": "deleted",
+        "D": "failed"
+      },
+      "answer": "B",
+      "source_pages": [
+        258
+      ]
+    },
+    {
+      "id": "MCQ031",
+      "difficulty": "hard",
+      "question": "What triggers the completion callback?",
+      "choices": {
+        "A": "Metadata cache",
+        "B": "Cloud storage",
+        "C": "Client 2",
+        "D": "Load balancer"
+      },
+      "answer": "B",
+      "source_pages": [
+        258
+      ]
+    },
+    {
+      "id": "MCQ032",
+      "difficulty": "hard",
+      "question": "What final status is written after upload completes?",
+      "choices": {
+        "A": "pending",
+        "B": "uploaded",
+        "C": "archived",
+        "D": "offline"
+      },
+      "answer": "B",
+      "source_pages": [
+        258
+      ]
+    },
+    {
+      "id": "MCQ033",
+      "difficulty": "hard",
+      "question": "What does an online client use to learn about changes?",
+      "choices": {
+        "A": "Notification Service",
+        "B": "Cold storage",
+        "C": "Shard map",
+        "D": "Block hash only"
+      },
+      "answer": "A",
+      "source_pages": [
+        258,
+        259
+      ]
+    },
+    {
+      "id": "MCQ034",
+      "difficulty": "hard",
+      "question": "What does the client fetch first after notification?",
+      "choices": {
+        "A": "Metadata",
+        "B": "All blocks",
+        "C": "User profile",
+        "D": "Revision limit"
+      },
+      "answer": "A",
+      "source_pages": [
+        259
+      ]
+    },
+    {
+      "id": "MCQ035",
+      "difficulty": "hard",
+      "question": "What notification mechanisms are considered?",
+      "choices": {
+        "A": "Polling and UDP",
+        "B": "Long polling and WebSocket",
+        "C": "SMTP and FTP",
+        "D": "gRPC only"
+      },
+      "answer": "B",
+      "source_pages": [
+        259
+      ]
+    },
+    {
+      "id": "MCQ036",
+      "difficulty": "hard",
+      "question": "Which is chosen?",
+      "choices": {
+        "A": "WebSocket",
+        "B": "Long polling",
+        "C": "Short polling",
+        "D": "Email"
+      },
+      "answer": "B",
+      "source_pages": [
+        259,
+        260
+      ]
+    },
+    {
+      "id": "MCQ037",
+      "difficulty": "hard",
+      "question": "Why is long polling chosen?",
+      "choices": {
+        "A": "Notifications are one-way/infrequent",
+        "B": "Need constant bidirectional chat",
+        "C": "It stores files",
+        "D": "It encrypts blocks"
+      },
+      "answer": "A",
+      "source_pages": [
+        259,
+        260
+      ]
+    },
+    {
+      "id": "MCQ038",
+      "difficulty": "hard",
+      "question": "What identifies duplicate blocks?",
+      "choices": {
+        "A": "Same hash value",
+        "B": "Same filename only",
+        "C": "Same user only",
+        "D": "Same timestamp"
+      },
+      "answer": "A",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "MCQ039",
+      "difficulty": "hard",
+      "question": "What happens when revision limit is reached?",
+      "choices": {
+        "A": "Never remove versions",
+        "B": "Replace oldest with newest",
+        "C": "Delete newest",
+        "D": "Delete file"
+      },
+      "answer": "B",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "MCQ040",
+      "difficulty": "hard",
+      "question": "Where can old inactive data move?",
+      "choices": {
+        "A": "S3 Glacier",
+        "B": "Notification server",
+        "C": "Metadata cache",
+        "D": "API server"
+      },
+      "answer": "A",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "MCQ041",
+      "difficulty": "hard",
+      "question": "How do load balancers detect failures?",
+      "choices": {
+        "A": "Heartbeats",
+        "B": "File hashes",
+        "C": "WebSockets",
+        "D": "Revision IDs"
+      },
+      "answer": "A",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "MCQ042",
+      "difficulty": "hard",
+      "question": "What happens on Block Server failure?",
+      "choices": {
+        "A": "Drop job",
+        "B": "Other servers pick up pending jobs",
+        "C": "Delete file",
+        "D": "Stop system"
+      },
+      "answer": "B",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "MCQ043",
+      "difficulty": "hard",
+      "question": "What happens on API Server failure?",
+      "choices": {
+        "A": "Traffic redirects to another API server",
+        "B": "File is lost",
+        "C": "DB promotes cache",
+        "D": "Clients cannot recover"
+      },
+      "answer": "A",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "MCQ044",
+      "difficulty": "hard",
+      "question": "What happens on Metadata DB master failure?",
+      "choices": {
+        "A": "Promote slave",
+        "B": "Use CDN as DB",
+        "C": "Delete slave",
+        "D": "Ignore"
+      },
+      "answer": "A",
+      "source_pages": [
+        260,
+        261
+      ]
+    },
+    {
+      "id": "MCQ045",
+      "difficulty": "hard",
+      "question": "Why can Notification Service recovery be slow?",
+      "choices": {
+        "A": "Many long-poll clients must reconnect",
+        "B": "Blocks need recompression",
+        "C": "DB must reshard",
+        "D": "Files must be re-encrypted"
+      },
+      "answer": "A",
+      "source_pages": [
+        261
+      ]
+    },
+    {
+      "id": "MCQ046",
+      "difficulty": "hard",
+      "question": "What is direct-to-cloud upload's main advantage?",
+      "choices": {
+        "A": "One transfer to cloud storage",
+        "B": "No security logic",
+        "C": "No client code",
+        "D": "No metadata"
+      },
+      "answer": "A",
+      "source_pages": [
+        262
+      ]
+    },
+    {
+      "id": "MCQ047",
+      "difficulty": "hard",
+      "question": "What is a drawback of direct-to-cloud upload?",
+      "choices": {
+        "A": "Duplicate processing logic across platforms",
+        "B": "Fewer uploads",
+        "C": "No encryption needed",
+        "D": "No network use"
+      },
+      "answer": "A",
+      "source_pages": [
+        262
+      ]
+    },
+    {
+      "id": "MCQ048",
+      "difficulty": "hard",
+      "question": "What optional service is suggested?",
+      "choices": {
+        "A": "Presence service",
+        "B": "Search service",
+        "C": "Billing service",
+        "D": "Transcoding service"
+      },
+      "answer": "A",
+      "source_pages": [
+        262
+      ]
+    }
+  ],
+  "mix_and_match": [
+    {
+      "id": "MM01",
+      "title": "Component to Responsibility",
+      "left": {
+        "A": "Block server",
+        "B": "Metadata DB",
+        "C": "Notification service",
+        "D": "Offline backup queue",
+        "E": "Cold storage"
+      },
+      "right": {
+        "1": "Stores metadata only",
+        "2": "Split/compress/encrypt/upload blocks",
+        "3": "Notify clients of changes",
+        "4": "Retain update info for offline clients",
+        "5": "Store inactive data cheaply"
+      },
+      "answer_key": {
+        "A": "2",
+        "B": "1",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        253,
+        254,
+        255
+      ]
+    },
+    {
+      "id": "MM02",
+      "title": "Schema Table to Meaning",
+      "left": {
+        "A": "User",
+        "B": "Device",
+        "C": "Namespace",
+        "D": "File",
+        "E": "File_version",
+        "F": "Block"
+      },
+      "right": {
+        "1": "Latest file state",
+        "2": "Revision history",
+        "3": "User root directory",
+        "4": "Basic user info",
+        "5": "Device/push info",
+        "6": "Block metadata"
+      },
+      "answer_key": {
+        "A": "4",
+        "B": "5",
+        "C": "3",
+        "D": "1",
+        "E": "2",
+        "F": "6"
+      },
+      "source_pages": [
+        257
+      ]
+    },
+    {
+      "id": "MM03",
+      "title": "Optimization to Benefit",
+      "left": {
+        "A": "Delta sync",
+        "B": "Compression",
+        "C": "Deduplication",
+        "D": "Version limit",
+        "E": "Cold storage"
+      },
+      "right": {
+        "1": "Send only changed blocks",
+        "2": "Reduce transferred bytes",
+        "3": "Remove identical blocks",
+        "4": "Bound revision count",
+        "5": "Cheaper storage for inactive data"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        255,
+        260
+      ]
+    },
+    {
+      "id": "MM04",
+      "title": "Failure to Recovery",
+      "left": {
+        "A": "Block server",
+        "B": "API server",
+        "C": "Metadata DB master",
+        "D": "Metadata cache node",
+        "E": "Offline backup queue"
+      },
+      "right": {
+        "1": "Other block servers take jobs",
+        "2": "Redirect via load balancer",
+        "3": "Promote slave",
+        "4": "Use replicated cache nodes",
+        "5": "Re-subscribe to replicated backup queue"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        260,
+        261
+      ]
+    },
+    {
+      "id": "MM05",
+      "title": "API to Purpose",
+      "left": {
+        "A": "Upload",
+        "B": "Download",
+        "C": "List revisions",
+        "D": "HTTPS",
+        "E": "Resumable URL"
+      },
+      "right": {
+        "1": "Retrieve file data",
+        "2": "Add file data",
+        "3": "Retrieve version history",
+        "4": "Protect data in transit",
+        "5": "Continue interrupted large upload"
+      },
+      "answer_key": {
+        "A": "2",
+        "B": "1",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        248,
+        249
+      ]
+    }
+  ],
+  "true_false": [
+    {
+      "id": "TF001",
+      "statement": "The system supports both web and mobile clients.",
+      "answer": true,
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "TF002",
+      "statement": "Only text files are supported.",
+      "answer": false,
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "TF003",
+      "statement": "Stored files must be encrypted.",
+      "answer": true,
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "TF004",
+      "statement": "Maximum file size is 10 GB.",
+      "answer": true,
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "TF005",
+      "statement": "Real-time Google Docs collaboration is in scope.",
+      "answer": false,
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "TF006",
+      "statement": "Data loss is considered acceptable if rare.",
+      "answer": false,
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "TF007",
+      "statement": "Total allocated storage is estimated at 500 PB.",
+      "answer": true,
+      "source_pages": [
+        247
+      ]
+    },
+    {
+      "id": "TF008",
+      "statement": "Peak upload QPS is 480.",
+      "answer": true,
+      "source_pages": [
+        247
+      ]
+    },
+    {
+      "id": "TF009",
+      "statement": "Simple upload is intended for small files.",
+      "answer": true,
+      "source_pages": [
+        248
+      ]
+    },
+    {
+      "id": "TF010",
+      "statement": "Resumable upload can continue after interruption.",
+      "answer": true,
+      "source_pages": [
+        249
+      ]
+    },
+    {
+      "id": "TF011",
+      "statement": "All APIs use HTTPS.",
+      "answer": true,
+      "source_pages": [
+        249
+      ]
+    },
+    {
+      "id": "TF012",
+      "statement": "Storage sharding is suggested when local storage fills.",
+      "answer": true,
+      "source_pages": [
+        249
+      ]
+    },
+    {
+      "id": "TF013",
+      "statement": "S3 cross-region replication is used for durability/availability.",
+      "answer": true,
+      "source_pages": [
+        250
+      ]
+    },
+    {
+      "id": "TF014",
+      "statement": "The improved design keeps metadata DB on the same web server.",
+      "answer": false,
+      "source_pages": [
+        251
+      ]
+    },
+    {
+      "id": "TF015",
+      "statement": "First processed conflicting version wins.",
+      "answer": true,
+      "source_pages": [
+        251
+      ]
+    },
+    {
+      "id": "TF016",
+      "statement": "The conflicted user can compare local and server copies.",
+      "answer": true,
+      "source_pages": [
+        252
+      ]
+    },
+    {
+      "id": "TF017",
+      "statement": "Block servers store whole files only and never split them.",
+      "answer": false,
+      "source_pages": [
+        253
+      ]
+    },
+    {
+      "id": "TF018",
+      "statement": "Dropbox's reference maximum block size is 4 MB.",
+      "answer": true,
+      "source_pages": [
+        253
+      ]
+    },
+    {
+      "id": "TF019",
+      "statement": "Metadata DB stores actual file bytes.",
+      "answer": false,
+      "source_pages": [
+        253
+      ]
+    },
+    {
+      "id": "TF020",
+      "statement": "Offline Backup Queue stores change info for disconnected clients.",
+      "answer": true,
+      "source_pages": [
+        253,
+        254
+      ]
+    },
+    {
+      "id": "TF021",
+      "statement": "Delta sync transfers only modified blocks.",
+      "answer": true,
+      "source_pages": [
+        255
+      ]
+    },
+    {
+      "id": "TF022",
+      "statement": "Compression algorithm may depend on file type.",
+      "answer": true,
+      "source_pages": [
+        255
+      ]
+    },
+    {
+      "id": "TF023",
+      "statement": "Blocks are encrypted before cloud storage upload.",
+      "answer": true,
+      "source_pages": [
+        255
+      ]
+    },
+    {
+      "id": "TF024",
+      "statement": "Strong consistency is required for metadata.",
+      "answer": true,
+      "source_pages": [
+        256
+      ]
+    },
+    {
+      "id": "TF025",
+      "statement": "The chapter relies on eventual consistency for metadata correctness.",
+      "answer": false,
+      "source_pages": [
+        256
+      ]
+    },
+    {
+      "id": "TF026",
+      "statement": "Cache entries should be invalidated on DB write.",
+      "answer": true,
+      "source_pages": [
+        256
+      ]
+    },
+    {
+      "id": "TF027",
+      "statement": "The chapter chooses relational DB because ACID is native.",
+      "answer": true,
+      "source_pages": [
+        256
+      ]
+    },
+    {
+      "id": "TF028",
+      "statement": "One user can have multiple devices.",
+      "answer": true,
+      "source_pages": [
+        257
+      ]
+    },
+    {
+      "id": "TF029",
+      "statement": "File_version rows are mutable to rewrite history.",
+      "answer": false,
+      "source_pages": [
+        257
+      ]
+    },
+    {
+      "id": "TF030",
+      "statement": "Upload metadata and content flows can happen in parallel.",
+      "answer": true,
+      "source_pages": [
+        258
+      ]
+    },
+    {
+      "id": "TF031",
+      "statement": "The initial upload status is pending.",
+      "answer": true,
+      "source_pages": [
+        258
+      ]
+    },
+    {
+      "id": "TF032",
+      "statement": "Notification Service tells relevant clients when upload completes.",
+      "answer": true,
+      "source_pages": [
+        258
+      ]
+    },
+    {
+      "id": "TF033",
+      "statement": "Clients download blocks before obtaining metadata.",
+      "answer": false,
+      "source_pages": [
+        259
+      ]
+    },
+    {
+      "id": "TF034",
+      "statement": "Long polling and WebSocket are both considered for notifications.",
+      "answer": true,
+      "source_pages": [
+        259
+      ]
+    },
+    {
+      "id": "TF035",
+      "statement": "WebSocket is chosen because notifications are highly bidirectional.",
+      "answer": false,
+      "source_pages": [
+        259,
+        260
+      ]
+    },
+    {
+      "id": "TF036",
+      "statement": "Long polling is chosen because notifications are infrequent and one-way.",
+      "answer": true,
+      "source_pages": [
+        259,
+        260
+      ]
+    },
+    {
+      "id": "TF037",
+      "statement": "Identical block hashes indicate duplicate blocks.",
+      "answer": true,
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "TF038",
+      "statement": "The design saves every revision forever with no limit.",
+      "answer": false,
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "TF039",
+      "statement": "Cold storage is intended for inactive data.",
+      "answer": true,
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "TF040",
+      "statement": "Load balancers can use heartbeats to detect peer failure.",
+      "answer": true,
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "TF041",
+      "statement": "API servers are stateless.",
+      "answer": true,
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "TF042",
+      "statement": "Notification server failure can force many clients to reconnect.",
+      "answer": true,
+      "source_pages": [
+        261
+      ]
+    },
+    {
+      "id": "TF043",
+      "statement": "Direct client-to-cloud upload requires less duplicated client logic.",
+      "answer": false,
+      "source_pages": [
+        262
+      ]
+    },
+    {
+      "id": "TF044",
+      "statement": "Centralized block servers simplify chunking/compression/encryption implementation.",
+      "answer": true,
+      "source_pages": [
+        262
+      ]
+    }
+  ],
+  "fill_in_the_blank": [
+    {
+      "id": "FIB001",
+      "prompt": "Files must be ______ GB or smaller.",
+      "answer": "10",
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "FIB002",
+      "prompt": "The system assumes ______ million DAU.",
+      "answer": "10",
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "FIB003",
+      "prompt": "Users receive ______ GB of free space in the estimate.",
+      "answer": "10",
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "FIB004",
+      "prompt": "Average file size is ______ KB.",
+      "answer": "500",
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "FIB005",
+      "prompt": "Total allocated storage is ______ PB.",
+      "answer": "500",
+      "source_pages": [
+        247
+      ]
+    },
+    {
+      "id": "FIB006",
+      "prompt": "Average upload QPS is about ______.",
+      "answer": "240",
+      "source_pages": [
+        247
+      ]
+    },
+    {
+      "id": "FIB007",
+      "prompt": "Peak upload QPS is ______.",
+      "answer": "480",
+      "source_pages": [
+        247
+      ]
+    },
+    {
+      "id": "FIB008",
+      "prompt": "A user's root directory is called a ______.",
+      "answer": "namespace",
+      "source_pages": [
+        248,
+        257
+      ]
+    },
+    {
+      "id": "FIB009",
+      "prompt": "Large, interruption-prone transfers use ______ upload.",
+      "answer": "resumable",
+      "source_pages": [
+        248
+      ]
+    },
+    {
+      "id": "FIB010",
+      "prompt": "All APIs use ______ for secure transport.",
+      "answer": "HTTPS",
+      "source_pages": [
+        249
+      ]
+    },
+    {
+      "id": "FIB011",
+      "prompt": "Storage can be sharded by _______id.",
+      "answer": "user",
+      "source_pages": [
+        249
+      ]
+    },
+    {
+      "id": "FIB012",
+      "prompt": "The selected object storage example is Amazon ______.",
+      "answer": "S3",
+      "source_pages": [
+        250
+      ]
+    },
+    {
+      "id": "FIB013",
+      "prompt": "The first processed conflicting version ______.",
+      "answer": "wins",
+      "source_pages": [
+        251
+      ]
+    },
+    {
+      "id": "FIB014",
+      "prompt": "Dropbox's reference maximum block size is ______ MB.",
+      "answer": "4",
+      "source_pages": [
+        253
+      ]
+    },
+    {
+      "id": "FIB015",
+      "prompt": "Only modified blocks are sent with ______ sync.",
+      "answer": "delta",
+      "source_pages": [
+        255
+      ]
+    },
+    {
+      "id": "FIB016",
+      "prompt": "gzip and bzip2 are examples used for ______ files.",
+      "answer": "text",
+      "source_pages": [
+        255
+      ]
+    },
+    {
+      "id": "FIB017",
+      "prompt": "Blocks are compressed and then ______ before upload.",
+      "answer": "encrypted",
+      "source_pages": [
+        255
+      ]
+    },
+    {
+      "id": "FIB018",
+      "prompt": "Metadata requires ______ consistency.",
+      "answer": "strong",
+      "source_pages": [
+        256
+      ]
+    },
+    {
+      "id": "FIB019",
+      "prompt": "Cache entries should be ______ on database write.",
+      "answer": "invalidated",
+      "source_pages": [
+        256
+      ]
+    },
+    {
+      "id": "FIB020",
+      "prompt": "The chapter chooses a ______ database for metadata.",
+      "answer": "relational",
+      "source_pages": [
+        256
+      ]
+    },
+    {
+      "id": "FIB021",
+      "prompt": "The initial file-upload status is ______.",
+      "answer": "pending",
+      "source_pages": [
+        258
+      ]
+    },
+    {
+      "id": "FIB022",
+      "prompt": "The final status after completion is ______.",
+      "answer": "uploaded",
+      "source_pages": [
+        258
+      ]
+    },
+    {
+      "id": "FIB023",
+      "prompt": "The notification mechanism selected is long ______.",
+      "answer": "polling",
+      "source_pages": [
+        259
+      ]
+    },
+    {
+      "id": "FIB024",
+      "prompt": "Duplicate blocks have the same ______ value.",
+      "answer": "hash",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "FIB025",
+      "prompt": "Inactive data can move to S3 ______.",
+      "answer": "Glacier",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "FIB026",
+      "prompt": "Load balancers monitor peers using ______ signals.",
+      "answer": "heartbeat",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "FIB027",
+      "prompt": "API servers are ______.",
+      "answer": "stateless",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "FIB028",
+      "prompt": "Online/offline logic could be moved into a ______ service.",
+      "answer": "presence",
+      "source_pages": [
+        262
+      ]
+    }
+  ],
+  "ordering_exercises": [
+    {
+      "id": "ORD01",
+      "title": "Resumable Upload",
+      "items_scrambled": [
+        "Resume if interrupted",
+        "Get resumable URL",
+        "Upload data and monitor state"
+      ],
+      "correct_order": [
+        "Get resumable URL",
+        "Upload data and monitor state",
+        "Resume if interrupted"
+      ],
+      "source_pages": [
+        249
+      ]
+    },
+    {
+      "id": "ORD02",
+      "title": "Block Server Processing",
+      "items_scrambled": [
+        "Encrypt blocks",
+        "Split file",
+        "Upload to cloud",
+        "Compress blocks"
+      ],
+      "correct_order": [
+        "Split file",
+        "Compress blocks",
+        "Encrypt blocks",
+        "Upload to cloud"
+      ],
+      "source_pages": [
+        255
+      ]
+    },
+    {
+      "id": "ORD03",
+      "title": "Upload Content Branch",
+      "items_scrambled": [
+        "Cloud callback",
+        "Block servers process/upload",
+        "Mark uploaded",
+        "Client sends content",
+        "Notify relevant clients"
+      ],
+      "correct_order": [
+        "Client sends content",
+        "Block servers process/upload",
+        "Cloud callback",
+        "Mark uploaded",
+        "Notify relevant clients"
+      ],
+      "source_pages": [
+        258
+      ]
+    },
+    {
+      "id": "ORD04",
+      "title": "Download Flow",
+      "items_scrambled": [
+        "Client downloads blocks",
+        "Fetch metadata",
+        "Notification received",
+        "Block servers fetch cloud blocks",
+        "Client requests blocks"
+      ],
+      "correct_order": [
+        "Notification received",
+        "Fetch metadata",
+        "Client requests blocks",
+        "Block servers fetch cloud blocks",
+        "Client downloads blocks"
+      ],
+      "source_pages": [
+        259
+      ]
+    }
+  ],
+  "scenario_questions": [
+    {
+      "id": "SC01",
+      "difficulty": "medium",
+      "scenario": "A 9 GB upload on a flaky mobile connection drops halfway through.",
+      "question": "Which upload mode should be used and why?",
+      "expected_answer": "Resumable upload, so the transfer can continue rather than restart.",
+      "source_pages": [
+        248,
+        249
+      ]
+    },
+    {
+      "id": "SC02",
+      "difficulty": "hard",
+      "scenario": "A single local storage server is nearly full.",
+      "question": "What progression does the chapter use?",
+      "expected_answer": "First shard storage across servers, then adopt S3/object storage with replication for scalability and durability.",
+      "source_pages": [
+        249,
+        250
+      ]
+    },
+    {
+      "id": "SC03",
+      "difficulty": "hard",
+      "scenario": "Two users save different versions of the same file at the same time.",
+      "question": "How does the chapter resolve it?",
+      "expected_answer": "First processed version wins; the later writer gets a conflict and sees local plus latest server copies for merge/override.",
+      "source_pages": [
+        251,
+        252
+      ]
+    },
+    {
+      "id": "SC04",
+      "difficulty": "hard",
+      "scenario": "A 2 GB file changes only in two 4 MB regions.",
+      "question": "What optimization prevents retransmitting the whole file?",
+      "expected_answer": "Delta sync sends only the modified blocks.",
+      "source_pages": [
+        255
+      ]
+    },
+    {
+      "id": "SC05",
+      "difficulty": "medium",
+      "scenario": "Mobile bandwidth usage is too high for text-heavy files.",
+      "question": "Which block-server optimization helps?",
+      "expected_answer": "Compression, using an algorithm appropriate for the file type such as gzip/bzip2 for text.",
+      "source_pages": [
+        255
+      ]
+    },
+    {
+      "id": "SC06",
+      "difficulty": "hard",
+      "scenario": "Two metadata cache replicas disagree immediately after a file update.",
+      "question": "Which requirement is violated and how does the chapter address it?",
+      "expected_answer": "Strong consistency is violated; keep replicas/master consistent and invalidate cache on DB writes.",
+      "source_pages": [
+        256
+      ]
+    },
+    {
+      "id": "SC07",
+      "difficulty": "hard",
+      "scenario": "You need immutable file-revision history.",
+      "question": "Which table behavior is relevant?",
+      "expected_answer": "Existing File_version rows are read-only to preserve revision-history integrity.",
+      "source_pages": [
+        257
+      ]
+    },
+    {
+      "id": "SC08",
+      "difficulty": "hard",
+      "scenario": "A client starts uploading a new file while another device is online.",
+      "question": "What does the metadata branch do?",
+      "expected_answer": "Store metadata as pending, notify Notification Service, and inform relevant clients that a file is being uploaded.",
+      "source_pages": [
+        258
+      ]
+    },
+    {
+      "id": "SC09",
+      "difficulty": "hard",
+      "scenario": "The same client finishes uploading all blocks.",
+      "question": "What completion path follows?",
+      "expected_answer": "Cloud storage callback -> API server -> mark metadata uploaded -> notify Notification Service -> notify relevant clients.",
+      "source_pages": [
+        258
+      ]
+    },
+    {
+      "id": "SC10",
+      "difficulty": "medium",
+      "scenario": "A user comes back online after another device edited a file.",
+      "question": "How does it catch up?",
+      "expected_answer": "Stored change information allows it to pull latest metadata and changed blocks after reconnecting.",
+      "source_pages": [
+        259
+      ]
+    },
+    {
+      "id": "SC11",
+      "difficulty": "hard",
+      "scenario": "You are choosing between WebSocket and long polling for Drive notifications.",
+      "question": "Why does the chapter choose long polling?",
+      "expected_answer": "Traffic is infrequent and mostly server-to-client rather than persistent bidirectional communication.",
+      "source_pages": [
+        259,
+        260
+      ]
+    },
+    {
+      "id": "SC12",
+      "difficulty": "hard",
+      "scenario": "A heavily edited file produces thousands of versions.",
+      "question": "How can storage be controlled?",
+      "expected_answer": "Set a revision limit and/or keep only valuable versions with preference for recent revisions.",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "SC13",
+      "difficulty": "medium",
+      "scenario": "Years-old file versions are almost never accessed.",
+      "question": "Where should they move?",
+      "expected_answer": "Cold storage such as S3 Glacier.",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "SC14",
+      "difficulty": "hard",
+      "scenario": "A notification server holding many long-poll clients dies.",
+      "question": "What operational problem occurs?",
+      "expected_answer": "Clients must reconnect elsewhere, but restoring a huge number of connections cannot happen instantly and is relatively slow.",
+      "source_pages": [
+        261
+      ]
+    },
+    {
+      "id": "SC15",
+      "difficulty": "hard",
+      "scenario": "You propose uploading directly from client to cloud storage.",
+      "question": "What are the chapter's tradeoffs?",
+      "expected_answer": "Faster one-hop upload, but chunking/compression/encryption logic must be duplicated across client platforms and client-side security is less trusted.",
+      "source_pages": [
+        262
+      ]
+    }
+  ],
+  "short_answer_questions": [
+    {
+      "id": "SA01",
+      "question": "Why is a cloud-drive system more than simple file storage?",
+      "model_answer": "It must reliably synchronize versions across devices, notify users of changes, manage conflicts and revisions, minimize bandwidth, and remain strongly consistent and highly available.",
+      "source_pages": [
+        246,
+        251,
+        252,
+        255,
+        256
+      ]
+    },
+    {
+      "id": "SA02",
+      "question": "How does the architecture evolve from one server to a scalable system?",
+      "model_answer": "Start with web server + DB + local storage, then shard storage, move files to replicated object storage, add a load balancer and scalable web/API tier, and separate/replicate/shard the metadata database.",
+      "source_pages": [
+        248,
+        249,
+        250,
+        251
+      ]
+    },
+    {
+      "id": "SA03",
+      "question": "Explain block servers.",
+      "model_answer": "They split files into blocks, compress and encrypt the blocks, upload them to cloud storage, and support delta sync so only modified blocks are transferred.",
+      "source_pages": [
+        253,
+        255
+      ]
+    },
+    {
+      "id": "SA04",
+      "question": "Why is strong consistency required and how is it maintained?",
+      "model_answer": "Different clients must not see different file states. The chapter requires cache replicas/master consistency and cache invalidation on DB writes, and chooses a relational DB because ACID is native.",
+      "source_pages": [
+        256
+      ]
+    },
+    {
+      "id": "SA05",
+      "question": "Describe the upload flow.",
+      "model_answer": "Metadata and file-content requests run in parallel. Metadata is stored as pending and clients are notified; file content goes through block servers to cloud storage; a completion callback marks it uploaded and triggers another notification.",
+      "source_pages": [
+        257,
+        258
+      ]
+    },
+    {
+      "id": "SA06",
+      "question": "Describe the download/sync flow.",
+      "model_answer": "Notification Service tells a client about a change; the client fetches metadata through API servers, then requests blocks from Block Servers, which fetch them from cloud storage; the client downloads new blocks and reconstructs the file.",
+      "source_pages": [
+        258,
+        259
+      ]
+    },
+    {
+      "id": "SA07",
+      "question": "Why is long polling preferred over WebSocket?",
+      "model_answer": "Drive notifications are infrequent and essentially one-way; WebSocket's persistent bidirectional communication is more appropriate for chat-like workloads.",
+      "source_pages": [
+        259,
+        260
+      ]
+    },
+    {
+      "id": "SA08",
+      "question": "How does the design reduce storage space?",
+      "model_answer": "Deduplicate equal-hash blocks, limit/curate revision history with preference for recent versions, and move inactive data to cheaper cold storage.",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "SA09",
+      "question": "What failure-handling patterns appear repeatedly?",
+      "model_answer": "Heartbeat failover, stateless rerouting, replicated storage/cache/queues, takeover by peer workers, and database replica promotion.",
+      "source_pages": [
+        260,
+        261
+      ]
+    },
+    {
+      "id": "SA10",
+      "question": "What is the block-server vs direct-client-upload tradeoff?",
+      "model_answer": "Direct upload is faster because data moves once, but processing/security logic must be duplicated on every client. Block servers add a hop but centralize chunking, compression, and encryption.",
+      "source_pages": [
+        262
+      ]
+    }
+  ],
+  "active_recall_prompts": [
+    {
+      "id": "AR01",
+      "prompt": "Recite all functional and non-functional requirements.",
+      "target_points": [
+        "upload",
+        "download",
+        "sync",
+        "revisions",
+        "share",
+        "notifications",
+        "reliability",
+        "fast sync",
+        "bandwidth",
+        "scalability",
+        "availability"
+      ],
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "AR02",
+      "prompt": "Reproduce all capacity estimates.",
+      "target_points": [
+        "50M signed up",
+        "10M DAU",
+        "10GB free",
+        "2 uploads/day",
+        "500KB",
+        "500PB",
+        "240 QPS",
+        "480 peak"
+      ],
+      "source_pages": [
+        246,
+        247
+      ]
+    },
+    {
+      "id": "AR03",
+      "prompt": "Explain the single-server-to-distributed evolution.",
+      "target_points": [
+        "single server",
+        "storage sharding",
+        "S3",
+        "cross-region replication",
+        "LB",
+        "scale web/API",
+        "metadata DB replication/sharding"
+      ],
+      "source_pages": [
+        248,
+        249,
+        250,
+        251
+      ]
+    },
+    {
+      "id": "AR04",
+      "prompt": "Recite every high-level component.",
+      "target_points": [
+        "user",
+        "block servers",
+        "cloud storage",
+        "cold storage",
+        "LB",
+        "API",
+        "metadata DB/cache",
+        "notification",
+        "offline queue"
+      ],
+      "source_pages": [
+        253,
+        254
+      ]
+    },
+    {
+      "id": "AR05",
+      "prompt": "Explain block-server processing and bandwidth optimizations.",
+      "target_points": [
+        "split",
+        "compress",
+        "encrypt",
+        "upload",
+        "delta sync",
+        "only changed blocks"
+      ],
+      "source_pages": [
+        255
+      ]
+    },
+    {
+      "id": "AR06",
+      "prompt": "Explain strong metadata consistency.",
+      "target_points": [
+        "same file state",
+        "cache replicas/master",
+        "invalidate on writes",
+        "relational DB",
+        "ACID"
+      ],
+      "source_pages": [
+        256
+      ]
+    },
+    {
+      "id": "AR07",
+      "prompt": "Recite all metadata tables.",
+      "target_points": [
+        "User",
+        "Device",
+        "Namespace",
+        "File",
+        "File_version",
+        "Block"
+      ],
+      "source_pages": [
+        257
+      ]
+    },
+    {
+      "id": "AR08",
+      "prompt": "Reconstruct both upload branches.",
+      "target_points": [
+        "metadata pending",
+        "notification",
+        "block upload",
+        "callback",
+        "uploaded status",
+        "second notification"
+      ],
+      "source_pages": [
+        258
+      ]
+    },
+    {
+      "id": "AR09",
+      "prompt": "Reconstruct download flow.",
+      "target_points": [
+        "notification",
+        "metadata",
+        "API/DB",
+        "block request",
+        "cloud blocks",
+        "reconstruct"
+      ],
+      "source_pages": [
+        259
+      ]
+    },
+    {
+      "id": "AR10",
+      "prompt": "Explain notification protocol selection.",
+      "target_points": [
+        "long polling",
+        "WebSocket",
+        "one-way",
+        "infrequent",
+        "reopen connection"
+      ],
+      "source_pages": [
+        259,
+        260
+      ]
+    },
+    {
+      "id": "AR11",
+      "prompt": "Name all storage-saving techniques.",
+      "target_points": [
+        "dedup blocks",
+        "version limit",
+        "valuable versions",
+        "recent weighting",
+        "cold storage"
+      ],
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "AR12",
+      "prompt": "Recite the failure-handling playbook.",
+      "target_points": [
+        "LB heartbeat",
+        "block peers",
+        "multi-region storage",
+        "stateless API",
+        "cache replicas",
+        "DB promotion",
+        "notification reconnect",
+        "backup queue"
+      ],
+      "source_pages": [
+        260,
+        261
+      ]
+    }
+  ],
+  "diagram_reconstruction_drills": [
+    {
+      "id": "DR01",
+      "name": "Single Server",
+      "task": "Draw web server + MySQL metadata DB + 1TB drive/ storage with per-user namespaces.",
+      "source_pages": [
+        248
+      ]
+    },
+    {
+      "id": "DR02",
+      "name": "S3 Replication",
+      "task": "Draw same-region and cross-region replicated object storage and explain durability/availability.",
+      "source_pages": [
+        250
+      ]
+    },
+    {
+      "id": "DR03",
+      "name": "High-Level Google Drive",
+      "task": "Draw User, Block Servers, Cloud/Cold Storage, LB, API Servers, Metadata DB/Cache, Notification Service, Offline Backup Queue.",
+      "source_pages": [
+        252,
+        253,
+        254
+      ]
+    },
+    {
+      "id": "DR04",
+      "name": "Block Server Pipeline",
+      "task": "Draw file -> split blocks -> compress -> encrypt -> cloud storage; show delta sync sending only changed blocks.",
+      "source_pages": [
+        255,
+        256
+      ]
+    },
+    {
+      "id": "DR05",
+      "name": "Metadata Schema",
+      "task": "Recreate User, Device, Namespace, File, File_version, Block and their purposes.",
+      "source_pages": [
+        256,
+        257
+      ]
+    },
+    {
+      "id": "DR06",
+      "name": "Upload Sequence",
+      "task": "Draw metadata and content uploads in parallel, including pending/uploaded states and notifications.",
+      "source_pages": [
+        257,
+        258
+      ]
+    },
+    {
+      "id": "DR07",
+      "name": "Download Sequence",
+      "task": "Draw notification -> metadata request -> API/DB -> block request -> cloud storage -> file reconstruction.",
+      "source_pages": [
+        258,
+        259
+      ]
+    },
+    {
+      "id": "DR08",
+      "name": "Notification Long Poll",
+      "task": "Draw client long poll -> server change event -> connection close -> metadata pull -> reopen long poll.",
+      "source_pages": [
+        259,
+        260
+      ]
+    }
+  ],
+  "interview_style_questions": [
+    {
+      "id": "INT01",
+      "question": "What requirements would you clarify for a cloud drive?",
+      "strong_answer_outline": [
+        "upload/download",
+        "sync",
+        "revisions",
+        "sharing",
+        "notifications",
+        "clients",
+        "file types",
+        "encryption",
+        "max size",
+        "DAU"
+      ],
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "INT02",
+      "question": "How would you estimate capacity?",
+      "strong_answer_outline": [
+        "users",
+        "quota",
+        "uploads/day",
+        "average size",
+        "read/write ratio",
+        "allocated storage",
+        "average/peak QPS"
+      ],
+      "source_pages": [
+        246,
+        247
+      ]
+    },
+    {
+      "id": "INT03",
+      "question": "How would you evolve from a single server?",
+      "strong_answer_outline": [
+        "shard storage",
+        "object storage",
+        "replication",
+        "LB",
+        "horizontal web/API scaling",
+        "separate metadata DB",
+        "replicate/shard DB"
+      ],
+      "source_pages": [
+        248,
+        249,
+        250,
+        251
+      ]
+    },
+    {
+      "id": "INT04",
+      "question": "How would you reduce synchronization bandwidth?",
+      "strong_answer_outline": [
+        "block files",
+        "delta sync",
+        "compression",
+        "encrypt blocks",
+        "send changed blocks only"
+      ],
+      "source_pages": [
+        253,
+        255
+      ]
+    },
+    {
+      "id": "INT05",
+      "question": "How would you guarantee metadata consistency?",
+      "strong_answer_outline": [
+        "strong consistency",
+        "cache replicas/master",
+        "cache invalidation on writes",
+        "relational ACID"
+      ],
+      "source_pages": [
+        256
+      ]
+    },
+    {
+      "id": "INT06",
+      "question": "Walk through upload synchronization.",
+      "strong_answer_outline": [
+        "metadata branch",
+        "pending",
+        "notification",
+        "block-server content branch",
+        "cloud callback",
+        "uploaded",
+        "notification"
+      ],
+      "source_pages": [
+        257,
+        258
+      ]
+    },
+    {
+      "id": "INT07",
+      "question": "Walk through download synchronization.",
+      "strong_answer_outline": [
+        "notification",
+        "fetch metadata",
+        "request blocks",
+        "block servers/cloud storage",
+        "reconstruct file"
+      ],
+      "source_pages": [
+        258,
+        259
+      ]
+    },
+    {
+      "id": "INT08",
+      "question": "What protocol would you use for change notifications?",
+      "strong_answer_outline": [
+        "long polling",
+        "compare WebSocket",
+        "one-way/infrequent updates",
+        "reconnect after response/timeout"
+      ],
+      "source_pages": [
+        259,
+        260
+      ]
+    },
+    {
+      "id": "INT09",
+      "question": "How would you reduce storage cost?",
+      "strong_answer_outline": [
+        "dedup by hash",
+        "revision limit",
+        "keep valuable/recent versions",
+        "cold storage"
+      ],
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "INT10",
+      "question": "How would you handle component failures?",
+      "strong_answer_outline": [
+        "heartbeat failover",
+        "replicas",
+        "peer takeover",
+        "stateless rerouting",
+        "DB promotion",
+        "client reconnect",
+        "backup queues"
+      ],
+      "source_pages": [
+        260,
+        261
+      ]
+    },
+    {
+      "id": "INT11",
+      "question": "Would you upload directly from client to cloud storage?",
+      "strong_answer_outline": [
+        "faster one-hop transfer",
+        "duplicated cross-platform chunk/compress/encrypt logic",
+        "client trust/security concern",
+        "centralized block-server alternative"
+      ],
+      "source_pages": [
+        262
+      ]
+    }
+  ],
+  "common_confusions": [
+    {
+      "confusion": "Google Drive design is mostly about storing file bytes.",
+      "correction": "The chapter emphasizes synchronization, revisions, notifications, conflicts, bandwidth, consistency, and reliability in addition to storage.",
+      "source_pages": [
+        246,
+        251,
+        255,
+        256
+      ]
+    },
+    {
+      "confusion": "Metadata DB should contain the actual files.",
+      "correction": "File contents live in cloud storage; Metadata DB stores metadata only.",
+      "source_pages": [
+        253
+      ]
+    },
+    {
+      "confusion": "Every edit should re-upload the whole file.",
+      "correction": "Delta sync sends only modified blocks.",
+      "source_pages": [
+        255
+      ]
+    },
+    {
+      "confusion": "Block compression is identical for every file type.",
+      "correction": "The chapter says compression algorithm should depend on file type.",
+      "source_pages": [
+        255
+      ]
+    },
+    {
+      "confusion": "Eventual consistency is acceptable for metadata because caches are fast.",
+      "correction": "The chapter explicitly requires strong consistency for metadata cache and DB.",
+      "source_pages": [
+        256
+      ]
+    },
+    {
+      "confusion": "WebSocket must be better because it is more real time.",
+      "correction": "The chapter chooses long polling because Drive notifications are infrequent and mostly one-way.",
+      "source_pages": [
+        259,
+        260
+      ]
+    },
+    {
+      "confusion": "File revision history should always retain every revision forever.",
+      "correction": "The chapter recommends limits/valuable-version policies to control storage use.",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "confusion": "Direct client-to-cloud upload is strictly superior.",
+      "correction": "It is faster, but duplicates processing/security logic across clients and moves sensitive logic onto less-trusted clients.",
+      "source_pages": [
+        262
+      ]
+    }
+  ],
+  "practice_problems": [
+    {
+      "id": "P01",
+      "type": "capacity",
+      "prompt": "If signed-up users doubled to 100 million at 10 GB free each, what total allocated storage would that imply?",
+      "solution": "1,000 PB = 1 EB.",
+      "note": "Derived from the chapter's allocation method.",
+      "based_on_source_pages": [
+        246,
+        247
+      ]
+    },
+    {
+      "id": "P02",
+      "type": "qps",
+      "prompt": "If DAU doubled to 20 million with 2 uploads/day, estimate average upload QPS.",
+      "solution": "About 480 QPS.",
+      "note": "Derived by doubling the chapter's ~240 QPS.",
+      "based_on_source_pages": [
+        246,
+        247
+      ]
+    },
+    {
+      "id": "P03",
+      "type": "delta_sync",
+      "prompt": "A 100-block file changes in only blocks 2 and 5. How many blocks need uploading under delta sync?",
+      "solution": "2 blocks.",
+      "based_on_source_pages": [
+        255
+      ]
+    },
+    {
+      "id": "P04",
+      "type": "conflict",
+      "prompt": "User A's update is processed before User B's simultaneous update. What happens?",
+      "solution": "User A's version wins; User B receives a conflict and is shown local and server copies.",
+      "based_on_source_pages": [
+        251,
+        252
+      ]
+    },
+    {
+      "id": "P05",
+      "type": "consistency",
+      "prompt": "Metadata DB is updated but stale cache remains. What must happen?",
+      "solution": "Invalidate the cache entry so cache and DB reflect the same value.",
+      "based_on_source_pages": [
+        256
+      ]
+    },
+    {
+      "id": "P06",
+      "type": "storage",
+      "prompt": "Two account-level blocks have identical hashes. What optimization applies?",
+      "solution": "Deduplicate them and store one copy/reference rather than redundant blocks.",
+      "based_on_source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "P07",
+      "type": "notification",
+      "prompt": "A Drive-style notification channel is one-way and rarely active. Which protocol does the chapter choose?",
+      "solution": "Long polling.",
+      "based_on_source_pages": [
+        259,
+        260
+      ]
+    },
+    {
+      "id": "P08",
+      "type": "failure",
+      "prompt": "The Metadata DB master fails while a slave is healthy. What should happen?",
+      "solution": "Promote a slave to master and bring up a new slave.",
+      "based_on_source_pages": [
+        260,
+        261
+      ]
+    }
+  ],
+  "mastery_check": {
+    "beginner": [
+      "Can state all functional and non-functional requirements.",
+      "Can reproduce 500 PB, 240 QPS, and 480 peak QPS.",
+      "Can explain simple vs resumable upload.",
+      "Can name all high-level components."
+    ],
+    "intermediate": [
+      "Can explain evolution from one server to S3-based distributed design.",
+      "Can explain conflict handling.",
+      "Can describe block-level storage, delta sync, compression, and encryption.",
+      "Can explain strong metadata consistency and relational ACID choice.",
+      "Can reconstruct upload/download flows.",
+      "Can explain long polling selection."
+    ],
+    "advanced": [
+      "Can reason about revision/dedup/cold-storage tradeoffs.",
+      "Can walk through every failure scenario.",
+      "Can defend centralized block servers vs direct client-to-cloud upload.",
+      "Can explain how notification and offline synchronization interact.",
+      "Can redraw the major chapter diagrams from memory."
+    ]
+  },
+  "chapter_fifteen_final_review": {
+    "must_memorize": [
+      "Scope: upload/download, sync, revisions, share, notifications; no live Docs collaboration.",
+      "Clients: web + mobile; any file type; encrypted storage; max 10 GB; 10M DAU.",
+      "NFRs: reliability, fast sync, bandwidth efficiency, scalability, high availability.",
+      "Capacity: 50M users × 10 GB = 500 PB; upload ~240 QPS; peak 480.",
+      "APIs: upload, download, revisions; simple vs resumable; HTTPS.",
+      "Single server evolves to sharded storage, S3, load balancer, scalable web/API, replicated/sharded metadata DB.",
+      "Cross-region replication protects against data loss and improves availability.",
+      "Conflict rule: first processed version wins; later user sees local/server copies.",
+      "Block servers split, compress, encrypt, and upload blocks.",
+      "Dropbox reference block size = max 4 MB.",
+      "Delta sync sends only modified blocks.",
+      "Metadata requires strong consistency.",
+      "Invalidate metadata cache on DB writes.",
+      "Relational DB chosen because ACID is native.",
+      "Schema: User, Device, Namespace, File, File_version, Block.",
+      "Upload has parallel metadata and content branches.",
+      "File states: pending -> uploaded.",
+      "Download: notification -> metadata -> block download -> reconstruct.",
+      "Long polling selected over WebSocket for infrequent one-way notifications.",
+      "Save space with block dedup, revision limits/valuable versions, and cold storage.",
+      "Failures: heartbeat LB failover, block-server takeover, multi-region storage, stateless API reroute, cache replicas, DB promotion, notification reconnect, queue replicas.",
+      "Direct client-to-cloud upload is faster but duplicates client logic and weakens trust boundary.",
+      "Possible evolution: separate presence service."
+    ],
+    "memory_chain": "REQUIREMENTS -> CAPACITY -> SINGLE SERVER -> RESUMABLE APIs -> SHARD STORAGE -> S3 REPLICATION -> LB/API/METADATA -> CONFLICTS -> BLOCK SERVERS -> DELTA SYNC/COMPRESSION/ENCRYPTION -> STRONG CONSISTENCY -> SCHEMA -> PARALLEL UPLOAD -> DOWNLOAD SYNC -> LONG POLL -> DEDUP/VERSIONS/COLD STORAGE -> FAILURE HANDLING -> DIRECT-UPLOAD TRADEOFF",
+    "one_sentence_takeaway": "A scalable cloud drive combines strongly consistent metadata with block-level, bandwidth-efficient file synchronization, replicated object storage, long-poll change notifications, revision management, and robust failure recovery."
+  }
+}

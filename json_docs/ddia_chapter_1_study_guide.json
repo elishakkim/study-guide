@@ -1,0 +1,3333 @@
+{
+  "chapter": {
+    "number": 1,
+    "title": "Reliable, Scalable, and Maintainable Applications",
+    "book": "Designing Data-Intensive Applications",
+    "author": "Martin Kleppmann",
+    "pdf_pages": {
+      "start": 25,
+      "summary_end": 45
+    },
+    "book_pages": {
+      "start": 3,
+      "summary_end": 23
+    }
+  },
+  "summary": {
+    "overview": "Chapter 1 establishes the book's vocabulary for reasoning about data-intensive systems. It explains why modern applications are composed from databases, caches, search indexes, stream-processing systems, and batch-processing systems; why combining those components effectively makes the application itself a data system; and how to evaluate that system through reliability, scalability, and maintainability. Reliability is analyzed through hardware faults, systematic software faults, and human error. Scalability is framed as a workload-specific question using load parameters, the Twitter timeline fan-out example, response-time distributions, percentiles, tail latency, and scaling strategies. Maintainability is divided into operability, simplicity, and evolvability.",
+    "three_core_concerns": [
+      "Reliability",
+      "Scalability",
+      "Maintainability"
+    ],
+    "maintainability_principles": [
+      "Operability",
+      "Simplicity",
+      "Evolvability"
+    ],
+    "source_pages": [
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45
+    ]
+  },
+  "learning_objectives": [
+    {
+      "id": "LO01",
+      "objective": "Distinguish data-intensive and compute-intensive applications.",
+      "source_pages": [
+        25
+      ]
+    },
+    {
+      "id": "LO02",
+      "objective": "Name the standard data-system building blocks.",
+      "source_pages": [
+        25
+      ]
+    },
+    {
+      "id": "LO03",
+      "objective": "Explain why applications combine specialized data tools.",
+      "source_pages": [
+        26,
+        27
+      ]
+    },
+    {
+      "id": "LO04",
+      "objective": "Define reliability, scalability, and maintainability.",
+      "source_pages": [
+        28
+      ]
+    },
+    {
+      "id": "LO05",
+      "objective": "Distinguish faults from failures and explain fault tolerance.",
+      "source_pages": [
+        29
+      ]
+    },
+    {
+      "id": "LO06",
+      "objective": "Compare hardware, software, and human sources of faults.",
+      "source_pages": [
+        29,
+        30,
+        31,
+        32
+      ]
+    },
+    {
+      "id": "LO07",
+      "objective": "Explain deliberate fault injection and Chaos Monkey.",
+      "source_pages": [
+        29
+      ]
+    },
+    {
+      "id": "LO08",
+      "objective": "Define load parameters and choose workload-specific examples.",
+      "source_pages": [
+        33
+      ]
+    },
+    {
+      "id": "LO09",
+      "objective": "Analyze Twitter fan-out on read, fan-out on write, and the hybrid approach.",
+      "source_pages": [
+        33,
+        34,
+        35
+      ]
+    },
+    {
+      "id": "LO10",
+      "objective": "Distinguish throughput, response time, and latency.",
+      "source_pages": [
+        35,
+        36
+      ]
+    },
+    {
+      "id": "LO11",
+      "objective": "Interpret p50, p95, p99, and p999.",
+      "source_pages": [
+        36,
+        37
+      ]
+    },
+    {
+      "id": "LO12",
+      "objective": "Explain tail latency, head-of-line blocking, and tail-latency amplification.",
+      "source_pages": [
+        37,
+        38,
+        39
+      ]
+    },
+    {
+      "id": "LO13",
+      "objective": "Compare vertical, horizontal, elastic, and manual scaling.",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "LO14",
+      "objective": "Explain why scalable architectures are workload-specific.",
+      "source_pages": [
+        40
+      ]
+    },
+    {
+      "id": "LO15",
+      "objective": "Explain operability, simplicity, and evolvability.",
+      "source_pages": [
+        41,
+        42,
+        43,
+        44
+      ]
+    },
+    {
+      "id": "LO16",
+      "objective": "Explain accidental complexity and abstraction.",
+      "source_pages": [
+        43
+      ]
+    }
+  ],
+  "core_concepts": {
+    "data_intensive": {
+      "definition": "The primary challenge is data quantity, data complexity, or the speed at which data changes, rather than raw CPU.",
+      "building_blocks": {
+        "database": "Store data for later retrieval.",
+        "cache": "Remember expensive results to speed reads.",
+        "search_index": "Support keyword search and filtering.",
+        "stream_processing": "Send messages for asynchronous handling.",
+        "batch_processing": "Periodically process accumulated data."
+      },
+      "blurred_categories": [
+        "Redis can act as both datastore and message queue.",
+        "Apache Kafka has message-queue/log behavior with database-like durability."
+      ],
+      "composite_system": "When application code combines several general-purpose data tools behind one API, it effectively creates a special-purpose data system and becomes responsible for cross-component guarantees such as cache invalidation.",
+      "source_pages": [
+        25,
+        26,
+        27
+      ]
+    },
+    "reliability": {
+      "definition": "Continue working correctly, at required performance, even when things go wrong.",
+      "working_correctly_includes": [
+        "Perform the expected function.",
+        "Tolerate user mistakes/unexpected use.",
+        "Meet required performance under expected load.",
+        "Prevent unauthorized access and abuse."
+      ],
+      "fault": "One component deviates from its specification.",
+      "failure": "The system as a whole stops providing the required service.",
+      "fault_tolerance_goal": "Prevent component faults from becoming system failures.",
+      "chaos_testing": "Deliberately trigger faults to continuously exercise recovery; Netflix Chaos Monkey is the example.",
+      "source_pages": [
+        28,
+        29
+      ]
+    },
+    "hardware_faults": {
+      "examples": [
+        "Disk failure",
+        "Faulty RAM",
+        "Blackout",
+        "Wrong network cable unplugged"
+      ],
+      "disk_mttf": "About 10–50 years",
+      "cluster_implication": "At 10,000 disks, expect roughly one disk failure per day.",
+      "redundancy": [
+        "RAID",
+        "Dual power supplies",
+        "Hot-swappable CPUs",
+        "Batteries",
+        "Diesel generators"
+      ],
+      "modern_direction": "Use software fault tolerance to survive loss of whole machines, enabling rolling upgrades.",
+      "source_pages": [
+        29,
+        30
+      ]
+    },
+    "software_faults": {
+      "characteristic": "Often systematic and correlated across nodes.",
+      "examples": [
+        "One bad input crashes all application-server instances.",
+        "Runaway process exhausts CPU/memory/disk/network.",
+        "Dependency slows, hangs, or returns corrupted responses.",
+        "Cascading failure."
+      ],
+      "mitigations": [
+        "Think carefully about assumptions and interactions.",
+        "Thorough testing.",
+        "Process isolation and restart.",
+        "Production monitoring.",
+        "Continuously check invariants/guarantees."
+      ],
+      "source_pages": [
+        30,
+        31
+      ]
+    },
+    "human_errors": {
+      "observation": "The cited study found operator configuration errors were the leading outage cause; hardware contributed to only 10–25% of outages.",
+      "mitigations": [
+        "Safer abstractions/APIs/admin interfaces.",
+        "Non-production sandboxes.",
+        "Testing at multiple levels.",
+        "Fast rollback.",
+        "Gradual rollout.",
+        "Tools to recompute incorrect data.",
+        "Monitoring/telemetry.",
+        "Management practices and training."
+      ],
+      "source_pages": [
+        31,
+        32
+      ]
+    },
+    "scalability": {
+      "definition": "Having reasonable strategies for coping with a specific increase in load.",
+      "load_parameter_examples": [
+        "Requests per second",
+        "Database read/write ratio",
+        "Simultaneously active users",
+        "Cache hit rate",
+        "Follower/fan-out distribution"
+      ],
+      "source_pages": [
+        32,
+        33
+      ]
+    },
+    "twitter_example": {
+      "post_tweet_avg_rps": 4600,
+      "post_tweet_peak_rps": 12000,
+      "home_timeline_reads_rps": 300000,
+      "main_problem": "Fan-out",
+      "fanout_on_read": "Store each tweet once; assemble timeline at read time. Cheap writes, expensive reads.",
+      "fanout_on_write": "Copy each tweet into followers' home-timeline caches. Expensive writes, cheap reads.",
+      "average_followers": 75,
+      "derived_timeline_cache_writes": "4.6k × 75 ≈ 345k writes/sec",
+      "celebrity_extreme": "Some users have more than 30 million followers.",
+      "delivery_goal": "About five seconds",
+      "hybrid": "Fan out ordinary users on write; fetch celebrity tweets at read time and merge them.",
+      "key_load_parameter": "Follower-count distribution, potentially weighted by tweet frequency.",
+      "source_pages": [
+        33,
+        34,
+        35
+      ]
+    },
+    "performance": {
+      "throughput": "Common batch metric: records processed per second or total job time.",
+      "response_time": "Client-visible time from request submission to receiving the response.",
+      "latency": "Time a request spends waiting to be handled.",
+      "response_time_is_distribution": true,
+      "percentiles": {
+        "p50": "Median; 50% faster and 50% slower.",
+        "p95": "95% faster than the threshold.",
+        "p99": "99% faster than the threshold.",
+        "p999": "99.9% faster than the threshold."
+      },
+      "tail_latency": "High-percentile response times.",
+      "amazon_examples": [
+        "p99.9 used for some internal response-time requirements.",
+        "The chapter cites 100 ms additional response time reducing sales by 1%.",
+        "p99.99 optimization was considered too expensive for the benefit."
+      ],
+      "sla_example": "Median <200 ms, p99 <1 second, availability ≥99.9%.",
+      "source_pages": [
+        35,
+        36,
+        37
+      ]
+    },
+    "queueing_and_tail_amplification": {
+      "head_of_line_blocking": "A few slow requests occupy limited processing capacity and delay requests queued behind them.",
+      "load_test_rule": "A load generator should issue requests independently of prior response completion.",
+      "tail_latency_amplification": "An end-user request that fans out to many backends waits for the slowest call, increasing the chance of a slow overall response.",
+      "percentile_tools": [
+        "Forward decay",
+        "t-digest",
+        "HdrHistogram"
+      ],
+      "aggregation_rule": "Do not average percentiles; aggregate histograms.",
+      "source_pages": [
+        38,
+        39
+      ]
+    },
+    "scaling_approaches": {
+      "vertical": "Scale up to a more powerful machine.",
+      "horizontal": "Scale out across multiple machines; also called shared-nothing.",
+      "elastic": "Automatically add resources as load changes.",
+      "manual": "Humans analyze capacity and add resources.",
+      "important_tradeoffs": [
+        "Real systems often use a pragmatic mixture of vertical and horizontal scaling.",
+        "Elasticity helps unpredictable load; manual scaling can be simpler and less surprising.",
+        "Stateful distributed systems add much more complexity than stateless services.",
+        "There is no one-size-fits-all scalable architecture."
+      ],
+      "premature_scaling_warning": "Early-stage products may benefit more from fast iteration than from scaling to hypothetical future load.",
+      "source_pages": [
+        39,
+        40
+      ]
+    },
+    "maintainability": {
+      "why_it_matters": "Most software cost occurs after initial development during operation, debugging, adaptation, technical-debt repayment, and new features.",
+      "operability": "Make routine operation and failure recovery easy.",
+      "simplicity": "Make systems easy to understand by reducing complexity.",
+      "evolvability": "Make systems easy to modify as requirements change.",
+      "source_pages": [
+        40,
+        41
+      ]
+    },
+    "operability": {
+      "operations_responsibilities": [
+        "Monitor health and restore service.",
+        "Find root causes.",
+        "Apply updates/security patches.",
+        "Understand cross-system interactions.",
+        "Capacity planning.",
+        "Deployment/configuration tooling.",
+        "Platform migrations.",
+        "Maintain security.",
+        "Define predictable production processes.",
+        "Preserve organizational knowledge."
+      ],
+      "system_support": [
+        "Good monitoring/runtime visibility.",
+        "Automation and standard-tool integration.",
+        "No dependency on individual machines.",
+        "Good documentation.",
+        "Good defaults with administrator overrides.",
+        "Self-healing plus manual control when needed.",
+        "Predictable behavior."
+      ],
+      "source_pages": [
+        41,
+        42
+      ]
+    },
+    "simplicity": {
+      "complexity_symptoms": [
+        "Explosion of state space",
+        "Tight coupling",
+        "Tangled dependencies",
+        "Inconsistent naming",
+        "Performance hacks",
+        "Special cases"
+      ],
+      "accidental_complexity": "Implementation complexity that is not inherent in the user-visible problem.",
+      "main_tool": "Abstraction",
+      "examples": [
+        "High-level languages hide machine code/registers/syscalls.",
+        "SQL hides storage structures, concurrency, and crash-recovery details."
+      ],
+      "source_pages": [
+        42,
+        43
+      ]
+    },
+    "evolvability": {
+      "definition": "Ease of adapting a data system to changing requirements; also called extensibility, modifiability, or plasticity.",
+      "drivers": [
+        "New facts",
+        "New use cases",
+        "Changing business priorities",
+        "User requests",
+        "New platforms",
+        "Regulatory change",
+        "Growth-driven architecture change"
+      ],
+      "supporting_practices": [
+        "Agile methods",
+        "TDD",
+        "Refactoring"
+      ],
+      "relationship_to_simplicity": "Simple systems with good abstractions are usually easier to change.",
+      "source_pages": [
+        43,
+        44
+      ]
+    }
+  },
+  "flashcards": [
+    {
+      "id": "FC001",
+      "front": "What makes an application data-intensive?",
+      "back": "Data quantity, complexity, or rate of change is the primary challenge rather than CPU.",
+      "source_pages": [
+        25
+      ]
+    },
+    {
+      "id": "FC002",
+      "front": "Name the five building blocks.",
+      "back": "Database, cache, search index, stream processing, batch processing.",
+      "source_pages": [
+        25
+      ]
+    },
+    {
+      "id": "FC003",
+      "front": "What does a database do in the opening list?",
+      "back": "Stores data so it can be found again later.",
+      "source_pages": [
+        25
+      ]
+    },
+    {
+      "id": "FC004",
+      "front": "What does a cache do?",
+      "back": "Stores expensive results to speed reads.",
+      "source_pages": [
+        25
+      ]
+    },
+    {
+      "id": "FC005",
+      "front": "What does a search index do?",
+      "back": "Supports keyword search and filtering.",
+      "source_pages": [
+        25
+      ]
+    },
+    {
+      "id": "FC006",
+      "front": "What does stream processing do?",
+      "back": "Sends messages for asynchronous processing.",
+      "source_pages": [
+        25
+      ]
+    },
+    {
+      "id": "FC007",
+      "front": "What does batch processing do?",
+      "back": "Periodically processes accumulated data.",
+      "source_pages": [
+        25
+      ]
+    },
+    {
+      "id": "FC008",
+      "front": "Why do applications combine tools?",
+      "back": "One tool often cannot satisfy all storage and processing requirements.",
+      "source_pages": [
+        26
+      ]
+    },
+    {
+      "id": "FC009",
+      "front": "What tool can act as datastore and message queue?",
+      "back": "Redis.",
+      "source_pages": [
+        26
+      ]
+    },
+    {
+      "id": "FC010",
+      "front": "What queue/log is cited for database-like durability?",
+      "back": "Apache Kafka.",
+      "source_pages": [
+        26
+      ]
+    },
+    {
+      "id": "FC011",
+      "front": "Who usually keeps caches/search indexes synchronized with the primary DB?",
+      "back": "Application code.",
+      "source_pages": [
+        26
+      ]
+    },
+    {
+      "id": "FC012",
+      "front": "What do you become when you combine tools behind one API?",
+      "back": "A data-system designer.",
+      "source_pages": [
+        27
+      ]
+    },
+    {
+      "id": "FC013",
+      "front": "What three concerns organize the chapter?",
+      "back": "Reliability, scalability, maintainability.",
+      "source_pages": [
+        28
+      ]
+    },
+    {
+      "id": "FC014",
+      "front": "Define reliability.",
+      "back": "Continuing to work correctly despite adversity.",
+      "source_pages": [
+        28
+      ]
+    },
+    {
+      "id": "FC015",
+      "front": "Define scalability.",
+      "back": "Having reasonable ways to cope with growth in load/data/complexity.",
+      "source_pages": [
+        28
+      ]
+    },
+    {
+      "id": "FC016",
+      "front": "Define maintainability.",
+      "back": "Allowing engineers/operations to work productively on the system over time.",
+      "source_pages": [
+        28
+      ]
+    },
+    {
+      "id": "FC017",
+      "front": "What is a fault?",
+      "back": "A component deviating from its specification.",
+      "source_pages": [
+        29
+      ]
+    },
+    {
+      "id": "FC018",
+      "front": "What is a failure?",
+      "back": "The system as a whole stops providing the required service.",
+      "source_pages": [
+        29
+      ]
+    },
+    {
+      "id": "FC019",
+      "front": "What is fault tolerance?",
+      "back": "Mechanisms that keep component faults from becoming system failures.",
+      "source_pages": [
+        29
+      ]
+    },
+    {
+      "id": "FC020",
+      "front": "Why inject faults deliberately?",
+      "back": "To exercise and test recovery mechanisms continually.",
+      "source_pages": [
+        29
+      ]
+    },
+    {
+      "id": "FC021",
+      "front": "What named tool demonstrates deliberate fault injection?",
+      "back": "Netflix Chaos Monkey.",
+      "source_pages": [
+        29
+      ]
+    },
+    {
+      "id": "FC022",
+      "front": "What hardware MTTF range is cited for disks?",
+      "back": "About 10–50 years.",
+      "source_pages": [
+        29
+      ]
+    },
+    {
+      "id": "FC023",
+      "front": "What does 10,000 disks imply?",
+      "back": "Roughly one disk failure per day.",
+      "source_pages": [
+        29
+      ]
+    },
+    {
+      "id": "FC024",
+      "front": "Name hardware redundancy examples.",
+      "back": "RAID, dual power supplies, hot-swappable CPUs, batteries, diesel generators.",
+      "source_pages": [
+        29
+      ]
+    },
+    {
+      "id": "FC025",
+      "front": "Why tolerate whole-machine loss in software?",
+      "back": "Large fleets/cloud instances fail often enough that machine loss must be expected.",
+      "source_pages": [
+        30
+      ]
+    },
+    {
+      "id": "FC026",
+      "front": "What is a rolling upgrade benefit?",
+      "back": "Patch/restart one node at a time without whole-system downtime.",
+      "source_pages": [
+        30
+      ]
+    },
+    {
+      "id": "FC027",
+      "front": "How do software faults differ from hardware faults?",
+      "back": "Software faults are often systematic and correlated across nodes.",
+      "source_pages": [
+        30,
+        31
+      ]
+    },
+    {
+      "id": "FC028",
+      "front": "What is a cascading failure?",
+      "back": "A fault in one component triggers further faults in others.",
+      "source_pages": [
+        31
+      ]
+    },
+    {
+      "id": "FC029",
+      "front": "Name software-fault mitigations.",
+      "back": "Testing, isolation, restart, monitoring, invariant checking, careful assumption analysis.",
+      "source_pages": [
+        31
+      ]
+    },
+    {
+      "id": "FC030",
+      "front": "What human-error outage observation is cited?",
+      "back": "Operator configuration errors were the leading cause; hardware contributed 10–25%.",
+      "source_pages": [
+        31
+      ]
+    },
+    {
+      "id": "FC031",
+      "front": "Why use a sandbox?",
+      "back": "To let people experiment safely without affecting users.",
+      "source_pages": [
+        31
+      ]
+    },
+    {
+      "id": "FC032",
+      "front": "How can rollout reduce human-error impact?",
+      "back": "Deploy gradually and support fast rollback.",
+      "source_pages": [
+        32
+      ]
+    },
+    {
+      "id": "FC033",
+      "front": "What is telemetry?",
+      "back": "Detailed monitoring such as performance metrics and error rates.",
+      "source_pages": [
+        32
+      ]
+    },
+    {
+      "id": "FC034",
+      "front": "Why does reliability matter for noncritical apps?",
+      "back": "Failures still cause productivity, revenue, reputation, legal, or user-data loss.",
+      "source_pages": [
+        32
+      ]
+    },
+    {
+      "id": "FC035",
+      "front": "What is a load parameter?",
+      "back": "A quantitative description of workload.",
+      "source_pages": [
+        33
+      ]
+    },
+    {
+      "id": "FC036",
+      "front": "Give four load-parameter examples.",
+      "back": "RPS, read/write ratio, active users, cache hit rate.",
+      "source_pages": [
+        33
+      ]
+    },
+    {
+      "id": "FC037",
+      "front": "Twitter average tweet-post rate?",
+      "back": "About 4.6k/sec.",
+      "source_pages": [
+        33
+      ]
+    },
+    {
+      "id": "FC038",
+      "front": "Twitter peak tweet-post rate?",
+      "back": "Over 12k/sec.",
+      "source_pages": [
+        33
+      ]
+    },
+    {
+      "id": "FC039",
+      "front": "Twitter timeline read rate?",
+      "back": "About 300k/sec.",
+      "source_pages": [
+        33
+      ]
+    },
+    {
+      "id": "FC040",
+      "front": "What was Twitter's main scaling challenge?",
+      "back": "Fan-out.",
+      "source_pages": [
+        33
+      ]
+    },
+    {
+      "id": "FC041",
+      "front": "What is fan-out on read?",
+      "back": "Store tweet once and assemble each timeline on read.",
+      "source_pages": [
+        33
+      ]
+    },
+    {
+      "id": "FC042",
+      "front": "What is fan-out on write?",
+      "back": "Copy tweet into each follower's timeline cache when posted.",
+      "source_pages": [
+        34
+      ]
+    },
+    {
+      "id": "FC043",
+      "front": "Why did Twitter favor fan-out on write for most users?",
+      "back": "Reads were much more frequent than writes.",
+      "source_pages": [
+        34
+      ]
+    },
+    {
+      "id": "FC044",
+      "front": "Average follower fan-out in the example?",
+      "back": "About 75.",
+      "source_pages": [
+        34
+      ]
+    },
+    {
+      "id": "FC045",
+      "front": "4.6k × 75 equals approximately what write rate?",
+      "back": "345k timeline-cache writes/sec.",
+      "source_pages": [
+        34
+      ]
+    },
+    {
+      "id": "FC046",
+      "front": "What is the celebrity problem?",
+      "back": "One tweet can require tens of millions of timeline writes.",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "FC047",
+      "front": "What hybrid strategy is used?",
+      "back": "Normal users fan out on write; celebrity tweets are merged at read time.",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "FC048",
+      "front": "What key Twitter load parameter is highlighted?",
+      "back": "Follower-count distribution, possibly weighted by tweet frequency.",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "FC049",
+      "front": "What metric is common for batch systems?",
+      "back": "Throughput.",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "FC050",
+      "front": "What metric is common for online systems?",
+      "back": "Response time.",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "FC051",
+      "front": "Define response time.",
+      "back": "Client-visible request-to-response duration.",
+      "source_pages": [
+        35,
+        36
+      ]
+    },
+    {
+      "id": "FC052",
+      "front": "Define latency as used here.",
+      "back": "Time a request waits to be handled.",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "FC053",
+      "front": "Why use a response-time distribution?",
+      "back": "Individual requests vary because of queueing, network retransmission, GC, page faults, etc.",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "FC054",
+      "front": "Why is the mean often weak?",
+      "back": "It does not show how many users experienced a particular delay.",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "FC055",
+      "front": "What is p50?",
+      "back": "The median.",
+      "source_pages": [
+        37
+      ]
+    },
+    {
+      "id": "FC056",
+      "front": "What does p95=1.5s mean?",
+      "back": "95% of requests are faster than 1.5s; 5% take 1.5s or longer.",
+      "source_pages": [
+        37
+      ]
+    },
+    {
+      "id": "FC057",
+      "front": "What are high-percentile response times called?",
+      "back": "Tail latencies.",
+      "source_pages": [
+        37
+      ]
+    },
+    {
+      "id": "FC058",
+      "front": "What percentile did Amazon use for some internal requirements?",
+      "back": "p99.9.",
+      "source_pages": [
+        37
+      ]
+    },
+    {
+      "id": "FC059",
+      "front": "What effect of +100ms response time is cited?",
+      "back": "About a 1% reduction in sales.",
+      "source_pages": [
+        37
+      ]
+    },
+    {
+      "id": "FC060",
+      "front": "Why not always optimize p99.99?",
+      "back": "Cost and difficulty can exceed the benefit.",
+      "source_pages": [
+        37
+      ]
+    },
+    {
+      "id": "FC061",
+      "front": "What sample SLA thresholds are given?",
+      "back": "Median <200ms, p99 <1s, availability ≥99.9%.",
+      "source_pages": [
+        37
+      ]
+    },
+    {
+      "id": "FC062",
+      "front": "What is head-of-line blocking?",
+      "back": "Slow requests occupy limited capacity and delay later requests.",
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "FC063",
+      "front": "Why measure client-side response time?",
+      "back": "It captures network and queueing delay experienced by users.",
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "FC064",
+      "front": "How should load generators send requests?",
+      "back": "Independently of previous response completion.",
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "FC065",
+      "front": "What is tail-latency amplification?",
+      "back": "One slow backend can delay a request that fans out to many backends.",
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "FC066",
+      "front": "Name percentile approximation algorithms.",
+      "back": "Forward decay, t-digest, HdrHistogram.",
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "FC067",
+      "front": "Can percentiles be averaged across machines?",
+      "back": "No.",
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "FC068",
+      "front": "What should be aggregated instead?",
+      "back": "Histograms.",
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "FC069",
+      "front": "What is vertical scaling?",
+      "back": "Moving to a more powerful machine.",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "FC070",
+      "front": "What is horizontal scaling?",
+      "back": "Distributing load across multiple machines.",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "FC071",
+      "front": "What is another term for horizontal/shared distribution?",
+      "back": "Shared-nothing architecture.",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "FC072",
+      "front": "What is elastic scaling?",
+      "back": "Automatically adding resources when load rises.",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "FC073",
+      "front": "What advantage can manual scaling have?",
+      "back": "Simplicity and fewer operational surprises.",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "FC074",
+      "front": "Which is harder to distribute, stateful or stateless systems?",
+      "back": "Stateful data systems.",
+      "source_pages": [
+        40
+      ]
+    },
+    {
+      "id": "FC075",
+      "front": "Is there one generic scalable architecture?",
+      "back": "No; workload characteristics determine the design.",
+      "source_pages": [
+        40
+      ]
+    },
+    {
+      "id": "FC076",
+      "front": "What early-stage scaling warning is given?",
+      "back": "Do not sacrifice rapid iteration for hypothetical future scale.",
+      "source_pages": [
+        40
+      ]
+    },
+    {
+      "id": "FC077",
+      "front": "Why is maintainability costly?",
+      "back": "Most software cost occurs after initial development.",
+      "source_pages": [
+        40
+      ]
+    },
+    {
+      "id": "FC078",
+      "front": "Name the three maintainability principles.",
+      "back": "Operability, simplicity, evolvability.",
+      "source_pages": [
+        41
+      ]
+    },
+    {
+      "id": "FC079",
+      "front": "Define operability.",
+      "back": "Make it easy to keep the system running.",
+      "source_pages": [
+        41
+      ]
+    },
+    {
+      "id": "FC080",
+      "front": "Define simplicity.",
+      "back": "Reduce complexity so engineers can understand the system.",
+      "source_pages": [
+        41
+      ]
+    },
+    {
+      "id": "FC081",
+      "front": "Define evolvability.",
+      "back": "Make future change/adaptation easy.",
+      "source_pages": [
+        41,
+        44
+      ]
+    },
+    {
+      "id": "FC082",
+      "front": "Name complexity symptoms.",
+      "back": "Tight coupling, tangled dependencies, inconsistent naming, hacks, special cases, state-space explosion.",
+      "source_pages": [
+        43
+      ]
+    },
+    {
+      "id": "FC083",
+      "front": "What is accidental complexity?",
+      "back": "Implementation complexity not inherent in the user problem.",
+      "source_pages": [
+        43
+      ]
+    },
+    {
+      "id": "FC084",
+      "front": "What tool helps remove accidental complexity?",
+      "back": "Abstraction.",
+      "source_pages": [
+        43
+      ]
+    },
+    {
+      "id": "FC085",
+      "front": "What does SQL abstract away in the example?",
+      "back": "Storage structures, concurrency, and crash inconsistencies.",
+      "source_pages": [
+        43
+      ]
+    },
+    {
+      "id": "FC086",
+      "front": "What kinds of change drive evolvability?",
+      "back": "New use cases, business priorities, users, platforms, regulation, and growth.",
+      "source_pages": [
+        43,
+        44
+      ]
+    },
+    {
+      "id": "FC087",
+      "front": "What development practices are mentioned?",
+      "back": "Agile methods, TDD, and refactoring.",
+      "source_pages": [
+        44
+      ]
+    },
+    {
+      "id": "FC088",
+      "front": "How are simplicity and evolvability related?",
+      "back": "Simple systems with good abstractions are usually easier to change.",
+      "source_pages": [
+        44
+      ]
+    }
+  ],
+  "multiple_choice_questions": [
+    {
+      "id": "MCQ001",
+      "difficulty": "medium",
+      "question": "Which is a data-system building block?",
+      "choices": {
+        "A": "Cache",
+        "B": "Compiler",
+        "C": "CSS engine",
+        "D": "GPU shader"
+      },
+      "answer": "A",
+      "source_pages": [
+        25
+      ]
+    },
+    {
+      "id": "MCQ002",
+      "difficulty": "medium",
+      "question": "What primarily characterizes a data-intensive application?",
+      "choices": {
+        "A": "Data quantity/complexity/change rate",
+        "B": "Only CPU frequency",
+        "C": "Only UI complexity",
+        "D": "Only network protocol"
+      },
+      "answer": "A",
+      "source_pages": [
+        25
+      ]
+    },
+    {
+      "id": "MCQ003",
+      "difficulty": "medium",
+      "question": "Which example blurs datastore and message-queue categories?",
+      "choices": {
+        "A": "Redis",
+        "B": "RAID",
+        "C": "HTTP",
+        "D": "DNS"
+      },
+      "answer": "A",
+      "source_pages": [
+        26
+      ]
+    },
+    {
+      "id": "MCQ004",
+      "difficulty": "medium",
+      "question": "What does combining several tools behind one API create?",
+      "choices": {
+        "A": "A special-purpose data system",
+        "B": "A compiler",
+        "C": "A single disk",
+        "D": "A browser"
+      },
+      "answer": "A",
+      "source_pages": [
+        27
+      ]
+    },
+    {
+      "id": "MCQ005",
+      "difficulty": "medium",
+      "question": "Which is a core concern?",
+      "choices": {
+        "A": "Reliability",
+        "B": "Typography",
+        "C": "Branding",
+        "D": "Localization only"
+      },
+      "answer": "A",
+      "source_pages": [
+        28
+      ]
+    },
+    {
+      "id": "MCQ006",
+      "difficulty": "medium",
+      "question": "What is a fault?",
+      "choices": {
+        "A": "Component deviation from spec",
+        "B": "Whole-system outage",
+        "C": "SLA",
+        "D": "Cache hit"
+      },
+      "answer": "A",
+      "source_pages": [
+        29
+      ]
+    },
+    {
+      "id": "MCQ007",
+      "difficulty": "medium",
+      "question": "What is a failure?",
+      "choices": {
+        "A": "Whole system stops required service",
+        "B": "One component glitch only",
+        "C": "A retry",
+        "D": "A deployment"
+      },
+      "answer": "A",
+      "source_pages": [
+        29
+      ]
+    },
+    {
+      "id": "MCQ008",
+      "difficulty": "medium",
+      "question": "What is fault tolerance trying to do?",
+      "choices": {
+        "A": "Prevent faults becoming failures",
+        "B": "Eliminate all faults forever",
+        "C": "Remove monitoring",
+        "D": "Avoid redundancy"
+      },
+      "answer": "A",
+      "source_pages": [
+        29
+      ]
+    },
+    {
+      "id": "MCQ009",
+      "difficulty": "medium",
+      "question": "What tool injects deliberate faults?",
+      "choices": {
+        "A": "Chaos Monkey",
+        "B": "Kafka",
+        "C": "Solr",
+        "D": "RAID"
+      },
+      "answer": "A",
+      "source_pages": [
+        29
+      ]
+    },
+    {
+      "id": "MCQ010",
+      "difficulty": "medium",
+      "question": "What disk MTTF range is cited?",
+      "choices": {
+        "A": "10–50 years",
+        "B": "1–5 days",
+        "C": "500 years",
+        "D": "Exactly 1 year"
+      },
+      "answer": "A",
+      "source_pages": [
+        29
+      ]
+    },
+    {
+      "id": "MCQ011",
+      "difficulty": "medium",
+      "question": "What does 10,000 disks imply?",
+      "choices": {
+        "A": "~1 failure/day",
+        "B": "~1 failure/decade",
+        "C": "0 failures",
+        "D": "10k failures/day"
+      },
+      "answer": "A",
+      "source_pages": [
+        29
+      ]
+    },
+    {
+      "id": "MCQ012",
+      "difficulty": "medium",
+      "question": "Why can software faults be worse than hardware faults?",
+      "choices": {
+        "A": "They can be systematic/correlated",
+        "B": "They are always isolated",
+        "C": "They never cascade",
+        "D": "They only affect disks"
+      },
+      "answer": "A",
+      "source_pages": [
+        30,
+        31
+      ]
+    },
+    {
+      "id": "MCQ013",
+      "difficulty": "medium",
+      "question": "Which is a software fault?",
+      "choices": {
+        "A": "Runaway process exhausting resources",
+        "B": "Healthy disk",
+        "C": "Successful request",
+        "D": "Cache hit"
+      },
+      "answer": "A",
+      "source_pages": [
+        30
+      ]
+    },
+    {
+      "id": "MCQ014",
+      "difficulty": "medium",
+      "question": "What was the cited leading outage cause?",
+      "choices": {
+        "A": "Operator configuration errors",
+        "B": "CPU manufacturing",
+        "C": "Disk only",
+        "D": "DNS only"
+      },
+      "answer": "A",
+      "source_pages": [
+        31
+      ]
+    },
+    {
+      "id": "MCQ015",
+      "difficulty": "medium",
+      "question": "What reduces human-error blast radius?",
+      "choices": {
+        "A": "Gradual rollout",
+        "B": "All-at-once deploy only",
+        "C": "No rollback",
+        "D": "No tests"
+      },
+      "answer": "A",
+      "source_pages": [
+        32
+      ]
+    },
+    {
+      "id": "MCQ016",
+      "difficulty": "medium",
+      "question": "What is telemetry?",
+      "choices": {
+        "A": "Monitoring/metrics",
+        "B": "A DB engine",
+        "C": "A queue",
+        "D": "A query"
+      },
+      "answer": "A",
+      "source_pages": [
+        32
+      ]
+    },
+    {
+      "id": "MCQ017",
+      "difficulty": "medium",
+      "question": "What is scalability about?",
+      "choices": {
+        "A": "Coping with specific load growth",
+        "B": "A binary label",
+        "C": "Only bigger servers",
+        "D": "Only lower latency"
+      },
+      "answer": "A",
+      "source_pages": [
+        32,
+        33
+      ]
+    },
+    {
+      "id": "MCQ018",
+      "difficulty": "medium",
+      "question": "Which is a load parameter?",
+      "choices": {
+        "A": "Requests per second",
+        "B": "Font size",
+        "C": "Repo name",
+        "D": "Programming language"
+      },
+      "answer": "A",
+      "source_pages": [
+        33
+      ]
+    },
+    {
+      "id": "MCQ019",
+      "difficulty": "medium",
+      "question": "Twitter's average post rate?",
+      "choices": {
+        "A": "4.6k/sec",
+        "B": "46k/sec",
+        "C": "300k/sec",
+        "D": "4.6/sec"
+      },
+      "answer": "A",
+      "source_pages": [
+        33
+      ]
+    },
+    {
+      "id": "MCQ020",
+      "difficulty": "medium",
+      "question": "Twitter's timeline read rate?",
+      "choices": {
+        "A": "300k/sec",
+        "B": "30k/sec",
+        "C": "3k/sec",
+        "D": "30/sec"
+      },
+      "answer": "A",
+      "source_pages": [
+        33
+      ]
+    },
+    {
+      "id": "MCQ021",
+      "difficulty": "medium",
+      "question": "Twitter's main scaling problem?",
+      "choices": {
+        "A": "Fan-out",
+        "B": "Tweet text length",
+        "C": "Encryption",
+        "D": "Search syntax"
+      },
+      "answer": "A",
+      "source_pages": [
+        33
+      ]
+    },
+    {
+      "id": "MCQ022",
+      "difficulty": "medium",
+      "question": "What does fan-out on read do?",
+      "choices": {
+        "A": "Assemble timeline on read",
+        "B": "Copy to all followers on post",
+        "C": "Delete tweets",
+        "D": "Compress tweets"
+      },
+      "answer": "A",
+      "source_pages": [
+        33
+      ]
+    },
+    {
+      "id": "MCQ023",
+      "difficulty": "medium",
+      "question": "What does fan-out on write do?",
+      "choices": {
+        "A": "Precompute follower timelines on post",
+        "B": "Assemble on read only",
+        "C": "Avoid caches",
+        "D": "Use one write total"
+      },
+      "answer": "A",
+      "source_pages": [
+        34
+      ]
+    },
+    {
+      "id": "MCQ024",
+      "difficulty": "medium",
+      "question": "Why was fan-out on write attractive?",
+      "choices": {
+        "A": "Reads far exceeded writes",
+        "B": "Writes exceeded reads",
+        "C": "No followers existed",
+        "D": "SQL was unavailable"
+      },
+      "answer": "A",
+      "source_pages": [
+        34
+      ]
+    },
+    {
+      "id": "MCQ025",
+      "difficulty": "medium",
+      "question": "Average fan-out?",
+      "choices": {
+        "A": "75 followers",
+        "B": "7.5",
+        "C": "7500",
+        "D": "30M"
+      },
+      "answer": "A",
+      "source_pages": [
+        34
+      ]
+    },
+    {
+      "id": "MCQ026",
+      "difficulty": "medium",
+      "question": "4.6k posts/sec × 75 gives?",
+      "choices": {
+        "A": "~345k cache writes/sec",
+        "B": "~34.5k",
+        "C": "~4.6k",
+        "D": "~300"
+      },
+      "answer": "A",
+      "source_pages": [
+        34
+      ]
+    },
+    {
+      "id": "MCQ027",
+      "difficulty": "medium",
+      "question": "What problem do celebrities create?",
+      "choices": {
+        "A": "Tens of millions of fan-out writes",
+        "B": "No write amplification",
+        "C": "No readers",
+        "D": "Smaller posts"
+      },
+      "answer": "A",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "MCQ028",
+      "difficulty": "medium",
+      "question": "What is Twitter's hybrid?",
+      "choices": {
+        "A": "Fan out normal users; merge celebrity tweets on read",
+        "B": "Fan out everyone",
+        "C": "Read-time only",
+        "D": "Disable celebrities"
+      },
+      "answer": "A",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "MCQ029",
+      "difficulty": "medium",
+      "question": "What is throughput?",
+      "choices": {
+        "A": "Work per unit time",
+        "B": "Only queue delay",
+        "C": "Median latency",
+        "D": "Request size"
+      },
+      "answer": "A",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "MCQ030",
+      "difficulty": "medium",
+      "question": "What is response time?",
+      "choices": {
+        "A": "Client-visible request-to-response duration",
+        "B": "Only CPU time",
+        "C": "Only queueing",
+        "D": "Only network"
+      },
+      "answer": "A",
+      "source_pages": [
+        35,
+        36
+      ]
+    },
+    {
+      "id": "MCQ031",
+      "difficulty": "medium",
+      "question": "What is latency in the chapter?",
+      "choices": {
+        "A": "Time waiting to be handled",
+        "B": "Full client response time",
+        "C": "Only disk time",
+        "D": "Only TCP time"
+      },
+      "answer": "A",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "MCQ032",
+      "difficulty": "medium",
+      "question": "What is p50?",
+      "choices": {
+        "A": "Median",
+        "B": "Maximum",
+        "C": "Mean",
+        "D": "p99"
+      },
+      "answer": "A",
+      "source_pages": [
+        37
+      ]
+    },
+    {
+      "id": "MCQ033",
+      "difficulty": "medium",
+      "question": "What does p95=1.5s mean?",
+      "choices": {
+        "A": "95% finish under 1.5s",
+        "B": "95% exceed 1.5s",
+        "C": "Every request is 1.5s",
+        "D": "5% finish under 1.5s"
+      },
+      "answer": "A",
+      "source_pages": [
+        37
+      ]
+    },
+    {
+      "id": "MCQ034",
+      "difficulty": "medium",
+      "question": "What are high-percentile response times called?",
+      "choices": {
+        "A": "Tail latencies",
+        "B": "Throughput",
+        "C": "SLA",
+        "D": "Load parameters"
+      },
+      "answer": "A",
+      "source_pages": [
+        37
+      ]
+    },
+    {
+      "id": "MCQ035",
+      "difficulty": "medium",
+      "question": "Which percentile is cited for some Amazon internal targets?",
+      "choices": {
+        "A": "p99.9",
+        "B": "p50 only",
+        "C": "p10",
+        "D": "p1"
+      },
+      "answer": "A",
+      "source_pages": [
+        37
+      ]
+    },
+    {
+      "id": "MCQ036",
+      "difficulty": "medium",
+      "question": "What is head-of-line blocking?",
+      "choices": {
+        "A": "Slow work delays requests behind it",
+        "B": "All requests execute together",
+        "C": "A cache miss",
+        "D": "A DB transaction"
+      },
+      "answer": "A",
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "MCQ037",
+      "difficulty": "medium",
+      "question": "What is tail-latency amplification?",
+      "choices": {
+        "A": "One slow backend delays a fan-out request",
+        "B": "Tail latency disappears with fan-out",
+        "C": "Averages become percentiles",
+        "D": "Writes become reads"
+      },
+      "answer": "A",
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "MCQ038",
+      "difficulty": "medium",
+      "question": "How should percentiles from machines be aggregated?",
+      "choices": {
+        "A": "Combine histograms",
+        "B": "Average p99 values",
+        "C": "Average p50 only",
+        "D": "Take max only"
+      },
+      "answer": "A",
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "MCQ039",
+      "difficulty": "medium",
+      "question": "What is vertical scaling?",
+      "choices": {
+        "A": "Use a more powerful machine",
+        "B": "Use more machines",
+        "C": "Reduce traffic",
+        "D": "Add a queue"
+      },
+      "answer": "A",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "MCQ040",
+      "difficulty": "medium",
+      "question": "What is horizontal scaling?",
+      "choices": {
+        "A": "Spread load across machines",
+        "B": "Use one bigger machine",
+        "C": "Reduce data",
+        "D": "Only cache"
+      },
+      "answer": "A",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "MCQ041",
+      "difficulty": "medium",
+      "question": "What is elastic scaling?",
+      "choices": {
+        "A": "Automatically add capacity",
+        "B": "Manual-only scaling",
+        "C": "No scaling",
+        "D": "Only vertical scaling"
+      },
+      "answer": "A",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "MCQ042",
+      "difficulty": "medium",
+      "question": "Which system type is harder to distribute?",
+      "choices": {
+        "A": "Stateful data systems",
+        "B": "Stateless services",
+        "C": "Static files",
+        "D": "Pure functions"
+      },
+      "answer": "A",
+      "source_pages": [
+        40
+      ]
+    },
+    {
+      "id": "MCQ043",
+      "difficulty": "medium",
+      "question": "Is there a one-size-fits-all scalable architecture?",
+      "choices": {
+        "A": "No",
+        "B": "Yes: always shard",
+        "C": "Yes: always microservices",
+        "D": "Yes: always SQL"
+      },
+      "answer": "A",
+      "source_pages": [
+        40
+      ]
+    },
+    {
+      "id": "MCQ044",
+      "difficulty": "medium",
+      "question": "What are maintainability's three principles?",
+      "choices": {
+        "A": "Operability, simplicity, evolvability",
+        "B": "RPS, p99, fan-out",
+        "C": "RAID, cache, queue",
+        "D": "TCP, HTTP, SQL"
+      },
+      "answer": "A",
+      "source_pages": [
+        41
+      ]
+    },
+    {
+      "id": "MCQ045",
+      "difficulty": "medium",
+      "question": "What is operability?",
+      "choices": {
+        "A": "Ease of keeping system running",
+        "B": "Simple UI",
+        "C": "Low latency only",
+        "D": "Data compression"
+      },
+      "answer": "A",
+      "source_pages": [
+        41
+      ]
+    },
+    {
+      "id": "MCQ046",
+      "difficulty": "medium",
+      "question": "What is accidental complexity?",
+      "choices": {
+        "A": "Implementation complexity not inherent to the problem",
+        "B": "All domain complexity",
+        "C": "Network latency",
+        "D": "Business requirements"
+      },
+      "answer": "A",
+      "source_pages": [
+        43
+      ]
+    },
+    {
+      "id": "MCQ047",
+      "difficulty": "medium",
+      "question": "What reduces accidental complexity?",
+      "choices": {
+        "A": "Good abstraction",
+        "B": "More special cases",
+        "C": "Tighter coupling",
+        "D": "More hidden dependencies"
+      },
+      "answer": "A",
+      "source_pages": [
+        43
+      ]
+    },
+    {
+      "id": "MCQ048",
+      "difficulty": "medium",
+      "question": "What supports evolvability?",
+      "choices": {
+        "A": "Simple systems and good abstractions",
+        "B": "More hacks",
+        "C": "More coupling",
+        "D": "Less testing"
+      },
+      "answer": "A",
+      "source_pages": [
+        44
+      ]
+    }
+  ],
+  "mix_and_match": [
+    {
+      "id": "MM01",
+      "title": "Building block to purpose",
+      "left": {
+        "A": "Database",
+        "B": "Cache",
+        "C": "Search index",
+        "D": "Stream processing",
+        "E": "Batch processing"
+      },
+      "right": {
+        "1": "Persistent retrieval",
+        "2": "Speed repeated reads",
+        "3": "Keyword/filter search",
+        "4": "Asynchronous handling",
+        "5": "Periodic accumulated-data processing"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        25
+      ]
+    },
+    {
+      "id": "MM02",
+      "title": "Reliability term to meaning",
+      "left": {
+        "A": "Fault",
+        "B": "Failure",
+        "C": "Fault tolerance",
+        "D": "Chaos testing",
+        "E": "Telemetry"
+      },
+      "right": {
+        "1": "Component deviation",
+        "2": "Whole-service outage",
+        "3": "Contain faults",
+        "4": "Deliberately inject faults",
+        "5": "Runtime monitoring"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        29,
+        32
+      ]
+    },
+    {
+      "id": "MM03",
+      "title": "Performance term to meaning",
+      "left": {
+        "A": "Throughput",
+        "B": "Response time",
+        "C": "Latency",
+        "D": "p50",
+        "E": "Tail latency"
+      },
+      "right": {
+        "1": "Work per unit time",
+        "2": "Client-visible total",
+        "3": "Waiting time",
+        "4": "Median",
+        "5": "High-percentile response time"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        35,
+        36,
+        37
+      ]
+    },
+    {
+      "id": "MM04",
+      "title": "Scaling term to meaning",
+      "left": {
+        "A": "Vertical",
+        "B": "Horizontal",
+        "C": "Elastic",
+        "D": "Manual",
+        "E": "Shared-nothing"
+      },
+      "right": {
+        "1": "Bigger machine",
+        "2": "More machines",
+        "3": "Automatic capacity changes",
+        "4": "Human capacity decision",
+        "5": "Independent-machine scale-out"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "MM05",
+      "title": "Maintainability principle to goal",
+      "left": {
+        "A": "Operability",
+        "B": "Simplicity",
+        "C": "Evolvability",
+        "D": "Abstraction",
+        "E": "Accidental complexity"
+      },
+      "right": {
+        "1": "Easy to operate",
+        "2": "Easy to understand",
+        "3": "Easy to change",
+        "4": "Hide implementation detail",
+        "5": "Implementation-created complexity"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        41,
+        43,
+        44
+      ]
+    }
+  ],
+  "true_false": [
+    {
+      "id": "TF001",
+      "statement": "Data-intensive applications are defined mainly by CPU bottlenecks.",
+      "answer": false,
+      "source_pages": [
+        25
+      ]
+    },
+    {
+      "id": "TF002",
+      "statement": "Caches are a standard building block.",
+      "answer": true,
+      "source_pages": [
+        25
+      ]
+    },
+    {
+      "id": "TF003",
+      "statement": "Redis illustrates blurred tool categories.",
+      "answer": true,
+      "source_pages": [
+        26
+      ]
+    },
+    {
+      "id": "TF004",
+      "statement": "Application code may need to keep search indexes synchronized with the DB.",
+      "answer": true,
+      "source_pages": [
+        26
+      ]
+    },
+    {
+      "id": "TF005",
+      "statement": "Reliability means faults never occur.",
+      "answer": false,
+      "source_pages": [
+        28,
+        29
+      ]
+    },
+    {
+      "id": "TF006",
+      "statement": "A fault and failure are different.",
+      "answer": true,
+      "source_pages": [
+        29
+      ]
+    },
+    {
+      "id": "TF007",
+      "statement": "Chaos Monkey deliberately injects faults.",
+      "answer": true,
+      "source_pages": [
+        29
+      ]
+    },
+    {
+      "id": "TF008",
+      "statement": "10,000 disks imply roughly one disk failure per day in the cited example.",
+      "answer": true,
+      "source_pages": [
+        29
+      ]
+    },
+    {
+      "id": "TF009",
+      "statement": "Software faults are often systematic/correlated.",
+      "answer": true,
+      "source_pages": [
+        30,
+        31
+      ]
+    },
+    {
+      "id": "TF010",
+      "statement": "Cascading failure means one fault triggers more faults.",
+      "answer": true,
+      "source_pages": [
+        31
+      ]
+    },
+    {
+      "id": "TF011",
+      "statement": "Operator configuration errors are described as a major outage cause.",
+      "answer": true,
+      "source_pages": [
+        31
+      ]
+    },
+    {
+      "id": "TF012",
+      "statement": "Sandboxes can reduce human-error impact.",
+      "answer": true,
+      "source_pages": [
+        31
+      ]
+    },
+    {
+      "id": "TF013",
+      "statement": "Reliability matters only for safety-critical systems.",
+      "answer": false,
+      "source_pages": [
+        32
+      ]
+    },
+    {
+      "id": "TF014",
+      "statement": "Scalability is meaningful without specifying how load grows.",
+      "answer": false,
+      "source_pages": [
+        32,
+        33
+      ]
+    },
+    {
+      "id": "TF015",
+      "statement": "Twitter's timeline reads were about 300k/sec.",
+      "answer": true,
+      "source_pages": [
+        33
+      ]
+    },
+    {
+      "id": "TF016",
+      "statement": "Fan-out on write makes reads cheaper.",
+      "answer": true,
+      "source_pages": [
+        34
+      ]
+    },
+    {
+      "id": "TF017",
+      "statement": "Fan-out on write makes writes more expensive.",
+      "answer": true,
+      "source_pages": [
+        34
+      ]
+    },
+    {
+      "id": "TF018",
+      "statement": "Twitter treats celebrity accounts exactly like ordinary accounts.",
+      "answer": false,
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "TF019",
+      "statement": "Throughput is commonly important in batch systems.",
+      "answer": true,
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "TF020",
+      "statement": "Latency and response time are identical in the chapter.",
+      "answer": false,
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "TF021",
+      "statement": "Response time is a distribution.",
+      "answer": true,
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "TF022",
+      "statement": "p50 is the median.",
+      "answer": true,
+      "source_pages": [
+        37
+      ]
+    },
+    {
+      "id": "TF023",
+      "statement": "Tail latency refers to high percentiles.",
+      "answer": true,
+      "source_pages": [
+        37
+      ]
+    },
+    {
+      "id": "TF024",
+      "statement": "Queueing can dominate high-percentile response time.",
+      "answer": true,
+      "source_pages": [
+        37,
+        38
+      ]
+    },
+    {
+      "id": "TF025",
+      "statement": "A realistic load generator should wait for each previous response.",
+      "answer": false,
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "TF026",
+      "statement": "Tail-latency amplification comes from waiting on many backend calls.",
+      "answer": true,
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "TF027",
+      "statement": "Averaging p99 across machines is valid.",
+      "answer": false,
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "TF028",
+      "statement": "Histograms should be aggregated instead.",
+      "answer": true,
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "TF029",
+      "statement": "Vertical scaling means a stronger machine.",
+      "answer": true,
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "TF030",
+      "statement": "Horizontal scaling means distributing load.",
+      "answer": true,
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "TF031",
+      "statement": "Elastic scaling automatically adjusts resources.",
+      "answer": true,
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "TF032",
+      "statement": "Stateful systems are usually easier to distribute than stateless ones.",
+      "answer": false,
+      "source_pages": [
+        40
+      ]
+    },
+    {
+      "id": "TF033",
+      "statement": "There is no generic scalable architecture for all workloads.",
+      "answer": true,
+      "source_pages": [
+        40
+      ]
+    },
+    {
+      "id": "TF034",
+      "statement": "Operability, simplicity, and evolvability are maintainability principles.",
+      "answer": true,
+      "source_pages": [
+        41
+      ]
+    },
+    {
+      "id": "TF035",
+      "statement": "Simplicity here means a simple user interface.",
+      "answer": false,
+      "source_pages": [
+        41
+      ]
+    },
+    {
+      "id": "TF036",
+      "statement": "Tight coupling is a symptom of complexity.",
+      "answer": true,
+      "source_pages": [
+        43
+      ]
+    },
+    {
+      "id": "TF037",
+      "statement": "Accidental complexity comes from implementation rather than the inherent problem.",
+      "answer": true,
+      "source_pages": [
+        43
+      ]
+    },
+    {
+      "id": "TF038",
+      "statement": "Abstraction can reduce accidental complexity.",
+      "answer": true,
+      "source_pages": [
+        43
+      ]
+    },
+    {
+      "id": "TF039",
+      "statement": "SQL is cited as an abstraction over lower-level data structures and concurrency.",
+      "answer": true,
+      "source_pages": [
+        43
+      ]
+    },
+    {
+      "id": "TF040",
+      "statement": "Simple systems are usually easier to evolve.",
+      "answer": true,
+      "source_pages": [
+        44
+      ]
+    }
+  ],
+  "fill_in_the_blank": [
+    {
+      "id": "FIB001",
+      "prompt": "The three core concerns are reliability, scalability, and ______.",
+      "answer": "maintainability",
+      "source_pages": [
+        28
+      ]
+    },
+    {
+      "id": "FIB002",
+      "prompt": "A component deviation from spec is a ______.",
+      "answer": "fault",
+      "source_pages": [
+        29
+      ]
+    },
+    {
+      "id": "FIB003",
+      "prompt": "A whole-system loss of required service is a ______.",
+      "answer": "failure",
+      "source_pages": [
+        29
+      ]
+    },
+    {
+      "id": "FIB004",
+      "prompt": "Netflix's deliberate fault tool is Chaos ______.",
+      "answer": "Monkey",
+      "source_pages": [
+        29
+      ]
+    },
+    {
+      "id": "FIB005",
+      "prompt": "Disk MTTF is cited as about 10 to ______ years.",
+      "answer": "50",
+      "source_pages": [
+        29
+      ]
+    },
+    {
+      "id": "FIB006",
+      "prompt": "10,000 disks imply roughly one failure per ______.",
+      "answer": "day",
+      "source_pages": [
+        29
+      ]
+    },
+    {
+      "id": "FIB007",
+      "prompt": "Runtime monitoring metrics are called ______.",
+      "answer": "telemetry",
+      "source_pages": [
+        32
+      ]
+    },
+    {
+      "id": "FIB008",
+      "prompt": "Workload dimensions are load ______.",
+      "answer": "parameters",
+      "source_pages": [
+        33
+      ]
+    },
+    {
+      "id": "FIB009",
+      "prompt": "Twitter averaged about ______k posts/sec.",
+      "answer": "4.6",
+      "source_pages": [
+        33
+      ]
+    },
+    {
+      "id": "FIB010",
+      "prompt": "Twitter timeline reads were about ______k/sec.",
+      "answer": "300",
+      "source_pages": [
+        33
+      ]
+    },
+    {
+      "id": "FIB011",
+      "prompt": "Average fan-out was about ______ followers.",
+      "answer": "75",
+      "source_pages": [
+        34
+      ]
+    },
+    {
+      "id": "FIB012",
+      "prompt": "That produced about ______k timeline-cache writes/sec.",
+      "answer": "345",
+      "source_pages": [
+        34
+      ]
+    },
+    {
+      "id": "FIB013",
+      "prompt": "Batch systems commonly focus on ______.",
+      "answer": "throughput",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "FIB014",
+      "prompt": "Client-visible request duration is response ______.",
+      "answer": "time",
+      "source_pages": [
+        35,
+        36
+      ]
+    },
+    {
+      "id": "FIB015",
+      "prompt": "Waiting before service is ______.",
+      "answer": "latency",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "FIB016",
+      "prompt": "Median is p______.",
+      "answer": "50",
+      "source_pages": [
+        37
+      ]
+    },
+    {
+      "id": "FIB017",
+      "prompt": "99.9th percentile is p______.",
+      "answer": "999",
+      "source_pages": [
+        37
+      ]
+    },
+    {
+      "id": "FIB018",
+      "prompt": "Slow high-percentile requests are ______ latency.",
+      "answer": "tail",
+      "source_pages": [
+        37
+      ]
+    },
+    {
+      "id": "FIB019",
+      "prompt": "Bigger-machine scaling is ______ scaling.",
+      "answer": "vertical",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "FIB020",
+      "prompt": "More-machine scaling is ______ scaling.",
+      "answer": "horizontal",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "FIB021",
+      "prompt": "Maintainability includes operability, simplicity, and ______.",
+      "answer": "evolvability",
+      "source_pages": [
+        41
+      ]
+    },
+    {
+      "id": "FIB022",
+      "prompt": "Implementation-only complexity is ______ complexity.",
+      "answer": "accidental",
+      "source_pages": [
+        43
+      ]
+    },
+    {
+      "id": "FIB023",
+      "prompt": "A clean layer hiding implementation details is an ______.",
+      "answer": "abstraction",
+      "source_pages": [
+        43
+      ]
+    }
+  ],
+  "ordering_exercises": [
+    {
+      "id": "ORD01",
+      "title": "Fault containment",
+      "items_scrambled": [
+        "Whole-system failure if recovery fails",
+        "Component fault",
+        "Fault-tolerance mechanism reacts"
+      ],
+      "correct_order": [
+        "Component fault",
+        "Fault-tolerance mechanism reacts",
+        "Whole-system failure if recovery fails"
+      ],
+      "source_pages": [
+        29
+      ]
+    },
+    {
+      "id": "ORD02",
+      "title": "Fan-out on write",
+      "items_scrambled": [
+        "Read precomputed timeline",
+        "Find followers",
+        "Post tweet",
+        "Insert into follower timeline caches"
+      ],
+      "correct_order": [
+        "Post tweet",
+        "Find followers",
+        "Insert into follower timeline caches",
+        "Read precomputed timeline"
+      ],
+      "source_pages": [
+        34
+      ]
+    },
+    {
+      "id": "ORD03",
+      "title": "Scalability analysis",
+      "items_scrambled": [
+        "Choose scaling approach",
+        "Measure performance",
+        "Describe load",
+        "Increase load parameter"
+      ],
+      "correct_order": [
+        "Describe load",
+        "Measure performance",
+        "Increase load parameter",
+        "Choose scaling approach"
+      ],
+      "source_pages": [
+        33,
+        35,
+        39
+      ]
+    }
+  ],
+  "scenario_questions": [
+    {
+      "id": "SC01",
+      "scenario": "A service uses a DB, Redis cache, Elasticsearch, and Kafka behind one API.",
+      "question": "What chapter concept is illustrated?",
+      "expected_answer": "A composite/special-purpose data system assembled from general-purpose components.",
+      "source_pages": [
+        26,
+        27
+      ]
+    },
+    {
+      "id": "SC02",
+      "scenario": "A database write succeeds but the cache remains stale.",
+      "question": "What guarantee must the composite system provide?",
+      "expected_answer": "Correct cache invalidation/update so clients see consistent results.",
+      "source_pages": [
+        27
+      ]
+    },
+    {
+      "id": "SC03",
+      "scenario": "One node crashes but users see no interruption.",
+      "question": "Fault or failure?",
+      "expected_answer": "A component fault occurred, but the system avoided a failure.",
+      "source_pages": [
+        29
+      ]
+    },
+    {
+      "id": "SC04",
+      "scenario": "A team randomly kills service processes to verify failover.",
+      "question": "What practice is this?",
+      "expected_answer": "Deliberate fault injection/chaos testing.",
+      "source_pages": [
+        29
+      ]
+    },
+    {
+      "id": "SC05",
+      "scenario": "One malformed request crashes every server instance.",
+      "question": "Why is this dangerous?",
+      "expected_answer": "It is a systematic/correlated software fault capable of causing widespread failure.",
+      "source_pages": [
+        30,
+        31
+      ]
+    },
+    {
+      "id": "SC06",
+      "scenario": "A social account has 30M followers.",
+      "question": "Why can fan-out-on-write become problematic?",
+      "expected_answer": "One post can create over 30M timeline writes.",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "SC07",
+      "scenario": "Timeline reads vastly outnumber posts.",
+      "question": "What tradeoff favors fan-out-on-write?",
+      "expected_answer": "Doing more work during less-frequent writes makes frequent reads much cheaper.",
+      "source_pages": [
+        34
+      ]
+    },
+    {
+      "id": "SC08",
+      "scenario": "A service reports only mean latency.",
+      "question": "What should be added?",
+      "expected_answer": "Response-time percentiles such as p50/p95/p99/p999 and tail latency.",
+      "source_pages": [
+        36,
+        37
+      ]
+    },
+    {
+      "id": "SC09",
+      "scenario": "p95 response time is 1.5 seconds.",
+      "question": "Interpret it.",
+      "expected_answer": "95% of requests are faster than 1.5s; 5% take 1.5s or longer.",
+      "source_pages": [
+        37
+      ]
+    },
+    {
+      "id": "SC10",
+      "scenario": "One frontend request calls 20 backends in parallel.",
+      "question": "Why can it be slow?",
+      "expected_answer": "Tail-latency amplification: it waits for the slowest backend call.",
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "SC11",
+      "scenario": "A benchmark waits for every response before sending the next request.",
+      "question": "Why is this unrealistic?",
+      "expected_answer": "It artificially suppresses queueing and understates real-world tail latency.",
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "SC12",
+      "scenario": "Traffic spikes unpredictably.",
+      "question": "What scaling mode may help?",
+      "expected_answer": "Elastic scaling.",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "SC13",
+      "scenario": "Two workloads move the same bytes/sec but have radically different request sizes/frequencies.",
+      "question": "Should architecture be the same?",
+      "expected_answer": "No. Workload shape, access patterns, and latency requirements may require different architectures.",
+      "source_pages": [
+        40
+      ]
+    },
+    {
+      "id": "SC14",
+      "scenario": "Operations cannot diagnose production problems.",
+      "question": "What maintainability principle is weak?",
+      "expected_answer": "Operability; improve monitoring, documentation, automation, and predictable controls.",
+      "source_pages": [
+        41,
+        42
+      ]
+    },
+    {
+      "id": "SC15",
+      "scenario": "A codebase has tangled dependencies and many special-case hacks.",
+      "question": "What concept applies?",
+      "expected_answer": "Accidental complexity; simplicity and abstraction should be improved.",
+      "source_pages": [
+        42,
+        43
+      ]
+    }
+  ],
+  "short_answer_questions": [
+    {
+      "id": "SA01",
+      "question": "Why group databases, caches, queues, and indexes as data systems?",
+      "model_answer": "Their traditional categories increasingly overlap, and modern applications often combine several tools to satisfy one system's storage and processing requirements.",
+      "source_pages": [
+        26
+      ]
+    },
+    {
+      "id": "SA02",
+      "question": "Explain fault vs failure.",
+      "model_answer": "A fault is a component deviation; a failure is system-level loss of required service. Fault tolerance attempts to contain faults before users experience failure.",
+      "source_pages": [
+        29
+      ]
+    },
+    {
+      "id": "SA03",
+      "question": "Why can software faults be harder than hardware faults?",
+      "model_answer": "They are often systematic and correlated, so the same trigger can affect many nodes simultaneously or cascade across dependencies.",
+      "source_pages": [
+        30,
+        31
+      ]
+    },
+    {
+      "id": "SA04",
+      "question": "How should systems account for human error?",
+      "model_answer": "Use safe interfaces, sandboxes, testing, gradual deployment, rollback, telemetry, recomputation tools, and training.",
+      "source_pages": [
+        31,
+        32
+      ]
+    },
+    {
+      "id": "SA05",
+      "question": "Explain Twitter's hybrid feed strategy.",
+      "model_answer": "Most tweets are fanned out into follower caches at write time, while celebrity tweets are fetched and merged at read time to avoid extreme write amplification.",
+      "source_pages": [
+        34,
+        35
+      ]
+    },
+    {
+      "id": "SA06",
+      "question": "Why are percentiles better than averages for response time?",
+      "model_answer": "Response time is a distribution; percentiles reveal typical and tail experiences that a mean can hide.",
+      "source_pages": [
+        36,
+        37
+      ]
+    },
+    {
+      "id": "SA07",
+      "question": "Explain tail-latency amplification.",
+      "model_answer": "A user request that fans out to many backends completes only after the slowest call, so the chance of encountering a slow outlier grows with fan-out.",
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "SA08",
+      "question": "Compare vertical, horizontal, elastic, and manual scaling.",
+      "model_answer": "Vertical uses stronger machines; horizontal uses more machines; elastic scaling adjusts automatically; manual scaling relies on human capacity decisions.",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "id": "SA09",
+      "question": "Why is there no one-size-fits-all scalable architecture?",
+      "model_answer": "Reads, writes, request size/frequency, data volume/complexity, access patterns, and latency requirements differ across applications.",
+      "source_pages": [
+        40
+      ]
+    },
+    {
+      "id": "SA10",
+      "question": "What makes software maintainable?",
+      "model_answer": "Operability makes it easy to run, simplicity reduces complexity, and evolvability makes future change easier.",
+      "source_pages": [
+        41,
+        42,
+        43,
+        44
+      ]
+    }
+  ],
+  "active_recall_prompts": [
+    {
+      "id": "AR01",
+      "prompt": "Define data-intensive and list all five building blocks.",
+      "target_points": [
+        "data quantity/complexity/change rate",
+        "DB",
+        "cache",
+        "search",
+        "stream",
+        "batch"
+      ],
+      "source_pages": [
+        25
+      ]
+    },
+    {
+      "id": "AR02",
+      "prompt": "Define reliability, fault, failure, and fault tolerance.",
+      "target_points": [
+        "work correctly",
+        "component deviation",
+        "system outage",
+        "contain fault"
+      ],
+      "source_pages": [
+        28,
+        29
+      ]
+    },
+    {
+      "id": "AR03",
+      "prompt": "Compare hardware, software, and human faults.",
+      "target_points": [
+        "random hardware",
+        "systematic software",
+        "operator mistakes",
+        "redundancy/testing/sandbox/monitoring"
+      ],
+      "source_pages": [
+        29,
+        30,
+        31,
+        32
+      ]
+    },
+    {
+      "id": "AR04",
+      "prompt": "Reconstruct Twitter's numeric example.",
+      "target_points": [
+        "4.6k avg",
+        "12k peak",
+        "300k reads",
+        "75 followers",
+        "345k writes",
+        "30M celebrity",
+        "5 sec"
+      ],
+      "source_pages": [
+        33,
+        34,
+        35
+      ]
+    },
+    {
+      "id": "AR05",
+      "prompt": "Explain fan-out on read, fan-out on write, and hybrid.",
+      "target_points": [
+        "cheap write/expensive read",
+        "expensive write/cheap read",
+        "celebrity exception"
+      ],
+      "source_pages": [
+        33,
+        34,
+        35
+      ]
+    },
+    {
+      "id": "AR06",
+      "prompt": "Differentiate throughput, response time, and latency.",
+      "target_points": [
+        "batch",
+        "client-visible total",
+        "waiting"
+      ],
+      "source_pages": [
+        35,
+        36
+      ]
+    },
+    {
+      "id": "AR07",
+      "prompt": "Explain p50/p95/p99/p999 and tail latency.",
+      "target_points": [
+        "median",
+        "thresholds",
+        "outliers",
+        "user experience"
+      ],
+      "source_pages": [
+        36,
+        37
+      ]
+    },
+    {
+      "id": "AR08",
+      "prompt": "Explain HOL blocking and tail amplification.",
+      "target_points": [
+        "limited parallelism",
+        "queueing",
+        "slowest backend",
+        "fan-out"
+      ],
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "AR09",
+      "prompt": "Compare scaling approaches.",
+      "target_points": [
+        "vertical",
+        "horizontal",
+        "shared nothing",
+        "elastic",
+        "manual",
+        "stateful complexity"
+      ],
+      "source_pages": [
+        39,
+        40
+      ]
+    },
+    {
+      "id": "AR10",
+      "prompt": "Define operability, simplicity, evolvability.",
+      "target_points": [
+        "easy to operate",
+        "easy to understand",
+        "easy to change"
+      ],
+      "source_pages": [
+        41
+      ]
+    },
+    {
+      "id": "AR11",
+      "prompt": "List complexity symptoms and explain accidental complexity.",
+      "target_points": [
+        "state explosion",
+        "coupling",
+        "dependencies",
+        "naming",
+        "hacks",
+        "special cases",
+        "abstraction"
+      ],
+      "source_pages": [
+        42,
+        43
+      ]
+    }
+  ],
+  "diagram_reconstruction_drills": [
+    {
+      "id": "DR01",
+      "name": "Composite data system",
+      "task": "Redraw Figure 1-1: client/API, app code, primary DB, cache, full-text index, message queue, and synchronization paths.",
+      "source_pages": [
+        27
+      ]
+    },
+    {
+      "id": "DR02",
+      "name": "Twitter fan-out",
+      "task": "Redraw the Twitter timeline pipeline and annotate 4.6k posts/sec, 345k cache writes/sec, and 300k reads/sec.",
+      "source_pages": [
+        34
+      ]
+    },
+    {
+      "id": "DR03",
+      "name": "Response-time percentiles",
+      "task": "Recreate Figure 1-4 conceptually with request bars and p50/mean/p95/p99 lines.",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "DR04",
+      "name": "Tail-latency amplification",
+      "task": "Redraw one user request fanning out to multiple backends, with the slowest backend determining total response.",
+      "source_pages": [
+        38,
+        39
+      ]
+    },
+    {
+      "id": "DR05",
+      "name": "Maintainability model",
+      "task": "Draw maintainability branching into operability, simplicity, and evolvability with one-line definitions.",
+      "source_pages": [
+        41
+      ]
+    }
+  ],
+  "interview_style_questions": [
+    {
+      "id": "INT01",
+      "question": "How do you evaluate reliability?",
+      "strong_answer_outline": [
+        "fault vs failure",
+        "hardware/software/human",
+        "fault tolerance",
+        "monitoring/testing/recovery"
+      ],
+      "source_pages": [
+        28,
+        29,
+        30,
+        31,
+        32
+      ]
+    },
+    {
+      "id": "INT02",
+      "question": "What load parameters matter for a social feed?",
+      "strong_answer_outline": [
+        "post RPS",
+        "read RPS",
+        "follower distribution",
+        "fan-out",
+        "extreme users"
+      ],
+      "source_pages": [
+        33,
+        34,
+        35
+      ]
+    },
+    {
+      "id": "INT03",
+      "question": "When would you fan out on write vs read?",
+      "strong_answer_outline": [
+        "read/write ratio",
+        "write amplification",
+        "cache precompute",
+        "celebrity skew",
+        "hybrid"
+      ],
+      "source_pages": [
+        33,
+        34,
+        35
+      ]
+    },
+    {
+      "id": "INT04",
+      "question": "How should production latency be reported?",
+      "strong_answer_outline": [
+        "response-time distribution",
+        "p50",
+        "p95/p99/p999",
+        "client-side",
+        "histograms"
+      ],
+      "source_pages": [
+        36,
+        37,
+        38
+      ]
+    },
+    {
+      "id": "INT05",
+      "question": "Why can service fan-out cause poor p99?",
+      "strong_answer_outline": [
+        "wait for slowest",
+        "tail-latency amplification",
+        "queueing/HOL"
+      ],
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "INT06",
+      "question": "How do you think about scaling?",
+      "strong_answer_outline": [
+        "load parameters",
+        "performance",
+        "vertical/horizontal",
+        "elastic/manual",
+        "workload-specific"
+      ],
+      "source_pages": [
+        33,
+        35,
+        39,
+        40
+      ]
+    },
+    {
+      "id": "INT07",
+      "question": "How do you improve operability?",
+      "strong_answer_outline": [
+        "visibility",
+        "automation",
+        "no machine dependency",
+        "docs",
+        "defaults/overrides",
+        "self-heal/manual control"
+      ],
+      "source_pages": [
+        41,
+        42
+      ]
+    },
+    {
+      "id": "INT08",
+      "question": "How do simplicity and evolvability interact?",
+      "strong_answer_outline": [
+        "accidental complexity",
+        "abstraction",
+        "understandability",
+        "safe future change"
+      ],
+      "source_pages": [
+        43,
+        44
+      ]
+    }
+  ],
+  "practice_problems": [
+    {
+      "id": "P01",
+      "prompt": "Under the chapter's rough disk-failure model, estimate failures/day for 20,000 disks.",
+      "solution": "About 2/day.",
+      "based_on_source_pages": [
+        29
+      ]
+    },
+    {
+      "id": "P02",
+      "prompt": "8,000 posts/sec with average fan-out 100: estimate timeline writes/sec.",
+      "solution": "About 800,000 writes/sec.",
+      "based_on_source_pages": [
+        34
+      ]
+    },
+    {
+      "id": "P03",
+      "prompt": "Interpret p99 = 800 ms.",
+      "solution": "99% of requests finish under 800 ms; ~1% take 800 ms or longer.",
+      "based_on_source_pages": [
+        37
+      ]
+    },
+    {
+      "id": "P04",
+      "prompt": "Why can 30 parallel backend calls hurt tail latency?",
+      "solution": "The user request waits for the slowest call, amplifying the chance of a tail outlier.",
+      "based_on_source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "P05",
+      "prompt": "Why is closed-loop benchmarking optimistic?",
+      "solution": "Waiting for each response before issuing another request suppresses queue buildup.",
+      "based_on_source_pages": [
+        38
+      ]
+    },
+    {
+      "id": "P06",
+      "prompt": "Traffic doubles while resources stay fixed. What question do you ask?",
+      "solution": "How does performance change as the load parameter increases?",
+      "based_on_source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "P07",
+      "prompt": "Traffic doubles and target performance must remain unchanged. What question do you ask?",
+      "solution": "How many additional resources are required to preserve performance?",
+      "based_on_source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "P08",
+      "prompt": "A system requires SSHing into one special machine for every maintenance task. Which operability idea is violated?",
+      "solution": "Avoid dependency on individual machines; support automation and maintenance without whole-system interruption.",
+      "based_on_source_pages": [
+        42
+      ]
+    }
+  ],
+  "common_confusions": [
+    {
+      "confusion": "Fault and failure are synonyms.",
+      "correction": "Fault is component-level; failure is system-level loss of required service.",
+      "source_pages": [
+        29
+      ]
+    },
+    {
+      "confusion": "Scalability is a binary label.",
+      "correction": "It must be discussed relative to specific load parameters and growth.",
+      "source_pages": [
+        32,
+        33
+      ]
+    },
+    {
+      "confusion": "Average workload values are enough.",
+      "correction": "Skew/extreme cases such as celebrity fan-out may dominate.",
+      "source_pages": [
+        34,
+        35
+      ]
+    },
+    {
+      "confusion": "Mean response time captures user experience.",
+      "correction": "Use percentiles and tail latency because response time is a distribution.",
+      "source_pages": [
+        36,
+        37
+      ]
+    },
+    {
+      "confusion": "Latency and response time are identical.",
+      "correction": "Response time is the client-visible total; latency is waiting time.",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "confusion": "Averaging p99 values is valid.",
+      "correction": "Aggregate histograms, not percentiles.",
+      "source_pages": [
+        38
+      ]
+    },
+    {
+      "confusion": "Horizontal scaling is always better.",
+      "correction": "Pragmatic architectures often mix vertical and horizontal scaling.",
+      "source_pages": [
+        39
+      ]
+    },
+    {
+      "confusion": "Simplicity means fewer features.",
+      "correction": "The focus is removing accidental implementation complexity.",
+      "source_pages": [
+        43
+      ]
+    }
+  ],
+  "mastery_check": {
+    "beginner": [
+      "Define data-intensive and name the five building blocks.",
+      "Define reliability, scalability, maintainability.",
+      "Distinguish fault from failure.",
+      "Define throughput, response time, latency.",
+      "Define operability, simplicity, evolvability."
+    ],
+    "intermediate": [
+      "Explain hardware/software/human faults.",
+      "Reconstruct the Twitter fan-out example and its numbers.",
+      "Interpret p50/p95/p99/p999.",
+      "Explain HOL blocking and tail-latency amplification.",
+      "Compare vertical/horizontal and elastic/manual scaling."
+    ],
+    "advanced": [
+      "Choose workload-specific load parameters.",
+      "Defend fan-out-on-read/write/hybrid tradeoffs.",
+      "Critique bad latency reporting and benchmarking.",
+      "Assess a system for operability, accidental complexity, and evolvability."
+    ]
+  },
+  "final_review": {
+    "must_memorize": [
+      "Data-intensive = data quantity/complexity/change rate dominates.",
+      "Building blocks = DB, cache, search index, stream processing, batch processing.",
+      "Core concerns = reliability, scalability, maintainability.",
+      "Fault = component deviation; failure = system-level outage.",
+      "Reliability must handle hardware, software, and human faults.",
+      "Twitter: 4.6k post RPS avg, >12k peak, 300k timeline reads/sec.",
+      "Fan-out on read = cheap writes/expensive reads; fan-out on write = expensive writes/cheap reads.",
+      "75 average followers -> ~345k cache writes/sec; celebrities can exceed 30M followers.",
+      "Response time is a distribution; use percentiles.",
+      "p50 = median; high percentiles = tail latency.",
+      "HOL blocking and fan-out can amplify tail latency.",
+      "Do not average percentiles; aggregate histograms.",
+      "Vertical = bigger machine; horizontal = more machines; elastic = automatic scaling.",
+      "No one-size-fits-all scalable architecture.",
+      "Maintainability = operability + simplicity + evolvability.",
+      "Abstraction reduces accidental complexity."
+    ],
+    "memory_chain": "DATA-INTENSIVE -> COMPOSITE DATA SYSTEM -> RELIABILITY -> FAULT/FAILURE -> HARDWARE/SOFTWARE/HUMAN -> SCALABILITY -> LOAD PARAMETERS -> TWITTER FAN-OUT -> THROUGHPUT/RESPONSE TIME/LATENCY -> PERCENTILES -> TAIL LATENCY -> SCALING STRATEGIES -> MAINTAINABILITY -> OPERABILITY/SIMPLICITY/EVOLVABILITY"
+  }
+}

@@ -1,0 +1,2754 @@
+{
+  "chapter": {
+    "number": 5,
+    "title": "Design Consistent Hashing",
+    "source": "System Design Interview: An Insider's Guide by Alex Xu",
+    "pdf_pages": {
+      "chapter_start": 71,
+      "chapter_end": 85,
+      "references_page": 86
+    },
+    "primary_goal": "Understand why naïve modulo-based hashing causes large-scale remapping when servers change, and learn how consistent hashing, hash rings, clockwise lookup, virtual nodes, and affected-key ranges reduce redistribution while improving horizontal scalability and load balance."
+  },
+  "chapter_summary": {
+    "overview": "Chapter 5 begins with the rehashing problem created by the common mapping serverIndex = hash(key) % N. This approach works while the server pool remains fixed, but adding or removing a server changes N and therefore remaps many keys, producing cache misses and unnecessary data movement. Consistent hashing replaces direct modulo mapping with a hash ring. Servers and keys are mapped onto the ring, and a key belongs to the first server encountered when moving clockwise from the key. Adding or removing a server therefore affects only a fraction of keys. The chapter then explains two limitations of the basic ring—uneven partition sizes and non-uniform key distribution—and introduces virtual nodes to improve balance. It concludes by showing how to determine the affected key range when membership changes and summarizes the technique's benefits and real-world use.",
+    "core_problem": "Traditional modulo hashing tightly couples key placement to the total number of servers. When N changes, most key-to-server mappings can change even though only one server was added or removed.",
+    "core_solution": "Map servers and keys into a common circular hash space. A key is assigned to the first server encountered clockwise. Membership changes then only remap keys in a neighboring portion of the ring rather than nearly the entire keyspace.",
+    "major_benefits": [
+      "Minimizes key redistribution when servers are added or removed.",
+      "Makes horizontal scaling easier because data can be distributed more evenly.",
+      "Helps mitigate hotspot-key problems by spreading data more evenly."
+    ],
+    "real_world_examples_listed": [
+      "Amazon Dynamo partitioning",
+      "Apache Cassandra data partitioning",
+      "Discord",
+      "Akamai CDN",
+      "Maglev network load balancer"
+    ],
+    "source_pages": [
+      71,
+      72,
+      73,
+      74,
+      75,
+      76,
+      77,
+      78,
+      79,
+      80,
+      81,
+      82,
+      83,
+      85
+    ]
+  },
+  "learning_objectives": [
+    {
+      "id": "LO1",
+      "objective": "Explain the modulo-based rehashing problem using serverIndex = hash(key) % N.",
+      "source_pages": [
+        72,
+        73,
+        74
+      ]
+    },
+    {
+      "id": "LO2",
+      "objective": "Explain why a server addition or removal can cause a storm of cache misses under modulo hashing.",
+      "source_pages": [
+        73,
+        74
+      ]
+    },
+    {
+      "id": "LO3",
+      "objective": "Define consistent hashing using the chapter's remapping intuition.",
+      "source_pages": [
+        75
+      ]
+    },
+    {
+      "id": "LO4",
+      "objective": "Explain hash space, the hash ring, and how servers and keys are mapped to the ring.",
+      "source_pages": [
+        75,
+        76
+      ]
+    },
+    {
+      "id": "LO5",
+      "objective": "Determine a key's owner using clockwise traversal.",
+      "source_pages": [
+        77
+      ]
+    },
+    {
+      "id": "LO6",
+      "objective": "Explain why adding a server affects only a fraction of keys.",
+      "source_pages": [
+        77,
+        78
+      ]
+    },
+    {
+      "id": "LO7",
+      "objective": "Explain why removing a server affects only a small fraction of keys.",
+      "source_pages": [
+        78,
+        79
+      ]
+    },
+    {
+      "id": "LO8",
+      "objective": "Identify the two problems in the basic consistent-hashing approach.",
+      "source_pages": [
+        79,
+        80
+      ]
+    },
+    {
+      "id": "LO9",
+      "objective": "Explain how virtual nodes address uneven partition sizes and non-uniform key distribution.",
+      "source_pages": [
+        80,
+        81,
+        82
+      ]
+    },
+    {
+      "id": "LO10",
+      "objective": "Explain the tradeoff between more virtual nodes and additional metadata/storage overhead.",
+      "source_pages": [
+        82
+      ]
+    },
+    {
+      "id": "LO11",
+      "objective": "Determine which key range is affected when a server is added.",
+      "source_pages": [
+        82,
+        83
+      ]
+    },
+    {
+      "id": "LO12",
+      "objective": "Determine which key range is affected when a server is removed.",
+      "source_pages": [
+        83,
+        84
+      ]
+    },
+    {
+      "id": "LO13",
+      "objective": "Summarize the operational benefits and real-world uses of consistent hashing.",
+      "source_pages": [
+        85
+      ]
+    }
+  ],
+  "rehashing_problem": {
+    "traditional_formula": "serverIndex = hash(key) % N",
+    "where_N_means": "Number of servers in the server pool.",
+    "works_well_when": [
+      "The server-pool size is fixed.",
+      "Data distribution is even."
+    ],
+    "four_server_example": {
+      "server_count": 4,
+      "keys": [
+        {
+          "key": "key0",
+          "hash": 18358617,
+          "hash_mod_4": 1
+        },
+        {
+          "key": "key1",
+          "hash": 26143584,
+          "hash_mod_4": 0
+        },
+        {
+          "key": "key2",
+          "hash": 18131146,
+          "hash_mod_4": 2
+        },
+        {
+          "key": "key3",
+          "hash": 35863496,
+          "hash_mod_4": 0
+        },
+        {
+          "key": "key4",
+          "hash": 34085809,
+          "hash_mod_4": 1
+        },
+        {
+          "key": "key5",
+          "hash": 27581703,
+          "hash_mod_4": 3
+        },
+        {
+          "key": "key6",
+          "hash": 38164978,
+          "hash_mod_4": 2
+        },
+        {
+          "key": "key7",
+          "hash": 22530351,
+          "hash_mod_4": 3
+        }
+      ],
+      "server_distribution": {
+        "server0": [
+          "key1",
+          "key3"
+        ],
+        "server1": [
+          "key0",
+          "key4"
+        ],
+        "server2": [
+          "key2",
+          "key6"
+        ],
+        "server3": [
+          "key5",
+          "key7"
+        ]
+      },
+      "source_pages": [
+        72,
+        73
+      ]
+    },
+    "server_failure_example": {
+      "event": "server1 goes offline",
+      "new_server_count": 3,
+      "new_formula": "hash(key) % 3",
+      "key_mapping_from_table": [
+        {
+          "key": "key0",
+          "hash_mod_3": 0
+        },
+        {
+          "key": "key1",
+          "hash_mod_3": 0
+        },
+        {
+          "key": "key2",
+          "hash_mod_3": 1
+        },
+        {
+          "key": "key3",
+          "hash_mod_3": 2
+        },
+        {
+          "key": "key4",
+          "hash_mod_3": 1
+        },
+        {
+          "key": "key5",
+          "hash_mod_3": 0
+        },
+        {
+          "key": "key6",
+          "hash_mod_3": 1
+        },
+        {
+          "key": "key7",
+          "hash_mod_3": 0
+        }
+      ],
+      "consequence": "Most keys move to different server indexes, not only the keys that were on the failed server. Cache clients then look on the wrong servers and create a storm of cache misses.",
+      "source_pages": [
+        73,
+        74
+      ]
+    }
+  },
+  "consistent_hashing_definition": {
+    "source_definition_summary": "When a hash table is resized under consistent hashing, only about k/n keys need to be remapped on average, where k is the number of keys and n is the number of slots, instead of nearly all keys being remapped.",
+    "important_variables": {
+      "k": "Number of keys",
+      "n": "Number of slots"
+    },
+    "source_pages": [
+      75
+    ]
+  },
+  "hash_space_and_ring": {
+    "hash_function_example": "SHA-1",
+    "hash_space": {
+      "minimum": "0",
+      "maximum": "2^160 - 1",
+      "description": "All possible SHA-1 hash values lie within this range."
+    },
+    "ring_construction": "Conceptually connect the two ends of the linear hash space to form a ring.",
+    "source_pages": [
+      75
+    ]
+  },
+  "server_and_key_mapping": {
+    "servers": {
+      "rule": "Hash each server's IP address or server name with the same hash function and place it on the ring.",
+      "example_server_count": 4,
+      "source_pages": [
+        75,
+        76
+      ]
+    },
+    "keys": {
+      "rule": "Hash each key and place it somewhere on the ring.",
+      "important_difference_from_modulo_hashing": "There is no modulo operation in the consistent-hashing lookup described here.",
+      "example_keys": [
+        "key0",
+        "key1",
+        "key2",
+        "key3"
+      ],
+      "source_pages": [
+        76
+      ]
+    },
+    "lookup": {
+      "rule": "Starting at the key's position, move clockwise until the first server is encountered.",
+      "chapter_example": {
+        "key0": "server0",
+        "key1": "server1",
+        "key2": "server2",
+        "key3": "server3"
+      },
+      "source_pages": [
+        77
+      ]
+    }
+  },
+  "membership_changes": {
+    "add_server": {
+      "principle": "Only a fraction of keys need redistribution.",
+      "chapter_example": {
+        "added_server": "server4",
+        "remapped_key": "key0",
+        "old_owner": "server0",
+        "new_owner": "server4",
+        "unchanged_keys": [
+          "key1",
+          "key2",
+          "key3"
+        ],
+        "reason": "server4 becomes the first server encountered clockwise from key0."
+      },
+      "source_pages": [
+        77,
+        78
+      ]
+    },
+    "remove_server": {
+      "principle": "Only a small fraction of keys need redistribution.",
+      "chapter_example": {
+        "removed_server": "server1",
+        "remapped_key": "key1",
+        "new_owner": "server2",
+        "unaffected_keys": [
+          "key0",
+          "key2",
+          "key3"
+        ]
+      },
+      "source_pages": [
+        78,
+        79
+      ]
+    }
+  },
+  "basic_approach_problems": [
+    {
+      "problem": "Unequal partition sizes",
+      "definition": "A partition is the hash-space interval between adjacent servers.",
+      "why_it_happens": "Adding or removing servers makes it impossible to keep all server partitions exactly the same size.",
+      "chapter_example": "After s1 is removed, s2's partition becomes twice as large as s0's and s3's partitions.",
+      "source_pages": [
+        79,
+        80
+      ]
+    },
+    {
+      "problem": "Non-uniform key distribution",
+      "why_it_happens": "Server positions can leave large and small intervals, concentrating many keys under one server while others receive few or none.",
+      "chapter_example": "Most keys can end up on server2 while server1 and server3 have no data.",
+      "source_pages": [
+        80
+      ]
+    }
+  ],
+  "virtual_nodes": {
+    "definition": "A virtual node refers to a real node; each real server is represented by multiple virtual positions on the hash ring.",
+    "example": {
+      "real_servers": [
+        "server0",
+        "server1"
+      ],
+      "virtual_nodes_per_server": 3,
+      "server0_virtual_nodes": [
+        "s0_0",
+        "s0_1",
+        "s0_2"
+      ],
+      "server1_virtual_nodes": [
+        "s1_0",
+        "s1_1",
+        "s1_2"
+      ],
+      "note": "The chapter says 3 is arbitrary and real systems typically use many more virtual nodes."
+    },
+    "lookup_rule": "Move clockwise from the key and use the first virtual node encountered; that virtual node points to its real server.",
+    "example_lookup": "k0 encounters virtual node s1_1 first, so k0 is stored on server1.",
+    "why_it_helps": [
+      "Each server owns multiple partitions distributed around the ring.",
+      "Increasing the number of virtual nodes makes key distribution more balanced.",
+      "More virtual nodes reduce the standard deviation of load distribution."
+    ],
+    "quantitative_example_from_source": {
+      "100_virtual_nodes": "Standard deviation around 10% of the mean.",
+      "200_virtual_nodes": "Standard deviation around 5% of the mean.",
+      "interpretation": "More virtual nodes reduce variation and improve balance."
+    },
+    "tradeoff": "More virtual nodes improve balance but require more space to store virtual-node metadata.",
+    "source_pages": [
+      80,
+      81,
+      82
+    ]
+  },
+  "finding_affected_keys": {
+    "when_adding_server": {
+      "chapter_example": "server4 is added",
+      "method": [
+        "Start at the newly added server's position.",
+        "Move anticlockwise until the previous server is found.",
+        "The keys in that interval are the affected keys."
+      ],
+      "range": "Between s3 and s4",
+      "destination": "Redistribute those keys to s4.",
+      "source_pages": [
+        82,
+        83
+      ]
+    },
+    "when_removing_server": {
+      "chapter_example": "server1 is removed",
+      "method": [
+        "Start at the removed server's former position.",
+        "Move anticlockwise until the previous server is found.",
+        "The keys in that interval are affected."
+      ],
+      "range": "Between s0 and s1",
+      "destination": "Redistribute those keys to s2, the next server clockwise after the removed node.",
+      "source_pages": [
+        83,
+        84
+      ]
+    }
+  },
+  "key_concepts": [
+    {
+      "term": "Modulo Hashing",
+      "definition": "Maps a key to serverIndex = hash(key) % N.",
+      "source_pages": [
+        72
+      ]
+    },
+    {
+      "term": "Rehashing Problem",
+      "definition": "When N changes, many keys receive different server indexes, causing widespread remapping.",
+      "source_pages": [
+        73,
+        74
+      ]
+    },
+    {
+      "term": "Consistent Hashing",
+      "definition": "A hashing approach designed so resizing the server set remaps only a fraction of keys rather than nearly all keys.",
+      "source_pages": [
+        75
+      ]
+    },
+    {
+      "term": "Hash Space",
+      "definition": "The complete output range of the hash function.",
+      "source_pages": [
+        75
+      ]
+    },
+    {
+      "term": "Hash Ring",
+      "definition": "A circular representation of the hash space formed by conceptually connecting its two endpoints.",
+      "source_pages": [
+        75
+      ]
+    },
+    {
+      "term": "Clockwise Lookup",
+      "definition": "The key-assignment rule: from a key's position, move clockwise until the first server or virtual node is found.",
+      "source_pages": [
+        77,
+        81
+      ]
+    },
+    {
+      "term": "Partition",
+      "definition": "The hash-space interval between adjacent servers on the ring.",
+      "source_pages": [
+        79
+      ]
+    },
+    {
+      "term": "Virtual Node",
+      "alias": "Replica",
+      "definition": "A virtual position on the hash ring that represents a real server.",
+      "source_pages": [
+        80,
+        81
+      ]
+    },
+    {
+      "term": "Standard Deviation",
+      "definition": "A measure used in the chapter to describe how spread out the load/data distribution is; lower values indicate more balanced distribution.",
+      "source_pages": [
+        82
+      ]
+    },
+    {
+      "term": "Affected Key Range",
+      "definition": "The interval of the ring whose keys must move after a server is added or removed.",
+      "source_pages": [
+        82,
+        83
+      ]
+    },
+    {
+      "term": "Hotspot Key Problem",
+      "definition": "Excessive access concentrated on one shard or server can overload it; consistent hashing helps mitigate this by distributing data more evenly.",
+      "source_pages": [
+        85
+      ]
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "FC01",
+      "front": "Why is consistent hashing useful in horizontally scaled systems?",
+      "back": "It helps distribute requests/data efficiently and evenly across servers while minimizing remapping when the server set changes.",
+      "source_pages": [
+        71,
+        85
+      ]
+    },
+    {
+      "id": "FC02",
+      "front": "What is the traditional modulo hashing formula?",
+      "back": "serverIndex = hash(key) % N.",
+      "source_pages": [
+        72
+      ]
+    },
+    {
+      "id": "FC03",
+      "front": "What does N represent in hash(key) % N?",
+      "back": "The number of servers in the server pool.",
+      "source_pages": [
+        72
+      ]
+    },
+    {
+      "id": "FC04",
+      "front": "When does modulo hashing work well?",
+      "back": "When the server-pool size is fixed and the data distribution is even.",
+      "source_pages": [
+        73
+      ]
+    },
+    {
+      "id": "FC05",
+      "front": "Why does modulo hashing fail badly when a server is removed?",
+      "back": "N changes, so the modulo result changes for many keys even though their original hash values do not.",
+      "source_pages": [
+        73,
+        74
+      ]
+    },
+    {
+      "id": "FC06",
+      "front": "What operational problem can widespread remapping cause in a cache cluster?",
+      "back": "A storm of cache misses because clients look for keys on newly computed servers where the data is not cached.",
+      "source_pages": [
+        74
+      ]
+    },
+    {
+      "id": "FC07",
+      "front": "In the four-server example, where does key0 map?",
+      "back": "server1 because hash(key0) % 4 = 1.",
+      "source_pages": [
+        72
+      ]
+    },
+    {
+      "id": "FC08",
+      "front": "In the four-server example, which keys map to server0?",
+      "back": "key1 and key3.",
+      "source_pages": [
+        72,
+        73
+      ]
+    },
+    {
+      "id": "FC09",
+      "front": "In the four-server example, which keys map to server1?",
+      "back": "key0 and key4.",
+      "source_pages": [
+        72,
+        73
+      ]
+    },
+    {
+      "id": "FC10",
+      "front": "In the four-server example, which keys map to server2?",
+      "back": "key2 and key6.",
+      "source_pages": [
+        72,
+        73
+      ]
+    },
+    {
+      "id": "FC11",
+      "front": "In the four-server example, which keys map to server3?",
+      "back": "key5 and key7.",
+      "source_pages": [
+        72,
+        73
+      ]
+    },
+    {
+      "id": "FC12",
+      "front": "What happens to the modulo divisor if one of four servers fails?",
+      "back": "It changes from 4 to 3.",
+      "source_pages": [
+        73
+      ]
+    },
+    {
+      "id": "FC13",
+      "front": "What does the chapter say about how many keys consistent hashing remaps when resized?",
+      "back": "Only about k/n keys on average, where k is the number of keys and n is the number of slots.",
+      "source_pages": [
+        75
+      ]
+    },
+    {
+      "id": "FC14",
+      "front": "What SHA-1 hash-space range does the chapter use?",
+      "back": "0 through 2^160 - 1.",
+      "source_pages": [
+        75
+      ]
+    },
+    {
+      "id": "FC15",
+      "front": "How is a hash ring formed conceptually?",
+      "back": "By connecting the two ends of the linear hash space.",
+      "source_pages": [
+        75
+      ]
+    },
+    {
+      "id": "FC16",
+      "front": "How are servers placed on the ring?",
+      "back": "Hash the server IP or name using the same hash function and place the result on the ring.",
+      "source_pages": [
+        75
+      ]
+    },
+    {
+      "id": "FC17",
+      "front": "How are keys placed on the ring?",
+      "back": "Hash the keys into the same hash space and place them at those positions.",
+      "source_pages": [
+        76
+      ]
+    },
+    {
+      "id": "FC18",
+      "front": "Does the ring-based approach use hash(key) % N for lookup?",
+      "back": "No. The chapter explicitly notes there is no modular operation in the consistent-hashing lookup.",
+      "source_pages": [
+        76
+      ]
+    },
+    {
+      "id": "FC19",
+      "front": "How do you find a key's server?",
+      "back": "Move clockwise from the key until the first server is encountered.",
+      "source_pages": [
+        77
+      ]
+    },
+    {
+      "id": "FC20",
+      "front": "In Figure 5-7, where is key0 stored?",
+      "back": "server0.",
+      "source_pages": [
+        77
+      ]
+    },
+    {
+      "id": "FC21",
+      "front": "In Figure 5-7, where is key1 stored?",
+      "back": "server1.",
+      "source_pages": [
+        77
+      ]
+    },
+    {
+      "id": "FC22",
+      "front": "In Figure 5-7, where is key2 stored?",
+      "back": "server2.",
+      "source_pages": [
+        77
+      ]
+    },
+    {
+      "id": "FC23",
+      "front": "In Figure 5-7, where is key3 stored?",
+      "back": "server3.",
+      "source_pages": [
+        77
+      ]
+    },
+    {
+      "id": "FC24",
+      "front": "What is the main effect of adding a server under consistent hashing?",
+      "back": "Only a fraction of keys need redistribution.",
+      "source_pages": [
+        77
+      ]
+    },
+    {
+      "id": "FC25",
+      "front": "When server4 is added in the chapter, which key moves?",
+      "back": "Only key0.",
+      "source_pages": [
+        77,
+        78
+      ]
+    },
+    {
+      "id": "FC26",
+      "front": "Why does key0 move from server0 to server4?",
+      "back": "server4 becomes the first server encountered clockwise from key0.",
+      "source_pages": [
+        77
+      ]
+    },
+    {
+      "id": "FC27",
+      "front": "When server1 is removed, which key moves?",
+      "back": "Only key1.",
+      "source_pages": [
+        78
+      ]
+    },
+    {
+      "id": "FC28",
+      "front": "Where does key1 move after server1 is removed?",
+      "back": "server2.",
+      "source_pages": [
+        78
+      ]
+    },
+    {
+      "id": "FC29",
+      "front": "What are the two basic problems of the naïve ring?",
+      "back": "Unequal partition sizes and non-uniform key distribution.",
+      "source_pages": [
+        79,
+        80
+      ]
+    },
+    {
+      "id": "FC30",
+      "front": "What is a partition on the ring?",
+      "back": "The hash-space interval between adjacent servers.",
+      "source_pages": [
+        79
+      ]
+    },
+    {
+      "id": "FC31",
+      "front": "What unequal-partition example does the chapter give?",
+      "back": "After s1 is removed, s2's partition becomes twice as large as s0's and s3's partitions.",
+      "source_pages": [
+        79,
+        80
+      ]
+    },
+    {
+      "id": "FC32",
+      "front": "What non-uniform distribution example does the chapter give?",
+      "back": "Most keys can land on server2 while server1 and server3 have no data.",
+      "source_pages": [
+        80
+      ]
+    },
+    {
+      "id": "FC33",
+      "front": "What technique solves the two basic ring problems?",
+      "back": "Virtual nodes, also called replicas.",
+      "source_pages": [
+        80
+      ]
+    },
+    {
+      "id": "FC34",
+      "front": "What is a virtual node?",
+      "back": "A ring position that refers to a real server; each real server is represented by multiple virtual nodes.",
+      "source_pages": [
+        80,
+        81
+      ]
+    },
+    {
+      "id": "FC35",
+      "front": "How many virtual nodes per server are shown in the example?",
+      "back": "Three, though the chapter says this is arbitrary and real systems use many more.",
+      "source_pages": [
+        80,
+        81
+      ]
+    },
+    {
+      "id": "FC36",
+      "front": "What are server0's virtual-node names in the example?",
+      "back": "s0_0, s0_1, and s0_2.",
+      "source_pages": [
+        81
+      ]
+    },
+    {
+      "id": "FC37",
+      "front": "What are server1's virtual-node names in the example?",
+      "back": "s1_0, s1_1, and s1_2.",
+      "source_pages": [
+        81
+      ]
+    },
+    {
+      "id": "FC38",
+      "front": "How is a key assigned when virtual nodes are used?",
+      "back": "Move clockwise from the key to the first virtual node; the real server represented by that virtual node owns the key.",
+      "source_pages": [
+        81
+      ]
+    },
+    {
+      "id": "FC39",
+      "front": "Which virtual node owns k0 in Figure 5-13?",
+      "back": "s1_1, which refers to server1.",
+      "source_pages": [
+        81,
+        82
+      ]
+    },
+    {
+      "id": "FC40",
+      "front": "What happens to key distribution as the number of virtual nodes increases?",
+      "back": "It becomes more balanced.",
+      "source_pages": [
+        82
+      ]
+    },
+    {
+      "id": "FC41",
+      "front": "Why does more virtual nodes improve balance according to the chapter?",
+      "back": "The standard deviation of the distribution becomes smaller.",
+      "source_pages": [
+        82
+      ]
+    },
+    {
+      "id": "FC42",
+      "front": "What standard-deviation examples does the chapter cite?",
+      "back": "About 10% of the mean at 100 virtual nodes and about 5% at 200 virtual nodes.",
+      "source_pages": [
+        82
+      ]
+    },
+    {
+      "id": "FC43",
+      "front": "What is the cost of increasing the number of virtual nodes?",
+      "back": "More space is required to store virtual-node metadata.",
+      "source_pages": [
+        82
+      ]
+    },
+    {
+      "id": "FC44",
+      "front": "How do you find the affected range when adding a server?",
+      "back": "Start at the new server and move anticlockwise to the previous server; keys in that interval move to the new server.",
+      "source_pages": [
+        82,
+        83
+      ]
+    },
+    {
+      "id": "FC45",
+      "front": "When s4 is added, what range is affected?",
+      "back": "The range between s3 and s4.",
+      "source_pages": [
+        82,
+        83
+      ]
+    },
+    {
+      "id": "FC46",
+      "front": "How do you find the affected range when removing a server?",
+      "back": "Start at the removed server's former position and move anticlockwise to the previous server; that interval's keys move to the next server clockwise.",
+      "source_pages": [
+        83,
+        84
+      ]
+    },
+    {
+      "id": "FC47",
+      "front": "When s1 is removed, what range is affected?",
+      "back": "The range between s0 and s1.",
+      "source_pages": [
+        83
+      ]
+    },
+    {
+      "id": "FC48",
+      "front": "Where do keys between s0 and removed s1 move?",
+      "back": "To s2.",
+      "source_pages": [
+        83
+      ]
+    },
+    {
+      "id": "FC49",
+      "front": "What are the three benefits listed in the wrap-up?",
+      "back": "Minimized redistribution, easier horizontal scaling from more even distribution, and mitigation of hotspot-key problems.",
+      "source_pages": [
+        85
+      ]
+    },
+    {
+      "id": "FC50",
+      "front": "How can consistent hashing help hotspot problems?",
+      "back": "By spreading data more evenly so heavily accessed data is less likely to concentrate on a single shard.",
+      "source_pages": [
+        85
+      ]
+    },
+    {
+      "id": "FC51",
+      "front": "Which Amazon system is listed as using consistent hashing?",
+      "back": "Dynamo.",
+      "source_pages": [
+        85
+      ]
+    },
+    {
+      "id": "FC52",
+      "front": "Which distributed database besides Dynamo is listed?",
+      "back": "Apache Cassandra.",
+      "source_pages": [
+        85
+      ]
+    },
+    {
+      "id": "FC53",
+      "front": "Which chat application is listed as a real-world use?",
+      "back": "Discord.",
+      "source_pages": [
+        85
+      ]
+    },
+    {
+      "id": "FC54",
+      "front": "Which CDN is listed?",
+      "back": "Akamai.",
+      "source_pages": [
+        85
+      ]
+    },
+    {
+      "id": "FC55",
+      "front": "Which network load balancer is listed?",
+      "back": "Maglev.",
+      "source_pages": [
+        85
+      ]
+    }
+  ],
+  "multiple_choice_questions": [
+    {
+      "id": "MCQ01",
+      "difficulty": "easy",
+      "question": "What is the traditional server-selection formula discussed first?",
+      "choices": {
+        "A": "hash(key) + N",
+        "B": "hash(key) % N",
+        "C": "N % hash(key)",
+        "D": "hash(server) % key"
+      },
+      "answer": "B",
+      "source_pages": [
+        72
+      ]
+    },
+    {
+      "id": "MCQ02",
+      "difficulty": "medium",
+      "question": "What does N mean in serverIndex = hash(key) % N?",
+      "choices": {
+        "A": "Number of keys",
+        "B": "Number of servers",
+        "C": "Number of virtual nodes",
+        "D": "Number of requests"
+      },
+      "answer": "B",
+      "source_pages": [
+        72
+      ]
+    },
+    {
+      "id": "MCQ03",
+      "difficulty": "medium",
+      "question": "Why does modulo hashing work poorly when server membership changes?",
+      "choices": {
+        "A": "The key hashes disappear",
+        "B": "Changing N changes many modulo results",
+        "C": "Servers stop having IP addresses",
+        "D": "SHA-1 cannot hash keys"
+      },
+      "answer": "B",
+      "source_pages": [
+        73,
+        74
+      ]
+    },
+    {
+      "id": "MCQ04",
+      "difficulty": "medium",
+      "question": "What can widespread remapping cause in a cache cluster?",
+      "choices": {
+        "A": "A storm of cache misses",
+        "B": "Fewer hashes",
+        "C": "More CPU registers",
+        "D": "No data movement"
+      },
+      "answer": "A",
+      "source_pages": [
+        74
+      ]
+    },
+    {
+      "id": "MCQ05",
+      "difficulty": "medium",
+      "question": "In the original four-server example, key0 maps to which server?",
+      "choices": {
+        "A": "server0",
+        "B": "server1",
+        "C": "server2",
+        "D": "server3"
+      },
+      "answer": "B",
+      "source_pages": [
+        72
+      ]
+    },
+    {
+      "id": "MCQ06",
+      "difficulty": "medium",
+      "question": "What is the main remapping property attributed to consistent hashing?",
+      "choices": {
+        "A": "All keys are always remapped",
+        "B": "Only about k/n keys are remapped on average when resized",
+        "C": "No keys ever move",
+        "D": "Exactly one key always moves"
+      },
+      "answer": "B",
+      "source_pages": [
+        75
+      ]
+    },
+    {
+      "id": "MCQ07",
+      "difficulty": "medium",
+      "question": "What hash-space maximum is shown for SHA-1?",
+      "choices": {
+        "A": "2^32 - 1",
+        "B": "2^64 - 1",
+        "C": "2^128 - 1",
+        "D": "2^160 - 1"
+      },
+      "answer": "D",
+      "source_pages": [
+        75
+      ]
+    },
+    {
+      "id": "MCQ08",
+      "difficulty": "easy",
+      "question": "How is the ring formed?",
+      "choices": {
+        "A": "By connecting the two ends of the hash space",
+        "B": "By sorting servers alphabetically",
+        "C": "By applying modulo twice",
+        "D": "By using a database index"
+      },
+      "answer": "A",
+      "source_pages": [
+        75
+      ]
+    },
+    {
+      "id": "MCQ09",
+      "difficulty": "medium",
+      "question": "How are servers mapped to the ring?",
+      "choices": {
+        "A": "By server IP/name through the hash function",
+        "B": "By request count only",
+        "C": "By database row count",
+        "D": "By random client choice"
+      },
+      "answer": "A",
+      "source_pages": [
+        75
+      ]
+    },
+    {
+      "id": "MCQ10",
+      "difficulty": "medium",
+      "question": "How are keys mapped to servers on the ring?",
+      "choices": {
+        "A": "Nearest server counterclockwise",
+        "B": "First server clockwise",
+        "C": "Largest server ID",
+        "D": "hash(key) % N"
+      },
+      "answer": "B",
+      "source_pages": [
+        76,
+        77
+      ]
+    },
+    {
+      "id": "MCQ11",
+      "difficulty": "medium",
+      "question": "Does the ring-based lookup described use a modulo operation?",
+      "choices": {
+        "A": "Yes",
+        "B": "No",
+        "C": "Only for virtual nodes",
+        "D": "Only for SHA-1"
+      },
+      "answer": "B",
+      "source_pages": [
+        76
+      ]
+    },
+    {
+      "id": "MCQ12",
+      "difficulty": "medium",
+      "question": "What happens when server4 is added in Figure 5-8?",
+      "choices": {
+        "A": "All four keys move",
+        "B": "Only key0 moves",
+        "C": "Only key3 moves",
+        "D": "No key moves"
+      },
+      "answer": "B",
+      "source_pages": [
+        77,
+        78
+      ]
+    },
+    {
+      "id": "MCQ13",
+      "difficulty": "medium",
+      "question": "Where does key0 move after server4 is added?",
+      "choices": {
+        "A": "server1",
+        "B": "server2",
+        "C": "server3",
+        "D": "server4"
+      },
+      "answer": "D",
+      "source_pages": [
+        77
+      ]
+    },
+    {
+      "id": "MCQ14",
+      "difficulty": "medium",
+      "question": "What happens when server1 is removed in Figure 5-9?",
+      "choices": {
+        "A": "Only key1 is remapped",
+        "B": "Every key is remapped",
+        "C": "Only key0 is remapped",
+        "D": "No key is remapped"
+      },
+      "answer": "A",
+      "source_pages": [
+        78,
+        79
+      ]
+    },
+    {
+      "id": "MCQ15",
+      "difficulty": "medium",
+      "question": "Where does key1 move after server1 is removed?",
+      "choices": {
+        "A": "server0",
+        "B": "server2",
+        "C": "server3",
+        "D": "server4"
+      },
+      "answer": "B",
+      "source_pages": [
+        78
+      ]
+    },
+    {
+      "id": "MCQ16",
+      "difficulty": "hard",
+      "question": "What is a partition in the basic ring?",
+      "choices": {
+        "A": "The hash-space interval between adjacent servers",
+        "B": "A database replica",
+        "C": "A key's string prefix",
+        "D": "A client session"
+      },
+      "answer": "A",
+      "source_pages": [
+        79
+      ]
+    },
+    {
+      "id": "MCQ17",
+      "difficulty": "hard",
+      "question": "What is the first problem in the basic ring approach?",
+      "choices": {
+        "A": "All partitions cannot remain equal-sized as servers change",
+        "B": "Keys cannot be hashed",
+        "C": "Clockwise traversal is impossible",
+        "D": "Every server owns exactly the same interval"
+      },
+      "answer": "A",
+      "source_pages": [
+        79
+      ]
+    },
+    {
+      "id": "MCQ18",
+      "difficulty": "hard",
+      "question": "What is the second problem in the basic approach?",
+      "choices": {
+        "A": "Non-uniform key distribution",
+        "B": "The ring has no endpoints",
+        "C": "No servers can be removed",
+        "D": "Keys cannot be cached"
+      },
+      "answer": "A",
+      "source_pages": [
+        80
+      ]
+    },
+    {
+      "id": "MCQ19",
+      "difficulty": "medium",
+      "question": "What technique addresses both basic-ring problems?",
+      "choices": {
+        "A": "Modulo arithmetic",
+        "B": "Virtual nodes",
+        "C": "Sticky sessions",
+        "D": "Database replication"
+      },
+      "answer": "B",
+      "source_pages": [
+        80
+      ]
+    },
+    {
+      "id": "MCQ20",
+      "difficulty": "medium",
+      "question": "What is a virtual node?",
+      "choices": {
+        "A": "A real server's representation at one of multiple positions on the ring",
+        "B": "A copied key only",
+        "C": "A client-side cache entry",
+        "D": "A separate physical data center"
+      },
+      "answer": "A",
+      "source_pages": [
+        80,
+        81
+      ]
+    },
+    {
+      "id": "MCQ21",
+      "difficulty": "medium",
+      "question": "In the example, how many virtual nodes represent each of server0 and server1?",
+      "choices": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "10"
+      },
+      "answer": "C",
+      "source_pages": [
+        80,
+        81
+      ]
+    },
+    {
+      "id": "MCQ22",
+      "difficulty": "hard",
+      "question": "What happens as the number of virtual nodes increases?",
+      "choices": {
+        "A": "Distribution becomes more balanced",
+        "B": "Distribution becomes less balanced",
+        "C": "All keys move to one server",
+        "D": "Servers no longer need hashing"
+      },
+      "answer": "A",
+      "source_pages": [
+        82
+      ]
+    },
+    {
+      "id": "MCQ23",
+      "difficulty": "hard",
+      "question": "Why does more virtual nodes improve balance according to the chapter?",
+      "choices": {
+        "A": "Standard deviation becomes smaller",
+        "B": "Hash space becomes larger",
+        "C": "Keys stop being hashed",
+        "D": "Modulo N becomes constant"
+      },
+      "answer": "A",
+      "source_pages": [
+        82
+      ]
+    },
+    {
+      "id": "MCQ24",
+      "difficulty": "hard",
+      "question": "What standard deviation does the cited experiment associate with about 200 virtual nodes?",
+      "choices": {
+        "A": "About 50% of the mean",
+        "B": "About 20%",
+        "C": "About 10%",
+        "D": "About 5%"
+      },
+      "answer": "D",
+      "source_pages": [
+        82
+      ]
+    },
+    {
+      "id": "MCQ25",
+      "difficulty": "hard",
+      "question": "What is the main cost of using more virtual nodes?",
+      "choices": {
+        "A": "More metadata/storage space",
+        "B": "No more horizontal scaling",
+        "C": "Every request becomes a cache miss",
+        "D": "The ring disappears"
+      },
+      "answer": "A",
+      "source_pages": [
+        82
+      ]
+    },
+    {
+      "id": "MCQ26",
+      "difficulty": "hard",
+      "question": "When adding s4, how do you identify the affected range?",
+      "choices": {
+        "A": "Move clockwise from s4 to s0",
+        "B": "Move anticlockwise from s4 to the previous server s3",
+        "C": "Move to every server",
+        "D": "Use hash(key) % N"
+      },
+      "answer": "B",
+      "source_pages": [
+        82
+      ]
+    },
+    {
+      "id": "MCQ27",
+      "difficulty": "hard",
+      "question": "Which keys move to newly added s4?",
+      "choices": {
+        "A": "Keys between s3 and s4",
+        "B": "Keys between s4 and s0",
+        "C": "Every key on the ring",
+        "D": "Only keys owned by s2"
+      },
+      "answer": "A",
+      "source_pages": [
+        82,
+        83
+      ]
+    },
+    {
+      "id": "MCQ28",
+      "difficulty": "hard",
+      "question": "When s1 is removed, which interval contains the affected keys?",
+      "choices": {
+        "A": "s0 to s1",
+        "B": "s1 to s2 only in the clockwise direction",
+        "C": "s2 to s3",
+        "D": "Entire ring"
+      },
+      "answer": "A",
+      "source_pages": [
+        83
+      ]
+    },
+    {
+      "id": "MCQ29",
+      "difficulty": "hard",
+      "question": "Where are keys from the s0-to-s1 interval redistributed after s1 is removed?",
+      "choices": {
+        "A": "s0",
+        "B": "s2",
+        "C": "s3",
+        "D": "All servers equally"
+      },
+      "answer": "B",
+      "source_pages": [
+        83
+      ]
+    },
+    {
+      "id": "MCQ30",
+      "difficulty": "medium",
+      "question": "Which benefit is explicitly listed in the wrap-up?",
+      "choices": {
+        "A": "Minimized key redistribution",
+        "B": "No need for hashing",
+        "C": "No server failures",
+        "D": "Unlimited memory"
+      },
+      "answer": "A",
+      "source_pages": [
+        85
+      ]
+    },
+    {
+      "id": "MCQ31",
+      "difficulty": "medium",
+      "question": "How does consistent hashing help horizontal scaling?",
+      "choices": {
+        "A": "By distributing data more evenly",
+        "B": "By using one server only",
+        "C": "By removing cache",
+        "D": "By disabling server changes"
+      },
+      "answer": "A",
+      "source_pages": [
+        85
+      ]
+    },
+    {
+      "id": "MCQ32",
+      "difficulty": "medium",
+      "question": "Which hotspot example is given?",
+      "choices": {
+        "A": "Popular celebrity data landing on the same shard",
+        "B": "DNS records expiring",
+        "C": "A single HTTP request",
+        "D": "A slow disk seek"
+      },
+      "answer": "A",
+      "source_pages": [
+        85
+      ]
+    },
+    {
+      "id": "MCQ33",
+      "difficulty": "medium",
+      "question": "Which system is NOT listed in the chapter's real-world examples?",
+      "choices": {
+        "A": "Amazon Dynamo",
+        "B": "Apache Cassandra",
+        "C": "Akamai",
+        "D": "PostgreSQL"
+      },
+      "answer": "D",
+      "source_pages": [
+        85
+      ]
+    },
+    {
+      "id": "MCQ34",
+      "difficulty": "medium",
+      "question": "Which load balancer is listed as a consistent-hashing use case?",
+      "choices": {
+        "A": "Maglev",
+        "B": "Nginx only",
+        "C": "HAProxy only",
+        "D": "Envoy only"
+      },
+      "answer": "A",
+      "source_pages": [
+        85
+      ]
+    }
+  ],
+  "mix_and_match": [
+    {
+      "id": "MM01",
+      "title": "Concept to Definition",
+      "instructions": "Match each concept with its definition.",
+      "left": {
+        "A": "Modulo hashing",
+        "B": "Hash ring",
+        "C": "Partition",
+        "D": "Virtual node",
+        "E": "Clockwise lookup",
+        "F": "Affected key range"
+      },
+      "right": {
+        "1": "Hash-space interval between adjacent servers",
+        "2": "Circular representation of the hash space",
+        "3": "serverIndex = hash(key) % N",
+        "4": "First server or vnode encountered moving clockwise from a key",
+        "5": "Part of the ring whose keys must move after membership change",
+        "6": "One of multiple ring positions representing a real server"
+      },
+      "answer_key": {
+        "A": "3",
+        "B": "2",
+        "C": "1",
+        "D": "6",
+        "E": "4",
+        "F": "5"
+      },
+      "source_pages": [
+        72,
+        75,
+        77,
+        79,
+        80,
+        82,
+        83
+      ]
+    },
+    {
+      "id": "MM02",
+      "title": "Problem to Solution",
+      "instructions": "Match each problem with the chapter's response.",
+      "left": {
+        "A": "Most keys remap when N changes",
+        "B": "Unequal ring partitions",
+        "C": "Non-uniform key distribution",
+        "D": "Need to know which keys move after adding a server",
+        "E": "Need to know which keys move after removing a server"
+      },
+      "right": {
+        "1": "Use virtual nodes",
+        "2": "Use consistent hashing instead of direct modulo mapping",
+        "3": "Use virtual nodes",
+        "4": "From new node, scan anticlockwise to prior server",
+        "5": "From removed node, scan anticlockwise to prior server"
+      },
+      "answer_key": {
+        "A": "2",
+        "B": "1",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        74,
+        79,
+        80,
+        82,
+        83
+      ]
+    },
+    {
+      "id": "MM03",
+      "title": "Membership Change Example",
+      "instructions": "Match the event with the key movement shown in the chapter.",
+      "left": {
+        "A": "Add server4",
+        "B": "Remove server1"
+      },
+      "right": {
+        "1": "key1 moves to server2",
+        "2": "key0 moves from server0 to server4"
+      },
+      "answer_key": {
+        "A": "2",
+        "B": "1"
+      },
+      "source_pages": [
+        77,
+        78
+      ]
+    },
+    {
+      "id": "MM04",
+      "title": "Real-World System to Category",
+      "instructions": "Match the listed system with the role stated or implied by the chapter.",
+      "left": {
+        "A": "Amazon Dynamo",
+        "B": "Apache Cassandra",
+        "C": "Discord",
+        "D": "Akamai",
+        "E": "Maglev"
+      },
+      "right": {
+        "1": "Network load balancer",
+        "2": "Chat application",
+        "3": "CDN",
+        "4": "Database partitioning",
+        "5": "Cluster data partitioning"
+      },
+      "answer_key": {
+        "A": "4",
+        "B": "5",
+        "C": "2",
+        "D": "3",
+        "E": "1"
+      },
+      "source_pages": [
+        85
+      ]
+    }
+  ],
+  "true_false": [
+    {
+      "id": "TF01",
+      "statement": "Modulo hashing uses serverIndex = hash(key) % N.",
+      "answer": true,
+      "source_pages": [
+        72
+      ]
+    },
+    {
+      "id": "TF02",
+      "statement": "Modulo hashing remains stable even when N changes.",
+      "answer": false,
+      "explanation": "Changing N changes many server indexes.",
+      "source_pages": [
+        73,
+        74
+      ]
+    },
+    {
+      "id": "TF03",
+      "statement": "A server failure under modulo hashing can cause a storm of cache misses.",
+      "answer": true,
+      "source_pages": [
+        74
+      ]
+    },
+    {
+      "id": "TF04",
+      "statement": "Consistent hashing is designed to reduce remapping when the table/server set changes.",
+      "answer": true,
+      "source_pages": [
+        75
+      ]
+    },
+    {
+      "id": "TF05",
+      "statement": "The SHA-1 example has a range from 0 through 2^160 - 1.",
+      "answer": true,
+      "source_pages": [
+        75
+      ]
+    },
+    {
+      "id": "TF06",
+      "statement": "The ring lookup uses hash(key) % N.",
+      "answer": false,
+      "explanation": "The chapter explicitly says there is no modulo operation in this ring-based lookup.",
+      "source_pages": [
+        76
+      ]
+    },
+    {
+      "id": "TF07",
+      "statement": "A key belongs to the first server encountered clockwise.",
+      "answer": true,
+      "source_pages": [
+        77
+      ]
+    },
+    {
+      "id": "TF08",
+      "statement": "Adding server4 in the example remaps every key.",
+      "answer": false,
+      "source_pages": [
+        77,
+        78
+      ]
+    },
+    {
+      "id": "TF09",
+      "statement": "Removing server1 remaps only key1 in the chapter's example.",
+      "answer": true,
+      "source_pages": [
+        78
+      ]
+    },
+    {
+      "id": "TF10",
+      "statement": "The basic ring always gives every server exactly equal partition size.",
+      "answer": false,
+      "source_pages": [
+        79
+      ]
+    },
+    {
+      "id": "TF11",
+      "statement": "Non-uniform key distribution is one of the basic-ring problems.",
+      "answer": true,
+      "source_pages": [
+        80
+      ]
+    },
+    {
+      "id": "TF12",
+      "statement": "Virtual nodes represent physical servers at multiple positions on the ring.",
+      "answer": true,
+      "source_pages": [
+        80,
+        81
+      ]
+    },
+    {
+      "id": "TF13",
+      "statement": "Real-world systems necessarily use exactly three virtual nodes per server.",
+      "answer": false,
+      "explanation": "Three is only the chapter's simple example; real systems generally use many more.",
+      "source_pages": [
+        81
+      ]
+    },
+    {
+      "id": "TF14",
+      "statement": "More virtual nodes generally reduce standard deviation of load distribution.",
+      "answer": true,
+      "source_pages": [
+        82
+      ]
+    },
+    {
+      "id": "TF15",
+      "statement": "More virtual nodes have zero storage cost.",
+      "answer": false,
+      "source_pages": [
+        82
+      ]
+    },
+    {
+      "id": "TF16",
+      "statement": "When adding a server, the affected interval can be found by scanning anticlockwise to the previous server.",
+      "answer": true,
+      "source_pages": [
+        82
+      ]
+    },
+    {
+      "id": "TF17",
+      "statement": "When s4 is added, the affected keys are between s3 and s4.",
+      "answer": true,
+      "source_pages": [
+        82,
+        83
+      ]
+    },
+    {
+      "id": "TF18",
+      "statement": "When s1 is removed, the affected keys between s0 and s1 move to s2.",
+      "answer": true,
+      "source_pages": [
+        83
+      ]
+    },
+    {
+      "id": "TF19",
+      "statement": "Consistent hashing can make horizontal scaling easier.",
+      "answer": true,
+      "source_pages": [
+        85
+      ]
+    },
+    {
+      "id": "TF20",
+      "statement": "The chapter lists Amazon Dynamo, Cassandra, Discord, Akamai, and Maglev as real-world uses.",
+      "answer": true,
+      "source_pages": [
+        85
+      ]
+    }
+  ],
+  "fill_in_the_blank": [
+    {
+      "id": "FIB01",
+      "prompt": "Traditional server selection uses serverIndex = hash(key) % ______.",
+      "answer": "N",
+      "source_pages": [
+        72
+      ]
+    },
+    {
+      "id": "FIB02",
+      "prompt": "Changing the number of servers can cause a storm of cache ______.",
+      "answer": "misses",
+      "source_pages": [
+        74
+      ]
+    },
+    {
+      "id": "FIB03",
+      "prompt": "The SHA-1 hash space in the chapter ends at 2^______ - 1.",
+      "answer": "160",
+      "source_pages": [
+        75
+      ]
+    },
+    {
+      "id": "FIB04",
+      "prompt": "Connecting both ends of the hash space forms a hash ______.",
+      "answer": "ring",
+      "source_pages": [
+        75
+      ]
+    },
+    {
+      "id": "FIB05",
+      "prompt": "To find a key's server, move ______ from the key until a server is found.",
+      "answer": "clockwise",
+      "source_pages": [
+        77
+      ]
+    },
+    {
+      "id": "FIB06",
+      "prompt": "The hash-space interval between adjacent servers is called a ______.",
+      "answer": "partition",
+      "source_pages": [
+        79
+      ]
+    },
+    {
+      "id": "FIB07",
+      "prompt": "Multiple logical ring positions representing one real server are called virtual ______.",
+      "answer": "nodes",
+      "source_pages": [
+        80
+      ]
+    },
+    {
+      "id": "FIB08",
+      "prompt": "Virtual nodes are also called ______ in the chapter.",
+      "answer": "replicas",
+      "source_pages": [
+        80
+      ]
+    },
+    {
+      "id": "FIB09",
+      "prompt": "As virtual-node count rises, distribution becomes more ______.",
+      "answer": "balanced",
+      "source_pages": [
+        82
+      ]
+    },
+    {
+      "id": "FIB10",
+      "prompt": "Increasing virtual-node count tends to reduce standard ______.",
+      "answer": "deviation",
+      "source_pages": [
+        82
+      ]
+    },
+    {
+      "id": "FIB11",
+      "prompt": "To find affected keys when adding a server, move ______ from the new server to the previous server.",
+      "answer": "anticlockwise",
+      "source_pages": [
+        82
+      ]
+    },
+    {
+      "id": "FIB12",
+      "prompt": "When s4 is added, keys between s3 and ______ move to the new server.",
+      "answer": "s4",
+      "source_pages": [
+        82,
+        83
+      ]
+    },
+    {
+      "id": "FIB13",
+      "prompt": "When s1 is removed, keys between s0 and s1 are redistributed to ______.",
+      "answer": "s2",
+      "source_pages": [
+        83
+      ]
+    },
+    {
+      "id": "FIB14",
+      "prompt": "Consistent hashing helps mitigate ______ key problems.",
+      "answer": "hotspot",
+      "source_pages": [
+        85
+      ]
+    }
+  ],
+  "ordering_exercises": [
+    {
+      "id": "ORD01",
+      "title": "Build a Consistent Hash Ring",
+      "items_scrambled": [
+        "Hash keys onto the ring",
+        "Connect hash-space endpoints into a ring",
+        "Hash servers onto the ring",
+        "Choose/define the hash space"
+      ],
+      "correct_order": [
+        "Choose/define the hash space",
+        "Connect hash-space endpoints into a ring",
+        "Hash servers onto the ring",
+        "Hash keys onto the ring"
+      ],
+      "source_pages": [
+        75,
+        76
+      ]
+    },
+    {
+      "id": "ORD02",
+      "title": "Key Lookup",
+      "items_scrambled": [
+        "Assign key to server",
+        "Hash key onto ring",
+        "Move clockwise",
+        "Encounter first server"
+      ],
+      "correct_order": [
+        "Hash key onto ring",
+        "Move clockwise",
+        "Encounter first server",
+        "Assign key to server"
+      ],
+      "source_pages": [
+        76,
+        77
+      ]
+    },
+    {
+      "id": "ORD03",
+      "title": "Add a Server",
+      "items_scrambled": [
+        "Redistribute affected keys",
+        "Place new server on ring",
+        "Find previous server anticlockwise",
+        "Identify interval between previous and new server"
+      ],
+      "correct_order": [
+        "Place new server on ring",
+        "Find previous server anticlockwise",
+        "Identify interval between previous and new server",
+        "Redistribute affected keys"
+      ],
+      "source_pages": [
+        82,
+        83
+      ]
+    },
+    {
+      "id": "ORD04",
+      "title": "Virtual-Node Lookup",
+      "items_scrambled": [
+        "Resolve virtual node to real server",
+        "Hash key onto ring",
+        "Find first virtual node clockwise",
+        "Store/fetch from real server"
+      ],
+      "correct_order": [
+        "Hash key onto ring",
+        "Find first virtual node clockwise",
+        "Resolve virtual node to real server",
+        "Store/fetch from real server"
+      ],
+      "source_pages": [
+        81
+      ]
+    }
+  ],
+  "scenario_questions": [
+    {
+      "id": "SC01",
+      "difficulty": "medium",
+      "scenario": "A cache cluster uses hash(key) % 8. One server fails and N becomes 7.",
+      "question": "What systemic problem should you expect?",
+      "expected_answer": "Many keys will map to different server indexes, potentially creating widespread cache misses rather than only affecting the failed server's keys.",
+      "source_basis": "Applies the rehashing problem from the chapter.",
+      "source_pages": [
+        73,
+        74
+      ]
+    },
+    {
+      "id": "SC02",
+      "difficulty": "hard",
+      "scenario": "You need to scale a cache cluster by adding one server without remapping nearly the entire keyspace.",
+      "question": "What technique should you consider?",
+      "expected_answer": "Consistent hashing.",
+      "source_pages": [
+        74,
+        75
+      ]
+    },
+    {
+      "id": "SC03",
+      "difficulty": "medium",
+      "scenario": "A key hashes to a point between s2 and s3 on the ring.",
+      "question": "Which server owns it under the basic lookup rule?",
+      "expected_answer": "s3, assuming s3 is the first server encountered clockwise from the key.",
+      "source_basis": "Applies the clockwise lookup rule.",
+      "source_pages": [
+        77
+      ]
+    },
+    {
+      "id": "SC04",
+      "difficulty": "hard",
+      "scenario": "After a server is removed, one neighboring server suddenly owns a much larger portion of the ring than the others.",
+      "question": "Which basic consistent-hashing problem does this illustrate?",
+      "expected_answer": "Unequal partition sizes.",
+      "source_pages": [
+        79
+      ]
+    },
+    {
+      "id": "SC05",
+      "difficulty": "hard",
+      "scenario": "Most keys happen to map to one server while two other servers hold almost nothing.",
+      "question": "Which problem is this, and what technique does the chapter use to address it?",
+      "expected_answer": "Non-uniform key distribution; use virtual nodes.",
+      "source_pages": [
+        80
+      ]
+    },
+    {
+      "id": "SC06",
+      "difficulty": "medium",
+      "scenario": "A physical server is represented at 200 positions around the ring instead of one.",
+      "question": "What concept is being used?",
+      "expected_answer": "Virtual nodes.",
+      "source_pages": [
+        80,
+        81,
+        82
+      ]
+    },
+    {
+      "id": "SC07",
+      "difficulty": "hard",
+      "scenario": "You increase the number of virtual nodes from 100 to 200.",
+      "question": "What trend does the chapter's cited experiment suggest?",
+      "expected_answer": "Lower standard deviation and more balanced distribution, with additional metadata/storage overhead.",
+      "source_pages": [
+        82
+      ]
+    },
+    {
+      "id": "SC08",
+      "difficulty": "hard",
+      "scenario": "You add a new server s4 between s3 and s0 on the ring.",
+      "question": "Which keys need redistribution according to the chapter's method?",
+      "expected_answer": "Keys in the interval from s3 to s4, determined by moving anticlockwise from the new server to the previous server.",
+      "source_pages": [
+        82,
+        83
+      ]
+    },
+    {
+      "id": "SC09",
+      "difficulty": "hard",
+      "scenario": "Server s1 is removed, and s0 is the previous server anticlockwise while s2 is the next server clockwise.",
+      "question": "Which keys move and where?",
+      "expected_answer": "Keys between s0 and s1 move to s2.",
+      "source_pages": [
+        83,
+        84
+      ]
+    },
+    {
+      "id": "SC10",
+      "difficulty": "hard",
+      "scenario": "Three extremely popular celebrity records all land on the same shard and overload it.",
+      "question": "Which problem from the wrap-up does this resemble, and how can consistent hashing help?",
+      "expected_answer": "A hotspot-key problem. Consistent hashing can help mitigate it by distributing data more evenly.",
+      "source_pages": [
+        85
+      ]
+    }
+  ],
+  "short_answer_questions": [
+    {
+      "id": "SA01",
+      "question": "Why does modulo hashing cause widespread remapping when N changes?",
+      "model_answer": "The hash values themselves stay the same, but the modulo divisor changes. Because hash(key) % N depends directly on N, many keys produce different server indexes after a server is added or removed.",
+      "source_pages": [
+        73,
+        74
+      ]
+    },
+    {
+      "id": "SA02",
+      "question": "What is the operational consequence of that remapping in a cache cluster?",
+      "model_answer": "Clients compute new server locations for many keys, but those keys are not actually cached there yet, causing a large number of cache misses.",
+      "source_pages": [
+        74
+      ]
+    },
+    {
+      "id": "SA03",
+      "question": "Explain the core lookup rule of consistent hashing.",
+      "model_answer": "Servers and keys are hashed into the same circular hash space. Starting from a key's position, the first server encountered while moving clockwise owns that key.",
+      "source_pages": [
+        75,
+        76,
+        77
+      ]
+    },
+    {
+      "id": "SA04",
+      "question": "Why does adding a server require only limited redistribution?",
+      "model_answer": "Only keys in the interval that now encounter the new server before their previous owner change ownership. Other keys still encounter the same first server clockwise.",
+      "source_pages": [
+        77,
+        78
+      ]
+    },
+    {
+      "id": "SA05",
+      "question": "What are the two limitations of the basic consistent-hashing ring?",
+      "model_answer": "The server partitions can have very different sizes, and key distribution can be non-uniform, causing some servers to hold many keys while others hold few or none.",
+      "source_pages": [
+        79,
+        80
+      ]
+    },
+    {
+      "id": "SA06",
+      "question": "How do virtual nodes improve distribution?",
+      "model_answer": "Each real server is represented by multiple positions around the ring, so it owns several smaller partitions rather than one large contiguous interval. Increasing the number of virtual nodes reduces distribution variance.",
+      "source_pages": [
+        80,
+        81,
+        82
+      ]
+    },
+    {
+      "id": "SA07",
+      "question": "What is the virtual-node tradeoff?",
+      "model_answer": "More virtual nodes improve load balance by reducing standard deviation, but storing information about more virtual nodes requires additional space.",
+      "source_pages": [
+        82
+      ]
+    },
+    {
+      "id": "SA08",
+      "question": "How are affected keys identified when adding a node?",
+      "model_answer": "Start from the new node and move anticlockwise until the previous server is found. Keys in the interval between that previous server and the new server must move to the new server.",
+      "source_pages": [
+        82,
+        83
+      ]
+    },
+    {
+      "id": "SA09",
+      "question": "How are affected keys identified when removing a node?",
+      "model_answer": "Start at the removed node's former position and move anticlockwise to the previous server. The keys in that interval must be reassigned to the next server clockwise.",
+      "source_pages": [
+        83,
+        84
+      ]
+    },
+    {
+      "id": "SA10",
+      "question": "What benefits does the chapter list in its wrap-up?",
+      "model_answer": "Minimize key redistribution, make horizontal scaling easier through more even distribution, and mitigate hotspot-key problems.",
+      "source_pages": [
+        85
+      ]
+    }
+  ],
+  "active_recall_prompts": [
+    {
+      "id": "AR01",
+      "prompt": "Explain the rehashing problem without looking.",
+      "target_points": [
+        "hash(key) % N",
+        "Works when N fixed",
+        "Membership change alters N",
+        "Many keys remap",
+        "Cache-miss storm"
+      ],
+      "source_pages": [
+        72,
+        73,
+        74
+      ]
+    },
+    {
+      "id": "AR02",
+      "prompt": "Reconstruct the four-server key distribution from Table 5-1.",
+      "target_points": [
+        "server0: key1, key3",
+        "server1: key0, key4",
+        "server2: key2, key6",
+        "server3: key5, key7"
+      ],
+      "source_pages": [
+        72,
+        73
+      ]
+    },
+    {
+      "id": "AR03",
+      "prompt": "Describe how to build and use a hash ring.",
+      "target_points": [
+        "Define hash space",
+        "Connect ends to form ring",
+        "Hash servers",
+        "Hash keys",
+        "Move clockwise from key",
+        "First server owns key"
+      ],
+      "source_pages": [
+        75,
+        76,
+        77
+      ]
+    },
+    {
+      "id": "AR04",
+      "prompt": "Explain the add-server example.",
+      "target_points": [
+        "Add server4",
+        "key0 previously on server0",
+        "server4 becomes first clockwise server",
+        "key0 moves",
+        "key1/key2/key3 remain"
+      ],
+      "source_pages": [
+        77,
+        78
+      ]
+    },
+    {
+      "id": "AR05",
+      "prompt": "Explain the remove-server example.",
+      "target_points": [
+        "Remove server1",
+        "Only key1 affected",
+        "key1 moves to server2",
+        "Other keys unchanged"
+      ],
+      "source_pages": [
+        78,
+        79
+      ]
+    },
+    {
+      "id": "AR06",
+      "prompt": "Name the two basic consistent-hashing problems.",
+      "target_points": [
+        "Unequal partition sizes",
+        "Non-uniform key distribution"
+      ],
+      "source_pages": [
+        79,
+        80
+      ]
+    },
+    {
+      "id": "AR07",
+      "prompt": "Explain virtual nodes from memory.",
+      "target_points": [
+        "Multiple ring positions per real server",
+        "Each vnode references a real node",
+        "Real server owns multiple partitions",
+        "Clockwise vnode lookup",
+        "Better balance"
+      ],
+      "source_pages": [
+        80,
+        81,
+        82
+      ]
+    },
+    {
+      "id": "AR08",
+      "prompt": "State the virtual-node balance tradeoff.",
+      "target_points": [
+        "More virtual nodes",
+        "Lower standard deviation",
+        "More even distribution",
+        "More metadata/storage"
+      ],
+      "source_pages": [
+        82
+      ]
+    },
+    {
+      "id": "AR09",
+      "prompt": "How do you find affected keys after adding a server?",
+      "target_points": [
+        "Start at new server",
+        "Move anticlockwise",
+        "Stop at previous server",
+        "Interval between previous and new server moves"
+      ],
+      "source_pages": [
+        82,
+        83
+      ]
+    },
+    {
+      "id": "AR10",
+      "prompt": "How do you find affected keys after removing a server?",
+      "target_points": [
+        "Start at removed position",
+        "Move anticlockwise",
+        "Stop at previous server",
+        "Affected interval moves to next clockwise server"
+      ],
+      "source_pages": [
+        83,
+        84
+      ]
+    },
+    {
+      "id": "AR11",
+      "prompt": "Name the three benefits from the wrap-up.",
+      "target_points": [
+        "Minimized redistribution",
+        "Easy horizontal scaling",
+        "Mitigate hotspot-key problem"
+      ],
+      "source_pages": [
+        85
+      ]
+    },
+    {
+      "id": "AR12",
+      "prompt": "Name all five real-world systems listed.",
+      "target_points": [
+        "Amazon Dynamo",
+        "Apache Cassandra",
+        "Discord",
+        "Akamai CDN",
+        "Maglev"
+      ],
+      "source_pages": [
+        85
+      ]
+    }
+  ],
+  "diagram_reconstruction_drills": [
+    {
+      "id": "DR01",
+      "name": "Figure 5-1 Modulo Distribution",
+      "task": "Draw four servers and assign the eight example keys using hash % 4.",
+      "required_distribution": {
+        "server0": [
+          "key1",
+          "key3"
+        ],
+        "server1": [
+          "key0",
+          "key4"
+        ],
+        "server2": [
+          "key2",
+          "key6"
+        ],
+        "server3": [
+          "key5",
+          "key7"
+        ]
+      },
+      "source_pages": [
+        72,
+        73
+      ]
+    },
+    {
+      "id": "DR02",
+      "name": "Figure 5-4 Hash Ring",
+      "task": "Draw the linear SHA-1 hash space from 0 to 2^160 - 1, then connect its ends to form a ring.",
+      "source_pages": [
+        75
+      ]
+    },
+    {
+      "id": "DR03",
+      "name": "Figure 5-7 Clockwise Lookup",
+      "task": "Draw four servers and four keys and show clockwise arrows from each key to its owning server.",
+      "required_mapping": {
+        "key0": "server0",
+        "key1": "server1",
+        "key2": "server2",
+        "key3": "server3"
+      },
+      "source_pages": [
+        77
+      ]
+    },
+    {
+      "id": "DR04",
+      "name": "Figure 5-8 Add Server",
+      "task": "Add server4 to the ring and show only key0 moving from server0 to server4.",
+      "source_pages": [
+        77,
+        78
+      ]
+    },
+    {
+      "id": "DR05",
+      "name": "Figure 5-9 Remove Server",
+      "task": "Remove server1 and show key1 moving to server2 while other keys remain unchanged.",
+      "source_pages": [
+        78,
+        79
+      ]
+    },
+    {
+      "id": "DR06",
+      "name": "Figure 5-12 Virtual Nodes",
+      "task": "Draw server0 and server1 with three virtual nodes each around the ring.",
+      "required_virtual_nodes": {
+        "server0": [
+          "s0_0",
+          "s0_1",
+          "s0_2"
+        ],
+        "server1": [
+          "s1_0",
+          "s1_1",
+          "s1_2"
+        ]
+      },
+      "source_pages": [
+        80,
+        81
+      ]
+    },
+    {
+      "id": "DR07",
+      "name": "Figure 5-13 Virtual-Node Lookup",
+      "task": "Draw k0 and show clockwise traversal to s1_1, which points to server1.",
+      "source_pages": [
+        81,
+        82
+      ]
+    },
+    {
+      "id": "DR08",
+      "name": "Figure 5-14 Affected Range on Add",
+      "task": "Add s4 and highlight the range between s3 and s4 that must move.",
+      "source_pages": [
+        82,
+        83
+      ]
+    },
+    {
+      "id": "DR09",
+      "name": "Figure 5-15 Affected Range on Remove",
+      "task": "Remove s1 and highlight the range between s0 and s1 that moves to s2.",
+      "source_pages": [
+        83,
+        84
+      ]
+    }
+  ],
+  "interview_style_questions": [
+    {
+      "id": "INT01",
+      "question": "Why not just use hash(key) % N for a distributed cache?",
+      "strong_answer_outline": [
+        "Simple and works when N is fixed",
+        "Server membership changes alter N",
+        "Many keys remap",
+        "Large cache-miss storm",
+        "Consistent hashing minimizes redistribution"
+      ],
+      "source_pages": [
+        72,
+        73,
+        74,
+        75
+      ]
+    },
+    {
+      "id": "INT02",
+      "question": "Explain consistent hashing from first principles.",
+      "strong_answer_outline": [
+        "Choose common hash space",
+        "Represent it as a ring",
+        "Hash servers onto ring",
+        "Hash keys onto ring",
+        "First server clockwise owns key",
+        "Only local intervals change when membership changes"
+      ],
+      "source_pages": [
+        75,
+        76,
+        77,
+        78
+      ]
+    },
+    {
+      "id": "INT03",
+      "question": "What is wrong with the basic hash ring?",
+      "strong_answer_outline": [
+        "Unequal partition sizes",
+        "Non-uniform key distribution",
+        "One server can become overloaded",
+        "Virtual nodes solve both problems"
+      ],
+      "source_pages": [
+        79,
+        80
+      ]
+    },
+    {
+      "id": "INT04",
+      "question": "Why do virtual nodes help?",
+      "strong_answer_outline": [
+        "Multiple positions per real server",
+        "Multiple smaller partitions per server",
+        "Better spreading",
+        "Lower standard deviation",
+        "Tune vnode count against metadata cost"
+      ],
+      "source_pages": [
+        80,
+        81,
+        82
+      ]
+    },
+    {
+      "id": "INT05",
+      "question": "How do you determine which data moves when adding or removing a node?",
+      "strong_answer_outline": [
+        "For add: start at new node, move anticlockwise to previous server",
+        "Keys in that interval move to new node",
+        "For remove: start at removed node, move anticlockwise to previous server",
+        "Keys in interval move to next clockwise server"
+      ],
+      "source_pages": [
+        82,
+        83,
+        84
+      ]
+    },
+    {
+      "id": "INT06",
+      "question": "What operational benefits would you cite for consistent hashing?",
+      "strong_answer_outline": [
+        "Less data movement during membership changes",
+        "Easier horizontal scaling",
+        "More even distribution",
+        "Hotspot mitigation",
+        "Used in Dynamo, Cassandra, Discord, Akamai, and Maglev"
+      ],
+      "source_pages": [
+        85
+      ]
+    }
+  ],
+  "common_confusions": [
+    {
+      "confusion": "Consistent hashing prevents all key movement.",
+      "correction": "It minimizes movement; a fraction of keys still moves when servers are added or removed.",
+      "source_pages": [
+        75,
+        77,
+        78
+      ]
+    },
+    {
+      "confusion": "Consistent hashing still selects servers using hash(key) % N.",
+      "correction": "The chapter explicitly notes that the ring-based lookup does not use the modulo operation.",
+      "source_pages": [
+        76
+      ]
+    },
+    {
+      "confusion": "The nearest server in either direction owns a key.",
+      "correction": "Ownership is determined by the first server encountered while moving clockwise.",
+      "source_pages": [
+        77
+      ]
+    },
+    {
+      "confusion": "The basic hash ring automatically balances load perfectly.",
+      "correction": "The chapter identifies unequal partitions and non-uniform key distribution as two basic-ring problems.",
+      "source_pages": [
+        79,
+        80
+      ]
+    },
+    {
+      "confusion": "A virtual node is an additional physical server.",
+      "correction": "A virtual node refers to a real server; one physical server can have many virtual positions on the ring.",
+      "source_pages": [
+        80,
+        81
+      ]
+    },
+    {
+      "confusion": "More virtual nodes are always free.",
+      "correction": "More virtual nodes improve balance but consume additional space for virtual-node metadata.",
+      "source_pages": [
+        82
+      ]
+    },
+    {
+      "confusion": "Affected keys after adding a server are found by moving clockwise to the next server.",
+      "correction": "The chapter identifies the affected range by starting at the new server and moving anticlockwise to the previous server.",
+      "source_pages": [
+        82
+      ]
+    },
+    {
+      "confusion": "Consistent hashing is only a caching technique.",
+      "correction": "The chapter lists use in database partitioning, cluster partitioning, chat infrastructure, CDNs, and network load balancing.",
+      "source_pages": [
+        85
+      ]
+    }
+  ],
+  "practice_problems": [
+    {
+      "id": "PRACTICE01",
+      "type": "modulo_hashing",
+      "prompt": "A cluster has 5 servers and a key hash is 47. Which server index does modulo hashing select?",
+      "answer": "47 % 5 = 2, so server index 2.",
+      "note": "New practice question based on the chapter's modulo-hashing formula.",
+      "based_on_source_pages": [
+        72
+      ]
+    },
+    {
+      "id": "PRACTICE02",
+      "type": "modulo_hashing_membership_change",
+      "prompt": "The same key hash 47 is remapped after one server is removed and N changes from 5 to 4. What server index is selected now?",
+      "answer": "47 % 4 = 3. The key changes from server2 to server3, illustrating the rehashing problem.",
+      "note": "New practice question based on the chapter's rehashing problem.",
+      "based_on_source_pages": [
+        73,
+        74
+      ]
+    },
+    {
+      "id": "PRACTICE03",
+      "type": "clockwise_lookup",
+      "prompt": "Servers occur clockwise at ring positions 10, 40, 70, and 90. A key hashes to position 68. Which server owns it?",
+      "answer": "The server at 70, because it is the first server encountered clockwise.",
+      "note": "New practice question based on the chapter's lookup rule.",
+      "based_on_source_pages": [
+        77
+      ]
+    },
+    {
+      "id": "PRACTICE04",
+      "type": "ring_wraparound",
+      "prompt": "Servers are at positions 10, 40, and 70. A key hashes to 95 on a circular 0-99 ring. Which server owns it?",
+      "answer": "The server at 10 after wrapping around the ring.",
+      "note": "New practice question based on the circular hash-ring model.",
+      "based_on_source_pages": [
+        75,
+        77
+      ]
+    },
+    {
+      "id": "PRACTICE05",
+      "type": "virtual_nodes",
+      "prompt": "Why might representing a server with 100 virtual nodes be better balanced than representing it with one ring position?",
+      "answer": "The server receives multiple smaller partitions distributed around the ring, reducing distribution variance; the tradeoff is more vnode metadata.",
+      "note": "New practice question based on the chapter's virtual-node discussion.",
+      "based_on_source_pages": [
+        80,
+        81,
+        82
+      ]
+    }
+  ],
+  "mastery_check": {
+    "beginner": [
+      "Can state hash(key) % N.",
+      "Can explain why changing N remaps many keys.",
+      "Can define consistent hashing and hash ring.",
+      "Can explain clockwise key lookup.",
+      "Can define a virtual node."
+    ],
+    "intermediate": [
+      "Can reproduce the chapter's add-server and remove-server examples.",
+      "Can explain the two problems in the basic ring.",
+      "Can explain how virtual nodes improve distribution.",
+      "Can describe the standard-deviation/metadata tradeoff.",
+      "Can identify affected key intervals."
+    ],
+    "advanced": [
+      "Can compare modulo hashing and consistent hashing under membership changes.",
+      "Can reason about ring wraparound and key ownership.",
+      "Can explain why virtual nodes reduce partition imbalance.",
+      "Can derive which keys move after arbitrary node additions/removals.",
+      "Can discuss consistent hashing as a general partitioning/load-distribution mechanism rather than only a cache technique.",
+      "Can reconstruct the major figures from the chapter from memory."
+    ]
+  },
+  "chapter_five_final_review": {
+    "must_memorize": [
+      "Traditional mapping: serverIndex = hash(key) % N.",
+      "Modulo hashing is stable only while N remains fixed.",
+      "Changing N remaps many keys and can cause a cache-miss storm.",
+      "Consistent hashing remaps only a fraction of keys when membership changes.",
+      "SHA-1 example hash space: 0 to 2^160 - 1.",
+      "Connect both ends of the hash space to form a ring.",
+      "Hash servers and keys into the same ring.",
+      "A key belongs to the first server encountered clockwise.",
+      "Adding a server moves only keys in the neighboring affected interval.",
+      "Removing a server moves only the affected interval to the next clockwise server.",
+      "Basic-ring problems: unequal partition sizes and non-uniform key distribution.",
+      "Virtual nodes represent one real server at many ring positions.",
+      "More virtual nodes usually mean better balance and lower standard deviation.",
+      "More virtual nodes also require more metadata/storage.",
+      "For an added server, find the affected range by moving anticlockwise to the previous server.",
+      "For a removed server, find the affected interval similarly and move it to the next server clockwise.",
+      "Benefits: minimized redistribution, easier horizontal scaling, hotspot mitigation.",
+      "Examples listed: Dynamo, Cassandra, Discord, Akamai, Maglev."
+    ],
+    "memory_chain": "MODULO PROBLEM -> HASH SPACE -> HASH RING -> HASH SERVERS + KEYS -> CLOCKWISE LOOKUP -> LIMITED REMAPPING -> BASIC RING IMBALANCE -> VIRTUAL NODES -> AFFECTED KEY RANGES",
+    "one_sentence_takeaway": "Consistent hashing decouples key placement from the exact server count by assigning keys within a circular hash space, so server membership changes move only neighboring ranges of keys; virtual nodes then make that distribution substantially more balanced."
+  }
+}

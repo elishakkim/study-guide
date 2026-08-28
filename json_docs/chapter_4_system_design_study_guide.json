@@ -1,0 +1,2557 @@
+{
+  "chapter": {
+    "number": 4,
+    "title": "Design a Rate Limiter",
+    "source": "System Design Interview: An Insider's Guide by Alex Xu",
+    "pdf_pages": {
+      "start": 51,
+      "end": 69,
+      "references": 70
+    },
+    "goal": "Design a scalable distributed API rate limiter and understand its algorithms, architecture, failure modes, client behavior, and operational tradeoffs."
+  },
+  "summary": {
+    "definition": "A rate limiter controls the rate of traffic sent by a client or service. In HTTP systems it limits the number of client requests permitted over a specified period; excess calls are blocked.",
+    "benefits": [
+      "Prevent resource starvation caused by intentional or unintentional DoS behavior.",
+      "Reduce cost by limiting excess calls and preserving resources for high-priority APIs.",
+      "Reduce paid third-party API usage when providers charge per call.",
+      "Prevent server overload caused by bots or user misbehavior."
+    ],
+    "examples": [
+      "No more than 2 posts per second per user.",
+      "No more than 10 account creations per day from the same IP.",
+      "No more than 5 reward claims per week from the same device."
+    ],
+    "source_pages": [
+      51
+    ]
+  },
+  "requirements": [
+    {
+      "name": "Accurate limiting",
+      "detail": "Accurately limit excessive requests.",
+      "source_pages": [
+        52
+      ]
+    },
+    {
+      "name": "Low latency",
+      "detail": "The limiter should not noticeably slow HTTP response time.",
+      "source_pages": [
+        52
+      ]
+    },
+    {
+      "name": "Memory efficiency",
+      "detail": "Use as little memory as possible.",
+      "source_pages": [
+        52
+      ]
+    },
+    {
+      "name": "Distributed rate limiting",
+      "detail": "The limiter must be shareable across multiple servers or processes.",
+      "source_pages": [
+        52
+      ]
+    },
+    {
+      "name": "Exception handling",
+      "detail": "Show clear exceptions to users when requests are throttled.",
+      "source_pages": [
+        52
+      ]
+    },
+    {
+      "name": "High fault tolerance",
+      "detail": "Problems in the limiter, such as cache-server failure, should not take down the whole system.",
+      "source_pages": [
+        52
+      ]
+    }
+  ],
+  "scope_clarification": [
+    {
+      "question": "Client-side or server-side?",
+      "answer": "Server-side API rate limiter.",
+      "source_pages": [
+        52
+      ]
+    },
+    {
+      "question": "Throttle by IP, user ID, or other properties?",
+      "answer": "Support flexible sets of throttle rules.",
+      "source_pages": [
+        52
+      ]
+    },
+    {
+      "question": "What scale?",
+      "answer": "Handle a large number of requests.",
+      "source_pages": [
+        52
+      ]
+    },
+    {
+      "question": "Distributed environment?",
+      "answer": "Yes.",
+      "source_pages": [
+        52
+      ]
+    },
+    {
+      "question": "Separate service or application code?",
+      "answer": "Design decision.",
+      "source_pages": [
+        52
+      ]
+    },
+    {
+      "question": "Inform throttled users?",
+      "answer": "Yes.",
+      "source_pages": [
+        52
+      ]
+    }
+  ],
+  "placement": {
+    "client_side": {
+      "assessment": "Generally unreliable for enforcement.",
+      "reasons": [
+        "Requests can be forged by malicious actors.",
+        "The service may not control client implementation."
+      ],
+      "source_pages": [
+        53
+      ]
+    },
+    "server_side": {
+      "description": "Rate limiting can be implemented within the server-side API infrastructure.",
+      "source_pages": [
+        53
+      ]
+    },
+    "middleware": {
+      "description": "A rate-limiter middleware can sit between clients and API servers.",
+      "example": "If the API permits 2 requests/second and the client sends 3, the first 2 pass and the third gets HTTP 429.",
+      "source_pages": [
+        53,
+        54
+      ]
+    },
+    "api_gateway": {
+      "description": "A managed middleware component that may support rate limiting, SSL termination, authentication, IP whitelisting, static content, and other functions.",
+      "source_pages": [
+        54
+      ]
+    },
+    "decision_guidelines": [
+      "Evaluate the existing technology stack and cache service.",
+      "Choose an algorithm that fits business needs.",
+      "Server-side implementation provides more algorithm control; third-party gateways may limit options.",
+      "If an API gateway already exists for authentication or IP whitelisting, rate limiting can be added there.",
+      "If engineering resources are limited, a commercial API gateway may be preferable."
+    ],
+    "source_pages": [
+      54
+    ]
+  },
+  "algorithms": [
+    {
+      "name": "Token Bucket",
+      "mechanism": [
+        "A bucket has a predefined token capacity.",
+        "Tokens are added periodically at a preset refill rate.",
+        "Extra refill tokens overflow when the bucket is full.",
+        "Each request consumes one token.",
+        "If enough tokens exist, the request passes.",
+        "If not, the request is dropped."
+      ],
+      "parameters": {
+        "bucket_size": "Maximum number of tokens in the bucket.",
+        "refill_rate": "Number of tokens added per unit time."
+      },
+      "bucket_examples": [
+        "Different API endpoints may require different buckets.",
+        "Rate limiting by IP can require one bucket per IP.",
+        "A global request ceiling can use one shared global bucket."
+      ],
+      "pros": [
+        "Easy to implement.",
+        "Memory efficient.",
+        "Allows short bursts while tokens remain."
+      ],
+      "cons": [
+        "Bucket size and refill rate can be difficult to tune."
+      ],
+      "source_pages": [
+        54,
+        55,
+        56,
+        57,
+        58
+      ]
+    },
+    {
+      "name": "Leaking Bucket",
+      "mechanism": [
+        "Usually implemented with a FIFO queue.",
+        "If the queue is not full, the arriving request is added.",
+        "If the queue is full, the request is dropped.",
+        "Requests are pulled and processed at regular intervals."
+      ],
+      "parameters": {
+        "bucket_size": "Equivalent to queue size.",
+        "outflow_rate": "How many requests are processed at a fixed rate."
+      },
+      "pros": [
+        "Memory efficient because queue size is bounded.",
+        "Suitable when a stable output rate is required."
+      ],
+      "cons": [
+        "Burst traffic can fill the queue with old requests and cause recent requests to be rate limited.",
+        "Queue size and outflow rate can be difficult to tune."
+      ],
+      "source_pages": [
+        58
+      ]
+    },
+    {
+      "name": "Fixed Window Counter",
+      "mechanism": [
+        "Divide the timeline into fixed-size windows.",
+        "Assign a counter to each window.",
+        "Increment the counter for every request.",
+        "After the threshold is reached, reject additional requests until the next window."
+      ],
+      "boundary_problem": "Traffic near the boundary between adjacent windows can exceed the intended quota within a rolling interval.",
+      "chapter_example": "With a 5-requests/minute limit, 5 requests near the end of one minute plus 5 just after the next minute begins can yield 10 requests between 2:00:30 and 2:01:30.",
+      "pros": [
+        "Memory efficient.",
+        "Easy to understand.",
+        "Window resets fit some use cases."
+      ],
+      "cons": [
+        "Boundary spikes can allow more requests than intended."
+      ],
+      "source_pages": [
+        58,
+        59,
+        60
+      ]
+    },
+    {
+      "name": "Sliding Window Log",
+      "mechanism": [
+        "Store request timestamps, typically in cache such as Redis sorted sets.",
+        "Remove timestamps older than the beginning of the current rolling window.",
+        "Add the new request timestamp.",
+        "If the log size is within the allowed count, accept; otherwise reject."
+      ],
+      "chapter_example": [
+        "Limit = 2 requests/minute.",
+        "1:00:01 accepted.",
+        "1:00:30 accepted.",
+        "1:00:50 rejected because log size becomes 3; timestamp may still remain.",
+        "1:01:40 removes timestamps before 1:00:40, then accepts the request."
+      ],
+      "pros": [
+        "Very accurate; requests do not exceed the rate in a rolling window."
+      ],
+      "cons": [
+        "Uses more memory because timestamps, including rejected-request timestamps, can remain stored."
+      ],
+      "source_pages": [
+        60,
+        61
+      ]
+    },
+    {
+      "name": "Sliding Window Counter",
+      "mechanism": "Hybrid of fixed window counter and sliding window log. Estimate the rolling-window count as current-window requests plus a weighted portion of the previous window.",
+      "formula": "current requests + previous requests * overlap percentage",
+      "chapter_example": {
+        "limit": "7 requests/minute",
+        "previous_window_requests": 5,
+        "current_window_requests": 3,
+        "current_position": "30% into current minute",
+        "figure_previous_window_overlap": "70%",
+        "book_text_as_printed": "3 + 5 * 0.7% = 6.5 request",
+        "source_note": "The text prints '0.7%' while the figure shows 70% and the stated result is 6.5. This guide preserves the source discrepancy.",
+        "result": "6.5, rounded down to 6; request passes because limit is 7."
+      },
+      "pros": [
+        "Smooths traffic spikes.",
+        "Memory efficient."
+      ],
+      "cons": [
+        "Approximate because it assumes previous-window requests are evenly distributed."
+      ],
+      "source_pages": [
+        61,
+        62
+      ]
+    }
+  ],
+  "algorithm_comparison": [
+    {
+      "algorithm": "Token Bucket",
+      "best_fit_from_chapter": "Short bursts",
+      "memory": "Efficient",
+      "main_issue": "Tuning bucket size/refill rate"
+    },
+    {
+      "algorithm": "Leaking Bucket",
+      "best_fit_from_chapter": "Stable fixed output rate",
+      "memory": "Efficient",
+      "main_issue": "Old queued burst traffic can crowd out new requests"
+    },
+    {
+      "algorithm": "Fixed Window Counter",
+      "best_fit_from_chapter": "Simple fixed quotas",
+      "memory": "Efficient",
+      "main_issue": "Window-boundary spikes"
+    },
+    {
+      "algorithm": "Sliding Window Log",
+      "best_fit_from_chapter": "Strict rolling-window accuracy",
+      "memory": "Higher",
+      "main_issue": "Timestamp storage"
+    },
+    {
+      "algorithm": "Sliding Window Counter",
+      "best_fit_from_chapter": "Memory-efficient rolling approximation",
+      "memory": "Efficient",
+      "main_issue": "Approximation error"
+    }
+  ],
+  "high_level_architecture": {
+    "counter_principle": "Track requests for the relevant user, IP, or other throttle key. If the count is above the limit, disallow the request.",
+    "storage_choice": {
+      "choice": "In-memory cache such as Redis",
+      "why_not_database": "The chapter says database disk access is too slow for this path.",
+      "redis_commands": [
+        {
+          "command": "INCR",
+          "purpose": "Increment the stored counter by 1."
+        },
+        {
+          "command": "EXPIRE",
+          "purpose": "Set a timeout so the counter is automatically deleted."
+        }
+      ]
+    },
+    "flow": [
+      "Client sends request to rate-limiter middleware.",
+      "Middleware reads the corresponding counter from Redis.",
+      "Middleware checks whether the limit has been reached.",
+      "If reached, reject.",
+      "If not reached, forward to API servers.",
+      "Increment the counter and save it in Redis."
+    ],
+    "source_pages": [
+      62,
+      63
+    ]
+  },
+  "rules_and_responses": {
+    "rule_storage": "Rules are generally written in configuration files and stored on disk.",
+    "rule_examples": [
+      {
+        "domain": "messaging",
+        "descriptor": "message_type=marketing",
+        "limit": "5 marketing messages/day"
+      },
+      {
+        "domain": "auth",
+        "descriptor": "auth_type=login",
+        "limit": "5 login attempts/minute"
+      }
+    ],
+    "over_limit_behavior": [
+      "Return HTTP 429.",
+      "Depending on the use case, drop the request.",
+      "Depending on the use case, enqueue the request for later processing."
+    ],
+    "headers": [
+      {
+        "header": "X-Ratelimit-Remaining",
+        "meaning": "Remaining requests allowed within the current window."
+      },
+      {
+        "header": "X-Ratelimit-Limit",
+        "meaning": "Maximum calls allowed per time window."
+      },
+      {
+        "header": "X-Ratelimit-Retry-After",
+        "meaning": "Seconds to wait before retrying without being throttled."
+      }
+    ],
+    "source_pages": [
+      64,
+      65
+    ]
+  },
+  "detailed_design": {
+    "flow": [
+      "Rules live on disk.",
+      "Workers frequently pull the rules and place them in cache.",
+      "Client request reaches rate-limiter middleware first.",
+      "Middleware loads rules from cache.",
+      "Middleware fetches counters and the last request timestamp from Redis.",
+      "If allowed, forward to API servers.",
+      "If blocked, return 429 and either drop or queue the request."
+    ],
+    "components": [
+      "Client",
+      "Rate limiter middleware",
+      "Rules on disk",
+      "Workers",
+      "Rule cache",
+      "Redis",
+      "API servers",
+      "Message queue"
+    ],
+    "source_pages": [
+      65
+    ]
+  },
+  "distributed_environment": {
+    "race_condition": {
+      "problem": "Concurrent requests can read the same Redis counter before either writes an update, producing a lost increment.",
+      "chapter_example": "Counter starts at 3. Two requests both read 3 and each writes 4; logically it should become 5.",
+      "obvious_solution": "Locks",
+      "lock_tradeoff": "Locks significantly slow the system.",
+      "referenced_strategies": [
+        "Lua script",
+        "Redis sorted sets"
+      ],
+      "source_pages": [
+        66
+      ]
+    },
+    "synchronization": {
+      "problem": "The same client can reach different rate-limiter instances, so isolated local state is insufficient.",
+      "not_recommended": "Sticky sessions; the chapter calls them neither scalable nor flexible.",
+      "preferred": "Centralized shared state such as Redis.",
+      "source_pages": [
+        66,
+        67
+      ]
+    }
+  },
+  "performance_and_monitoring": {
+    "performance": [
+      {
+        "topic": "Multi-data-center / edge deployment",
+        "reason": "Users far from a data center experience higher latency.",
+        "approach": "Route traffic to geographically close edge servers.",
+        "source_pages": [
+          67
+        ]
+      },
+      {
+        "topic": "Distributed synchronization",
+        "approach": "Use an eventual consistency model.",
+        "source_pages": [
+          68
+        ]
+      }
+    ],
+    "monitoring": {
+      "verify": [
+        "The rate-limiting algorithm is effective.",
+        "The configured rules are effective."
+      ],
+      "examples": [
+        "If rules are too strict and valid requests are dropped, relax the rules.",
+        "If flash-sale bursts make the limiter ineffective, consider changing algorithms; the chapter says token bucket is a good fit."
+      ],
+      "source_pages": [
+        68
+      ]
+    }
+  },
+  "additional_talking_points": {
+    "hard_rate_limiting": "The number of requests cannot exceed the threshold.",
+    "soft_rate_limiting": "Requests may exceed the threshold for a short period.",
+    "layers": {
+      "main_chapter_focus": "Application-level HTTP rate limiting, OSI layer 7.",
+      "other_example": "IP-based rate limiting with Iptables at OSI layer 3."
+    },
+    "client_best_practices": [
+      "Use client caching to avoid unnecessary API calls.",
+      "Understand the limit and avoid sending too many requests in a short interval.",
+      "Catch errors/exceptions and recover gracefully.",
+      "Add sufficient backoff time to retry logic."
+    ],
+    "source_pages": [
+      69
+    ]
+  },
+  "flashcards": [
+    {
+      "id": "FC01",
+      "front": "What does a rate limiter do?",
+      "back": "Controls how many requests a client or service may send over a specified period.",
+      "source_pages": [
+        51
+      ]
+    },
+    {
+      "id": "FC02",
+      "front": "What are the three main benefits discussed?",
+      "back": "Prevent resource starvation/DoS effects, reduce cost, and prevent server overload.",
+      "source_pages": [
+        51
+      ]
+    },
+    {
+      "id": "FC03",
+      "front": "What kind of limiter is designed?",
+      "back": "A server-side API rate limiter.",
+      "source_pages": [
+        52
+      ]
+    },
+    {
+      "id": "FC04",
+      "front": "What are the six requirements?",
+      "back": "Accurate limiting, low latency, low memory use, distributed operation, clear exception handling, and high fault tolerance.",
+      "source_pages": [
+        52
+      ]
+    },
+    {
+      "id": "FC05",
+      "front": "Why is client-side enforcement unreliable?",
+      "back": "Requests can be forged and the service may not control client implementation.",
+      "source_pages": [
+        53
+      ]
+    },
+    {
+      "id": "FC06",
+      "front": "What status code means too many requests?",
+      "back": "HTTP 429.",
+      "source_pages": [
+        53,
+        64
+      ]
+    },
+    {
+      "id": "FC07",
+      "front": "What is an API gateway in this chapter?",
+      "back": "Middleware that may provide rate limiting plus SSL termination, authentication, IP whitelisting, static content, and related functions.",
+      "source_pages": [
+        54
+      ]
+    },
+    {
+      "id": "FC08",
+      "front": "Name all five rate-limiting algorithms.",
+      "back": "Token bucket, leaking bucket, fixed window counter, sliding window log, sliding window counter.",
+      "source_pages": [
+        54
+      ]
+    },
+    {
+      "id": "FC09",
+      "front": "How does token bucket work?",
+      "back": "Requests consume replenished tokens; if a token exists the request passes, otherwise it is dropped.",
+      "source_pages": [
+        55
+      ]
+    },
+    {
+      "id": "FC10",
+      "front": "What are token bucket's two parameters?",
+      "back": "Bucket size and refill rate.",
+      "source_pages": [
+        57
+      ]
+    },
+    {
+      "id": "FC11",
+      "front": "What is token bucket's major burst advantage?",
+      "back": "It allows short bursts while tokens remain.",
+      "source_pages": [
+        57
+      ]
+    },
+    {
+      "id": "FC12",
+      "front": "What is token bucket's main downside?",
+      "back": "Bucket size and refill rate can be hard to tune.",
+      "source_pages": [
+        57,
+        58
+      ]
+    },
+    {
+      "id": "FC13",
+      "front": "How is leaking bucket usually implemented?",
+      "back": "As a FIFO queue processed at a fixed outflow rate.",
+      "source_pages": [
+        58
+      ]
+    },
+    {
+      "id": "FC14",
+      "front": "What happens when the leaking-bucket queue is full?",
+      "back": "The arriving request is dropped.",
+      "source_pages": [
+        58
+      ]
+    },
+    {
+      "id": "FC15",
+      "front": "When is leaking bucket suitable?",
+      "back": "When a stable outflow rate is required.",
+      "source_pages": [
+        58
+      ]
+    },
+    {
+      "id": "FC16",
+      "front": "How does fixed window counter work?",
+      "back": "It counts requests in fixed time windows and blocks new requests after the threshold until the next window.",
+      "source_pages": [
+        58,
+        59
+      ]
+    },
+    {
+      "id": "FC17",
+      "front": "What is the fixed-window boundary problem?",
+      "back": "Requests clustered around adjacent window boundaries can exceed the intended rolling quota.",
+      "source_pages": [
+        59,
+        60
+      ]
+    },
+    {
+      "id": "FC18",
+      "front": "What does sliding window log store?",
+      "back": "Individual request timestamps.",
+      "source_pages": [
+        60
+      ]
+    },
+    {
+      "id": "FC19",
+      "front": "What is the main strength of sliding window log?",
+      "back": "Very accurate rolling-window enforcement.",
+      "source_pages": [
+        61
+      ]
+    },
+    {
+      "id": "FC20",
+      "front": "What is its main weakness?",
+      "back": "High memory use because timestamps can remain stored, including rejected-request timestamps.",
+      "source_pages": [
+        61
+      ]
+    },
+    {
+      "id": "FC21",
+      "front": "What does sliding window counter combine?",
+      "back": "Fixed window counter and sliding window log.",
+      "source_pages": [
+        61
+      ]
+    },
+    {
+      "id": "FC22",
+      "front": "Why is sliding window counter approximate?",
+      "back": "It assumes previous-window requests were evenly distributed.",
+      "source_pages": [
+        62
+      ]
+    },
+    {
+      "id": "FC23",
+      "front": "Why does the architecture choose Redis?",
+      "back": "It is an in-memory store that is fast and supports expiration.",
+      "source_pages": [
+        62
+      ]
+    },
+    {
+      "id": "FC24",
+      "front": "What does Redis INCR do?",
+      "back": "Increments a stored counter by one.",
+      "source_pages": [
+        62
+      ]
+    },
+    {
+      "id": "FC25",
+      "front": "What does Redis EXPIRE do?",
+      "back": "Sets a timeout so a counter is automatically deleted.",
+      "source_pages": [
+        62
+      ]
+    },
+    {
+      "id": "FC26",
+      "front": "Where are rate-limit rules generally stored?",
+      "back": "In configuration files saved on disk.",
+      "source_pages": [
+        64
+      ]
+    },
+    {
+      "id": "FC27",
+      "front": "What does X-Ratelimit-Remaining mean?",
+      "back": "Remaining allowed requests in the window.",
+      "source_pages": [
+        64
+      ]
+    },
+    {
+      "id": "FC28",
+      "front": "What does X-Ratelimit-Limit mean?",
+      "back": "Maximum calls allowed per time window.",
+      "source_pages": [
+        64
+      ]
+    },
+    {
+      "id": "FC29",
+      "front": "What does X-Ratelimit-Retry-After mean?",
+      "back": "Seconds to wait before retrying without being throttled.",
+      "source_pages": [
+        64,
+        65
+      ]
+    },
+    {
+      "id": "FC30",
+      "front": "What can happen to a blocked request besides being dropped?",
+      "back": "It can be queued for later processing when the use case allows it.",
+      "source_pages": [
+        64,
+        65
+      ]
+    },
+    {
+      "id": "FC31",
+      "front": "What are the two distributed challenges?",
+      "back": "Race condition and synchronization.",
+      "source_pages": [
+        66
+      ]
+    },
+    {
+      "id": "FC32",
+      "front": "What is the race-condition example?",
+      "back": "Two requests both read counter 3 and each writes 4, even though the logical result should be 5.",
+      "source_pages": [
+        66
+      ]
+    },
+    {
+      "id": "FC33",
+      "front": "Why not solve the race condition only with locks?",
+      "back": "The chapter says locks significantly slow the system.",
+      "source_pages": [
+        66
+      ]
+    },
+    {
+      "id": "FC34",
+      "front": "What alternatives are referenced?",
+      "back": "Lua scripts and Redis sorted sets.",
+      "source_pages": [
+        66
+      ]
+    },
+    {
+      "id": "FC35",
+      "front": "Why are sticky sessions not preferred?",
+      "back": "They are neither scalable nor flexible.",
+      "source_pages": [
+        67
+      ]
+    },
+    {
+      "id": "FC36",
+      "front": "What synchronization approach is preferred?",
+      "back": "Centralized shared state such as Redis.",
+      "source_pages": [
+        67
+      ]
+    },
+    {
+      "id": "FC37",
+      "front": "Why use multiple data centers or edge locations?",
+      "back": "To reduce latency for geographically distant users.",
+      "source_pages": [
+        67
+      ]
+    },
+    {
+      "id": "FC38",
+      "front": "What consistency model is suggested?",
+      "back": "Eventual consistency.",
+      "source_pages": [
+        68
+      ]
+    },
+    {
+      "id": "FC39",
+      "front": "What should monitoring verify?",
+      "back": "That both the algorithm and the rules are effective.",
+      "source_pages": [
+        68
+      ]
+    },
+    {
+      "id": "FC40",
+      "front": "Which algorithm is identified as good for burst traffic?",
+      "back": "Token bucket.",
+      "source_pages": [
+        68
+      ]
+    },
+    {
+      "id": "FC41",
+      "front": "What is hard rate limiting?",
+      "back": "Requests cannot exceed the threshold.",
+      "source_pages": [
+        69
+      ]
+    },
+    {
+      "id": "FC42",
+      "front": "What is soft rate limiting?",
+      "back": "Requests may exceed the threshold briefly.",
+      "source_pages": [
+        69
+      ]
+    },
+    {
+      "id": "FC43",
+      "front": "What OSI layer is HTTP rate limiting?",
+      "back": "Layer 7, application layer.",
+      "source_pages": [
+        69
+      ]
+    },
+    {
+      "id": "FC44",
+      "front": "Name four client best practices.",
+      "back": "Cache, understand limits, catch errors, and use sufficient retry backoff.",
+      "source_pages": [
+        69
+      ]
+    }
+  ],
+  "multiple_choice_questions": [
+    {
+      "id": "MCQ01",
+      "difficulty": "easy",
+      "question": "What is the purpose of a rate limiter?",
+      "choices": {
+        "A": "Control request rate",
+        "B": "Encrypt traffic",
+        "C": "Shard databases",
+        "D": "Resolve DNS"
+      },
+      "answer": "A",
+      "source_pages": [
+        51
+      ]
+    },
+    {
+      "id": "MCQ02",
+      "difficulty": "medium",
+      "question": "Which is NOT a stated benefit?",
+      "choices": {
+        "A": "Reduce cost",
+        "B": "Prevent overload",
+        "C": "Prevent DoS-style resource starvation",
+        "D": "Guarantee zero latency"
+      },
+      "answer": "D",
+      "source_pages": [
+        51
+      ]
+    },
+    {
+      "id": "MCQ03",
+      "difficulty": "medium",
+      "question": "Which design is in scope?",
+      "choices": {
+        "A": "Client-only limiter",
+        "B": "Server-side API limiter",
+        "C": "CDN",
+        "D": "Database optimizer"
+      },
+      "answer": "B",
+      "source_pages": [
+        52
+      ]
+    },
+    {
+      "id": "MCQ04",
+      "difficulty": "medium",
+      "question": "Which requirement addresses cache-server failure?",
+      "choices": {
+        "A": "Fault tolerance",
+        "B": "Low memory",
+        "C": "Endpoint naming",
+        "D": "Static content"
+      },
+      "answer": "A",
+      "source_pages": [
+        52
+      ]
+    },
+    {
+      "id": "MCQ05",
+      "difficulty": "medium",
+      "question": "Why is client-side enforcement unreliable?",
+      "choices": {
+        "A": "Clients cannot use HTTP",
+        "B": "Requests can be forged and client code may be uncontrolled",
+        "C": "It always uses SQL",
+        "D": "It cannot count"
+      },
+      "answer": "B",
+      "source_pages": [
+        53
+      ]
+    },
+    {
+      "id": "MCQ06",
+      "difficulty": "easy",
+      "question": "Which code means Too Many Requests?",
+      "choices": {
+        "A": "200",
+        "B": "401",
+        "C": "404",
+        "D": "429"
+      },
+      "answer": "D",
+      "source_pages": [
+        53,
+        64
+      ]
+    },
+    {
+      "id": "MCQ07",
+      "difficulty": "medium",
+      "question": "Which algorithm uses replenished tokens?",
+      "choices": {
+        "A": "Token bucket",
+        "B": "Fixed window",
+        "C": "Sliding log",
+        "D": "Leaking bucket"
+      },
+      "answer": "A",
+      "source_pages": [
+        55
+      ]
+    },
+    {
+      "id": "MCQ08",
+      "difficulty": "medium",
+      "question": "What are token bucket's parameters?",
+      "choices": {
+        "A": "Bucket size and refill rate",
+        "B": "Queue size and retry code",
+        "C": "Window and SQL table",
+        "D": "IP and region"
+      },
+      "answer": "A",
+      "source_pages": [
+        57
+      ]
+    },
+    {
+      "id": "MCQ09",
+      "difficulty": "medium",
+      "question": "Which algorithm allows bursts while tokens remain?",
+      "choices": {
+        "A": "Token bucket",
+        "B": "Leaking bucket",
+        "C": "Fixed window only",
+        "D": "None"
+      },
+      "answer": "A",
+      "source_pages": [
+        57
+      ]
+    },
+    {
+      "id": "MCQ10",
+      "difficulty": "medium",
+      "question": "Leaking bucket typically uses what structure?",
+      "choices": {
+        "A": "FIFO queue",
+        "B": "LIFO stack",
+        "C": "B-tree",
+        "D": "Heap"
+      },
+      "answer": "A",
+      "source_pages": [
+        58
+      ]
+    },
+    {
+      "id": "MCQ11",
+      "difficulty": "medium",
+      "question": "What happens when the leaking-bucket queue is full?",
+      "choices": {
+        "A": "New request is dropped",
+        "B": "Output rate doubles",
+        "C": "Queue becomes infinite",
+        "D": "All old requests disappear"
+      },
+      "answer": "A",
+      "source_pages": [
+        58
+      ]
+    },
+    {
+      "id": "MCQ12",
+      "difficulty": "hard",
+      "question": "What is the fixed-window counter's main weakness?",
+      "choices": {
+        "A": "Boundary spikes",
+        "B": "Cannot count",
+        "C": "Requires every timestamp",
+        "D": "No reset"
+      },
+      "answer": "A",
+      "source_pages": [
+        59,
+        60
+      ]
+    },
+    {
+      "id": "MCQ13",
+      "difficulty": "hard",
+      "question": "With a 5/minute fixed-window limit, how many requests can the chapter's boundary example allow in the rolling interval?",
+      "choices": {
+        "A": "2",
+        "B": "5",
+        "C": "10",
+        "D": "20"
+      },
+      "answer": "C",
+      "source_pages": [
+        59
+      ]
+    },
+    {
+      "id": "MCQ14",
+      "difficulty": "medium",
+      "question": "Which algorithm stores individual timestamps?",
+      "choices": {
+        "A": "Sliding window log",
+        "B": "Token bucket",
+        "C": "Leaking bucket",
+        "D": "Fixed window"
+      },
+      "answer": "A",
+      "source_pages": [
+        60
+      ]
+    },
+    {
+      "id": "MCQ15",
+      "difficulty": "hard",
+      "question": "What is sliding window log's primary cost?",
+      "choices": {
+        "A": "Memory",
+        "B": "No accuracy",
+        "C": "No timestamps",
+        "D": "No expiration"
+      },
+      "answer": "A",
+      "source_pages": [
+        61
+      ]
+    },
+    {
+      "id": "MCQ16",
+      "difficulty": "medium",
+      "question": "Sliding window counter combines which two ideas?",
+      "choices": {
+        "A": "Fixed window counter + sliding window log",
+        "B": "Token + leak",
+        "C": "SQL + Redis",
+        "D": "Hard + soft"
+      },
+      "answer": "A",
+      "source_pages": [
+        61
+      ]
+    },
+    {
+      "id": "MCQ17",
+      "difficulty": "hard",
+      "question": "Why is sliding window counter approximate?",
+      "choices": {
+        "A": "It assumes previous requests are evenly distributed",
+        "B": "It ignores current traffic",
+        "C": "It never counts",
+        "D": "It requires a queue"
+      },
+      "answer": "A",
+      "source_pages": [
+        62
+      ]
+    },
+    {
+      "id": "MCQ18",
+      "difficulty": "medium",
+      "question": "Why use Redis instead of a database for counters?",
+      "choices": {
+        "A": "Disk access is too slow",
+        "B": "Databases cannot store numbers",
+        "C": "Redis is always persistent",
+        "D": "Redis has no memory"
+      },
+      "answer": "A",
+      "source_pages": [
+        62
+      ]
+    },
+    {
+      "id": "MCQ19",
+      "difficulty": "medium",
+      "question": "Which Redis command increments a counter?",
+      "choices": {
+        "A": "INCR",
+        "B": "EXPIRE",
+        "C": "JOIN",
+        "D": "RETRY"
+      },
+      "answer": "A",
+      "source_pages": [
+        62
+      ]
+    },
+    {
+      "id": "MCQ20",
+      "difficulty": "medium",
+      "question": "Which Redis command sets a timeout?",
+      "choices": {
+        "A": "INCR",
+        "B": "EXPIRE",
+        "C": "SELECT",
+        "D": "APPEND"
+      },
+      "answer": "B",
+      "source_pages": [
+        62
+      ]
+    },
+    {
+      "id": "MCQ21",
+      "difficulty": "medium",
+      "question": "Where are rate-limit rules generally stored?",
+      "choices": {
+        "A": "Config files on disk",
+        "B": "DNS",
+        "C": "Browser history",
+        "D": "Only Redis counters"
+      },
+      "answer": "A",
+      "source_pages": [
+        64
+      ]
+    },
+    {
+      "id": "MCQ22",
+      "difficulty": "medium",
+      "question": "What does X-Ratelimit-Remaining provide?",
+      "choices": {
+        "A": "Remaining quota",
+        "B": "Total servers",
+        "C": "Redis memory",
+        "D": "User ID"
+      },
+      "answer": "A",
+      "source_pages": [
+        64
+      ]
+    },
+    {
+      "id": "MCQ23",
+      "difficulty": "medium",
+      "question": "What does X-Ratelimit-Retry-After provide?",
+      "choices": {
+        "A": "Seconds to wait before retrying",
+        "B": "Request body size",
+        "C": "Server count",
+        "D": "Window name"
+      },
+      "answer": "A",
+      "source_pages": [
+        64,
+        65
+      ]
+    },
+    {
+      "id": "MCQ24",
+      "difficulty": "hard",
+      "question": "What can happen to a blocked order request besides being dropped?",
+      "choices": {
+        "A": "Queue it for later",
+        "B": "Send it directly anyway",
+        "C": "Put it in DNS",
+        "D": "Convert it to a token"
+      },
+      "answer": "A",
+      "source_pages": [
+        64,
+        65
+      ]
+    },
+    {
+      "id": "MCQ25",
+      "difficulty": "hard",
+      "question": "Two concurrent requests both read counter 3 and each writes 4. What problem is this?",
+      "choices": {
+        "A": "Race condition",
+        "B": "Boundary spike",
+        "C": "Cache miss",
+        "D": "DNS failure"
+      },
+      "answer": "A",
+      "source_pages": [
+        66
+      ]
+    },
+    {
+      "id": "MCQ26",
+      "difficulty": "hard",
+      "question": "What should the logically correct counter be after two increments from 3?",
+      "choices": {
+        "A": "3",
+        "B": "4",
+        "C": "5",
+        "D": "6"
+      },
+      "answer": "C",
+      "source_pages": [
+        66
+      ]
+    },
+    {
+      "id": "MCQ27",
+      "difficulty": "hard",
+      "question": "Why not rely only on locks?",
+      "choices": {
+        "A": "They significantly slow the system",
+        "B": "They cannot protect counters",
+        "C": "They disable HTTP",
+        "D": "They require a CDN"
+      },
+      "answer": "A",
+      "source_pages": [
+        66
+      ]
+    },
+    {
+      "id": "MCQ28",
+      "difficulty": "medium",
+      "question": "What alternatives are referenced for race conditions?",
+      "choices": {
+        "A": "Lua scripts and Redis sorted sets",
+        "B": "DNS and CDN",
+        "C": "SQL and FTP",
+        "D": "Sticky sessions only"
+      },
+      "answer": "A",
+      "source_pages": [
+        66
+      ]
+    },
+    {
+      "id": "MCQ29",
+      "difficulty": "hard",
+      "question": "Why are sticky sessions not preferred?",
+      "choices": {
+        "A": "Neither scalable nor flexible",
+        "B": "They are too accurate",
+        "C": "They require no state",
+        "D": "They use tokens"
+      },
+      "answer": "A",
+      "source_pages": [
+        67
+      ]
+    },
+    {
+      "id": "MCQ30",
+      "difficulty": "medium",
+      "question": "What shared-state approach is preferred?",
+      "choices": {
+        "A": "Centralized Redis",
+        "B": "Independent local counters",
+        "C": "Client cookies only",
+        "D": "DNS"
+      },
+      "answer": "A",
+      "source_pages": [
+        67
+      ]
+    },
+    {
+      "id": "MCQ31",
+      "difficulty": "medium",
+      "question": "Why use edge locations?",
+      "choices": {
+        "A": "Reduce latency",
+        "B": "Increase disk seeks",
+        "C": "Remove all caching",
+        "D": "Disable API gateways"
+      },
+      "answer": "A",
+      "source_pages": [
+        67
+      ]
+    },
+    {
+      "id": "MCQ32",
+      "difficulty": "medium",
+      "question": "What consistency model is suggested?",
+      "choices": {
+        "A": "Eventual consistency",
+        "B": "No consistency",
+        "C": "Single-thread only",
+        "D": "Filesystem locking"
+      },
+      "answer": "A",
+      "source_pages": [
+        68
+      ]
+    },
+    {
+      "id": "MCQ33",
+      "difficulty": "medium",
+      "question": "What should monitoring verify?",
+      "choices": {
+        "A": "Algorithm and rules are effective",
+        "B": "Only CPU",
+        "C": "Only user passwords",
+        "D": "Only DNS TTL"
+      },
+      "answer": "A",
+      "source_pages": [
+        68
+      ]
+    },
+    {
+      "id": "MCQ34",
+      "difficulty": "hard",
+      "question": "Which algorithm does the chapter say is a good fit for sudden burst traffic?",
+      "choices": {
+        "A": "Token bucket",
+        "B": "Fixed window",
+        "C": "No limiter",
+        "D": "Sticky sessions"
+      },
+      "answer": "A",
+      "source_pages": [
+        68
+      ]
+    },
+    {
+      "id": "MCQ35",
+      "difficulty": "medium",
+      "question": "What is hard rate limiting?",
+      "choices": {
+        "A": "Threshold cannot be exceeded",
+        "B": "Threshold can be exceeded briefly",
+        "C": "Only IP limiting",
+        "D": "No errors"
+      },
+      "answer": "A",
+      "source_pages": [
+        69
+      ]
+    },
+    {
+      "id": "MCQ36",
+      "difficulty": "medium",
+      "question": "Which client behavior is recommended?",
+      "choices": {
+        "A": "Immediate retry loop",
+        "B": "Backoff before retry",
+        "C": "Ignore 429",
+        "D": "Disable cache"
+      },
+      "answer": "B",
+      "source_pages": [
+        69
+      ]
+    }
+  ],
+  "mix_and_match": [
+    {
+      "id": "MM01",
+      "title": "Algorithm to Mechanism",
+      "left": {
+        "A": "Token bucket",
+        "B": "Leaking bucket",
+        "C": "Fixed window counter",
+        "D": "Sliding window log",
+        "E": "Sliding window counter"
+      },
+      "right": {
+        "1": "FIFO queue at fixed outflow",
+        "2": "Weighted previous-window approximation",
+        "3": "Fixed counters per time window",
+        "4": "Replenished tokens",
+        "5": "Rolling timestamp log"
+      },
+      "answer_key": {
+        "A": "4",
+        "B": "1",
+        "C": "3",
+        "D": "5",
+        "E": "2"
+      },
+      "source_pages": [
+        55,
+        58,
+        59,
+        60,
+        61,
+        62
+      ]
+    },
+    {
+      "id": "MM02",
+      "title": "Term to Meaning",
+      "left": {
+        "A": "INCR",
+        "B": "EXPIRE",
+        "C": "429",
+        "D": "X-Ratelimit-Remaining",
+        "E": "X-Ratelimit-Limit",
+        "F": "X-Ratelimit-Retry-After"
+      },
+      "right": {
+        "1": "Maximum calls per window",
+        "2": "Increment counter",
+        "3": "Seconds before retry",
+        "4": "Set timeout",
+        "5": "Too many requests",
+        "6": "Remaining quota"
+      },
+      "answer_key": {
+        "A": "2",
+        "B": "4",
+        "C": "5",
+        "D": "6",
+        "E": "1",
+        "F": "3"
+      },
+      "source_pages": [
+        53,
+        62,
+        64,
+        65
+      ]
+    },
+    {
+      "id": "MM03",
+      "title": "Distributed Problem to Response",
+      "left": {
+        "A": "Lost concurrent increment",
+        "B": "Different limiter instances lack shared state",
+        "C": "High geographic latency",
+        "D": "Rules too strict",
+        "E": "Flash-sale burst problem"
+      },
+      "right": {
+        "1": "Relax rules",
+        "2": "Edge/multi-data-center deployment",
+        "3": "Lua or Redis sorted sets",
+        "4": "Centralized Redis",
+        "5": "Token bucket"
+      },
+      "answer_key": {
+        "A": "3",
+        "B": "4",
+        "C": "2",
+        "D": "1",
+        "E": "5"
+      },
+      "source_pages": [
+        66,
+        67,
+        68
+      ]
+    },
+    {
+      "id": "MM04",
+      "title": "Algorithm to Tradeoff",
+      "left": {
+        "A": "Token bucket",
+        "B": "Leaking bucket",
+        "C": "Fixed window",
+        "D": "Sliding log",
+        "E": "Sliding counter"
+      },
+      "right": {
+        "1": "Accurate but memory-heavy",
+        "2": "Stable output but queue burst issue",
+        "3": "Simple but boundary spike",
+        "4": "Burst-friendly but tuning challenge",
+        "5": "Efficient but approximate"
+      },
+      "answer_key": {
+        "A": "4",
+        "B": "2",
+        "C": "3",
+        "D": "1",
+        "E": "5"
+      },
+      "source_pages": [
+        57,
+        58,
+        59,
+        60,
+        61,
+        62
+      ]
+    }
+  ],
+  "true_false": [
+    {
+      "id": "TF01",
+      "statement": "Rate limiting can reduce third-party API cost.",
+      "answer": true,
+      "source_pages": [
+        51
+      ]
+    },
+    {
+      "id": "TF02",
+      "statement": "The chapter focuses on a client-only rate limiter.",
+      "answer": false,
+      "source_pages": [
+        52
+      ]
+    },
+    {
+      "id": "TF03",
+      "statement": "Low latency is a requirement.",
+      "answer": true,
+      "source_pages": [
+        52
+      ]
+    },
+    {
+      "id": "TF04",
+      "statement": "HTTP 429 means Too Many Requests.",
+      "answer": true,
+      "source_pages": [
+        53,
+        64
+      ]
+    },
+    {
+      "id": "TF05",
+      "statement": "There is one universally correct placement for a rate limiter.",
+      "answer": false,
+      "source_pages": [
+        54
+      ]
+    },
+    {
+      "id": "TF06",
+      "statement": "Token bucket can permit short bursts.",
+      "answer": true,
+      "source_pages": [
+        57
+      ]
+    },
+    {
+      "id": "TF07",
+      "statement": "Leaking bucket processes requests at a fixed rate.",
+      "answer": true,
+      "source_pages": [
+        58
+      ]
+    },
+    {
+      "id": "TF08",
+      "statement": "Fixed window counter has no boundary weakness.",
+      "answer": false,
+      "source_pages": [
+        59,
+        60
+      ]
+    },
+    {
+      "id": "TF09",
+      "statement": "Sliding window log is very accurate.",
+      "answer": true,
+      "source_pages": [
+        61
+      ]
+    },
+    {
+      "id": "TF10",
+      "statement": "Sliding window log is especially memory efficient.",
+      "answer": false,
+      "source_pages": [
+        61
+      ]
+    },
+    {
+      "id": "TF11",
+      "statement": "Sliding window counter assumes even distribution in the previous window.",
+      "answer": true,
+      "source_pages": [
+        62
+      ]
+    },
+    {
+      "id": "TF12",
+      "statement": "The chapter prefers a disk database for hot counters.",
+      "answer": false,
+      "source_pages": [
+        62
+      ]
+    },
+    {
+      "id": "TF13",
+      "statement": "INCR increments and EXPIRE times out Redis counters.",
+      "answer": true,
+      "source_pages": [
+        62
+      ]
+    },
+    {
+      "id": "TF14",
+      "statement": "Rules are generally stored in configuration files on disk.",
+      "answer": true,
+      "source_pages": [
+        64
+      ]
+    },
+    {
+      "id": "TF15",
+      "statement": "Blocked requests can sometimes be queued instead of dropped.",
+      "answer": true,
+      "source_pages": [
+        64,
+        65
+      ]
+    },
+    {
+      "id": "TF16",
+      "statement": "Concurrent limiter requests can lose increments.",
+      "answer": true,
+      "source_pages": [
+        66
+      ]
+    },
+    {
+      "id": "TF17",
+      "statement": "Locks are free from performance cost.",
+      "answer": false,
+      "source_pages": [
+        66
+      ]
+    },
+    {
+      "id": "TF18",
+      "statement": "Sticky sessions are the preferred synchronization strategy.",
+      "answer": false,
+      "source_pages": [
+        67
+      ]
+    },
+    {
+      "id": "TF19",
+      "statement": "Monitoring should check both algorithm and rule effectiveness.",
+      "answer": true,
+      "source_pages": [
+        68
+      ]
+    },
+    {
+      "id": "TF20",
+      "statement": "Soft rate limiting can briefly exceed the threshold.",
+      "answer": true,
+      "source_pages": [
+        69
+      ]
+    }
+  ],
+  "fill_in_the_blank": [
+    {
+      "id": "FIB01",
+      "prompt": "HTTP status ______ means Too Many Requests.",
+      "answer": "429",
+      "source_pages": [
+        53,
+        64
+      ]
+    },
+    {
+      "id": "FIB02",
+      "prompt": "Token bucket parameters are bucket size and ______ rate.",
+      "answer": "refill",
+      "source_pages": [
+        57
+      ]
+    },
+    {
+      "id": "FIB03",
+      "prompt": "Leaking bucket usually uses a ______ queue.",
+      "answer": "FIFO",
+      "source_pages": [
+        58
+      ]
+    },
+    {
+      "id": "FIB04",
+      "prompt": "Fixed window divides time into fixed-size ______.",
+      "answer": "windows",
+      "source_pages": [
+        58
+      ]
+    },
+    {
+      "id": "FIB05",
+      "prompt": "Sliding window log stores request ______.",
+      "answer": "timestamps",
+      "source_pages": [
+        60
+      ]
+    },
+    {
+      "id": "FIB06",
+      "prompt": "Sliding window counter combines fixed window counter and sliding window ______.",
+      "answer": "log",
+      "source_pages": [
+        61
+      ]
+    },
+    {
+      "id": "FIB07",
+      "prompt": "The counter store example is ______.",
+      "answer": "Redis",
+      "source_pages": [
+        62
+      ]
+    },
+    {
+      "id": "FIB08",
+      "prompt": "Redis ______ increments a counter.",
+      "answer": "INCR",
+      "source_pages": [
+        62
+      ]
+    },
+    {
+      "id": "FIB09",
+      "prompt": "Redis ______ sets a timeout.",
+      "answer": "EXPIRE",
+      "source_pages": [
+        62
+      ]
+    },
+    {
+      "id": "FIB10",
+      "prompt": "Rules are generally stored on ______.",
+      "answer": "disk",
+      "source_pages": [
+        64
+      ]
+    },
+    {
+      "id": "FIB11",
+      "prompt": "X-Ratelimit-______ shows remaining requests.",
+      "answer": "Remaining",
+      "source_pages": [
+        64
+      ]
+    },
+    {
+      "id": "FIB12",
+      "prompt": "The two distributed issues are race condition and ______.",
+      "answer": "synchronization",
+      "source_pages": [
+        66
+      ]
+    },
+    {
+      "id": "FIB13",
+      "prompt": "The preferred shared store is ______.",
+      "answer": "Redis",
+      "source_pages": [
+        67
+      ]
+    },
+    {
+      "id": "FIB14",
+      "prompt": "The suggested distributed model is ______ consistency.",
+      "answer": "eventual",
+      "source_pages": [
+        68
+      ]
+    },
+    {
+      "id": "FIB15",
+      "prompt": "Clients should use sufficient retry ______.",
+      "answer": "backoff",
+      "source_pages": [
+        69
+      ]
+    }
+  ],
+  "scenario_questions": [
+    {
+      "id": "SC01",
+      "difficulty": "medium",
+      "scenario": "Limit is 2 requests/sec and a client sends 3 in one second.",
+      "question": "What happens in the middleware example?",
+      "expected_answer": "The first two pass; the third is throttled with HTTP 429.",
+      "source_pages": [
+        53,
+        54
+      ]
+    },
+    {
+      "id": "SC02",
+      "difficulty": "medium",
+      "scenario": "The system already has an API gateway for authentication and IP whitelisting.",
+      "question": "Where could rate limiting be added?",
+      "expected_answer": "To the existing API gateway.",
+      "source_pages": [
+        54
+      ]
+    },
+    {
+      "id": "SC03",
+      "difficulty": "hard",
+      "scenario": "You need to tolerate short bursts while maintaining a refill-based average limit.",
+      "question": "Which algorithm fits the chapter's stated advantage?",
+      "expected_answer": "Token bucket.",
+      "source_pages": [
+        57
+      ]
+    },
+    {
+      "id": "SC04",
+      "difficulty": "hard",
+      "scenario": "A downstream service needs a stable fixed input rate.",
+      "question": "Which algorithm fits?",
+      "expected_answer": "Leaking bucket.",
+      "source_pages": [
+        58
+      ]
+    },
+    {
+      "id": "SC05",
+      "difficulty": "hard",
+      "scenario": "Users exploit the transition between adjacent one-minute windows.",
+      "question": "Which algorithm weakness is this?",
+      "expected_answer": "Fixed window counter boundary spike.",
+      "source_pages": [
+        59,
+        60
+      ]
+    },
+    {
+      "id": "SC06",
+      "difficulty": "hard",
+      "scenario": "You need strict rolling-window accuracy and can afford more memory.",
+      "question": "Which algorithm best fits?",
+      "expected_answer": "Sliding window log.",
+      "source_pages": [
+        60,
+        61
+      ]
+    },
+    {
+      "id": "SC07",
+      "difficulty": "hard",
+      "scenario": "You want a memory-efficient rolling-window approximation.",
+      "question": "Which algorithm best fits?",
+      "expected_answer": "Sliding window counter.",
+      "source_pages": [
+        61,
+        62
+      ]
+    },
+    {
+      "id": "SC08",
+      "difficulty": "medium",
+      "scenario": "Counters must increment quickly and expire automatically.",
+      "question": "What storage and commands are suggested?",
+      "expected_answer": "Redis with INCR and EXPIRE.",
+      "source_pages": [
+        62
+      ]
+    },
+    {
+      "id": "SC09",
+      "difficulty": "hard",
+      "scenario": "Two threads both read counter 3 and each writes 4.",
+      "question": "What is the issue and what should the logical result be?",
+      "expected_answer": "A race condition; the logical result should be 5.",
+      "source_pages": [
+        66
+      ]
+    },
+    {
+      "id": "SC10",
+      "difficulty": "hard",
+      "scenario": "The same client reaches different rate-limiter instances.",
+      "question": "What problem appears and what approach does the chapter prefer?",
+      "expected_answer": "Synchronization problem; use centralized shared state such as Redis.",
+      "source_pages": [
+        66,
+        67
+      ]
+    },
+    {
+      "id": "SC11",
+      "difficulty": "medium",
+      "scenario": "Users far from the only rate-limiter data center see high latency.",
+      "question": "What optimization is discussed?",
+      "expected_answer": "Use geographically distributed edge/data-center locations.",
+      "source_pages": [
+        67
+      ]
+    },
+    {
+      "id": "SC12",
+      "difficulty": "medium",
+      "scenario": "Monitoring shows many legitimate requests are being rejected.",
+      "question": "What should you consider?",
+      "expected_answer": "Relax the rate-limiting rules.",
+      "source_pages": [
+        68
+      ]
+    },
+    {
+      "id": "SC13",
+      "difficulty": "hard",
+      "scenario": "A flash sale creates brief traffic bursts and the current limiter becomes ineffective.",
+      "question": "What algorithm does the chapter suggest?",
+      "expected_answer": "Token bucket.",
+      "source_pages": [
+        68
+      ]
+    },
+    {
+      "id": "SC14",
+      "difficulty": "medium",
+      "scenario": "A client gets 429 and instantly retries repeatedly.",
+      "question": "What practice should replace this?",
+      "expected_answer": "Use sufficient backoff and respect the limit/retry information.",
+      "source_pages": [
+        69
+      ]
+    }
+  ],
+  "short_answer_questions": [
+    {
+      "id": "SA01",
+      "question": "Why can rate limiting reduce cost?",
+      "model_answer": "By blocking excess requests, the system may need fewer resources and can avoid unnecessary paid third-party API calls.",
+      "source_pages": [
+        51
+      ]
+    },
+    {
+      "id": "SA02",
+      "question": "Why is the rate limiter placed server-side or in middleware rather than trusted solely to the client?",
+      "model_answer": "Clients can be forged and the service may not control client implementation, so trusted enforcement must occur in service-controlled infrastructure.",
+      "source_pages": [
+        53
+      ]
+    },
+    {
+      "id": "SA03",
+      "question": "Compare token bucket and leaking bucket.",
+      "model_answer": "Token bucket consumes replenished tokens and permits short bursts while tokens remain. Leaking bucket queues requests and releases them at a fixed rate, which produces stable outflow but can cause newer requests to be rejected when a burst fills the queue.",
+      "source_pages": [
+        55,
+        57,
+        58
+      ]
+    },
+    {
+      "id": "SA04",
+      "question": "Explain the fixed-window boundary problem.",
+      "model_answer": "Each fixed window may independently remain under quota even though a rolling interval spanning the boundary contains far more requests than intended.",
+      "source_pages": [
+        59,
+        60
+      ]
+    },
+    {
+      "id": "SA05",
+      "question": "Compare sliding window log and sliding window counter.",
+      "model_answer": "Sliding log stores individual timestamps and is accurate but memory intensive. Sliding counter weights previous-window traffic, making it memory efficient but approximate.",
+      "source_pages": [
+        60,
+        61,
+        62
+      ]
+    },
+    {
+      "id": "SA06",
+      "question": "Why is Redis used?",
+      "model_answer": "The limiter requires fast hot-path state updates. Redis is in memory and provides INCR and EXPIRE for counters and time windows.",
+      "source_pages": [
+        62
+      ]
+    },
+    {
+      "id": "SA07",
+      "question": "How are rate-limit rules distributed?",
+      "model_answer": "Rules are stored on disk, workers frequently pull them into a cache, and rate-limiter middleware reads them from the cache.",
+      "source_pages": [
+        64,
+        65
+      ]
+    },
+    {
+      "id": "SA08",
+      "question": "What distributed problems must be handled?",
+      "model_answer": "Race conditions during concurrent updates and synchronization across multiple rate-limiter instances.",
+      "source_pages": [
+        66,
+        67
+      ]
+    },
+    {
+      "id": "SA09",
+      "question": "Why is centralized Redis better than sticky sessions in the chapter's synchronization design?",
+      "model_answer": "Sticky sessions are described as neither scalable nor flexible, while shared Redis gives all limiter instances access to common state.",
+      "source_pages": [
+        67
+      ]
+    },
+    {
+      "id": "SA10",
+      "question": "What should production monitoring tell you?",
+      "model_answer": "Whether the algorithm works effectively for real traffic and whether the configured rules are appropriately strict or need adjustment.",
+      "source_pages": [
+        68
+      ]
+    }
+  ],
+  "active_recall": [
+    {
+      "id": "AR01",
+      "prompt": "Recite all six requirements.",
+      "target": [
+        "Accurate limiting",
+        "Low latency",
+        "Low memory",
+        "Distributed",
+        "Exception handling",
+        "Fault tolerance"
+      ],
+      "source_pages": [
+        52
+      ]
+    },
+    {
+      "id": "AR02",
+      "prompt": "Name all five algorithms.",
+      "target": [
+        "Token bucket",
+        "Leaking bucket",
+        "Fixed window counter",
+        "Sliding window log",
+        "Sliding window counter"
+      ],
+      "source_pages": [
+        54
+      ]
+    },
+    {
+      "id": "AR03",
+      "prompt": "Explain token bucket including parameters, pro, and con.",
+      "target": [
+        "Bucket size",
+        "Refill rate",
+        "Token per request",
+        "Burst-friendly",
+        "Memory efficient",
+        "Tuning challenge"
+      ],
+      "source_pages": [
+        55,
+        57,
+        58
+      ]
+    },
+    {
+      "id": "AR04",
+      "prompt": "Explain leaking bucket.",
+      "target": [
+        "FIFO",
+        "Queue size",
+        "Outflow rate",
+        "Fixed processing rate",
+        "Burst queue issue"
+      ],
+      "source_pages": [
+        58
+      ]
+    },
+    {
+      "id": "AR05",
+      "prompt": "Explain the fixed-window boundary example.",
+      "target": [
+        "5 near old boundary",
+        "5 near new boundary",
+        "10 within rolling minute"
+      ],
+      "source_pages": [
+        59
+      ]
+    },
+    {
+      "id": "AR06",
+      "prompt": "Explain sliding window log step by step.",
+      "target": [
+        "Remove old timestamps",
+        "Add timestamp",
+        "Count log",
+        "Accept/reject",
+        "Accurate",
+        "Memory-heavy"
+      ],
+      "source_pages": [
+        60,
+        61
+      ]
+    },
+    {
+      "id": "AR07",
+      "prompt": "Explain sliding window counter.",
+      "target": [
+        "Current count",
+        "Weighted previous count",
+        "Overlap percentage",
+        "Smooth",
+        "Efficient",
+        "Approximate"
+      ],
+      "source_pages": [
+        61,
+        62
+      ]
+    },
+    {
+      "id": "AR08",
+      "prompt": "Reconstruct the Redis request flow.",
+      "target": [
+        "Client",
+        "Middleware",
+        "Redis",
+        "Threshold check",
+        "429 or API server",
+        "Increment"
+      ],
+      "source_pages": [
+        62,
+        63
+      ]
+    },
+    {
+      "id": "AR09",
+      "prompt": "Recite the three headers.",
+      "target": [
+        "X-Ratelimit-Remaining",
+        "X-Ratelimit-Limit",
+        "X-Ratelimit-Retry-After"
+      ],
+      "source_pages": [
+        64,
+        65
+      ]
+    },
+    {
+      "id": "AR10",
+      "prompt": "Explain the two distributed problems and responses.",
+      "target": [
+        "Race condition",
+        "Lua/sorted sets",
+        "Synchronization",
+        "Sticky sessions not advised",
+        "Centralized Redis"
+      ],
+      "source_pages": [
+        66,
+        67
+      ]
+    },
+    {
+      "id": "AR11",
+      "prompt": "Name the two performance topics.",
+      "target": [
+        "Multi-data-center/edge routing",
+        "Eventual consistency"
+      ],
+      "source_pages": [
+        67,
+        68
+      ]
+    },
+    {
+      "id": "AR12",
+      "prompt": "Name client best practices.",
+      "target": [
+        "Cache",
+        "Understand limits",
+        "Catch errors",
+        "Backoff"
+      ],
+      "source_pages": [
+        69
+      ]
+    }
+  ],
+  "diagram_drills": [
+    {
+      "id": "DR01",
+      "name": "Middleware placement",
+      "required": [
+        "Client",
+        "Rate limiter",
+        "API servers"
+      ],
+      "flow": "Client -> Rate limiter -> API servers",
+      "source_pages": [
+        53
+      ]
+    },
+    {
+      "id": "DR02",
+      "name": "Token bucket",
+      "required": [
+        "Requests",
+        "Refiller",
+        "Bucket",
+        "Enough tokens?",
+        "Forward",
+        "Drop"
+      ],
+      "source_pages": [
+        56
+      ]
+    },
+    {
+      "id": "DR03",
+      "name": "Leaking bucket",
+      "required": [
+        "Requests",
+        "Queue full?",
+        "FIFO queue",
+        "Fixed outflow",
+        "Drop"
+      ],
+      "source_pages": [
+        58
+      ]
+    },
+    {
+      "id": "DR04",
+      "name": "Fixed-window boundary issue",
+      "required": [
+        "Two adjacent windows",
+        "Boundary",
+        "Requests near both sides",
+        "Rolling interval"
+      ],
+      "source_pages": [
+        59
+      ]
+    },
+    {
+      "id": "DR05",
+      "name": "High-level Redis architecture",
+      "required": [
+        "Client",
+        "Rate limiter middleware",
+        "API servers",
+        "Redis"
+      ],
+      "source_pages": [
+        62,
+        63
+      ]
+    },
+    {
+      "id": "DR06",
+      "name": "Detailed design",
+      "required": [
+        "Client",
+        "Middleware",
+        "Rules",
+        "Workers",
+        "Rule cache",
+        "Redis",
+        "API servers",
+        "429 path",
+        "Drop/queue path"
+      ],
+      "source_pages": [
+        65
+      ]
+    },
+    {
+      "id": "DR07",
+      "name": "Race condition",
+      "required": [
+        "Counter 3",
+        "Request 1 reads 3",
+        "Request 2 reads 3",
+        "Both write 4",
+        "Correct value 5"
+      ],
+      "source_pages": [
+        66
+      ]
+    },
+    {
+      "id": "DR08",
+      "name": "Distributed synchronization",
+      "required": [
+        "Client 1",
+        "Client 2",
+        "Rate limiter 1",
+        "Rate limiter 2",
+        "Shared Redis"
+      ],
+      "source_pages": [
+        67
+      ]
+    }
+  ],
+  "interview_questions": [
+    {
+      "id": "INT01",
+      "question": "What would you clarify before designing a distributed rate limiter?",
+      "answer_outline": [
+        "Server-side scope",
+        "Throttle dimensions",
+        "Traffic scale",
+        "Distributed requirement",
+        "Placement",
+        "Throttled-client feedback",
+        "Latency",
+        "Memory",
+        "Fault tolerance"
+      ],
+      "source_pages": [
+        52
+      ]
+    },
+    {
+      "id": "INT02",
+      "question": "How would you choose the placement?",
+      "answer_outline": [
+        "Technology stack",
+        "Required algorithm control",
+        "Existing API gateway",
+        "Engineering resources",
+        "Third-party gateway limitations"
+      ],
+      "source_pages": [
+        54
+      ]
+    },
+    {
+      "id": "INT03",
+      "question": "Compare all five algorithms.",
+      "answer_outline": [
+        "Token: bursts",
+        "Leak: fixed output",
+        "Fixed: boundary problem",
+        "Log: accurate/memory-heavy",
+        "Sliding counter: efficient/approximate"
+      ],
+      "source_pages": [
+        57,
+        58,
+        59,
+        60,
+        61,
+        62
+      ]
+    },
+    {
+      "id": "INT04",
+      "question": "What does the Redis-backed request path look like?",
+      "answer_outline": [
+        "Middleware before APIs",
+        "Read shared counter",
+        "Check threshold",
+        "429 if blocked",
+        "Forward if allowed",
+        "INCR/EXPIRE"
+      ],
+      "source_pages": [
+        62,
+        63
+      ]
+    },
+    {
+      "id": "INT05",
+      "question": "What breaks when the limiter is distributed?",
+      "answer_outline": [
+        "Race conditions",
+        "Locks hurt performance",
+        "Lua/sorted sets",
+        "Cross-instance synchronization",
+        "Sticky sessions weak",
+        "Centralized Redis",
+        "Edge latency",
+        "Eventual consistency"
+      ],
+      "source_pages": [
+        66,
+        67,
+        68
+      ]
+    },
+    {
+      "id": "INT06",
+      "question": "How would you operate the limiter after launch?",
+      "answer_outline": [
+        "Monitor algorithm effectiveness",
+        "Monitor rule effectiveness",
+        "Relax strict rules",
+        "Change algorithm for burst patterns",
+        "Use client backoff"
+      ],
+      "source_pages": [
+        68,
+        69
+      ]
+    }
+  ],
+  "common_confusions": [
+    {
+      "confusion": "Client-side rate limiting is sufficient.",
+      "correction": "The chapter calls client-side enforcement unreliable because requests can be forged and client code may be uncontrolled.",
+      "source_pages": [
+        53
+      ]
+    },
+    {
+      "confusion": "The API gateway is always the correct placement.",
+      "correction": "There is no absolute answer; placement depends on stack, control needs, resources, and existing architecture.",
+      "source_pages": [
+        54
+      ]
+    },
+    {
+      "confusion": "Token bucket and leaking bucket handle bursts the same way.",
+      "correction": "Token bucket allows bursts while tokens remain; leaking bucket queues and drains requests at a fixed rate.",
+      "source_pages": [
+        57,
+        58
+      ]
+    },
+    {
+      "confusion": "Fixed window gives exact rolling-window enforcement.",
+      "correction": "Boundary spikes can exceed the intended rolling quota.",
+      "source_pages": [
+        59,
+        60
+      ]
+    },
+    {
+      "confusion": "Sliding window log is memory efficient.",
+      "correction": "The chapter identifies memory consumption as its primary downside.",
+      "source_pages": [
+        61
+      ]
+    },
+    {
+      "confusion": "Sliding window counter is exact.",
+      "correction": "It is approximate because it assumes previous-window requests are evenly distributed.",
+      "source_pages": [
+        62
+      ]
+    },
+    {
+      "confusion": "The printed sliding-counter example is internally consistent.",
+      "correction": "The source text prints '0.7%' while the figure shows 70% and the stated result is 6.5; this guide preserves that discrepancy.",
+      "source_pages": [
+        61,
+        62
+      ]
+    },
+    {
+      "confusion": "Sticky sessions are the best distributed synchronization solution.",
+      "correction": "The chapter says they are neither scalable nor flexible and prefers centralized Redis.",
+      "source_pages": [
+        67
+      ]
+    }
+  ],
+  "mastery_check": {
+    "beginner": [
+      "Can define rate limiting and HTTP 429.",
+      "Can name the six requirements.",
+      "Can name all five algorithms.",
+      "Can explain INCR and EXPIRE."
+    ],
+    "intermediate": [
+      "Can explain algorithm mechanics and tradeoffs.",
+      "Can reconstruct the Redis-backed architecture.",
+      "Can explain the rule cache and response headers.",
+      "Can explain allowed versus blocked request paths."
+    ],
+    "advanced": [
+      "Can select an algorithm for bursts, stable output, strict rolling accuracy, or memory efficiency.",
+      "Can explain the fixed-window boundary problem.",
+      "Can explain race conditions and lost updates.",
+      "Can explain cross-instance synchronization and why shared Redis helps.",
+      "Can discuss edge deployment, eventual consistency, monitoring, hard/soft limiting, and client retry behavior."
+    ]
+  },
+  "final_review": {
+    "must_memorize": [
+      "HTTP 429 = Too Many Requests.",
+      "Requirements: accuracy, low latency, low memory, distributed support, exception handling, fault tolerance.",
+      "Algorithms: token bucket, leaking bucket, fixed window, sliding log, sliding counter.",
+      "Token bucket = burst-friendly.",
+      "Leaking bucket = stable fixed outflow.",
+      "Fixed window = simple but boundary spike risk.",
+      "Sliding log = accurate but memory-heavy.",
+      "Sliding counter = efficient but approximate.",
+      "Redis INCR increments; EXPIRE sets timeout.",
+      "Rules live on disk and are cached.",
+      "Headers: Remaining, Limit, Retry-After.",
+      "Distributed issues: race condition and synchronization.",
+      "Sticky sessions are not preferred; centralized Redis is.",
+      "Multi-data-center/edge locations reduce latency.",
+      "Eventual consistency is suggested.",
+      "Monitor both algorithm and rule effectiveness.",
+      "Hard = threshold cannot be exceeded; soft = brief exceedance is allowed.",
+      "Clients should cache, understand limits, catch errors, and back off before retrying."
+    ],
+    "memory_chain": "Client -> Rate Limiter Middleware -> cached rules + Redis state -> API server if allowed OR HTTP 429/drop/queue if blocked.",
+    "algorithm_memory_chain": "TOKEN=burst; LEAK=fixed outflow; FIXED=boundary issue; LOG=accurate/memory-heavy; SLIDING COUNTER=efficient/approximate.",
+    "one_sentence_takeaway": "A scalable rate limiter combines an appropriate algorithm with fast shared state, flexible rules, explicit client feedback, distributed concurrency handling, geographic optimization, and monitoring."
+  }
+}

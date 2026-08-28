@@ -1,0 +1,3543 @@
+{
+  "chapter": {
+    "number": 10,
+    "title": "Design a Notification System",
+    "source": "System Design Interview: An Insider's Guide by Alex Xu",
+    "pdf_pages": {
+      "chapter_start": 151,
+      "chapter_end": 164,
+      "references_page": 165
+    },
+    "primary_goal": "Design a scalable notification system that supports mobile push notifications, SMS, and email, delivers notifications as soon as practical, respects user opt-in settings, scales horizontally, avoids data loss, reduces duplicates, retries failures, and supports monitoring and analytics."
+  },
+  "chapter_summary": {
+    "overview": "Chapter 10 designs a multi-channel notification platform for iOS push, Android push, SMS, and email. The interview scope is soft real-time delivery: notifications should arrive as soon as possible, but small delays are acceptable under high load. Notifications may be triggered by client applications or scheduled server-side. The assumed daily scale is 10 million mobile push notifications, 1 million SMS messages, and 5 million emails. The initial architecture places a single notification server between triggering services and third-party delivery providers, but this creates a single point of failure, independent-scaling problems, and performance bottlenecks. The improved design separates database/cache from notification servers, horizontally scales notification servers, and introduces per-channel message queues and worker pools. The deep dive focuses on reliability, durable notification logs, retries, deduplication rather than exactly-once guarantees, templates, user notification settings, rate limiting, push API security, queue monitoring, analytics/event tracking, and an updated end-to-end design.",
+    "supported_formats": [
+      "Mobile push notification",
+      "SMS message",
+      "Email"
+    ],
+    "delivery_model": "Soft real-time",
+    "central_architectural_idea": "Decouple notification ingestion from delivery using message queues and independent workers for each notification type.",
+    "source_pages": [
+      151,
+      152,
+      153,
+      154,
+      155,
+      156,
+      157,
+      158,
+      159,
+      160,
+      161,
+      162,
+      163,
+      164
+    ]
+  },
+  "learning_objectives": [
+    {
+      "id": "LO01",
+      "objective": "Identify the three notification formats covered by the chapter.",
+      "source_pages": [
+        151,
+        152
+      ]
+    },
+    {
+      "id": "LO02",
+      "objective": "State the soft real-time requirement and explain what delay is acceptable.",
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "LO03",
+      "objective": "State supported devices, triggering models, opt-out behavior, and daily volume.",
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "LO04",
+      "objective": "Explain the iOS push flow using Provider, APNS, device token, payload, and iOS device.",
+      "source_pages": [
+        153
+      ]
+    },
+    {
+      "id": "LO05",
+      "objective": "Explain the Android push flow using FCM.",
+      "source_pages": [
+        153,
+        154
+      ]
+    },
+    {
+      "id": "LO06",
+      "objective": "Identify the chapter's SMS and email third-party provider examples.",
+      "source_pages": [
+        154
+      ]
+    },
+    {
+      "id": "LO07",
+      "objective": "Explain how contact information is collected and stored.",
+      "source_pages": [
+        155,
+        156
+      ]
+    },
+    {
+      "id": "LO08",
+      "objective": "Explain why a user may have multiple device tokens.",
+      "source_pages": [
+        156
+      ]
+    },
+    {
+      "id": "LO09",
+      "objective": "Describe the initial notification architecture and its components.",
+      "source_pages": [
+        156,
+        157
+      ]
+    },
+    {
+      "id": "LO10",
+      "objective": "Identify the three weaknesses of the initial single-server notification design.",
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "LO11",
+      "objective": "Explain the three major improvements in the improved high-level design.",
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "LO12",
+      "objective": "Explain all responsibilities of notification servers in the improved design.",
+      "source_pages": [
+        158
+      ]
+    },
+    {
+      "id": "LO13",
+      "objective": "Explain what is stored in cache versus database.",
+      "source_pages": [
+        158,
+        159
+      ]
+    },
+    {
+      "id": "LO14",
+      "objective": "Explain why each notification type gets a separate message queue.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "LO15",
+      "objective": "Explain the role of worker servers and third-party services.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "LO16",
+      "objective": "Reconstruct the six-step notification sending flow.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "LO17",
+      "objective": "Explain how the system prevents notification data loss.",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "LO18",
+      "objective": "Explain why exactly-once delivery is not guaranteed and how duplicates are reduced.",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "LO19",
+      "objective": "Explain notification templates and their benefits.",
+      "source_pages": [
+        160,
+        161
+      ]
+    },
+    {
+      "id": "LO20",
+      "objective": "Explain notification settings and the opt-in check.",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "LO21",
+      "objective": "Explain user-facing notification rate limiting.",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "LO22",
+      "objective": "Explain the retry mechanism for third-party delivery failures.",
+      "source_pages": [
+        161,
+        163
+      ]
+    },
+    {
+      "id": "LO23",
+      "objective": "Explain push-notification API security with appKey/appSecret and verified clients.",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "LO24",
+      "objective": "Explain queue-depth monitoring and worker autoscaling implications.",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "LO25",
+      "objective": "Explain event tracking and the role of analytics.",
+      "source_pages": [
+        162
+      ]
+    },
+    {
+      "id": "LO26",
+      "objective": "Summarize the final updated design and its new features.",
+      "source_pages": [
+        162,
+        163,
+        164
+      ]
+    }
+  ],
+  "requirements_and_scope": {
+    "notification_types": [
+      "Push notification",
+      "SMS message",
+      "Email"
+    ],
+    "real_time_requirement": {
+      "type": "Soft real-time",
+      "meaning": "Deliver as soon as possible, but slight delay is acceptable when the system is under high workload."
+    },
+    "supported_devices": [
+      "iOS devices",
+      "Android devices",
+      "Laptop/desktop"
+    ],
+    "notification_triggers": [
+      "Client applications",
+      "Server-side schedules"
+    ],
+    "user_opt_out": true,
+    "daily_volume": {
+      "mobile_push": 10000000,
+      "sms": 1000000,
+      "email": 5000000,
+      "total": 16000000
+    },
+    "source_pages": [
+      152
+    ]
+  },
+  "notification_channels": {
+    "ios_push": {
+      "components": [
+        "Provider",
+        "Apple Push Notification Service (APNS)",
+        "iOS device"
+      ],
+      "provider_role": "Builds and sends notification requests to APNS.",
+      "request_data": {
+        "device_token": "Unique identifier used for sending push notifications.",
+        "payload": "JSON dictionary containing the notification payload."
+      },
+      "apns_role": "Apple remote service that propagates push notifications to iOS devices.",
+      "device_role": "Receives the push notification.",
+      "source_pages": [
+        153
+      ]
+    },
+    "android_push": {
+      "flow": "Similar to iOS push, but Firebase Cloud Messaging (FCM) is commonly used instead of APNS.",
+      "source_pages": [
+        153,
+        154
+      ]
+    },
+    "sms": {
+      "delivery": "Usually delegated to third-party commercial SMS services.",
+      "examples": [
+        "Twilio",
+        "Nexmo"
+      ],
+      "source_pages": [
+        154
+      ]
+    },
+    "email": {
+      "delivery": "Companies may host their own email infrastructure, but many choose commercial services.",
+      "examples": [
+        "Sendgrid",
+        "Mailchimp"
+      ],
+      "benefits_of_commercial_services": [
+        "Better delivery rate",
+        "Data analytics"
+      ],
+      "source_pages": [
+        154
+      ]
+    }
+  },
+  "contact_information_flow": {
+    "collection_trigger": "When the user installs the app or signs up for the first time.",
+    "flow": [
+      "User installs app or signs up.",
+      "Request passes through load balancer.",
+      "API servers collect contact information.",
+      "Contact information is stored in the database."
+    ],
+    "contact_types": [
+      "Mobile device tokens",
+      "Phone numbers",
+      "Email addresses"
+    ],
+    "database_model": {
+      "user_table": [
+        "user_id",
+        "email",
+        "country_code",
+        "phone_number",
+        "created_at"
+      ],
+      "device_table": [
+        "id",
+        "device_token",
+        "user_id",
+        "last_logged_in_at"
+      ],
+      "relationship": "One user can have multiple devices."
+    },
+    "implication": "A push notification can be sent to all of a user's devices.",
+    "source_pages": [
+      155,
+      156
+    ]
+  },
+  "initial_high_level_design": {
+    "triggering_services": {
+      "name": "Service 1 to N",
+      "possible_forms": [
+        "Microservice",
+        "Cron job",
+        "Distributed system"
+      ],
+      "examples": [
+        "Billing service sends payment-due reminder emails.",
+        "Shopping service sends package-delivery SMS notifications."
+      ]
+    },
+    "notification_system": {
+      "initial_form": "One notification server",
+      "responsibilities": [
+        "Expose APIs to upstream services.",
+        "Build notification payloads for third-party services."
+      ]
+    },
+    "third_party_services": {
+      "role": "Deliver notifications to users.",
+      "extensibility_requirement": "The design should make third-party providers easy to plug in or unplug.",
+      "regional_availability_example": "FCM is unavailable in China, so alternatives such as Jpush or PushY may be used."
+    },
+    "end_clients": [
+      "iOS",
+      "Android",
+      "SMS",
+      "Email"
+    ],
+    "source_pages": [
+      156,
+      157
+    ]
+  },
+  "initial_design_problems": [
+    {
+      "problem": "Single point of failure (SPOF)",
+      "reason": "A single notification server can take down the notification pipeline if it fails.",
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "problem": "Hard to scale",
+      "reason": "Database, cache, and notification-processing responsibilities are coupled inside one server, making independent scaling difficult.",
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "problem": "Performance bottleneck",
+      "reason": "Payload rendering and waiting for third-party responses can be resource-intensive and overload the server during peak periods.",
+      "source_pages": [
+        157
+      ]
+    }
+  ],
+  "improved_high_level_design": {
+    "major_changes": [
+      "Move database and cache out of the notification server.",
+      "Add multiple notification servers with automatic horizontal scaling.",
+      "Introduce message queues to decouple system components."
+    ],
+    "source_pages": [
+      157
+    ]
+  },
+  "improved_design_components": {
+    "services_1_to_n": {
+      "role": "Call notification-server APIs to initiate notifications.",
+      "source_pages": [
+        158
+      ]
+    },
+    "notification_servers": {
+      "responsibilities": [
+        "Provide APIs for services to send notifications.",
+        "Restrict APIs to internal or verified clients to prevent spam.",
+        "Perform basic validation of email addresses, phone numbers, and related data.",
+        "Query database/cache for data needed to render notifications.",
+        "Place notification data onto message queues for parallel processing."
+      ],
+      "source_pages": [
+        158
+      ]
+    },
+    "api_example": {
+      "source_context": "The text introduces this as an example API to send an email.",
+      "method": "POST",
+      "endpoint_as_printed": "https://api.example.com/v/sms/send",
+      "source_discrepancy_note": "The chapter labels the example as an email API while the printed endpoint path contains '/sms/send'. This guide preserves that discrepancy rather than silently correcting it.",
+      "source_pages": [
+        158,
+        159
+      ]
+    },
+    "cache": {
+      "stores": [
+        "User info",
+        "Device info",
+        "Notification templates"
+      ],
+      "source_pages": [
+        159
+      ]
+    },
+    "database": {
+      "stores": [
+        "User data",
+        "Notification data",
+        "Settings"
+      ],
+      "source_pages": [
+        159
+      ]
+    },
+    "message_queues": {
+      "purposes": [
+        "Remove dependencies between components.",
+        "Act as buffers during high notification volume.",
+        "Enable parallel processing."
+      ],
+      "per_channel_isolation": "Each notification type receives a distinct queue so a failure in one third-party provider does not affect other notification channels.",
+      "example_queues": [
+        "iOS push notification queue",
+        "Android push notification queue",
+        "SMS queue",
+        "Email queue"
+      ],
+      "source_pages": [
+        159
+      ]
+    },
+    "workers": {
+      "role": "Pull notification events from message queues and send them to the appropriate third-party services.",
+      "source_pages": [
+        159
+      ]
+    },
+    "third_party_services": {
+      "role": "Deliver notifications to final user devices/accounts.",
+      "source_pages": [
+        159
+      ]
+    }
+  },
+  "notification_sending_flow": [
+    {
+      "step": 1,
+      "action": "An upstream service calls an API exposed by notification servers.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "step": 2,
+      "action": "Notification servers fetch metadata such as user information, device token, and notification settings from cache or database.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "step": 3,
+      "action": "The notification event is sent to the appropriate channel-specific message queue.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "step": 4,
+      "action": "Workers pull notification events from message queues.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "step": 5,
+      "action": "Workers send notifications to corresponding third-party services.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "step": 6,
+      "action": "Third-party services deliver notifications to user devices/accounts.",
+      "source_pages": [
+        159
+      ]
+    }
+  ],
+  "reliability": {
+    "data_loss": {
+      "requirement": "Notifications may be delayed or reordered, but should never be lost.",
+      "techniques": [
+        "Persist notification data in a database.",
+        "Implement a retry mechanism.",
+        "Use a notification log database for persistence."
+      ],
+      "source_pages": [
+        160
+      ]
+    },
+    "exactly_once": {
+      "guarantee": false,
+      "chapter_statement": "Exactly-once delivery cannot be guaranteed in the distributed design; duplicate notifications may occur.",
+      "dedupe_strategy": [
+        "When an event arrives, check its event ID.",
+        "If the event ID has already been seen, discard the event.",
+        "If it has not been seen, send the notification."
+      ],
+      "goal": "Reduce duplicate occurrence, not provide a strict exactly-once guarantee.",
+      "source_pages": [
+        160
+      ]
+    }
+  },
+  "additional_components_and_considerations": {
+    "notification_templates": {
+      "definition": "Preformatted notifications customized with parameters, styling, tracking links, and similar fields.",
+      "benefits": [
+        "Maintain a consistent format.",
+        "Reduce the margin of error.",
+        "Save time."
+      ],
+      "example_fields": [
+        "[ITEM NAME]",
+        "[DATE]",
+        "CTA"
+      ],
+      "source_pages": [
+        160,
+        161
+      ]
+    },
+    "notification_settings": {
+      "purpose": "Give users fine-grained control because excessive notifications can be overwhelming.",
+      "table_fields": [
+        "user_id bigInt",
+        "channel varchar",
+        "opt_in boolean"
+      ],
+      "channel_examples": [
+        "Push notification",
+        "Email",
+        "SMS"
+      ],
+      "send_rule": "Check whether the user is opted in for that notification type before sending.",
+      "source_pages": [
+        161
+      ]
+    },
+    "rate_limiting": {
+      "purpose": "Limit how many notifications a user receives so the system does not overwhelm users and cause them to disable notifications entirely.",
+      "source_pages": [
+        161
+      ]
+    },
+    "retry_mechanism": {
+      "trigger": "A third-party provider fails to send a notification.",
+      "behavior": [
+        "Put the notification back into the message queue.",
+        "Retry delivery.",
+        "If the failure persists, alert developers."
+      ],
+      "updated_design_detail": "The updated design retries a predefined number of times.",
+      "source_pages": [
+        161,
+        163
+      ]
+    },
+    "push_security": {
+      "credentials": [
+        "appKey",
+        "appSecret"
+      ],
+      "policy": "Only authenticated or verified clients may invoke push-notification APIs.",
+      "source_pages": [
+        161
+      ]
+    },
+    "queue_monitoring": {
+      "key_metric": "Total number of queued notifications.",
+      "interpretation": "A large queue indicates workers are not processing notification events quickly enough.",
+      "response": "Add more workers to reduce delivery delay.",
+      "source_pages": [
+        161
+      ]
+    },
+    "event_tracking": {
+      "metrics": [
+        "Open rate",
+        "Click rate",
+        "Engagement"
+      ],
+      "purpose": "Understand customer behavior.",
+      "system": "Analytics service",
+      "integration": "Notification system usually integrates with an analytics service.",
+      "source_pages": [
+        162
+      ]
+    }
+  },
+  "updated_design": {
+    "new_features": [
+      {
+        "feature": "Authentication",
+        "location": "Notification servers",
+        "source_pages": [
+          163
+        ]
+      },
+      {
+        "feature": "Rate limiting",
+        "location": "Notification servers",
+        "source_pages": [
+          163
+        ]
+      },
+      {
+        "feature": "Retry mechanism",
+        "behavior": "Failed notifications are returned to the messaging queue and retried by workers a predefined number of times.",
+        "source_pages": [
+          163
+        ]
+      },
+      {
+        "feature": "Notification templates",
+        "purpose": "Consistent and efficient notification creation.",
+        "source_pages": [
+          163
+        ]
+      },
+      {
+        "feature": "Monitoring and tracking",
+        "purpose": "System health checks and future improvements.",
+        "source_pages": [
+          163
+        ]
+      }
+    ]
+  },
+  "wrap_up": {
+    "major_takeaways": [
+      "Support push notification, SMS, and email.",
+      "Use message queues to decouple system components.",
+      "Use retry mechanisms to reduce delivery failures.",
+      "Use appKey/appSecret to secure push APIs for verified clients.",
+      "Track and monitor key metrics at any stage of the flow.",
+      "Respect user opt-out settings before sending.",
+      "Use rate limiting/frequency capping to avoid overwhelming users."
+    ],
+    "source_pages": [
+      164
+    ]
+  },
+  "key_concepts": [
+    {
+      "term": "Soft Real-Time",
+      "definition": "Notifications should arrive quickly, but a slight delay is acceptable under high load.",
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "term": "Device Token",
+      "definition": "A unique identifier used to send push notifications to a device.",
+      "source_pages": [
+        153
+      ]
+    },
+    {
+      "term": "Payload",
+      "definition": "JSON dictionary containing push-notification content and metadata.",
+      "source_pages": [
+        153
+      ]
+    },
+    {
+      "term": "APNS",
+      "definition": "Apple Push Notification Service, which delivers push notifications to iOS devices.",
+      "source_pages": [
+        153
+      ]
+    },
+    {
+      "term": "FCM",
+      "definition": "Firebase Cloud Messaging, commonly used for Android push notifications.",
+      "source_pages": [
+        153,
+        154
+      ]
+    },
+    {
+      "term": "SPOF",
+      "definition": "Single point of failure; the initial design has one notification server whose failure can stop the system.",
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "term": "Message Queue",
+      "definition": "A buffer that decouples notification ingestion from delivery workers and enables parallel processing.",
+      "source_pages": [
+        157,
+        159
+      ]
+    },
+    {
+      "term": "Worker",
+      "definition": "A server/process that pulls notification events from queues and invokes third-party delivery services.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "term": "Notification Log",
+      "definition": "Persistent storage used to prevent notification data from being lost.",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "term": "Deduplication",
+      "definition": "Checking event IDs to discard already-seen notification events and reduce duplicate delivery.",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "term": "Notification Template",
+      "definition": "A reusable preformatted notification customized with parameters and styling.",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "term": "Notification Settings",
+      "definition": "Per-user, per-channel preferences such as opt-in status.",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "term": "Rate Limiting",
+      "definition": "Frequency capping on notifications to avoid overwhelming a user.",
+      "source_pages": [
+        161,
+        164
+      ]
+    },
+    {
+      "term": "Retry Mechanism",
+      "definition": "Requeueing failed notification events and retrying delivery.",
+      "source_pages": [
+        161,
+        163
+      ]
+    },
+    {
+      "term": "Queue Depth",
+      "definition": "The number of queued notifications, monitored as a signal that workers may be falling behind.",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "term": "Event Tracking",
+      "definition": "Capturing open rate, click rate, engagement, and other metrics through analytics integration.",
+      "source_pages": [
+        162
+      ]
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "FC01",
+      "front": "What three notification formats are in scope?",
+      "back": "Mobile push notification, SMS message, and email.",
+      "source_pages": [
+        151,
+        152
+      ]
+    },
+    {
+      "id": "FC02",
+      "front": "What does soft real-time mean in this chapter?",
+      "back": "Notifications should arrive as soon as possible, but slight delay is acceptable under high load.",
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "FC03",
+      "front": "Which devices are supported?",
+      "back": "iOS devices, Android devices, and laptop/desktop.",
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "FC04",
+      "front": "What can trigger notifications?",
+      "back": "Client applications or server-side schedules.",
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "FC05",
+      "front": "Can users opt out?",
+      "back": "Yes. Opted-out users should no longer receive that notification type.",
+      "source_pages": [
+        152,
+        161
+      ]
+    },
+    {
+      "id": "FC06",
+      "front": "How many mobile push notifications per day are assumed?",
+      "back": "10 million.",
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "FC07",
+      "front": "How many SMS messages per day are assumed?",
+      "back": "1 million.",
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "FC08",
+      "front": "How many emails per day are assumed?",
+      "back": "5 million.",
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "FC09",
+      "front": "What are the three core components of iOS push delivery?",
+      "back": "Provider, APNS, and iOS device.",
+      "source_pages": [
+        153
+      ]
+    },
+    {
+      "id": "FC10",
+      "front": "What does the Provider do for iOS push?",
+      "back": "Builds and sends notification requests to APNS.",
+      "source_pages": [
+        153
+      ]
+    },
+    {
+      "id": "FC11",
+      "front": "What is a device token?",
+      "back": "A unique identifier used for sending push notifications.",
+      "source_pages": [
+        153
+      ]
+    },
+    {
+      "id": "FC12",
+      "front": "What is a push payload?",
+      "back": "A JSON dictionary containing the notification payload.",
+      "source_pages": [
+        153
+      ]
+    },
+    {
+      "id": "FC13",
+      "front": "What does APNS do?",
+      "back": "Propagates push notifications to iOS devices.",
+      "source_pages": [
+        153
+      ]
+    },
+    {
+      "id": "FC14",
+      "front": "What service is commonly used for Android push?",
+      "back": "Firebase Cloud Messaging (FCM).",
+      "source_pages": [
+        153,
+        154
+      ]
+    },
+    {
+      "id": "FC15",
+      "front": "Which SMS providers are named?",
+      "back": "Twilio and Nexmo.",
+      "source_pages": [
+        154
+      ]
+    },
+    {
+      "id": "FC16",
+      "front": "Which email providers are named?",
+      "back": "Sendgrid and Mailchimp.",
+      "source_pages": [
+        154
+      ]
+    },
+    {
+      "id": "FC17",
+      "front": "Why may companies use commercial email services?",
+      "back": "Better delivery rates and data analytics.",
+      "source_pages": [
+        154
+      ]
+    },
+    {
+      "id": "FC18",
+      "front": "When is contact info collected?",
+      "back": "When a user installs the app or signs up for the first time.",
+      "source_pages": [
+        155
+      ]
+    },
+    {
+      "id": "FC19",
+      "front": "What contact information is collected?",
+      "back": "Device tokens, phone numbers, and email addresses.",
+      "source_pages": [
+        155
+      ]
+    },
+    {
+      "id": "FC20",
+      "front": "Where are email and phone number stored?",
+      "back": "In the user table.",
+      "source_pages": [
+        155
+      ]
+    },
+    {
+      "id": "FC21",
+      "front": "Where are device tokens stored?",
+      "back": "In the device table.",
+      "source_pages": [
+        155,
+        156
+      ]
+    },
+    {
+      "id": "FC22",
+      "front": "Can one user have multiple devices?",
+      "back": "Yes.",
+      "source_pages": [
+        156
+      ]
+    },
+    {
+      "id": "FC23",
+      "front": "What does multiple devices imply for push notifications?",
+      "back": "A push can be sent to all of the user's devices.",
+      "source_pages": [
+        156
+      ]
+    },
+    {
+      "id": "FC24",
+      "front": "What can Service 1 to N represent?",
+      "back": "Microservices, cron jobs, or distributed systems that trigger notification events.",
+      "source_pages": [
+        156
+      ]
+    },
+    {
+      "id": "FC25",
+      "front": "What does the initial notification server do?",
+      "back": "Provides APIs to triggering services and builds notification payloads for third-party services.",
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "FC26",
+      "front": "Why must third-party integration be extensible?",
+      "back": "Providers may need to be plugged in or removed, and some services are unavailable in certain markets.",
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "FC27",
+      "front": "What regional provider issue does the chapter mention?",
+      "back": "FCM is unavailable in China, so alternatives such as Jpush or PushY may be used.",
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "FC28",
+      "front": "What are the three problems in the initial design?",
+      "back": "Single point of failure, hard to scale, and performance bottleneck.",
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "FC29",
+      "front": "Why is the initial design a SPOF?",
+      "back": "There is only one notification server.",
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "FC30",
+      "front": "Why is the initial design hard to scale?",
+      "back": "Database, cache, and notification-processing responsibilities are coupled together.",
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "FC31",
+      "front": "Why can the initial design become a performance bottleneck?",
+      "back": "Rendering content and waiting for third-party services are resource-intensive.",
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "FC32",
+      "front": "What three changes improve the design?",
+      "back": "Move DB/cache out, add horizontally scalable notification servers, and add message queues.",
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "FC33",
+      "front": "Who may call notification-server APIs?",
+      "back": "Internal services or verified clients.",
+      "source_pages": [
+        158
+      ]
+    },
+    {
+      "id": "FC34",
+      "front": "Why restrict the notification APIs?",
+      "back": "To prevent spam/unauthorized use.",
+      "source_pages": [
+        158
+      ]
+    },
+    {
+      "id": "FC35",
+      "front": "What basic validations do notification servers perform?",
+      "back": "Validation of emails, phone numbers, and similar notification data.",
+      "source_pages": [
+        158
+      ]
+    },
+    {
+      "id": "FC36",
+      "front": "Why do notification servers query cache or DB?",
+      "back": "To fetch data needed to render a notification.",
+      "source_pages": [
+        158
+      ]
+    },
+    {
+      "id": "FC37",
+      "front": "Why put notification data on message queues?",
+      "back": "To decouple components, buffer bursts, and enable parallel processing.",
+      "source_pages": [
+        158,
+        159
+      ]
+    },
+    {
+      "id": "FC38",
+      "front": "What does the cache store?",
+      "back": "User info, device info, and notification templates.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "FC39",
+      "front": "What does the DB store?",
+      "back": "User, notification, settings, and related data.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "FC40",
+      "front": "Why use separate queues for each notification type?",
+      "back": "So an outage in one third-party channel does not affect other notification types.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "FC41",
+      "front": "What do workers do?",
+      "back": "Pull events from queues and send them to the corresponding third-party services.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "FC42",
+      "front": "What is step 1 of the improved notification flow?",
+      "back": "A service calls an API provided by notification servers.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "FC43",
+      "front": "What metadata is fetched before sending?",
+      "back": "User information, device token, and notification settings.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "FC44",
+      "front": "Where is an iOS event placed?",
+      "back": "In the iOS push-notification queue.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "FC45",
+      "front": "Who pulls events from queues?",
+      "back": "Workers.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "FC46",
+      "front": "Who ultimately delivers messages to users?",
+      "back": "Third-party services such as APNS, FCM, SMS services, and email services.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "FC47",
+      "front": "What reliability rule does the chapter emphasize?",
+      "back": "Notifications may be delayed or reordered, but should never be lost.",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "FC48",
+      "front": "How is data loss prevented?",
+      "back": "Persist notification data in a database and use retries; the design includes a notification log.",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "FC49",
+      "front": "Does the chapter guarantee exactly-once delivery?",
+      "back": "No.",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "FC50",
+      "front": "Why can duplicate notifications occur?",
+      "back": "The distributed nature of the system can cause duplicate delivery during failures/retries.",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "FC51",
+      "front": "What is the simple dedupe key?",
+      "back": "Event ID.",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "FC52",
+      "front": "What happens when an already-seen event ID arrives?",
+      "back": "The event is discarded.",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "FC53",
+      "front": "What happens when a new event ID arrives?",
+      "back": "The notification is sent.",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "FC54",
+      "front": "Why use notification templates?",
+      "back": "To avoid building millions of similar notifications from scratch.",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "FC55",
+      "front": "What are three template benefits?",
+      "back": "Consistent format, fewer errors, and time savings.",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "FC56",
+      "front": "What fields are in the notification-settings table?",
+      "back": "user_id, channel, opt_in.",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "FC57",
+      "front": "What should happen before any notification is sent?",
+      "back": "Check whether the user opted in to that notification type.",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "FC58",
+      "front": "What problem does user-facing rate limiting solve?",
+      "back": "It prevents overwhelming users with too many notifications.",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "FC59",
+      "front": "Why is excessive notification frequency dangerous?",
+      "back": "Users may turn notifications off completely.",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "FC60",
+      "front": "What happens if a third-party service fails to send?",
+      "back": "The notification is added back to the queue for retry.",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "FC61",
+      "front": "What happens if delivery problems persist?",
+      "back": "An alert is sent to developers.",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "FC62",
+      "front": "What credentials secure push APIs?",
+      "back": "appKey and appSecret.",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "FC63",
+      "front": "Who is allowed to send push notifications through the APIs?",
+      "back": "Authenticated or verified clients.",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "FC64",
+      "front": "What queue metric should be monitored?",
+      "back": "The total number of queued notifications.",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "FC65",
+      "front": "What does a large notification queue indicate?",
+      "back": "Workers are not processing notification events fast enough.",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "FC66",
+      "front": "How should the system respond to a persistently large queue?",
+      "back": "Add more workers to reduce delivery delay.",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "FC67",
+      "front": "What notification metrics are named?",
+      "back": "Open rate, click rate, and engagement.",
+      "source_pages": [
+        162
+      ]
+    },
+    {
+      "id": "FC68",
+      "front": "What system performs event tracking?",
+      "back": "An analytics service.",
+      "source_pages": [
+        162
+      ]
+    },
+    {
+      "id": "FC69",
+      "front": "What two new critical features are added to notification servers in the updated design?",
+      "back": "Authentication and rate limiting.",
+      "source_pages": [
+        163
+      ]
+    },
+    {
+      "id": "FC70",
+      "front": "How does the updated design retry failed notifications?",
+      "back": "Put them back in the messaging queue and let workers retry a predefined number of times.",
+      "source_pages": [
+        163
+      ]
+    },
+    {
+      "id": "FC71",
+      "front": "What do monitoring and tracking support?",
+      "back": "System health checks and future improvements.",
+      "source_pages": [
+        163
+      ]
+    },
+    {
+      "id": "FC72",
+      "front": "What architectural mechanism does the wrap-up emphasize for decoupling?",
+      "back": "Message queues.",
+      "source_pages": [
+        164
+      ]
+    },
+    {
+      "id": "FC73",
+      "front": "What security takeaway is repeated in the wrap-up?",
+      "back": "Use appKey/appSecret so only verified clients can send notifications.",
+      "source_pages": [
+        164
+      ]
+    },
+    {
+      "id": "FC74",
+      "front": "What user-preference takeaway is repeated in the wrap-up?",
+      "back": "Check user settings before sending because users may opt out.",
+      "source_pages": [
+        164
+      ]
+    },
+    {
+      "id": "FC75",
+      "front": "What rate-limiting takeaway is repeated in the wrap-up?",
+      "back": "Use frequency capping on the number of notifications a user receives.",
+      "source_pages": [
+        164
+      ]
+    }
+  ],
+  "multiple_choice_questions": [
+    {
+      "id": "MCQ01",
+      "difficulty": "easy",
+      "question": "Which notification types are in scope?",
+      "choices": {
+        "A": "Push, SMS, email",
+        "B": "Email only",
+        "C": "Push only",
+        "D": "Voice calls only"
+      },
+      "answer": "A",
+      "source_pages": [
+        151,
+        152
+      ]
+    },
+    {
+      "id": "MCQ02",
+      "difficulty": "medium",
+      "question": "What kind of real-time behavior is required?",
+      "choices": {
+        "A": "Hard real-time",
+        "B": "Soft real-time",
+        "C": "Offline only",
+        "D": "Batch-only"
+      },
+      "answer": "B",
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "MCQ03",
+      "difficulty": "medium",
+      "question": "How many mobile push notifications/day are assumed?",
+      "choices": {
+        "A": "1M",
+        "B": "5M",
+        "C": "10M",
+        "D": "100M"
+      },
+      "answer": "C",
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "MCQ04",
+      "difficulty": "medium",
+      "question": "How many SMS messages/day are assumed?",
+      "choices": {
+        "A": "1M",
+        "B": "5M",
+        "C": "10M",
+        "D": "16M"
+      },
+      "answer": "A",
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "MCQ05",
+      "difficulty": "medium",
+      "question": "How many emails/day are assumed?",
+      "choices": {
+        "A": "1M",
+        "B": "5M",
+        "C": "10M",
+        "D": "50M"
+      },
+      "answer": "B",
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "MCQ06",
+      "difficulty": "easy",
+      "question": "What Apple service delivers iOS push notifications?",
+      "choices": {
+        "A": "APNS",
+        "B": "FCM",
+        "C": "Twilio",
+        "D": "Mailchimp"
+      },
+      "answer": "A",
+      "source_pages": [
+        153
+      ]
+    },
+    {
+      "id": "MCQ07",
+      "difficulty": "easy",
+      "question": "What service is commonly used for Android push?",
+      "choices": {
+        "A": "APNS",
+        "B": "FCM",
+        "C": "Nexmo",
+        "D": "Sendgrid"
+      },
+      "answer": "B",
+      "source_pages": [
+        153,
+        154
+      ]
+    },
+    {
+      "id": "MCQ08",
+      "difficulty": "medium",
+      "question": "What identifies a destination device for push?",
+      "choices": {
+        "A": "Device token",
+        "B": "PageRank",
+        "C": "Queue depth",
+        "D": "Event log"
+      },
+      "answer": "A",
+      "source_pages": [
+        153
+      ]
+    },
+    {
+      "id": "MCQ09",
+      "difficulty": "medium",
+      "question": "What is a push payload?",
+      "choices": {
+        "A": "JSON dictionary",
+        "B": "Database shard",
+        "C": "DNS record",
+        "D": "Worker pool"
+      },
+      "answer": "A",
+      "source_pages": [
+        153
+      ]
+    },
+    {
+      "id": "MCQ10",
+      "difficulty": "medium",
+      "question": "Which two SMS providers are named?",
+      "choices": {
+        "A": "Twilio and Nexmo",
+        "B": "APNS and FCM",
+        "C": "Sendgrid and Mailchimp",
+        "D": "Jpush and APNS"
+      },
+      "answer": "A",
+      "source_pages": [
+        154
+      ]
+    },
+    {
+      "id": "MCQ11",
+      "difficulty": "medium",
+      "question": "Which two email providers are named?",
+      "choices": {
+        "A": "Twilio and Nexmo",
+        "B": "Sendgrid and Mailchimp",
+        "C": "APNS and FCM",
+        "D": "Jpush and PushY"
+      },
+      "answer": "B",
+      "source_pages": [
+        154
+      ]
+    },
+    {
+      "id": "MCQ12",
+      "difficulty": "medium",
+      "question": "When is contact info gathered?",
+      "choices": {
+        "A": "At app install or sign-up",
+        "B": "Only after logout",
+        "C": "Only during retry",
+        "D": "Only after an email fails"
+      },
+      "answer": "A",
+      "source_pages": [
+        155
+      ]
+    },
+    {
+      "id": "MCQ13",
+      "difficulty": "hard",
+      "question": "Where are device tokens stored in the simplified schema?",
+      "choices": {
+        "A": "Device table",
+        "B": "User table only",
+        "C": "Queue table",
+        "D": "Notification log only"
+      },
+      "answer": "A",
+      "source_pages": [
+        155,
+        156
+      ]
+    },
+    {
+      "id": "MCQ14",
+      "difficulty": "hard",
+      "question": "Why can one user have multiple device tokens?",
+      "choices": {
+        "A": "A user can have multiple devices",
+        "B": "APNS requires duplicates",
+        "C": "Each SMS creates a token",
+        "D": "Each email creates a device"
+      },
+      "answer": "A",
+      "source_pages": [
+        156
+      ]
+    },
+    {
+      "id": "MCQ15",
+      "difficulty": "medium",
+      "question": "Which is NOT a possible Service 1..N trigger source?",
+      "choices": {
+        "A": "Microservice",
+        "B": "Cron job",
+        "C": "Distributed system",
+        "D": "Only APNS"
+      },
+      "answer": "D",
+      "source_pages": [
+        156
+      ]
+    },
+    {
+      "id": "MCQ16",
+      "difficulty": "hard",
+      "question": "What are the three problems of the initial notification-server design?",
+      "choices": {
+        "A": "SPOF, hard to scale, performance bottleneck",
+        "B": "No database, no email, no devices",
+        "C": "No DNS, no CDN, no cache",
+        "D": "Only duplicate content"
+      },
+      "answer": "A",
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "MCQ17",
+      "difficulty": "medium",
+      "question": "What is the first architectural improvement?",
+      "choices": {
+        "A": "Move DB/cache out of notification server",
+        "B": "Remove all queues",
+        "C": "Use one worker",
+        "D": "Store everything locally"
+      },
+      "answer": "A",
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "MCQ18",
+      "difficulty": "medium",
+      "question": "What scaling improvement is introduced?",
+      "choices": {
+        "A": "Multiple notification servers with auto horizontal scaling",
+        "B": "One larger server only",
+        "C": "No scaling",
+        "D": "Only database scaling"
+      },
+      "answer": "A",
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "MCQ19",
+      "difficulty": "medium",
+      "question": "What decouples system components?",
+      "choices": {
+        "A": "Message queues",
+        "B": "Device tokens",
+        "C": "Email templates",
+        "D": "User table"
+      },
+      "answer": "A",
+      "source_pages": [
+        157,
+        159
+      ]
+    },
+    {
+      "id": "MCQ20",
+      "difficulty": "hard",
+      "question": "Why should the send APIs be internal or verified-client-only?",
+      "choices": {
+        "A": "Prevent spam",
+        "B": "Reduce device-token length",
+        "C": "Generate analytics",
+        "D": "Avoid databases"
+      },
+      "answer": "A",
+      "source_pages": [
+        158
+      ]
+    },
+    {
+      "id": "MCQ21",
+      "difficulty": "medium",
+      "question": "What does the cache store?",
+      "choices": {
+        "A": "User info, device info, templates",
+        "B": "Only raw SMS payloads",
+        "C": "Only event IDs",
+        "D": "Only API secrets"
+      },
+      "answer": "A",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "MCQ22",
+      "difficulty": "medium",
+      "question": "Why have a distinct queue for each notification type?",
+      "choices": {
+        "A": "Failure isolation across channels",
+        "B": "To force exactly-once delivery",
+        "C": "To remove workers",
+        "D": "To avoid third-party services"
+      },
+      "answer": "A",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "MCQ23",
+      "difficulty": "medium",
+      "question": "What do workers do?",
+      "choices": {
+        "A": "Pull queued events and invoke third-party providers",
+        "B": "Only store user profiles",
+        "C": "Only generate device tokens",
+        "D": "Replace APNS"
+      },
+      "answer": "A",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "MCQ24",
+      "difficulty": "medium",
+      "question": "What is the first step of the sending flow?",
+      "choices": {
+        "A": "Service calls notification API",
+        "B": "Third party sends to device",
+        "C": "Worker writes settings",
+        "D": "Queue deletes the event"
+      },
+      "answer": "A",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "MCQ25",
+      "difficulty": "hard",
+      "question": "What metadata may be fetched before queueing?",
+      "choices": {
+        "A": "User info, device token, settings",
+        "B": "Only database schema",
+        "C": "Only DNS records",
+        "D": "Only click rate"
+      },
+      "answer": "A",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "MCQ26",
+      "difficulty": "hard",
+      "question": "What is the reliability rule about data loss?",
+      "choices": {
+        "A": "Notifications may be delayed/reordered but should not be lost",
+        "B": "Loss is acceptable",
+        "C": "Duplicates are impossible",
+        "D": "Retries are prohibited"
+      },
+      "answer": "A",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "MCQ27",
+      "difficulty": "hard",
+      "question": "How is notification data loss reduced?",
+      "choices": {
+        "A": "Persist data plus retries",
+        "B": "Only use cache",
+        "C": "Disable queues",
+        "D": "Use 301 redirects"
+      },
+      "answer": "A",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "MCQ28",
+      "difficulty": "hard",
+      "question": "Does the design guarantee exactly-once delivery?",
+      "choices": {
+        "A": "Yes, always",
+        "B": "No",
+        "C": "Only SMS",
+        "D": "Only email"
+      },
+      "answer": "B",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "MCQ29",
+      "difficulty": "medium",
+      "question": "What does the basic dedupe mechanism check?",
+      "choices": {
+        "A": "Event ID",
+        "B": "Phone-country code only",
+        "C": "Queue name only",
+        "D": "Worker hostname"
+      },
+      "answer": "A",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "MCQ30",
+      "difficulty": "medium",
+      "question": "What happens to an already-seen event?",
+      "choices": {
+        "A": "Discard it",
+        "B": "Always resend",
+        "C": "Move it to another channel",
+        "D": "Create new user"
+      },
+      "answer": "A",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "MCQ31",
+      "difficulty": "medium",
+      "question": "What is a notification template?",
+      "choices": {
+        "A": "Reusable preformatted notification",
+        "B": "A device token",
+        "C": "A queue partition",
+        "D": "A data center"
+      },
+      "answer": "A",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "MCQ32",
+      "difficulty": "hard",
+      "question": "Which is NOT a listed template benefit?",
+      "choices": {
+        "A": "Consistent format",
+        "B": "Lower margin of error",
+        "C": "Save time",
+        "D": "Guarantee exactly-once delivery"
+      },
+      "answer": "D",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "MCQ33",
+      "difficulty": "medium",
+      "question": "What field controls whether a user wants a channel?",
+      "choices": {
+        "A": "opt_in",
+        "B": "queue_depth",
+        "C": "worker_id",
+        "D": "retry_count only"
+      },
+      "answer": "A",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "MCQ34",
+      "difficulty": "hard",
+      "question": "What must occur before sending a notification?",
+      "choices": {
+        "A": "Check user opt-in setting",
+        "B": "Always send",
+        "C": "Delete device token",
+        "D": "Disable rate limits"
+      },
+      "answer": "A",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "MCQ35",
+      "difficulty": "medium",
+      "question": "Why rate-limit notifications per user?",
+      "choices": {
+        "A": "Avoid overwhelming users",
+        "B": "Generate more duplicates",
+        "C": "Avoid using templates",
+        "D": "Increase queue size"
+      },
+      "answer": "A",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "MCQ36",
+      "difficulty": "hard",
+      "question": "What happens after a third-party send failure?",
+      "choices": {
+        "A": "Requeue for retry",
+        "B": "Delete permanently immediately",
+        "C": "Disable all notification types",
+        "D": "Change user ID"
+      },
+      "answer": "A",
+      "source_pages": [
+        161,
+        163
+      ]
+    },
+    {
+      "id": "MCQ37",
+      "difficulty": "medium",
+      "question": "What happens if delivery failures persist?",
+      "choices": {
+        "A": "Alert developers",
+        "B": "Ignore forever",
+        "C": "Delete the user",
+        "D": "Switch to DFS"
+      },
+      "answer": "A",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "MCQ38",
+      "difficulty": "medium",
+      "question": "What secures push notification APIs?",
+      "choices": {
+        "A": "appKey/appSecret",
+        "B": "PageRank",
+        "C": "Bloom filter",
+        "D": "Merkle tree"
+      },
+      "answer": "A",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "MCQ39",
+      "difficulty": "hard",
+      "question": "What does a large queue depth imply?",
+      "choices": {
+        "A": "Workers are not processing fast enough",
+        "B": "Users have all opted out",
+        "C": "Database is empty",
+        "D": "APNS is always healthy"
+      },
+      "answer": "A",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "MCQ40",
+      "difficulty": "medium",
+      "question": "What should you do when queue depth remains too high?",
+      "choices": {
+        "A": "Add more workers",
+        "B": "Remove all workers",
+        "C": "Disable monitoring",
+        "D": "Delete the queue"
+      },
+      "answer": "A",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "MCQ41",
+      "difficulty": "medium",
+      "question": "Which metrics are mentioned for event tracking?",
+      "choices": {
+        "A": "Open rate, click rate, engagement",
+        "B": "CPU model, RAM speed, disk brand",
+        "C": "DNS TTL only",
+        "D": "Hash collisions"
+      },
+      "answer": "A",
+      "source_pages": [
+        162
+      ]
+    },
+    {
+      "id": "MCQ42",
+      "difficulty": "medium",
+      "question": "What service handles event tracking?",
+      "choices": {
+        "A": "Analytics service",
+        "B": "DNS Resolver",
+        "C": "Ticket server",
+        "D": "URL Frontier"
+      },
+      "answer": "A",
+      "source_pages": [
+        162
+      ]
+    },
+    {
+      "id": "MCQ43",
+      "difficulty": "hard",
+      "question": "What two features are added directly to notification servers in the final design?",
+      "choices": {
+        "A": "Authentication and rate limiting",
+        "B": "Merkle trees and gossip",
+        "C": "PageRank and BFS",
+        "D": "301 and 302"
+      },
+      "answer": "A",
+      "source_pages": [
+        163
+      ]
+    },
+    {
+      "id": "MCQ44",
+      "difficulty": "medium",
+      "question": "How many times does the updated design retry?",
+      "choices": {
+        "A": "A predefined number of times",
+        "B": "Exactly once",
+        "C": "Never",
+        "D": "Forever without limit"
+      },
+      "answer": "A",
+      "source_pages": [
+        163
+      ]
+    },
+    {
+      "id": "MCQ45",
+      "difficulty": "hard",
+      "question": "What is the core purpose of channel-specific queues?",
+      "choices": {
+        "A": "Decoupling, buffering, parallelism, and failure isolation",
+        "B": "Storing user passwords",
+        "C": "Providing DNS",
+        "D": "Generating device tokens"
+      },
+      "answer": "A",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "MCQ46",
+      "difficulty": "hard",
+      "question": "Which statement best summarizes exactly-once semantics in the chapter?",
+      "choices": {
+        "A": "It is not guaranteed; dedupe reduces duplicates",
+        "B": "It is strictly guaranteed by message queues",
+        "C": "It is guaranteed only by retries",
+        "D": "It is guaranteed by appSecret"
+      },
+      "answer": "A",
+      "source_pages": [
+        160
+      ]
+    }
+  ],
+  "mix_and_match": [
+    {
+      "id": "MM01",
+      "title": "Channel to Delivery Service",
+      "left": {
+        "A": "iOS push",
+        "B": "Android push",
+        "C": "SMS",
+        "D": "Email"
+      },
+      "right": {
+        "1": "FCM",
+        "2": "APNS",
+        "3": "Twilio/Nexmo",
+        "4": "Sendgrid/Mailchimp"
+      },
+      "answer_key": {
+        "A": "2",
+        "B": "1",
+        "C": "3",
+        "D": "4"
+      },
+      "source_pages": [
+        153,
+        154
+      ]
+    },
+    {
+      "id": "MM02",
+      "title": "Component to Responsibility",
+      "left": {
+        "A": "Notification server",
+        "B": "Message queue",
+        "C": "Worker",
+        "D": "Third-party service",
+        "E": "Cache",
+        "F": "Database"
+      },
+      "right": {
+        "1": "Deliver to final user/device",
+        "2": "Pull events and call provider",
+        "3": "Buffer and decouple channel processing",
+        "4": "Validate/fetch metadata/enqueue event",
+        "5": "Store user/device/template hot data",
+        "6": "Persist user/notification/settings data"
+      },
+      "answer_key": {
+        "A": "4",
+        "B": "3",
+        "C": "2",
+        "D": "1",
+        "E": "5",
+        "F": "6"
+      },
+      "source_pages": [
+        158,
+        159
+      ]
+    },
+    {
+      "id": "MM03",
+      "title": "Problem to Improvement",
+      "left": {
+        "A": "SPOF",
+        "B": "Hard to scale coupled components",
+        "C": "Third-party outage impacts pipeline",
+        "D": "Burst traffic",
+        "E": "Failed notification"
+      },
+      "right": {
+        "1": "Message queue buffer",
+        "2": "Horizontal notification-server scaling",
+        "3": "Separate DB/cache and components",
+        "4": "Requeue and retry",
+        "5": "Separate channel queues"
+      },
+      "answer_key": {
+        "A": "2",
+        "B": "3",
+        "C": "5",
+        "D": "1",
+        "E": "4"
+      },
+      "source_pages": [
+        157,
+        159,
+        161
+      ]
+    },
+    {
+      "id": "MM04",
+      "title": "Reliability/Operations Concept",
+      "left": {
+        "A": "Notification log",
+        "B": "Event-ID dedupe",
+        "C": "Queue-depth monitoring",
+        "D": "Notification setting",
+        "E": "Rate limiting",
+        "F": "Analytics"
+      },
+      "right": {
+        "1": "Reduce duplicate sends",
+        "2": "Respect opt-in/opt-out",
+        "3": "Detect worker backlog",
+        "4": "Prevent data loss through persistence",
+        "5": "Prevent overwhelming users",
+        "6": "Measure open/click/engagement"
+      },
+      "answer_key": {
+        "A": "4",
+        "B": "1",
+        "C": "3",
+        "D": "2",
+        "E": "5",
+        "F": "6"
+      },
+      "source_pages": [
+        160,
+        161,
+        162
+      ]
+    }
+  ],
+  "true_false": [
+    {
+      "id": "TF01",
+      "statement": "The chapter treats notifications as mobile push only.",
+      "answer": false,
+      "source_pages": [
+        151
+      ]
+    },
+    {
+      "id": "TF02",
+      "statement": "The system is soft real-time.",
+      "answer": true,
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "TF03",
+      "statement": "Slight delivery delay is acceptable under high workload.",
+      "answer": true,
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "TF04",
+      "statement": "Notifications can only be triggered from client apps.",
+      "answer": false,
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "TF05",
+      "statement": "Users may opt out of notifications.",
+      "answer": true,
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "TF06",
+      "statement": "The chapter assumes 10 million push notifications/day.",
+      "answer": true,
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "TF07",
+      "statement": "APNS is used for Android in the chapter.",
+      "answer": false,
+      "source_pages": [
+        153,
+        154
+      ]
+    },
+    {
+      "id": "TF08",
+      "statement": "FCM is commonly used for Android push.",
+      "answer": true,
+      "source_pages": [
+        153,
+        154
+      ]
+    },
+    {
+      "id": "TF09",
+      "statement": "A device token uniquely identifies a push destination device.",
+      "answer": true,
+      "source_pages": [
+        153
+      ]
+    },
+    {
+      "id": "TF10",
+      "statement": "Twilio and Nexmo are SMS-service examples.",
+      "answer": true,
+      "source_pages": [
+        154
+      ]
+    },
+    {
+      "id": "TF11",
+      "statement": "Sendgrid and Mailchimp are email-service examples.",
+      "answer": true,
+      "source_pages": [
+        154
+      ]
+    },
+    {
+      "id": "TF12",
+      "statement": "A user can have multiple devices.",
+      "answer": true,
+      "source_pages": [
+        156
+      ]
+    },
+    {
+      "id": "TF13",
+      "statement": "The initial design has no single point of failure.",
+      "answer": false,
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "TF14",
+      "statement": "The initial design is hard to scale because many responsibilities are coupled.",
+      "answer": true,
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "TF15",
+      "statement": "The improved design moves DB and cache out of notification servers.",
+      "answer": true,
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "TF16",
+      "statement": "The improved design removes message queues.",
+      "answer": false,
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "TF17",
+      "statement": "Notification APIs should be restricted to internal or verified clients.",
+      "answer": true,
+      "source_pages": [
+        158
+      ]
+    },
+    {
+      "id": "TF18",
+      "statement": "Notification servers perform basic validation.",
+      "answer": true,
+      "source_pages": [
+        158
+      ]
+    },
+    {
+      "id": "TF19",
+      "statement": "Each notification type gets a distinct queue.",
+      "answer": true,
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "TF20",
+      "statement": "Channel-specific queues provide failure isolation.",
+      "answer": true,
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "TF21",
+      "statement": "Workers pull events from message queues.",
+      "answer": true,
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "TF22",
+      "statement": "The chapter says delayed or reordered notifications are always unacceptable.",
+      "answer": false,
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "TF23",
+      "statement": "Notification data should never be lost.",
+      "answer": true,
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "TF24",
+      "statement": "Exactly-once notification delivery is strictly guaranteed.",
+      "answer": false,
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "TF25",
+      "statement": "Event-ID deduplication reduces duplicate sends.",
+      "answer": true,
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "TF26",
+      "statement": "Templates help maintain consistent format.",
+      "answer": true,
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "TF27",
+      "statement": "The opt_in field is checked before sending.",
+      "answer": true,
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "TF28",
+      "statement": "Rate limiting is used only to protect servers, not users.",
+      "answer": false,
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "TF29",
+      "statement": "Failed third-party sends are requeued for retry.",
+      "answer": true,
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "TF30",
+      "statement": "appKey/appSecret secure push APIs.",
+      "answer": true,
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "TF31",
+      "statement": "A large queued-notification count can indicate insufficient worker processing capacity.",
+      "answer": true,
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "TF32",
+      "statement": "Open rate and click rate are analytics metrics.",
+      "answer": true,
+      "source_pages": [
+        162
+      ]
+    },
+    {
+      "id": "TF33",
+      "statement": "The final design adds authentication and rate limiting to notification servers.",
+      "answer": true,
+      "source_pages": [
+        163
+      ]
+    },
+    {
+      "id": "TF34",
+      "statement": "The updated design retries forever with no limit.",
+      "answer": false,
+      "source_pages": [
+        163
+      ]
+    },
+    {
+      "id": "TF35",
+      "statement": "Monitoring and tracking help system health checks and future improvement.",
+      "answer": true,
+      "source_pages": [
+        163
+      ]
+    },
+    {
+      "id": "TF36",
+      "statement": "The wrap-up emphasizes message queues as a decoupling mechanism.",
+      "answer": true,
+      "source_pages": [
+        164
+      ]
+    }
+  ],
+  "fill_in_the_blank": [
+    {
+      "id": "FIB01",
+      "prompt": "The three channels are push notification, SMS, and ______.",
+      "answer": "email",
+      "source_pages": [
+        151,
+        152
+      ]
+    },
+    {
+      "id": "FIB02",
+      "prompt": "The system is described as ______ real-time.",
+      "answer": "soft",
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "FIB03",
+      "prompt": "Daily push volume is ______ million.",
+      "answer": "10",
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "FIB04",
+      "prompt": "Daily SMS volume is ______ million.",
+      "answer": "1",
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "FIB05",
+      "prompt": "Daily email volume is ______ million.",
+      "answer": "5",
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "FIB06",
+      "prompt": "Apple push delivery uses ______.",
+      "answer": "APNS",
+      "source_pages": [
+        153
+      ]
+    },
+    {
+      "id": "FIB07",
+      "prompt": "Android push commonly uses ______.",
+      "answer": "FCM",
+      "source_pages": [
+        153,
+        154
+      ]
+    },
+    {
+      "id": "FIB08",
+      "prompt": "A unique push destination identifier is a device ______.",
+      "answer": "token",
+      "source_pages": [
+        153
+      ]
+    },
+    {
+      "id": "FIB09",
+      "prompt": "The initial design has a single point of ______.",
+      "answer": "failure",
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "FIB10",
+      "prompt": "The improved design introduces message ______ to decouple components.",
+      "answer": "queues",
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "FIB11",
+      "prompt": "Workers ______ notification events from queues.",
+      "answer": "pull",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "FIB12",
+      "prompt": "Notifications may be delayed or reordered, but should never be ______.",
+      "answer": "lost",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "FIB13",
+      "prompt": "Duplicate detection checks the notification event ______.",
+      "answer": "ID",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "FIB14",
+      "prompt": "Reusable preformatted messages are notification ______.",
+      "answer": "templates",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "FIB15",
+      "prompt": "The per-channel preference field is called _______in.",
+      "answer": "opt",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "FIB16",
+      "prompt": "Failed notifications are placed back into the queue for ______.",
+      "answer": "retry",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "FIB17",
+      "prompt": "Push APIs are secured with appKey and app_______.",
+      "answer": "Secret",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "FIB18",
+      "prompt": "A large queue may indicate that more ______ are needed.",
+      "answer": "workers",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "FIB19",
+      "prompt": "Open rate, click rate, and engagement are tracked by the ______ service.",
+      "answer": "analytics",
+      "source_pages": [
+        162
+      ]
+    }
+  ],
+  "ordering_exercises": [
+    {
+      "id": "ORD01",
+      "title": "Improved Sending Flow",
+      "items_scrambled": [
+        "Workers send to third-party provider",
+        "Notification server fetches metadata",
+        "Service calls notification API",
+        "Third-party provider delivers",
+        "Worker pulls from queue",
+        "Event enters channel queue"
+      ],
+      "correct_order": [
+        "Service calls notification API",
+        "Notification server fetches metadata",
+        "Event enters channel queue",
+        "Worker pulls from queue",
+        "Workers send to third-party provider",
+        "Third-party provider delivers"
+      ],
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "ORD02",
+      "title": "Contact Info Gathering",
+      "items_scrambled": [
+        "Store contact info in DB",
+        "User installs/signs up",
+        "Load balancer receives request",
+        "API server collects contact info"
+      ],
+      "correct_order": [
+        "User installs/signs up",
+        "Load balancer receives request",
+        "API server collects contact info",
+        "Store contact info in DB"
+      ],
+      "source_pages": [
+        155
+      ]
+    },
+    {
+      "id": "ORD03",
+      "title": "Failure Retry",
+      "items_scrambled": [
+        "Retry via worker",
+        "Third-party send fails",
+        "Alert developers if persistent",
+        "Put event back into queue"
+      ],
+      "correct_order": [
+        "Third-party send fails",
+        "Put event back into queue",
+        "Retry via worker",
+        "Alert developers if persistent"
+      ],
+      "source_pages": [
+        161,
+        163
+      ]
+    },
+    {
+      "id": "ORD04",
+      "title": "Deduplication",
+      "items_scrambled": [
+        "Send if unseen",
+        "Event arrives",
+        "Discard if seen",
+        "Check event ID"
+      ],
+      "correct_order": [
+        "Event arrives",
+        "Check event ID",
+        "Discard if seen OR send if unseen"
+      ],
+      "source_pages": [
+        160
+      ]
+    }
+  ],
+  "scenario_questions": [
+    {
+      "id": "SC01",
+      "difficulty": "medium",
+      "scenario": "Traffic spikes cause notifications to arrive a little later than usual, but the system still delivers them.",
+      "question": "Does this violate the chapter's real-time requirement?",
+      "expected_answer": "No. The system is soft real-time, so slight delay is acceptable under heavy load.",
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "SC02",
+      "difficulty": "medium",
+      "scenario": "A user has an iPhone and an iPad registered to the same account.",
+      "question": "What data-model property allows push notifications to reach both?",
+      "expected_answer": "One user may have multiple records/device tokens in the device table.",
+      "source_pages": [
+        155,
+        156
+      ]
+    },
+    {
+      "id": "SC03",
+      "difficulty": "hard",
+      "scenario": "One monolithic notification server handles cache, DB, rendering, and third-party calls.",
+      "question": "Name the three architectural problems the chapter identifies.",
+      "expected_answer": "Single point of failure, hard to scale, and performance bottleneck.",
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "SC04",
+      "difficulty": "hard",
+      "scenario": "The SMS provider is down, but push and email should continue normally.",
+      "question": "Which design feature provides this isolation?",
+      "expected_answer": "Distinct message queues and worker flows for each notification type.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "SC05",
+      "difficulty": "medium",
+      "scenario": "A flash sale generates a burst of millions of notification events.",
+      "question": "Which component absorbs the burst?",
+      "expected_answer": "Message queues act as buffers and decouple ingestion from processing.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "SC06",
+      "difficulty": "hard",
+      "scenario": "A notification worker crashes after a delivery attempt and the event is retried, causing the same event to be processed twice.",
+      "question": "What does the chapter use to reduce duplicate delivery?",
+      "expected_answer": "Check the event ID and discard already-seen events.",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "SC07",
+      "difficulty": "hard",
+      "scenario": "A notification must not disappear even if downstream providers are unavailable.",
+      "question": "What reliability mechanisms are needed?",
+      "expected_answer": "Persist notification data in a database/notification log and use a retry mechanism.",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "SC08",
+      "difficulty": "medium",
+      "scenario": "Marketing wants reusable sale messages with item name and date parameters.",
+      "question": "What component should be used?",
+      "expected_answer": "Notification templates.",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "SC09",
+      "difficulty": "medium",
+      "scenario": "A user disabled SMS promotions but still accepts email.",
+      "question": "What must happen before an SMS is sent?",
+      "expected_answer": "Check the user's notification settings and opt_in value for the SMS channel; do not send if opted out.",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "SC10",
+      "difficulty": "medium",
+      "scenario": "A user is receiving so many push messages that they may disable notifications entirely.",
+      "question": "What mechanism addresses this?",
+      "expected_answer": "Per-user notification rate limiting/frequency capping.",
+      "source_pages": [
+        161,
+        164
+      ]
+    },
+    {
+      "id": "SC11",
+      "difficulty": "hard",
+      "scenario": "The email provider returns repeated failures.",
+      "question": "What should the pipeline do?",
+      "expected_answer": "Put failed events back into the queue, retry a predefined number of times, and alert developers if the issue persists.",
+      "source_pages": [
+        161,
+        163
+      ]
+    },
+    {
+      "id": "SC12",
+      "difficulty": "hard",
+      "scenario": "Anyone on the public Internet can call your push API.",
+      "question": "What chapter recommendation is missing?",
+      "expected_answer": "Require authenticated/verified clients using appKey/appSecret and restrict notification APIs appropriately.",
+      "source_pages": [
+        158,
+        161
+      ]
+    },
+    {
+      "id": "SC13",
+      "difficulty": "hard",
+      "scenario": "Queue depth keeps rising for the iOS queue while incoming traffic remains steady.",
+      "question": "What does this indicate and how should you respond?",
+      "expected_answer": "iOS workers are not processing fast enough; add more workers to reduce delivery delay.",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "SC14",
+      "difficulty": "medium",
+      "scenario": "Product managers want to know whether users opened or clicked notifications.",
+      "question": "What system should be integrated?",
+      "expected_answer": "An analytics service for event tracking such as open rate, click rate, and engagement.",
+      "source_pages": [
+        162
+      ]
+    },
+    {
+      "id": "SC15",
+      "difficulty": "hard",
+      "scenario": "FCM is unavailable in a target market.",
+      "question": "What architectural quality matters and what does the chapter suggest?",
+      "expected_answer": "Extensibility; allow another third-party provider such as Jpush or PushY to be plugged in.",
+      "source_pages": [
+        157
+      ]
+    }
+  ],
+  "short_answer_questions": [
+    {
+      "id": "SA01",
+      "question": "What makes notification-system design more complex than simply calling APNS or an SMS API?",
+      "model_answer": "The system must handle multiple channels, user/device metadata, high volume, provider-specific integrations, horizontal scaling, queueing, retries, data durability, duplicate suppression, preferences, rate limits, security, monitoring, and analytics.",
+      "source_pages": [
+        152,
+        157,
+        158,
+        159,
+        160,
+        161,
+        162,
+        163
+      ]
+    },
+    {
+      "id": "SA02",
+      "question": "Explain the iOS push-notification flow.",
+      "model_answer": "A provider constructs a request containing a device token and JSON payload, sends it to APNS, and APNS propagates the notification to the target iOS device.",
+      "source_pages": [
+        153
+      ]
+    },
+    {
+      "id": "SA03",
+      "question": "Why does the improved architecture use message queues?",
+      "model_answer": "Queues decouple notification servers from delivery workers, buffer traffic spikes, enable parallel processing, and isolate channels so a failure in one provider does not stop other notification types.",
+      "source_pages": [
+        157,
+        159
+      ]
+    },
+    {
+      "id": "SA04",
+      "question": "What responsibilities remain in the notification servers after the architecture is decomposed?",
+      "model_answer": "They expose controlled APIs, validate inputs, fetch user/device/template/settings data from cache or DB, and enqueue notification data into the proper channel queue.",
+      "source_pages": [
+        158
+      ]
+    },
+    {
+      "id": "SA05",
+      "question": "Why use different message queues for iOS, Android, SMS, and email?",
+      "model_answer": "Separate queues provide independent processing and failure isolation. An outage or slowdown in one third-party service does not have to block unrelated channels.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "SA06",
+      "question": "How does the chapter handle notification reliability?",
+      "model_answer": "Persist notification data in a database/notification log so it is not lost, then use retry logic when delivery fails.",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "SA07",
+      "question": "Why is exactly-once delivery not guaranteed?",
+      "model_answer": "Distributed failures and retries can cause the same event to be processed more than once. The chapter therefore uses deduplication by event ID to reduce duplicates instead of promising strict exactly-once delivery.",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "SA08",
+      "question": "What is the difference between notification settings and rate limiting?",
+      "model_answer": "Settings decide whether a user has opted into a particular channel at all. Rate limiting controls how frequently an opted-in user receives notifications.",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "SA09",
+      "question": "How does the system respond when workers fall behind?",
+      "model_answer": "Monitor the number of queued notifications. A large backlog means events are not being processed quickly enough, so more workers should be added.",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "SA10",
+      "question": "What does analytics add to the system?",
+      "model_answer": "Analytics event tracking records metrics such as open rate, click rate, and engagement so customer behavior can be understood and the notification system can be improved.",
+      "source_pages": [
+        162
+      ]
+    }
+  ],
+  "active_recall_prompts": [
+    {
+      "id": "AR01",
+      "prompt": "Recite the scope and traffic requirements.",
+      "target_points": [
+        "Push/SMS/email",
+        "Soft real-time",
+        "iOS/Android/desktop",
+        "Client or scheduled triggers",
+        "Opt-out",
+        "10M push/1M SMS/5M email daily"
+      ],
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "AR02",
+      "prompt": "Explain iOS push from memory.",
+      "target_points": [
+        "Provider",
+        "Device token",
+        "JSON payload",
+        "APNS",
+        "iOS device"
+      ],
+      "source_pages": [
+        153
+      ]
+    },
+    {
+      "id": "AR03",
+      "prompt": "Recite the initial architecture's three flaws.",
+      "target_points": [
+        "SPOF",
+        "Hard to scale",
+        "Performance bottleneck"
+      ],
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "AR04",
+      "prompt": "Recite the three high-level architectural improvements.",
+      "target_points": [
+        "Move DB/cache out",
+        "More notification servers + horizontal scaling",
+        "Message queues"
+      ],
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "AR05",
+      "prompt": "List all notification-server responsibilities.",
+      "target_points": [
+        "API",
+        "Verified clients",
+        "Validation",
+        "Fetch metadata",
+        "Enqueue notification"
+      ],
+      "source_pages": [
+        158
+      ]
+    },
+    {
+      "id": "AR06",
+      "prompt": "Reconstruct the six-step sending flow.",
+      "target_points": [
+        "Service API call",
+        "Fetch metadata",
+        "Channel queue",
+        "Worker pull",
+        "Provider call",
+        "User delivery"
+      ],
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "AR07",
+      "prompt": "Explain data-loss prevention and duplicate reduction.",
+      "target_points": [
+        "Persist notification log",
+        "Retry",
+        "No strict exactly-once",
+        "Check event ID",
+        "Discard seen events"
+      ],
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "AR08",
+      "prompt": "Name all additional deep-dive components.",
+      "target_points": [
+        "Templates",
+        "Settings",
+        "Rate limiting",
+        "Retry",
+        "Security",
+        "Queue monitoring",
+        "Event tracking"
+      ],
+      "source_pages": [
+        160,
+        161,
+        162
+      ]
+    },
+    {
+      "id": "AR09",
+      "prompt": "What should you monitor and what action follows a bad value?",
+      "target_points": [
+        "Queued notification count",
+        "Large backlog",
+        "Workers too slow",
+        "Add workers"
+      ],
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "AR10",
+      "prompt": "Recite the final design additions.",
+      "target_points": [
+        "Authentication",
+        "Rate limiting",
+        "Retry",
+        "Templates",
+        "Monitoring",
+        "Tracking"
+      ],
+      "source_pages": [
+        163
+      ]
+    }
+  ],
+  "diagram_reconstruction_drills": [
+    {
+      "id": "DR01",
+      "name": "Figure 10-2 iOS Push",
+      "task": "Draw Provider -> APNS -> iOS device and label device token/payload as provider inputs.",
+      "source_pages": [
+        153
+      ]
+    },
+    {
+      "id": "DR02",
+      "name": "Figure 10-3 Android Push",
+      "task": "Draw Provider -> FCM -> Android device.",
+      "source_pages": [
+        153,
+        154
+      ]
+    },
+    {
+      "id": "DR03",
+      "name": "Figures 10-4/10-5 SMS and Email",
+      "task": "Draw Provider -> SMS service -> SMS recipient and Provider -> Email service -> email recipient.",
+      "source_pages": [
+        154
+      ]
+    },
+    {
+      "id": "DR04",
+      "name": "Figure 10-7 Contact Gathering",
+      "task": "Draw User -> Load balancer -> API servers -> DB.",
+      "source_pages": [
+        155
+      ]
+    },
+    {
+      "id": "DR05",
+      "name": "Figure 10-8 Contact Schema",
+      "task": "Draw user table with email/phone and device table with device_token/user_id, showing one user to many devices.",
+      "source_pages": [
+        155,
+        156
+      ]
+    },
+    {
+      "id": "DR06",
+      "name": "Figure 10-9 Initial Design",
+      "task": "Draw Service 1..N -> one Notification System -> APNS/FCM/SMS/Email providers -> end users.",
+      "source_pages": [
+        156,
+        157
+      ]
+    },
+    {
+      "id": "DR07",
+      "name": "Figure 10-10 Improved Design",
+      "task": "Draw services -> horizontally scaled notification servers -> cache/DB + per-channel queues -> worker pools -> third-party services -> users.",
+      "source_pages": [
+        157,
+        158,
+        159
+      ]
+    },
+    {
+      "id": "DR08",
+      "name": "Figure 10-11 Notification Log",
+      "task": "Draw channel queue -> worker -> provider, with worker persisting notification state/log to a database.",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "DR09",
+      "name": "Figure 10-14 Updated Design",
+      "task": "Reconstruct the improved design and add authentication, rate limiting, retry, templates, monitoring, and tracking.",
+      "source_pages": [
+        162,
+        163
+      ]
+    }
+  ],
+  "interview_style_questions": [
+    {
+      "id": "INT01",
+      "question": "What requirements would you clarify for a notification system?",
+      "strong_answer_outline": [
+        "Notification channels",
+        "Real-time expectations",
+        "Supported devices",
+        "Trigger sources",
+        "Opt-out behavior",
+        "Daily volume"
+      ],
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "INT02",
+      "question": "How do the delivery mechanisms differ by channel?",
+      "strong_answer_outline": [
+        "iOS -> APNS",
+        "Android -> FCM",
+        "SMS -> commercial SMS provider",
+        "Email -> email provider",
+        "Provider abstractions should be extensible"
+      ],
+      "source_pages": [
+        153,
+        154,
+        157
+      ]
+    },
+    {
+      "id": "INT03",
+      "question": "Why is the single notification-server design inadequate?",
+      "strong_answer_outline": [
+        "SPOF",
+        "Coupled scaling",
+        "Resource-intensive rendering/provider waits",
+        "Peak-load bottleneck"
+      ],
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "id": "INT04",
+      "question": "How would you redesign the system for scale?",
+      "strong_answer_outline": [
+        "External DB/cache",
+        "Horizontally scaled notification servers",
+        "Per-channel message queues",
+        "Worker pools",
+        "Third-party provider abstraction"
+      ],
+      "source_pages": [
+        157,
+        158,
+        159
+      ]
+    },
+    {
+      "id": "INT05",
+      "question": "How do you make the system reliable?",
+      "strong_answer_outline": [
+        "Persist notification events/log",
+        "Retry failures",
+        "Accept that strict exactly-once is unavailable",
+        "Deduplicate by event ID",
+        "Alert on persistent failures"
+      ],
+      "source_pages": [
+        160,
+        161
+      ]
+    },
+    {
+      "id": "INT06",
+      "question": "How do you prevent the system from annoying users?",
+      "strong_answer_outline": [
+        "Fine-grained notification settings",
+        "Opt-in check before send",
+        "Per-user rate limiting/frequency capping"
+      ],
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "INT07",
+      "question": "How do you operate and monitor this system?",
+      "strong_answer_outline": [
+        "Monitor queue depth",
+        "Scale workers when backlog grows",
+        "Track open/click/engagement",
+        "Alert developers on persistent provider failures",
+        "Use monitoring for health and future improvement"
+      ],
+      "source_pages": [
+        161,
+        162,
+        163
+      ]
+    }
+  ],
+  "common_confusions": [
+    {
+      "confusion": "A notification system is just mobile push.",
+      "correction": "The chapter explicitly includes push notifications, SMS, and email.",
+      "source_pages": [
+        151
+      ]
+    },
+    {
+      "confusion": "Soft real-time means arbitrary delays are acceptable.",
+      "correction": "The goal is still to deliver as soon as possible; only slight delays are acceptable under heavy load.",
+      "source_pages": [
+        152
+      ]
+    },
+    {
+      "confusion": "APNS is the Android push provider.",
+      "correction": "APNS is for iOS; FCM is commonly used for Android.",
+      "source_pages": [
+        153,
+        154
+      ]
+    },
+    {
+      "confusion": "One user has only one device token.",
+      "correction": "The schema allows one user to have multiple devices/device tokens.",
+      "source_pages": [
+        155,
+        156
+      ]
+    },
+    {
+      "confusion": "One notification server is simpler, so it is sufficient.",
+      "correction": "The chapter identifies SPOF, scaling, and performance problems and replaces it with horizontally scaled servers and queues.",
+      "source_pages": [
+        157
+      ]
+    },
+    {
+      "confusion": "One shared queue is always enough for all notification channels.",
+      "correction": "The chapter gives each notification type a separate queue to isolate third-party outages and processing.",
+      "source_pages": [
+        159
+      ]
+    },
+    {
+      "confusion": "Retries guarantee exactly-once delivery.",
+      "correction": "The chapter explicitly says exactly-once delivery is not guaranteed and introduces event-ID deduplication to reduce duplicates.",
+      "source_pages": [
+        160
+      ]
+    },
+    {
+      "confusion": "Rate limiting is only an infrastructure protection mechanism.",
+      "correction": "Here it is explicitly used to avoid overwhelming users with too many notifications.",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "confusion": "A large queue is merely a storage issue.",
+      "correction": "The chapter treats queue depth as an operational signal that workers may be processing too slowly.",
+      "source_pages": [
+        161
+      ]
+    },
+    {
+      "confusion": "The example API path on page 158 clearly matches the text label.",
+      "correction": "The source says the example is for sending an email but prints an endpoint containing '/sms/send'; this guide preserves the discrepancy.",
+      "source_pages": [
+        158,
+        159
+      ]
+    }
+  ],
+  "practice_problems": [
+    {
+      "id": "PRACTICE01",
+      "type": "volume",
+      "prompt": "Using the chapter's daily assumptions, how many total notifications are sent per day?",
+      "solution": "10M push + 1M SMS + 5M email = 16 million notifications/day.",
+      "note": "Derived directly from the stated channel volumes.",
+      "based_on_source_pages": [
+        152
+      ]
+    },
+    {
+      "id": "PRACTICE02",
+      "type": "isolation",
+      "prompt": "The SMS provider experiences a two-hour outage. How should the queue architecture prevent push and email from stalling?",
+      "solution": "Use a distinct SMS queue and SMS workers so the SMS backlog is isolated from iOS, Android, and email queues.",
+      "based_on_source_pages": [
+        159
+      ]
+    },
+    {
+      "id": "PRACTICE03",
+      "type": "dedupe",
+      "prompt": "Event ID E123 was successfully processed, but the same event appears again after a retry race. What should happen?",
+      "solution": "Detect that E123 has already been seen and discard the repeated event.",
+      "based_on_source_pages": [
+        160
+      ]
+    },
+    {
+      "id": "PRACTICE04",
+      "type": "autoscaling",
+      "prompt": "Queue depth rises from 10,000 to 500,000 while ingress rate is stable. What does the chapter's monitoring logic suggest?",
+      "solution": "Workers are falling behind; add more workers to increase processing throughput.",
+      "based_on_source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "PRACTICE05",
+      "type": "user_setting",
+      "prompt": "A user has opt_in=false for email but opt_in=true for push. Which channel should be suppressed?",
+      "solution": "Email should be suppressed; push can still be sent subject to other rules.",
+      "based_on_source_pages": [
+        161
+      ]
+    },
+    {
+      "id": "PRACTICE06",
+      "type": "architecture",
+      "prompt": "Why should notification rendering data such as templates be cached?",
+      "solution": "The chapter places templates and user/device information in cache so notification servers can fetch frequently needed rendering metadata efficiently.",
+      "based_on_source_pages": [
+        158,
+        159
+      ]
+    }
+  ],
+  "mastery_check": {
+    "beginner": [
+      "Can name all notification channels and daily volumes.",
+      "Can explain soft real-time.",
+      "Can distinguish APNS and FCM.",
+      "Can explain device token and payload.",
+      "Can name the three flaws of the initial design."
+    ],
+    "intermediate": [
+      "Can reconstruct contact-info collection and the user/device schema.",
+      "Can explain the improved design with notification servers, queues, workers, cache, and DB.",
+      "Can reconstruct the six-step sending flow.",
+      "Can explain why queues are separated by channel.",
+      "Can explain templates, settings, rate limiting, and retries."
+    ],
+    "advanced": [
+      "Can explain data durability versus exactly-once semantics.",
+      "Can describe event-ID deduplication and retry behavior.",
+      "Can discuss provider extensibility and regional provider replacement.",
+      "Can reason about queue depth as a scaling signal.",
+      "Can explain push API authentication and authorization.",
+      "Can discuss monitoring/event tracking and system evolution.",
+      "Can reconstruct the updated architecture from memory."
+    ]
+  },
+  "chapter_ten_final_review": {
+    "must_memorize": [
+      "Channels: push notification, SMS, email.",
+      "Soft real-time: deliver ASAP; slight delay is acceptable under heavy load.",
+      "Scale: 10M push + 1M SMS + 5M email per day.",
+      "iOS push: Provider -> APNS -> device.",
+      "Android push: commonly FCM.",
+      "SMS examples: Twilio, Nexmo.",
+      "Email examples: Sendgrid, Mailchimp.",
+      "Collect device tokens, phone numbers, and email addresses at install/sign-up.",
+      "One user can have multiple devices.",
+      "Initial design problems: SPOF, hard to scale, performance bottleneck.",
+      "Improved design: external DB/cache, multiple notification servers, message queues.",
+      "Notification server: secure API, validate, fetch metadata, enqueue.",
+      "Separate queue per notification type for buffering and failure isolation.",
+      "Workers consume queues and call third-party services.",
+      "Reliability: persist notification data and retry.",
+      "Exactly-once delivery is not guaranteed.",
+      "Dedupe using event ID.",
+      "Templates improve consistency, reduce errors, and save time.",
+      "Check per-channel opt-in before sending.",
+      "Rate limit to avoid overwhelming users.",
+      "Failed notifications are requeued; persistent failure triggers developer alerts.",
+      "Secure push APIs with appKey/appSecret and verified clients.",
+      "Monitor queued-notification count; large backlog means add workers.",
+      "Track open rate, click rate, and engagement through analytics.",
+      "Final design adds authentication, rate limiting, retries, templates, monitoring, and tracking."
+    ],
+    "memory_chain": "TRIGGER -> NOTIFICATION SERVER -> CACHE/DB METADATA -> CHANNEL QUEUE -> WORKER -> THIRD-PARTY PROVIDER -> USER || DURABILITY + RETRY + DEDUPE || SETTINGS + RATE LIMIT || AUTH + MONITORING + ANALYTICS",
+    "one_sentence_takeaway": "A scalable notification platform separates notification ingestion from channel delivery using durable, channel-specific queues and workers, then adds retries, deduplication, user preferences, rate limiting, security, monitoring, and analytics to make delivery reliable and operable."
+  }
+}

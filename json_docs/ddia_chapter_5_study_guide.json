@@ -1,0 +1,3608 @@
+{
+  "chapter": {
+    "number": 5,
+    "title": "Replication",
+    "book": "Designing Data-Intensive Applications",
+    "author": "Martin Kleppmann",
+    "pdf_pages": {
+      "chapter_start": 173,
+      "chapter_summary_end": 215
+    },
+    "book_pages": {
+      "chapter_start": 151,
+      "chapter_summary_end": 193
+    },
+    "primary_goal": "Understand single-leader, multi-leader, and leaderless replication; the effects of replication lag; quorum behavior; and how distributed systems reason about concurrent writes and conflict resolution."
+  },
+  "summary": {
+    "overview": "Replication keeps copies of changing data on several machines to improve availability, latency, disconnected operation, and read scalability. The central difficulty is coordinating changes while machines fail, networks delay messages, followers lag, and multiple clients write concurrently. Single-leader systems route all writes through one leader and replicate to followers, making ordering relatively easy but introducing failover and lag concerns. Multi-leader systems allow several leaders to accept writes, which is useful across datacenters, offline clients, and collaborative editing but requires conflict resolution. Leaderless/Dynamo-style systems write and read from several replicas directly, using quorums, read repair, anti-entropy, sloppy quorums, hinted handoff, siblings, tombstones, and version vectors. The chapter also develops read-your-writes, monotonic reads, consistent-prefix reads, happens-before causality, and the distinction between causally ordered and concurrent writes.",
+    "replication_purposes": [
+      "High availability",
+      "Disconnected operation",
+      "Low latency through geographic proximity",
+      "Read scalability"
+    ],
+    "three_replication_models": [
+      "Single-leader replication",
+      "Multi-leader replication",
+      "Leaderless replication"
+    ],
+    "source_pages": [
+      173,
+      174,
+      175,
+      176,
+      177,
+      178,
+      179,
+      180,
+      181,
+      182,
+      183,
+      184,
+      185,
+      186,
+      187,
+      188,
+      189,
+      190,
+      191,
+      192,
+      193,
+      194,
+      195,
+      196,
+      197,
+      198,
+      199,
+      200,
+      201,
+      202,
+      203,
+      204,
+      205,
+      206,
+      207,
+      208,
+      209,
+      210,
+      211,
+      212,
+      213,
+      214,
+      215
+    ]
+  },
+  "core_concepts": {
+    "single_leader": {
+      "definition": "One leader accepts writes; followers replay the leader's change stream. Reads can use leader or followers.",
+      "sync_vs_async": {
+        "synchronous": "Leader waits for follower acknowledgement before reporting success.",
+        "asynchronous": "Leader does not wait; follower may lag and acknowledged writes may be lost if leader dies before replication.",
+        "semi_synchronous": "Commonly one synchronous follower and other followers asynchronous."
+      },
+      "new_follower": [
+        "Take a consistent leader snapshot.",
+        "Record the snapshot's exact replication-log position.",
+        "Copy snapshot to follower.",
+        "Replay all changes since that position.",
+        "Continue consuming the live stream."
+      ],
+      "follower_failure": "Catch-up recovery from the last processed log position.",
+      "leader_failure": "Failover: detect failure, elect/promote a new leader, reroute clients/followers, and demote the old leader if it returns.",
+      "failover_risks": [
+        "Loss of asynchronously replicated acknowledged writes",
+        "Split brain",
+        "Cross-system inconsistency",
+        "Timeout tradeoffs and unnecessary failovers"
+      ],
+      "source_pages": [
+        174,
+        175,
+        176,
+        177,
+        178,
+        179,
+        180
+      ]
+    },
+    "replication_logs": {
+      "statement_based": {
+        "idea": "Replicate SQL/write statements.",
+        "risks": [
+          "Nondeterministic functions",
+          "Order-sensitive writes",
+          "Nondeterministic triggers/side effects"
+        ]
+      },
+      "wal_shipping": {
+        "idea": "Replicate the physical write-ahead/storage log.",
+        "tradeoff": "Efficient but tightly coupled to storage-engine format and often software version."
+      },
+      "logical_log": {
+        "idea": "Replicate row-level logical inserts, deletes, updates, and commit markers.",
+        "advantages": [
+          "Decoupled from storage internals",
+          "Version-friendly",
+          "Useful for change data capture"
+        ]
+      },
+      "trigger_based": {
+        "idea": "Use triggers/stored procedures plus external application logic.",
+        "tradeoff": "Flexible but generally higher overhead and more error-prone."
+      },
+      "source_pages": [
+        180,
+        181,
+        182,
+        183
+      ]
+    },
+    "replication_lag_and_consistency": {
+      "eventual_consistency": "If writes stop and enough time passes, asynchronous followers eventually catch up.",
+      "replication_lag": "Delay between the leader applying a write and a follower applying it.",
+      "read_after_write": "A user always sees their own writes.",
+      "monotonic_reads": "A user never sees an older version after previously seeing a newer one.",
+      "consistent_prefix_reads": "Causally ordered writes are observed in that same order.",
+      "read_after_write_techniques": [
+        "Read user-owned/just-written data from leader",
+        "Route recent post-write reads to leader",
+        "Avoid followers with excessive lag",
+        "Track the user's latest logical write position and require a replica at least that current"
+      ],
+      "source_pages": [
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189
+      ]
+    },
+    "multi_leader": {
+      "definition": "Several leaders accept writes and asynchronously replicate changes to one another.",
+      "use_cases": [
+        "Multiple datacenters",
+        "Offline-capable clients",
+        "Collaborative editing"
+      ],
+      "multi_dc_benefits": [
+        "Local write latency",
+        "Datacenter independence during outages",
+        "Tolerance of inter-datacenter network interruptions"
+      ],
+      "central_problem": "Concurrent writes can conflict.",
+      "conflict_avoidance": "Route all writes for one logical record/user to the same leader where possible.",
+      "convergence_requirement": "All replicas must eventually reach the same state after receiving all changes.",
+      "conflict_resolution": [
+        "Last-write-wins",
+        "Replica priority",
+        "Merge values",
+        "Preserve all conflicting versions for later resolution",
+        "Application-defined write-time or read-time resolution"
+      ],
+      "automatic_resolution": [
+        "CRDTs",
+        "Mergeable persistent data structures",
+        "Operational transformation"
+      ],
+      "topologies": [
+        "Circular",
+        "Star/tree",
+        "All-to-all"
+      ],
+      "topology_tradeoff": "Sparse topologies can be interrupted by a failed intermediate node; all-to-all is more fault-tolerant but can reorder causally related messages.",
+      "source_pages": [
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199
+      ]
+    },
+    "leaderless": {
+      "definition": "Any replica can accept writes; clients/coordinators write to several replicas and read from several replicas.",
+      "systems": [
+        "Riak",
+        "Cassandra",
+        "Voldemort"
+      ],
+      "read_repair": "A multi-replica read detects stale values and writes the newer value back.",
+      "anti_entropy": "Background process compares replicas and copies missing data.",
+      "quorum": {
+        "n": "Number of replicas for a value",
+        "w": "Minimum successful write acknowledgements",
+        "r": "Minimum successful read responses",
+        "strict_overlap": "w + r > n"
+      },
+      "examples": [
+        {
+          "n": 3,
+          "w": 2,
+          "r": 2,
+          "tolerates_unavailable": 1
+        },
+        {
+          "n": 5,
+          "w": 3,
+          "r": 3,
+          "tolerates_unavailable": 2
+        },
+        {
+          "n": "any",
+          "w": "n",
+          "r": 1,
+          "effect": "Fast reads but one failed replica blocks writes"
+        }
+      ],
+      "quorum_limits": [
+        "Sloppy quorums may destroy strict read/write-set overlap.",
+        "Concurrent writes have no inherent total order.",
+        "Reads racing writes may return old or new values.",
+        "Failed writes may remain on replicas where they succeeded.",
+        "Recovery from stale replicas can reduce copies of the newest value.",
+        "Timing edge cases can still produce stale reads."
+      ],
+      "sloppy_quorum": "Use reachable non-home nodes to satisfy w/r for greater availability.",
+      "hinted_handoff": "Temporary nodes later forward accepted writes to the proper home replicas.",
+      "source_pages": [
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206
+      ]
+    },
+    "concurrency": {
+      "last_write_wins": "Use an arbitrary ordering, often timestamps, and discard all but the winning value; convergent but can lose data.",
+      "happens_before": "A happens before B if B knows about, depends on, or builds on A.",
+      "concurrent": "Two operations are concurrent if neither happens before the other.",
+      "physical_time_note": "Concurrency is about causality, not literal simultaneity.",
+      "siblings": "Concurrent versions preserved for application merge.",
+      "tombstone": "Versioned deletion marker needed so removals are not resurrected during merges.",
+      "version_vector": "Per-replica version state for a key that distinguishes overwrites from concurrent writes.",
+      "riak_term": "Causal context",
+      "vector_clock_note": "Version vectors and vector clocks are related but not identical; the chapter says version vectors are appropriate for comparing replica state.",
+      "source_pages": [
+        207,
+        208,
+        209,
+        210,
+        211,
+        212,
+        213
+      ]
+    }
+  },
+  "flashcards": [
+    {
+      "id": "FC001",
+      "front": "What is replication?",
+      "back": "Keeping copies of the same data on multiple networked machines.",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "FC002",
+      "front": "Name four reasons to replicate data.",
+      "back": "High availability, disconnected operation, lower latency, and read scalability.",
+      "source_pages": [
+        173,
+        214
+      ]
+    },
+    {
+      "id": "FC003",
+      "front": "What three replication models are covered?",
+      "back": "Single-leader, multi-leader, and leaderless.",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "FC004",
+      "front": "What is a replica?",
+      "back": "A node storing a copy of the database.",
+      "source_pages": [
+        174
+      ]
+    },
+    {
+      "id": "FC005",
+      "front": "What is the leader?",
+      "back": "The replica accepting client writes in leader-based replication.",
+      "source_pages": [
+        174
+      ]
+    },
+    {
+      "id": "FC006",
+      "front": "What is a follower?",
+      "back": "A replica that replays the leader's replication stream.",
+      "source_pages": [
+        174
+      ]
+    },
+    {
+      "id": "FC007",
+      "front": "Can reads go to followers?",
+      "back": "Yes.",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "FC008",
+      "front": "Can writes go directly to followers?",
+      "back": "No, not in single-leader replication.",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "FC009",
+      "front": "What is synchronous replication?",
+      "back": "Leader waits for follower acknowledgement before reporting success.",
+      "source_pages": [
+        176
+      ]
+    },
+    {
+      "id": "FC010",
+      "front": "What is asynchronous replication?",
+      "back": "Leader does not wait for follower acknowledgement.",
+      "source_pages": [
+        176
+      ]
+    },
+    {
+      "id": "FC011",
+      "front": "Main sync benefit?",
+      "back": "At least one up-to-date replica is guaranteed.",
+      "source_pages": [
+        176
+      ]
+    },
+    {
+      "id": "FC012",
+      "front": "Main sync cost?",
+      "back": "A slow/unavailable synchronous follower can block writes.",
+      "source_pages": [
+        176
+      ]
+    },
+    {
+      "id": "FC013",
+      "front": "What is semi-synchronous replication?",
+      "back": "Typically one synchronous follower plus other asynchronous followers.",
+      "source_pages": [
+        176,
+        177
+      ]
+    },
+    {
+      "id": "FC014",
+      "front": "What can async replication lose?",
+      "back": "Acknowledged writes not yet copied before leader failure.",
+      "source_pages": [
+        177
+      ]
+    },
+    {
+      "id": "FC015",
+      "front": "How do you initialize a follower?",
+      "back": "Snapshot + exact log position + copy + catch-up + live streaming.",
+      "source_pages": [
+        177,
+        178
+      ]
+    },
+    {
+      "id": "FC016",
+      "front": "What is follower catch-up recovery?",
+      "back": "Requesting changes since the last locally processed replication-log position.",
+      "source_pages": [
+        178
+      ]
+    },
+    {
+      "id": "FC017",
+      "front": "What is failover?",
+      "back": "Promoting a follower to leader and reconfiguring the system.",
+      "source_pages": [
+        179
+      ]
+    },
+    {
+      "id": "FC018",
+      "front": "How is leader failure often detected?",
+      "back": "Heartbeat/message timeout.",
+      "source_pages": [
+        179
+      ]
+    },
+    {
+      "id": "FC019",
+      "front": "Best new-leader candidate?",
+      "back": "Usually the most up-to-date follower.",
+      "source_pages": [
+        179
+      ]
+    },
+    {
+      "id": "FC020",
+      "front": "What is split brain?",
+      "back": "Two nodes both believe they are leader and accept writes.",
+      "source_pages": [
+        180
+      ]
+    },
+    {
+      "id": "FC021",
+      "front": "Why is failover timeout hard to tune?",
+      "back": "Long delays recovery; short causes false failovers.",
+      "source_pages": [
+        180
+      ]
+    },
+    {
+      "id": "FC022",
+      "front": "What is statement-based replication?",
+      "back": "Followers re-execute the leader's write statements.",
+      "source_pages": [
+        180,
+        181
+      ]
+    },
+    {
+      "id": "FC023",
+      "front": "Why is NOW()/RAND() problematic?",
+      "back": "Nondeterminism can yield different replica results.",
+      "source_pages": [
+        181
+      ]
+    },
+    {
+      "id": "FC024",
+      "front": "What is WAL shipping?",
+      "back": "Replicating the low-level write-ahead/storage log.",
+      "source_pages": [
+        181,
+        182
+      ]
+    },
+    {
+      "id": "FC025",
+      "front": "Main WAL-shipping drawback?",
+      "back": "Tight coupling to storage format and database version.",
+      "source_pages": [
+        182
+      ]
+    },
+    {
+      "id": "FC026",
+      "front": "What is a logical replication log?",
+      "back": "A row-level storage-independent change stream.",
+      "source_pages": [
+        182
+      ]
+    },
+    {
+      "id": "FC027",
+      "front": "What is change data capture?",
+      "back": "Using a database change stream to feed external systems.",
+      "source_pages": [
+        182,
+        183
+      ]
+    },
+    {
+      "id": "FC028",
+      "front": "Why use trigger-based replication?",
+      "back": "For flexible custom replication logic.",
+      "source_pages": [
+        183
+      ]
+    },
+    {
+      "id": "FC029",
+      "front": "What is replication lag?",
+      "back": "Delay before a follower applies a leader write.",
+      "source_pages": [
+        184
+      ]
+    },
+    {
+      "id": "FC030",
+      "front": "What is eventual consistency?",
+      "back": "Followers eventually converge if writes stop and enough time passes.",
+      "source_pages": [
+        184
+      ]
+    },
+    {
+      "id": "FC031",
+      "front": "Does eventual consistency bound lag?",
+      "back": "No.",
+      "source_pages": [
+        184
+      ]
+    },
+    {
+      "id": "FC032",
+      "front": "What is read-after-write consistency?",
+      "back": "A user sees their own submitted updates.",
+      "source_pages": [
+        185
+      ]
+    },
+    {
+      "id": "FC033",
+      "front": "Another name for read-after-write?",
+      "back": "Read-your-writes consistency.",
+      "source_pages": [
+        185
+      ]
+    },
+    {
+      "id": "FC034",
+      "front": "One way to implement read-your-writes?",
+      "back": "Read the user's own recently modified data from the leader.",
+      "source_pages": [
+        185
+      ]
+    },
+    {
+      "id": "FC035",
+      "front": "How can a write timestamp/log position help?",
+      "back": "Only read from replicas that have caught up to at least that position.",
+      "source_pages": [
+        185,
+        186
+      ]
+    },
+    {
+      "id": "FC036",
+      "front": "Why is cross-device read-your-writes harder?",
+      "back": "Last-write metadata must be shared across devices and datacenters.",
+      "source_pages": [
+        186
+      ]
+    },
+    {
+      "id": "FC037",
+      "front": "What are monotonic reads?",
+      "back": "After seeing newer data, the user never later sees older data.",
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "id": "FC038",
+      "front": "Simple monotonic-read technique?",
+      "back": "Pin a user's reads to the same replica.",
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "id": "FC039",
+      "front": "What are consistent-prefix reads?",
+      "back": "Readers see causally ordered writes in the same order.",
+      "source_pages": [
+        188
+      ]
+    },
+    {
+      "id": "FC040",
+      "front": "What anomaly does consistent prefix prevent?",
+      "back": "Seeing an answer before the question.",
+      "source_pages": [
+        188
+      ]
+    },
+    {
+      "id": "FC041",
+      "front": "Why are partitions vulnerable to prefix anomalies?",
+      "back": "Different partitions may replicate at different speeds.",
+      "source_pages": [
+        188,
+        189
+      ]
+    },
+    {
+      "id": "FC042",
+      "front": "What is multi-leader replication?",
+      "back": "Several leaders accept writes and replicate to one another.",
+      "source_pages": [
+        190
+      ]
+    },
+    {
+      "id": "FC043",
+      "front": "Name three multi-leader use cases.",
+      "back": "Multi-datacenter, offline operation, collaborative editing.",
+      "source_pages": [
+        190,
+        192,
+        193
+      ]
+    },
+    {
+      "id": "FC044",
+      "front": "Multi-DC performance benefit?",
+      "back": "Writes can be accepted in the local datacenter.",
+      "source_pages": [
+        191
+      ]
+    },
+    {
+      "id": "FC045",
+      "front": "Multi-DC outage benefit?",
+      "back": "Other datacenters can continue operating independently.",
+      "source_pages": [
+        191
+      ]
+    },
+    {
+      "id": "FC046",
+      "front": "Main multi-leader problem?",
+      "back": "Write conflicts.",
+      "source_pages": [
+        192,
+        193
+      ]
+    },
+    {
+      "id": "FC047",
+      "front": "How does offline operation resemble multi-leader?",
+      "back": "Each device behaves like a local leader and syncs later.",
+      "source_pages": [
+        192
+      ]
+    },
+    {
+      "id": "FC048",
+      "front": "How does collaborative editing resemble multi-leader?",
+      "back": "Each editor applies local writes and asynchronously syncs them.",
+      "source_pages": [
+        193
+      ]
+    },
+    {
+      "id": "FC049",
+      "front": "When are multi-leader conflicts usually detected?",
+      "back": "Asynchronously, after writes have succeeded.",
+      "source_pages": [
+        194
+      ]
+    },
+    {
+      "id": "FC050",
+      "front": "What is conflict avoidance?",
+      "back": "Route all writes for one record to one leader.",
+      "source_pages": [
+        194
+      ]
+    },
+    {
+      "id": "FC051",
+      "front": "What does convergence mean?",
+      "back": "All replicas eventually settle on the same state.",
+      "source_pages": [
+        194,
+        195
+      ]
+    },
+    {
+      "id": "FC052",
+      "front": "What is LWW?",
+      "back": "Last-write-wins: choose one write by an arbitrary order and discard others.",
+      "source_pages": [
+        195,
+        208
+      ]
+    },
+    {
+      "id": "FC053",
+      "front": "Why is LWW dangerous?",
+      "back": "It can silently lose successful writes.",
+      "source_pages": [
+        195,
+        208
+      ]
+    },
+    {
+      "id": "FC054",
+      "front": "What is read-time conflict resolution?",
+      "back": "Return all conflicting versions so the app/user resolves them.",
+      "source_pages": [
+        195
+      ]
+    },
+    {
+      "id": "FC055",
+      "front": "What is a CRDT?",
+      "back": "A conflict-free replicated datatype that automatically merges supported concurrent updates.",
+      "source_pages": [
+        196
+      ]
+    },
+    {
+      "id": "FC056",
+      "front": "What is operational transformation used for?",
+      "back": "Collaborative editing of ordered sequences such as text.",
+      "source_pages": [
+        196
+      ]
+    },
+    {
+      "id": "FC057",
+      "front": "Give a subtle conflict example.",
+      "back": "Two leaders accept overlapping bookings for the same room/time.",
+      "source_pages": [
+        196,
+        197
+      ]
+    },
+    {
+      "id": "FC058",
+      "front": "What is circular replication topology?",
+      "back": "Each leader forwards writes to one next leader.",
+      "source_pages": [
+        197
+      ]
+    },
+    {
+      "id": "FC059",
+      "front": "What is star topology?",
+      "back": "One root leader forwards writes to others.",
+      "source_pages": [
+        197
+      ]
+    },
+    {
+      "id": "FC060",
+      "front": "What is all-to-all topology?",
+      "back": "Every leader sends writes to every other leader.",
+      "source_pages": [
+        197
+      ]
+    },
+    {
+      "id": "FC061",
+      "front": "Circular/star weakness?",
+      "back": "One failed intermediate node can interrupt propagation.",
+      "source_pages": [
+        198
+      ]
+    },
+    {
+      "id": "FC062",
+      "front": "All-to-all weakness?",
+      "back": "Messages can overtake one another and violate causal order.",
+      "source_pages": [
+        198
+      ]
+    },
+    {
+      "id": "FC063",
+      "front": "Why are wall-clock timestamps insufficient for causality?",
+      "back": "Distributed clocks cannot be trusted to be sufficiently synchronized.",
+      "source_pages": [
+        198,
+        199
+      ]
+    },
+    {
+      "id": "FC064",
+      "front": "What is leaderless replication?",
+      "back": "Any replica may accept writes; no distinguished leader orders them.",
+      "source_pages": [
+        199
+      ]
+    },
+    {
+      "id": "FC065",
+      "front": "Name Dynamo-style systems.",
+      "back": "Riak, Cassandra, Voldemort.",
+      "source_pages": [
+        199
+      ]
+    },
+    {
+      "id": "FC066",
+      "front": "Does leaderless replication require leader failover?",
+      "back": "No.",
+      "source_pages": [
+        200
+      ]
+    },
+    {
+      "id": "FC067",
+      "front": "What is read repair?",
+      "back": "Repair a stale replica discovered during a multi-replica read.",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "FC068",
+      "front": "What is anti-entropy?",
+      "back": "Background reconciliation among replicas.",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "FC069",
+      "front": "What does n mean?",
+      "back": "Replica count for a value.",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "FC070",
+      "front": "What does w mean?",
+      "back": "Minimum successful write acknowledgements.",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "FC071",
+      "front": "What does r mean?",
+      "back": "Minimum successful read responses.",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "FC072",
+      "front": "What strict quorum condition is highlighted?",
+      "back": "w + r > n.",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "FC073",
+      "front": "Why does w+r>n help?",
+      "back": "Read and write sets must overlap under strict quorum assumptions.",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "FC074",
+      "front": "Typical n=3 quorum?",
+      "back": "w=2,r=2.",
+      "source_pages": [
+        201,
+        202
+      ]
+    },
+    {
+      "id": "FC075",
+      "front": "How many failures can n=3,w=2,r=2 tolerate?",
+      "back": "One.",
+      "source_pages": [
+        202
+      ]
+    },
+    {
+      "id": "FC076",
+      "front": "Typical n=5 quorum?",
+      "back": "w=3,r=3.",
+      "source_pages": [
+        202
+      ]
+    },
+    {
+      "id": "FC077",
+      "front": "How many failures can n=5,w=3,r=3 tolerate?",
+      "back": "Two.",
+      "source_pages": [
+        202
+      ]
+    },
+    {
+      "id": "FC078",
+      "front": "What does w=n,r=1 optimize?",
+      "back": "Read speed, at the cost of write availability.",
+      "source_pages": [
+        202
+      ]
+    },
+    {
+      "id": "FC079",
+      "front": "Are quorums always majorities?",
+      "back": "No; overlap is what matters.",
+      "source_pages": [
+        203
+      ]
+    },
+    {
+      "id": "FC080",
+      "front": "What happens if w+r<=n?",
+      "back": "Stale reads become more likely, but latency/availability can improve.",
+      "source_pages": [
+        203
+      ]
+    },
+    {
+      "id": "FC081",
+      "front": "Does w+r>n guarantee the newest value in every scenario?",
+      "back": "No.",
+      "source_pages": [
+        203,
+        204
+      ]
+    },
+    {
+      "id": "FC082",
+      "front": "Can a failed write later appear in reads?",
+      "back": "Yes, if some replicas accepted it before overall failure.",
+      "source_pages": [
+        204
+      ]
+    },
+    {
+      "id": "FC083",
+      "front": "What lag guarantees do Dynamo-style systems usually lack?",
+      "back": "Read-your-writes, monotonic reads, and consistent-prefix reads.",
+      "source_pages": [
+        204
+      ]
+    },
+    {
+      "id": "FC084",
+      "front": "How is leader-based lag measured?",
+      "back": "Compare follower and leader replication-log positions.",
+      "source_pages": [
+        204
+      ]
+    },
+    {
+      "id": "FC085",
+      "front": "Why is leaderless staleness harder to measure?",
+      "back": "There is no fixed global write order.",
+      "source_pages": [
+        204,
+        205
+      ]
+    },
+    {
+      "id": "FC086",
+      "front": "What is a sloppy quorum?",
+      "back": "Use reachable non-home replicas to satisfy w/r.",
+      "source_pages": [
+        205
+      ]
+    },
+    {
+      "id": "FC087",
+      "front": "Main sloppy-quorum benefit?",
+      "back": "Higher availability.",
+      "source_pages": [
+        205,
+        206
+      ]
+    },
+    {
+      "id": "FC088",
+      "front": "What is hinted handoff?",
+      "back": "Temporary node later forwards the write to its designated home replica.",
+      "source_pages": [
+        206
+      ]
+    },
+    {
+      "id": "FC089",
+      "front": "What does sloppy quorum primarily guarantee?",
+      "back": "Durability on w nodes somewhere, not immediate freshness.",
+      "source_pages": [
+        206
+      ]
+    },
+    {
+      "id": "FC090",
+      "front": "Why can leaderless writes conflict?",
+      "back": "Several clients may concurrently write the same key.",
+      "source_pages": [
+        206,
+        207
+      ]
+    },
+    {
+      "id": "FC091",
+      "front": "Why is arrival order unreliable?",
+      "back": "Different replicas can see the writes in different orders.",
+      "source_pages": [
+        207
+      ]
+    },
+    {
+      "id": "FC092",
+      "front": "What does LWW sacrifice?",
+      "back": "Durability of losing concurrent writes.",
+      "source_pages": [
+        208
+      ]
+    },
+    {
+      "id": "FC093",
+      "front": "When is LWW safest?",
+      "back": "When each key is written only once and then immutable.",
+      "source_pages": [
+        208
+      ]
+    },
+    {
+      "id": "FC094",
+      "front": "What key style is suggested?",
+      "back": "Unique keys such as UUIDs.",
+      "source_pages": [
+        208
+      ]
+    },
+    {
+      "id": "FC095",
+      "front": "Define happens-before.",
+      "back": "A happens before B if B knows about or depends on A.",
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "id": "FC096",
+      "front": "When are two writes concurrent?",
+      "back": "Neither happens before the other.",
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "id": "FC097",
+      "front": "Does concurrency mean exact wall-clock overlap?",
+      "back": "No.",
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "id": "FC098",
+      "front": "What does the causal-version algorithm maintain?",
+      "back": "A version number per key.",
+      "source_pages": [
+        212
+      ]
+    },
+    {
+      "id": "FC099",
+      "front": "What must a client do before writing in that algorithm?",
+      "back": "Read the key and receive current values/version.",
+      "source_pages": [
+        212
+      ]
+    },
+    {
+      "id": "FC100",
+      "front": "What are siblings?",
+      "back": "Concurrent values preserved instead of overwritten.",
+      "source_pages": [
+        212
+      ]
+    },
+    {
+      "id": "FC101",
+      "front": "Why doesn't union handle deletion correctly?",
+      "back": "Removed items can reappear.",
+      "source_pages": [
+        212,
+        213
+      ]
+    },
+    {
+      "id": "FC102",
+      "front": "What is a tombstone?",
+      "back": "A versioned deletion marker.",
+      "source_pages": [
+        213
+      ]
+    },
+    {
+      "id": "FC103",
+      "front": "What is a version vector?",
+      "back": "Per-replica version numbers for a key.",
+      "source_pages": [
+        213
+      ]
+    },
+    {
+      "id": "FC104",
+      "front": "What does a version vector detect?",
+      "back": "Causal overwrite versus concurrent write.",
+      "source_pages": [
+        213
+      ]
+    },
+    {
+      "id": "FC105",
+      "front": "What does Riak call version-vector client metadata?",
+      "back": "Causal context.",
+      "source_pages": [
+        213
+      ]
+    },
+    {
+      "id": "FC106",
+      "front": "Are version vectors the same as vector clocks?",
+      "back": "No, not exactly.",
+      "source_pages": [
+        213
+      ]
+    },
+    {
+      "id": "FC107",
+      "front": "What does the chapter recommend for replica-state comparison?",
+      "back": "Version vectors.",
+      "source_pages": [
+        213
+      ]
+    }
+  ],
+  "multiple_choice_questions": [
+    {
+      "id": "MCQ001",
+      "question": "Which is NOT a replication purpose?",
+      "choices": {
+        "A": "Availability",
+        "B": "Latency reduction",
+        "C": "Read scaling",
+        "D": "Partitioning a large dataset"
+      },
+      "answer": "D",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "MCQ002",
+      "question": "Who accepts writes in single-leader replication?",
+      "choices": {
+        "A": "Leader",
+        "B": "Any follower",
+        "C": "Every replica directly",
+        "D": "Read replica"
+      },
+      "answer": "A",
+      "source_pages": [
+        174
+      ]
+    },
+    {
+      "id": "MCQ003",
+      "question": "What does synchronous replication wait for?",
+      "choices": {
+        "A": "Follower acknowledgement",
+        "B": "Client retry",
+        "C": "Compaction",
+        "D": "Leader election"
+      },
+      "answer": "A",
+      "source_pages": [
+        176
+      ]
+    },
+    {
+      "id": "MCQ004",
+      "question": "Main asynchronous risk?",
+      "choices": {
+        "A": "Acknowledged write loss on leader failure",
+        "B": "No writes possible",
+        "C": "No read scaling",
+        "D": "No followers"
+      },
+      "answer": "A",
+      "source_pages": [
+        177
+      ]
+    },
+    {
+      "id": "MCQ005",
+      "question": "How should a new follower start?",
+      "choices": {
+        "A": "Consistent snapshot + log position",
+        "B": "Random file copy only",
+        "C": "Empty database only",
+        "D": "Leader election"
+      },
+      "answer": "A",
+      "source_pages": [
+        177,
+        178
+      ]
+    },
+    {
+      "id": "MCQ006",
+      "question": "What is follower recovery called?",
+      "choices": {
+        "A": "Catch-up recovery",
+        "B": "LWW",
+        "C": "Read repair",
+        "D": "Hinted handoff"
+      },
+      "answer": "A",
+      "source_pages": [
+        178
+      ]
+    },
+    {
+      "id": "MCQ007",
+      "question": "What is leader replacement called?",
+      "choices": {
+        "A": "Failover",
+        "B": "Compaction",
+        "C": "CDC",
+        "D": "Quorum"
+      },
+      "answer": "A",
+      "source_pages": [
+        179
+      ]
+    },
+    {
+      "id": "MCQ008",
+      "question": "What is split brain?",
+      "choices": {
+        "A": "Two leaders accept writes",
+        "B": "Two followers read",
+        "C": "Two clients disconnect",
+        "D": "Two logs compact"
+      },
+      "answer": "A",
+      "source_pages": [
+        180
+      ]
+    },
+    {
+      "id": "MCQ009",
+      "question": "Which replication log is most physically coupled?",
+      "choices": {
+        "A": "WAL shipping",
+        "B": "Logical row log",
+        "C": "Trigger log",
+        "D": "CDC"
+      },
+      "answer": "A",
+      "source_pages": [
+        182
+      ]
+    },
+    {
+      "id": "MCQ010",
+      "question": "Which log is easiest for CDC consumers?",
+      "choices": {
+        "A": "Logical log",
+        "B": "Physical WAL only",
+        "C": "Statement only",
+        "D": "No log"
+      },
+      "answer": "A",
+      "source_pages": [
+        182,
+        183
+      ]
+    },
+    {
+      "id": "MCQ011",
+      "question": "What causes eventual-consistency anomalies?",
+      "choices": {
+        "A": "Replication lag",
+        "B": "B-tree depth",
+        "C": "Compression",
+        "D": "Schema registry"
+      },
+      "answer": "A",
+      "source_pages": [
+        184
+      ]
+    },
+    {
+      "id": "MCQ012",
+      "question": "What guarantees a user sees their own updates?",
+      "choices": {
+        "A": "Read-your-writes",
+        "B": "Monotonic only",
+        "C": "Consistent prefix only",
+        "D": "LWW"
+      },
+      "answer": "A",
+      "source_pages": [
+        185
+      ]
+    },
+    {
+      "id": "MCQ013",
+      "question": "What prevents time from appearing to go backward for one user?",
+      "choices": {
+        "A": "Monotonic reads",
+        "B": "LWW",
+        "C": "Read repair",
+        "D": "Failover"
+      },
+      "answer": "A",
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "id": "MCQ014",
+      "question": "What preserves causal order such as question before answer?",
+      "choices": {
+        "A": "Consistent-prefix reads",
+        "B": "Read repair",
+        "C": "WAL shipping",
+        "D": "Sloppy quorum"
+      },
+      "answer": "A",
+      "source_pages": [
+        188
+      ]
+    },
+    {
+      "id": "MCQ015",
+      "question": "Which is a multi-leader use case?",
+      "choices": {
+        "A": "Multiple datacenters",
+        "B": "Single-node storage only",
+        "C": "No writes",
+        "D": "Pure batch compression"
+      },
+      "answer": "A",
+      "source_pages": [
+        190,
+        191
+      ]
+    },
+    {
+      "id": "MCQ016",
+      "question": "Main multi-leader downside?",
+      "choices": {
+        "A": "Conflicts",
+        "B": "No availability",
+        "C": "No replication",
+        "D": "No reads"
+      },
+      "answer": "A",
+      "source_pages": [
+        192
+      ]
+    },
+    {
+      "id": "MCQ017",
+      "question": "Conflict avoidance means?",
+      "choices": {
+        "A": "Keep one record's writes on one leader",
+        "B": "Use random leaders",
+        "C": "Use more clocks",
+        "D": "Disable followers"
+      },
+      "answer": "A",
+      "source_pages": [
+        194
+      ]
+    },
+    {
+      "id": "MCQ018",
+      "question": "What does LWW do?",
+      "choices": {
+        "A": "Picks one winner and discards others",
+        "B": "Preserves all siblings",
+        "C": "Disables concurrency",
+        "D": "Elects leader"
+      },
+      "answer": "A",
+      "source_pages": [
+        195,
+        208
+      ]
+    },
+    {
+      "id": "MCQ019",
+      "question": "What is a CRDT?",
+      "choices": {
+        "A": "Conflict-free replicated datatype",
+        "B": "Change-replay transaction",
+        "C": "Consistent replica delay timer",
+        "D": "Client read data table"
+      },
+      "answer": "A",
+      "source_pages": [
+        196
+      ]
+    },
+    {
+      "id": "MCQ020",
+      "question": "Which topology has every leader connected to every other?",
+      "choices": {
+        "A": "All-to-all",
+        "B": "Circular",
+        "C": "Star",
+        "D": "Single-leader"
+      },
+      "answer": "A",
+      "source_pages": [
+        197
+      ]
+    },
+    {
+      "id": "MCQ021",
+      "question": "All-to-all can cause?",
+      "choices": {
+        "A": "Causal message reordering",
+        "B": "No redundancy",
+        "C": "No paths",
+        "D": "One writer only"
+      },
+      "answer": "A",
+      "source_pages": [
+        198
+      ]
+    },
+    {
+      "id": "MCQ022",
+      "question": "What defines leaderless replication?",
+      "choices": {
+        "A": "Any replica can accept writes",
+        "B": "Exactly one leader",
+        "C": "Followers cannot read",
+        "D": "Only one node stores data"
+      },
+      "answer": "A",
+      "source_pages": [
+        199
+      ]
+    },
+    {
+      "id": "MCQ023",
+      "question": "What is read repair?",
+      "choices": {
+        "A": "Repair stale replicas discovered during reads",
+        "B": "Rebuild WAL",
+        "C": "Elect leader",
+        "D": "Compact segments"
+      },
+      "answer": "A",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "MCQ024",
+      "question": "What is anti-entropy?",
+      "choices": {
+        "A": "Background replica reconciliation",
+        "B": "Strong leader election",
+        "C": "API versioning",
+        "D": "Schema migration"
+      },
+      "answer": "A",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "MCQ025",
+      "question": "In n/w/r, what is n?",
+      "choices": {
+        "A": "Replica count",
+        "B": "Write acknowledgements",
+        "C": "Read acknowledgements",
+        "D": "Node failures"
+      },
+      "answer": "A",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "MCQ026",
+      "question": "What is w?",
+      "choices": {
+        "A": "Minimum successful writes",
+        "B": "Replica count",
+        "C": "Minimum reads",
+        "D": "Write latency"
+      },
+      "answer": "A",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "MCQ027",
+      "question": "What is r?",
+      "choices": {
+        "A": "Minimum read responses",
+        "B": "Replica count",
+        "C": "Minimum writes",
+        "D": "Replica lag"
+      },
+      "answer": "A",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "MCQ028",
+      "question": "What strict quorum condition is used?",
+      "choices": {
+        "A": "w+r>n",
+        "B": "w+r<n",
+        "C": "w=r=n always",
+        "D": "w*r=n"
+      },
+      "answer": "A",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "MCQ029",
+      "question": "n=3,w=2,r=2 tolerates?",
+      "choices": {
+        "A": "1 unavailable node",
+        "B": "0",
+        "C": "2",
+        "D": "3"
+      },
+      "answer": "A",
+      "source_pages": [
+        202
+      ]
+    },
+    {
+      "id": "MCQ030",
+      "question": "n=5,w=3,r=3 tolerates?",
+      "choices": {
+        "A": "2 unavailable nodes",
+        "B": "1",
+        "C": "3",
+        "D": "4"
+      },
+      "answer": "A",
+      "source_pages": [
+        202
+      ]
+    },
+    {
+      "id": "MCQ031",
+      "question": "What does w=n,r=1 optimize?",
+      "choices": {
+        "A": "Reads",
+        "B": "Writes",
+        "C": "Conflict merging",
+        "D": "Storage"
+      },
+      "answer": "A",
+      "source_pages": [
+        202
+      ]
+    },
+    {
+      "id": "MCQ032",
+      "question": "Must a quorum be a majority?",
+      "choices": {
+        "A": "No",
+        "B": "Yes",
+        "C": "Only reads",
+        "D": "Only writes"
+      },
+      "answer": "A",
+      "source_pages": [
+        203
+      ]
+    },
+    {
+      "id": "MCQ033",
+      "question": "Can w+r>n still return stale values?",
+      "choices": {
+        "A": "Yes",
+        "B": "No",
+        "C": "Only on B-trees",
+        "D": "Only in SQL"
+      },
+      "answer": "A",
+      "source_pages": [
+        203,
+        204
+      ]
+    },
+    {
+      "id": "MCQ034",
+      "question": "What is a sloppy quorum?",
+      "choices": {
+        "A": "Use reachable non-home replicas",
+        "B": "Use only home replicas",
+        "C": "Use leader only",
+        "D": "No quorum"
+      },
+      "answer": "A",
+      "source_pages": [
+        205
+      ]
+    },
+    {
+      "id": "MCQ035",
+      "question": "What is hinted handoff?",
+      "choices": {
+        "A": "Transfer temporary writes back home later",
+        "B": "Follower election",
+        "C": "Log compaction",
+        "D": "Read pinning"
+      },
+      "answer": "A",
+      "source_pages": [
+        206
+      ]
+    },
+    {
+      "id": "MCQ036",
+      "question": "Sloppy quorum mainly increases?",
+      "choices": {
+        "A": "Availability",
+        "B": "Strong consistency",
+        "C": "Global ordering",
+        "D": "Clock accuracy"
+      },
+      "answer": "A",
+      "source_pages": [
+        205,
+        206
+      ]
+    },
+    {
+      "id": "MCQ037",
+      "question": "What can concurrent leaderless writes do?",
+      "choices": {
+        "A": "Arrive in different orders on different replicas",
+        "B": "Always arrive same order",
+        "C": "Never conflict",
+        "D": "Require leader"
+      },
+      "answer": "A",
+      "source_pages": [
+        207
+      ]
+    },
+    {
+      "id": "MCQ038",
+      "question": "What does LWW risk?",
+      "choices": {
+        "A": "Data loss",
+        "B": "No convergence",
+        "C": "No timestamps",
+        "D": "No writes"
+      },
+      "answer": "A",
+      "source_pages": [
+        208
+      ]
+    },
+    {
+      "id": "MCQ039",
+      "question": "When is LWW safest?",
+      "choices": {
+        "A": "Immutable unique keys",
+        "B": "Hot mutable key",
+        "C": "Shared counter",
+        "D": "Repeated same-key updates"
+      },
+      "answer": "A",
+      "source_pages": [
+        208
+      ]
+    },
+    {
+      "id": "MCQ040",
+      "question": "What is happens-before?",
+      "choices": {
+        "A": "Causal dependency relation",
+        "B": "Wall-clock equality",
+        "C": "Quorum overlap",
+        "D": "Replica count"
+      },
+      "answer": "A",
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "id": "MCQ041",
+      "question": "When are A and B concurrent?",
+      "choices": {
+        "A": "Neither happens before the other",
+        "B": "Same timestamp",
+        "C": "Same node",
+        "D": "Within one second"
+      },
+      "answer": "A",
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "id": "MCQ042",
+      "question": "What are Riak siblings?",
+      "choices": {
+        "A": "Concurrent versions",
+        "B": "Followers",
+        "C": "Leaders",
+        "D": "Hints"
+      },
+      "answer": "A",
+      "source_pages": [
+        212
+      ]
+    },
+    {
+      "id": "MCQ043",
+      "question": "What preserves deletion during sibling merges?",
+      "choices": {
+        "A": "Tombstone",
+        "B": "WAL",
+        "C": "Follower",
+        "D": "Bloom filter"
+      },
+      "answer": "A",
+      "source_pages": [
+        213
+      ]
+    },
+    {
+      "id": "MCQ044",
+      "question": "What is a version vector?",
+      "choices": {
+        "A": "Per-replica causal version state",
+        "B": "One timestamp",
+        "C": "One scalar global counter",
+        "D": "Node list"
+      },
+      "answer": "A",
+      "source_pages": [
+        213
+      ]
+    },
+    {
+      "id": "MCQ045",
+      "question": "What does Riak call version-vector context?",
+      "choices": {
+        "A": "Causal context",
+        "B": "Read repair",
+        "C": "Hinted handoff",
+        "D": "Prefix"
+      },
+      "answer": "A",
+      "source_pages": [
+        213
+      ]
+    },
+    {
+      "id": "MCQ046",
+      "question": "What is easiest to reason about according to the chapter summary?",
+      "choices": {
+        "A": "Single-leader",
+        "B": "Multi-leader",
+        "C": "Leaderless",
+        "D": "All identical"
+      },
+      "answer": "A",
+      "source_pages": [
+        214,
+        215
+      ]
+    }
+  ],
+  "mix_and_match": [
+    {
+      "id": "MM01",
+      "title": "Replication model to write behavior",
+      "left": {
+        "A": "Single-leader",
+        "B": "Multi-leader",
+        "C": "Leaderless",
+        "D": "Follower",
+        "E": "Coordinator"
+      },
+      "right": {
+        "1": "One designated write node",
+        "2": "Several write leaders",
+        "3": "Several replicas directly accept writes",
+        "4": "Replays leader changes",
+        "5": "May fan out a leaderless write without imposing total order"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        174,
+        190,
+        199
+      ]
+    },
+    {
+      "id": "MM02",
+      "title": "Consistency guarantee to meaning",
+      "left": {
+        "A": "Read-your-writes",
+        "B": "Monotonic reads",
+        "C": "Consistent prefix",
+        "D": "Eventual consistency",
+        "E": "Strong consistency"
+      },
+      "right": {
+        "1": "See own updates",
+        "2": "Never move backward after newer state",
+        "3": "See causal writes in order",
+        "4": "Eventually converge",
+        "5": "Stronger than lag guarantees discussed here"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        184,
+        185,
+        187,
+        188
+      ]
+    },
+    {
+      "id": "MM03",
+      "title": "Leaderless term to meaning",
+      "left": {
+        "A": "n",
+        "B": "w",
+        "C": "r",
+        "D": "Read repair",
+        "E": "Anti-entropy"
+      },
+      "right": {
+        "1": "Replica count",
+        "2": "Write acknowledgements required",
+        "3": "Read responses required",
+        "4": "Repair stale replica on read",
+        "5": "Background repair"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        201,
+        202
+      ]
+    },
+    {
+      "id": "MM04",
+      "title": "Conflict term to meaning",
+      "left": {
+        "A": "LWW",
+        "B": "Sibling",
+        "C": "Tombstone",
+        "D": "Happens-before",
+        "E": "Version vector"
+      },
+      "right": {
+        "1": "Discard all but ordered winner",
+        "2": "Concurrent preserved value",
+        "3": "Deletion marker",
+        "4": "Causal dependency",
+        "5": "Per-replica version state"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        208,
+        209,
+        212,
+        213
+      ]
+    },
+    {
+      "id": "MM05",
+      "title": "Replication log type",
+      "left": {
+        "A": "Statement",
+        "B": "WAL shipping",
+        "C": "Logical row",
+        "D": "Trigger-based",
+        "E": "CDC"
+      },
+      "right": {
+        "1": "Replay SQL/write statements",
+        "2": "Replicate physical log bytes",
+        "3": "Row-level change records",
+        "4": "Custom database/application change hooks",
+        "5": "Consume change stream externally"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        180,
+        181,
+        182,
+        183
+      ]
+    }
+  ],
+  "true_false": [
+    {
+      "id": "TF001",
+      "statement": "Replication and partitioning are the same mechanism.",
+      "answer": false,
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "TF002",
+      "statement": "Replication can improve read throughput.",
+      "answer": true,
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "TF003",
+      "statement": "Followers can normally accept writes in single-leader replication.",
+      "answer": false,
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "TF004",
+      "statement": "Synchronous replication can block writes when the synchronous follower is unavailable.",
+      "answer": true,
+      "source_pages": [
+        176
+      ]
+    },
+    {
+      "id": "TF005",
+      "statement": "Fully asynchronous replication guarantees every acknowledged write survives leader loss.",
+      "answer": false,
+      "source_pages": [
+        177
+      ]
+    },
+    {
+      "id": "TF006",
+      "statement": "Follower bootstrap uses a consistent snapshot plus a replication-log position.",
+      "answer": true,
+      "source_pages": [
+        178
+      ]
+    },
+    {
+      "id": "TF007",
+      "statement": "Follower recovery is generally easier than leader failover.",
+      "answer": true,
+      "source_pages": [
+        178,
+        179
+      ]
+    },
+    {
+      "id": "TF008",
+      "statement": "Split brain means two leaders may both accept writes.",
+      "answer": true,
+      "source_pages": [
+        180
+      ]
+    },
+    {
+      "id": "TF009",
+      "statement": "Statement replication has no issue with nondeterministic functions.",
+      "answer": false,
+      "source_pages": [
+        181
+      ]
+    },
+    {
+      "id": "TF010",
+      "statement": "WAL shipping is closely tied to storage-engine internals.",
+      "answer": true,
+      "source_pages": [
+        182
+      ]
+    },
+    {
+      "id": "TF011",
+      "statement": "Logical logs can help zero-downtime upgrades and CDC.",
+      "answer": true,
+      "source_pages": [
+        182,
+        183
+      ]
+    },
+    {
+      "id": "TF012",
+      "statement": "Eventual consistency places a strict maximum on replication lag.",
+      "answer": false,
+      "source_pages": [
+        184
+      ]
+    },
+    {
+      "id": "TF013",
+      "statement": "Read-your-writes guarantees a user sees their own update.",
+      "answer": true,
+      "source_pages": [
+        185
+      ]
+    },
+    {
+      "id": "TF014",
+      "statement": "Read-your-writes guarantees globally fresh reads.",
+      "answer": false,
+      "source_pages": [
+        185
+      ]
+    },
+    {
+      "id": "TF015",
+      "statement": "Monotonic reads can still return stale data.",
+      "answer": true,
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "id": "TF016",
+      "statement": "Monotonic reads allow a user to move backward in time.",
+      "answer": false,
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "id": "TF017",
+      "statement": "Consistent-prefix reads preserve causality.",
+      "answer": true,
+      "source_pages": [
+        188
+      ]
+    },
+    {
+      "id": "TF018",
+      "statement": "Multi-leader usually has no conflict-resolution problem.",
+      "answer": false,
+      "source_pages": [
+        192,
+        193
+      ]
+    },
+    {
+      "id": "TF019",
+      "statement": "Offline clients can be viewed as asynchronous leaders.",
+      "answer": true,
+      "source_pages": [
+        192
+      ]
+    },
+    {
+      "id": "TF020",
+      "statement": "Collaborative editing without locking resembles multi-leader replication.",
+      "answer": true,
+      "source_pages": [
+        193
+      ]
+    },
+    {
+      "id": "TF021",
+      "statement": "Multi-leader conflicts are often detected asynchronously.",
+      "answer": true,
+      "source_pages": [
+        194
+      ]
+    },
+    {
+      "id": "TF022",
+      "statement": "Conflict avoidance routes a record's writes to one leader.",
+      "answer": true,
+      "source_pages": [
+        194
+      ]
+    },
+    {
+      "id": "TF023",
+      "statement": "LWW can silently lose successful writes.",
+      "answer": true,
+      "source_pages": [
+        195,
+        208
+      ]
+    },
+    {
+      "id": "TF024",
+      "statement": "CRDTs aim to resolve some concurrent edits automatically.",
+      "answer": true,
+      "source_pages": [
+        196
+      ]
+    },
+    {
+      "id": "TF025",
+      "statement": "A meeting-room invariant can be violated even when separate rows are written.",
+      "answer": true,
+      "source_pages": [
+        196,
+        197
+      ]
+    },
+    {
+      "id": "TF026",
+      "statement": "All-to-all topology has more alternate paths than circular topology.",
+      "answer": true,
+      "source_pages": [
+        198
+      ]
+    },
+    {
+      "id": "TF027",
+      "statement": "All-to-all guarantees causal arrival order.",
+      "answer": false,
+      "source_pages": [
+        198
+      ]
+    },
+    {
+      "id": "TF028",
+      "statement": "Wall-clock timestamps are always sufficient to order causal writes.",
+      "answer": false,
+      "source_pages": [
+        198,
+        199
+      ]
+    },
+    {
+      "id": "TF029",
+      "statement": "Leaderless replication has no distinguished leader.",
+      "answer": true,
+      "source_pages": [
+        199
+      ]
+    },
+    {
+      "id": "TF030",
+      "statement": "Leaderless replication always requires failover when one node is down.",
+      "answer": false,
+      "source_pages": [
+        200
+      ]
+    },
+    {
+      "id": "TF031",
+      "statement": "Read repair happens while reading from multiple replicas.",
+      "answer": true,
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "TF032",
+      "statement": "Anti-entropy is a background repair process.",
+      "answer": true,
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "TF033",
+      "statement": "In quorum notation, w is the replica count.",
+      "answer": false,
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "TF034",
+      "statement": "w+r>n creates strict read/write-set overlap under the basic model.",
+      "answer": true,
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "TF035",
+      "statement": "n=3,w=2,r=2 tolerates one unavailable node.",
+      "answer": true,
+      "source_pages": [
+        202
+      ]
+    },
+    {
+      "id": "TF036",
+      "statement": "n=5,w=3,r=3 tolerates two unavailable nodes.",
+      "answer": true,
+      "source_pages": [
+        202
+      ]
+    },
+    {
+      "id": "TF037",
+      "statement": "Quorums must always be majorities.",
+      "answer": false,
+      "source_pages": [
+        203
+      ]
+    },
+    {
+      "id": "TF038",
+      "statement": "Lower w/r can improve availability at the cost of stale-read risk.",
+      "answer": true,
+      "source_pages": [
+        203
+      ]
+    },
+    {
+      "id": "TF039",
+      "statement": "w+r>n guarantees linearizability in every case.",
+      "answer": false,
+      "source_pages": [
+        203,
+        204
+      ]
+    },
+    {
+      "id": "TF040",
+      "statement": "A failed write may remain visible on replicas where it succeeded.",
+      "answer": true,
+      "source_pages": [
+        204
+      ]
+    },
+    {
+      "id": "TF041",
+      "statement": "Leaderless systems inherently provide monotonic reads.",
+      "answer": false,
+      "source_pages": [
+        204
+      ]
+    },
+    {
+      "id": "TF042",
+      "statement": "Sloppy quorum may store a value on non-home nodes.",
+      "answer": true,
+      "source_pages": [
+        205
+      ]
+    },
+    {
+      "id": "TF043",
+      "statement": "Hinted handoff later moves temporary writes home.",
+      "answer": true,
+      "source_pages": [
+        206
+      ]
+    },
+    {
+      "id": "TF044",
+      "statement": "Sloppy quorum primarily guarantees immediate freshest reads.",
+      "answer": false,
+      "source_pages": [
+        206
+      ]
+    },
+    {
+      "id": "TF045",
+      "statement": "Concurrent writes can arrive in different orders at replicas.",
+      "answer": true,
+      "source_pages": [
+        207
+      ]
+    },
+    {
+      "id": "TF046",
+      "statement": "Arrival-order overwrite can leave replicas inconsistent.",
+      "answer": true,
+      "source_pages": [
+        207
+      ]
+    },
+    {
+      "id": "TF047",
+      "statement": "LWW is safest for write-once immutable keys.",
+      "answer": true,
+      "source_pages": [
+        208
+      ]
+    },
+    {
+      "id": "TF048",
+      "statement": "Happens-before is causal rather than purely temporal.",
+      "answer": true,
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "id": "TF049",
+      "statement": "Concurrent operations must physically overlap in time.",
+      "answer": false,
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "id": "TF050",
+      "statement": "Riak calls concurrent values siblings.",
+      "answer": true,
+      "source_pages": [
+        212
+      ]
+    },
+    {
+      "id": "TF051",
+      "statement": "A tombstone prevents deleted data from being resurrected during merge.",
+      "answer": true,
+      "source_pages": [
+        213
+      ]
+    },
+    {
+      "id": "TF052",
+      "statement": "A single scalar version number is enough for all leaderless multi-replica causality.",
+      "answer": false,
+      "source_pages": [
+        213
+      ]
+    },
+    {
+      "id": "TF053",
+      "statement": "Version vectors track per-replica versions.",
+      "answer": true,
+      "source_pages": [
+        213
+      ]
+    },
+    {
+      "id": "TF054",
+      "statement": "Version vectors and vector clocks are exactly identical.",
+      "answer": false,
+      "source_pages": [
+        213
+      ]
+    }
+  ],
+  "fill_in_the_blank": [
+    {
+      "id": "FIB001",
+      "prompt": "Copies of the same data on multiple machines is called ______.",
+      "answer": "replication",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "id": "FIB002",
+      "prompt": "The write-accepting node is the ______.",
+      "answer": "leader",
+      "source_pages": [
+        174
+      ]
+    },
+    {
+      "id": "FIB003",
+      "prompt": "Other leader-based replicas are ______.",
+      "answer": "followers",
+      "source_pages": [
+        174
+      ]
+    },
+    {
+      "id": "FIB004",
+      "prompt": "One synchronous follower plus asynchronous followers is ______-synchronous.",
+      "answer": "semi",
+      "source_pages": [
+        176,
+        177
+      ]
+    },
+    {
+      "id": "FIB005",
+      "prompt": "Leader replacement after failure is called ______.",
+      "answer": "failover",
+      "source_pages": [
+        179
+      ]
+    },
+    {
+      "id": "FIB006",
+      "prompt": "Two simultaneous leaders is split ______.",
+      "answer": "brain",
+      "source_pages": [
+        180
+      ]
+    },
+    {
+      "id": "FIB007",
+      "prompt": "A row-level storage-independent replication stream is a ______ log.",
+      "answer": "logical",
+      "source_pages": [
+        182
+      ]
+    },
+    {
+      "id": "FIB008",
+      "prompt": "Delay before a follower sees a write is replication ______.",
+      "answer": "lag",
+      "source_pages": [
+        184
+      ]
+    },
+    {
+      "id": "FIB009",
+      "prompt": "Read-after-write is also read-your-______ consistency.",
+      "answer": "writes",
+      "source_pages": [
+        185
+      ]
+    },
+    {
+      "id": "FIB010",
+      "prompt": "Never seeing older data after newer is ______ reads.",
+      "answer": "monotonic",
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "id": "FIB011",
+      "prompt": "Seeing causally ordered data in order is consistent ______ reads.",
+      "answer": "prefix",
+      "source_pages": [
+        188
+      ]
+    },
+    {
+      "id": "FIB012",
+      "prompt": "Several leaders accepting writes is ______-leader replication.",
+      "answer": "multi",
+      "source_pages": [
+        190
+      ]
+    },
+    {
+      "id": "FIB013",
+      "prompt": "Last-write-______ may discard concurrent writes.",
+      "answer": "wins",
+      "source_pages": [
+        195,
+        208
+      ]
+    },
+    {
+      "id": "FIB014",
+      "prompt": "Conflict-free replicated datatypes are ______.",
+      "answer": "CRDTs",
+      "source_pages": [
+        196
+      ]
+    },
+    {
+      "id": "FIB015",
+      "prompt": "The total replica count for a value is ______.",
+      "answer": "n",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "FIB016",
+      "prompt": "Required write acknowledgements are ______.",
+      "answer": "w",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "FIB017",
+      "prompt": "Required read responses are ______.",
+      "answer": "r",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "FIB018",
+      "prompt": "The overlap condition is w+r>______.",
+      "answer": "n",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "FIB019",
+      "prompt": "Repair during reads is read ______.",
+      "answer": "repair",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "FIB020",
+      "prompt": "Background repair is anti-______.",
+      "answer": "entropy",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "FIB021",
+      "prompt": "Using non-home nodes is a ______ quorum.",
+      "answer": "sloppy",
+      "source_pages": [
+        205
+      ]
+    },
+    {
+      "id": "FIB022",
+      "prompt": "Returning temporary writes home is hinted ______.",
+      "answer": "handoff",
+      "source_pages": [
+        206
+      ]
+    },
+    {
+      "id": "FIB023",
+      "prompt": "Neither operation causally preceding the other means they are ______.",
+      "answer": "concurrent",
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "id": "FIB024",
+      "prompt": "Concurrent Riak values are ______.",
+      "answer": "siblings",
+      "source_pages": [
+        212
+      ]
+    },
+    {
+      "id": "FIB025",
+      "prompt": "A deletion marker is a ______.",
+      "answer": "tombstone",
+      "source_pages": [
+        213
+      ]
+    },
+    {
+      "id": "FIB026",
+      "prompt": "Per-replica version state is a version ______.",
+      "answer": "vector",
+      "source_pages": [
+        213
+      ]
+    }
+  ],
+  "ordering_exercises": [
+    {
+      "id": "ORD01",
+      "title": "New follower setup",
+      "items_scrambled": [
+        "Replay backlog",
+        "Take consistent snapshot",
+        "Copy snapshot",
+        "Record log position",
+        "Join live stream"
+      ],
+      "correct_order": [
+        "Take consistent snapshot",
+        "Record log position",
+        "Copy snapshot",
+        "Replay backlog",
+        "Join live stream"
+      ],
+      "source_pages": [
+        177,
+        178
+      ]
+    },
+    {
+      "id": "ORD02",
+      "title": "Failover",
+      "items_scrambled": [
+        "Reroute clients",
+        "Detect failure",
+        "Promote follower",
+        "Demote returning old leader"
+      ],
+      "correct_order": [
+        "Detect failure",
+        "Promote follower",
+        "Reroute clients",
+        "Demote returning old leader"
+      ],
+      "source_pages": [
+        179
+      ]
+    },
+    {
+      "id": "ORD03",
+      "title": "Read repair",
+      "items_scrambled": [
+        "Compare versions",
+        "Read several replicas",
+        "Write newest value to stale replica",
+        "Receive fresh and stale responses"
+      ],
+      "correct_order": [
+        "Read several replicas",
+        "Receive fresh and stale responses",
+        "Compare versions",
+        "Write newest value to stale replica"
+      ],
+      "source_pages": [
+        200,
+        201
+      ]
+    },
+    {
+      "id": "ORD04",
+      "title": "Hinted handoff",
+      "items_scrambled": [
+        "Home replicas recover",
+        "Use temporary reachable node",
+        "Home quorum unavailable",
+        "Forward write home"
+      ],
+      "correct_order": [
+        "Home quorum unavailable",
+        "Use temporary reachable node",
+        "Home replicas recover",
+        "Forward write home"
+      ],
+      "source_pages": [
+        205,
+        206
+      ]
+    }
+  ],
+  "scenario_questions": [
+    {
+      "id": "SC001",
+      "scenario": "A user posts a comment then immediately sees it disappear from a stale follower.",
+      "question": "Which consistency guarantee should you add?",
+      "expected_answer": "Read-after-write/read-your-writes consistency.",
+      "source_pages": [
+        184,
+        185
+      ]
+    },
+    {
+      "id": "SC002",
+      "scenario": "A user sees new data on one refresh and older data on the next.",
+      "question": "Which guarantee is missing?",
+      "expected_answer": "Monotonic reads.",
+      "source_pages": [
+        186,
+        187
+      ]
+    },
+    {
+      "id": "SC003",
+      "scenario": "A reply appears before the question.",
+      "question": "Which guarantee is missing?",
+      "expected_answer": "Consistent-prefix reads / causal ordering.",
+      "source_pages": [
+        187,
+        188
+      ]
+    },
+    {
+      "id": "SC004",
+      "scenario": "A synchronous follower is down.",
+      "question": "What happens to leader writes?",
+      "expected_answer": "They block until a synchronous replica is available or another follower is promoted to synchronous.",
+      "source_pages": [
+        176
+      ]
+    },
+    {
+      "id": "SC005",
+      "scenario": "An async leader dies before a confirmed write reaches followers.",
+      "question": "What can happen?",
+      "expected_answer": "The acknowledged write can be lost.",
+      "source_pages": [
+        177,
+        179
+      ]
+    },
+    {
+      "id": "SC006",
+      "scenario": "You need to add a follower with no downtime.",
+      "question": "What is the procedure?",
+      "expected_answer": "Snapshot, capture log position, copy snapshot, replay backlog, then follow live stream.",
+      "source_pages": [
+        177,
+        178
+      ]
+    },
+    {
+      "id": "SC007",
+      "scenario": "Two datacenters need low-latency local writes.",
+      "question": "Which replication model may fit?",
+      "expected_answer": "Multi-leader, with conflict resolution required.",
+      "source_pages": [
+        190,
+        191,
+        192
+      ]
+    },
+    {
+      "id": "SC008",
+      "scenario": "A mobile calendar must work offline.",
+      "question": "How is it modeled?",
+      "expected_answer": "Each device is effectively a local leader that asynchronously syncs later.",
+      "source_pages": [
+        192
+      ]
+    },
+    {
+      "id": "SC009",
+      "scenario": "Two users concurrently update the same title on different leaders.",
+      "question": "Why must the system do more than apply arrival order?",
+      "expected_answer": "Different replicas can observe opposite orders; a convergent conflict-resolution rule is required.",
+      "source_pages": [
+        193,
+        194,
+        195
+      ]
+    },
+    {
+      "id": "SC010",
+      "scenario": "A timestamp decides the winner of concurrent writes.",
+      "question": "What is this and what risk exists?",
+      "expected_answer": "LWW; successful writes can be silently lost.",
+      "source_pages": [
+        195,
+        208
+      ]
+    },
+    {
+      "id": "SC011",
+      "scenario": "A three-replica store uses n=3,w=2,r=2.",
+      "question": "What does that buy?",
+      "expected_answer": "Strict quorum overlap and tolerance of one unavailable node under the basic assumptions.",
+      "source_pages": [
+        201,
+        202
+      ]
+    },
+    {
+      "id": "SC012",
+      "scenario": "A store has w+r>n but uses sloppy quorum.",
+      "question": "Why might a read miss the latest write?",
+      "expected_answer": "Write may be on non-home nodes outside the read's home replica set.",
+      "source_pages": [
+        203,
+        205,
+        206
+      ]
+    },
+    {
+      "id": "SC013",
+      "scenario": "A write fails overall but succeeds on one replica.",
+      "question": "Could it appear later?",
+      "expected_answer": "Yes; partial successful writes are not necessarily rolled back.",
+      "source_pages": [
+        204
+      ]
+    },
+    {
+      "id": "SC014",
+      "scenario": "Home replicas are unreachable but other nodes are reachable.",
+      "question": "What mechanism can preserve availability?",
+      "expected_answer": "Sloppy quorum, followed by hinted handoff.",
+      "source_pages": [
+        205,
+        206
+      ]
+    },
+    {
+      "id": "SC015",
+      "scenario": "Two clients write the same key without seeing each other's updates.",
+      "question": "Are they concurrent?",
+      "expected_answer": "Yes; neither happens-before the other.",
+      "source_pages": [
+        208,
+        209
+      ]
+    },
+    {
+      "id": "SC016",
+      "scenario": "A cart merge reintroduces an item removed on one branch.",
+      "question": "What is missing?",
+      "expected_answer": "A tombstone/versioned deletion marker or suitable CRDT semantics.",
+      "source_pages": [
+        212,
+        213
+      ]
+    },
+    {
+      "id": "SC017",
+      "scenario": "A client reads from replica A and writes to replica B.",
+      "question": "What metadata helps preserve causality?",
+      "expected_answer": "A version vector / causal context.",
+      "source_pages": [
+        213
+      ]
+    }
+  ],
+  "short_answer_questions": [
+    {
+      "id": "SA001",
+      "question": "Compare synchronous and asynchronous replication.",
+      "model_answer": "Synchronous waits for follower acknowledgement, improving durability but risking write unavailability. Asynchronous does not wait, improving latency/availability but risking acknowledged write loss after leader failure.",
+      "source_pages": [
+        176,
+        177
+      ]
+    },
+    {
+      "id": "SA002",
+      "question": "Why is failover difficult?",
+      "model_answer": "Failure detection is uncertain, candidates may be stale, writes may be lost, split brain may occur, and timeout choices trade false failover against slow recovery.",
+      "source_pages": [
+        179,
+        180
+      ]
+    },
+    {
+      "id": "SA003",
+      "question": "Compare statement, WAL, logical, and trigger replication.",
+      "model_answer": "Statement replication replays commands but struggles with nondeterminism; WAL shipping is physical and version-coupled; logical logs are row-level and evolvable; triggers are flexible but application-driven and higher overhead.",
+      "source_pages": [
+        180,
+        181,
+        182,
+        183
+      ]
+    },
+    {
+      "id": "SA004",
+      "question": "Compare read-your-writes, monotonic reads, and consistent-prefix reads.",
+      "model_answer": "Read-your-writes preserves a user's own updates; monotonic reads prevent backward movement in observed state; consistent prefix preserves causal order.",
+      "source_pages": [
+        185,
+        187,
+        188
+      ]
+    },
+    {
+      "id": "SA005",
+      "question": "Why is multi-leader useful across datacenters?",
+      "model_answer": "Writes can be local and continue through WAN/datacenter failures, but concurrent writes create conflicts.",
+      "source_pages": [
+        191,
+        192
+      ]
+    },
+    {
+      "id": "SA006",
+      "question": "Why is LWW risky?",
+      "model_answer": "It forces an arbitrary order and discards losing writes, even if they were successfully acknowledged.",
+      "source_pages": [
+        195,
+        208
+      ]
+    },
+    {
+      "id": "SA007",
+      "question": "How does leaderless replication work during node failure?",
+      "model_answer": "Writes go to several replicas and wait for w; reads query several and wait for r. Read repair and anti-entropy repair stale nodes without leader failover.",
+      "source_pages": [
+        200,
+        201,
+        202
+      ]
+    },
+    {
+      "id": "SA008",
+      "question": "What does w+r>n mean?",
+      "model_answer": "Under strict quorum assumptions, the read and successful write sets overlap in at least one replica.",
+      "source_pages": [
+        201,
+        202,
+        203
+      ]
+    },
+    {
+      "id": "SA009",
+      "question": "Why isn't quorum overlap strong consistency?",
+      "model_answer": "Sloppy quorums, concurrent writes, read/write races, partial failed writes, stale recovery, and timing edge cases can still produce stale or ambiguous values.",
+      "source_pages": [
+        203,
+        204
+      ]
+    },
+    {
+      "id": "SA010",
+      "question": "What are sloppy quorum and hinted handoff?",
+      "model_answer": "Sloppy quorum temporarily stores writes on reachable non-home nodes; hinted handoff later transfers them to home replicas.",
+      "source_pages": [
+        205,
+        206
+      ]
+    },
+    {
+      "id": "SA011",
+      "question": "How is concurrency defined?",
+      "model_answer": "By causality: two operations are concurrent when neither happens-before the other, not merely when timestamps overlap.",
+      "source_pages": [
+        208,
+        209
+      ]
+    },
+    {
+      "id": "SA012",
+      "question": "Why are version vectors necessary?",
+      "model_answer": "With several write-accepting replicas, per-replica version history is needed to distinguish causal overwrites from concurrent sibling values.",
+      "source_pages": [
+        213
+      ]
+    }
+  ],
+  "active_recall_prompts": [
+    {
+      "id": "AR001",
+      "prompt": "Explain the four reasons for replication.",
+      "target_points": [
+        "availability",
+        "disconnected operation",
+        "latency",
+        "read scale"
+      ],
+      "source_pages": [
+        173,
+        214
+      ]
+    },
+    {
+      "id": "AR002",
+      "prompt": "Reconstruct single-leader write/read paths.",
+      "target_points": [
+        "leader",
+        "followers",
+        "change stream",
+        "reads from replicas"
+      ],
+      "source_pages": [
+        174,
+        175
+      ]
+    },
+    {
+      "id": "AR003",
+      "prompt": "Compare sync, async, and semi-sync.",
+      "target_points": [
+        "acknowledgement",
+        "durability",
+        "availability",
+        "one sync follower"
+      ],
+      "source_pages": [
+        176,
+        177
+      ]
+    },
+    {
+      "id": "AR004",
+      "prompt": "Recite follower bootstrap and failover.",
+      "target_points": [
+        "snapshot",
+        "log position",
+        "catch-up",
+        "timeout",
+        "election",
+        "rerouting",
+        "split brain"
+      ],
+      "source_pages": [
+        178,
+        179,
+        180
+      ]
+    },
+    {
+      "id": "AR005",
+      "prompt": "Compare all four replication-log implementations.",
+      "target_points": [
+        "statement",
+        "WAL",
+        "logical",
+        "trigger",
+        "CDC"
+      ],
+      "source_pages": [
+        180,
+        181,
+        182,
+        183
+      ]
+    },
+    {
+      "id": "AR006",
+      "prompt": "Define all replication-lag guarantees.",
+      "target_points": [
+        "eventual consistency",
+        "read-your-writes",
+        "monotonic",
+        "consistent prefix"
+      ],
+      "source_pages": [
+        184,
+        185,
+        187,
+        188
+      ]
+    },
+    {
+      "id": "AR007",
+      "prompt": "Explain multi-leader use cases and conflict handling.",
+      "target_points": [
+        "multi-DC",
+        "offline",
+        "collaboration",
+        "avoidance",
+        "convergence",
+        "LWW",
+        "CRDT"
+      ],
+      "source_pages": [
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196
+      ]
+    },
+    {
+      "id": "AR008",
+      "prompt": "Compare circular, star/tree, and all-to-all topologies.",
+      "target_points": [
+        "propagation paths",
+        "failure risk",
+        "redundancy",
+        "causal reordering"
+      ],
+      "source_pages": [
+        197,
+        198,
+        199
+      ]
+    },
+    {
+      "id": "AR009",
+      "prompt": "Explain leaderless read/write/repair.",
+      "target_points": [
+        "write several",
+        "read several",
+        "versions",
+        "read repair",
+        "anti-entropy"
+      ],
+      "source_pages": [
+        199,
+        200,
+        201
+      ]
+    },
+    {
+      "id": "AR010",
+      "prompt": "Reconstruct n/w/r quorum examples.",
+      "target_points": [
+        "n",
+        "w",
+        "r",
+        "w+r>n",
+        "3/2/2",
+        "5/3/3"
+      ],
+      "source_pages": [
+        201,
+        202
+      ]
+    },
+    {
+      "id": "AR011",
+      "prompt": "List quorum limitations and sloppy quorum behavior.",
+      "target_points": [
+        "sloppy quorum",
+        "concurrent writes",
+        "partial writes",
+        "stale recovery",
+        "hinted handoff"
+      ],
+      "source_pages": [
+        203,
+        204,
+        205,
+        206
+      ]
+    },
+    {
+      "id": "AR012",
+      "prompt": "Explain happens-before, siblings, tombstones, and version vectors.",
+      "target_points": [
+        "causal dependency",
+        "concurrency",
+        "merge",
+        "deletion marker",
+        "per-replica versions"
+      ],
+      "source_pages": [
+        208,
+        209,
+        212,
+        213
+      ]
+    }
+  ],
+  "diagram_reconstruction_drills": [
+    {
+      "id": "DR01",
+      "name": "Leader-follower replication",
+      "task": "Draw client -> leader -> follower replication streams, with reads allowed from replicas.",
+      "source_pages": [
+        175
+      ]
+    },
+    {
+      "id": "DR02",
+      "name": "Sync vs async follower",
+      "task": "Show one follower whose ack blocks success and another follower whose ack does not.",
+      "source_pages": [
+        176
+      ]
+    },
+    {
+      "id": "DR03",
+      "name": "Replication-lag anomalies",
+      "task": "Draw read-your-writes, monotonic-read, and consistent-prefix anomalies side by side.",
+      "source_pages": [
+        184,
+        185,
+        186,
+        187,
+        188
+      ]
+    },
+    {
+      "id": "DR04",
+      "name": "Multi-datacenter multi-leader",
+      "task": "Draw two datacenters with local leaders, followers, cross-DC async replication, and a conflict point.",
+      "source_pages": [
+        190,
+        191
+      ]
+    },
+    {
+      "id": "DR05",
+      "name": "Replication topologies",
+      "task": "Draw circular, star/tree, and all-to-all topologies and annotate failure/order tradeoffs.",
+      "source_pages": [
+        197,
+        198
+      ]
+    },
+    {
+      "id": "DR06",
+      "name": "Leaderless quorum",
+      "task": "Draw n=3,w=2,r=2 with one unavailable node and a later read repair.",
+      "source_pages": [
+        200,
+        201,
+        202
+      ]
+    },
+    {
+      "id": "DR07",
+      "name": "Concurrent writes",
+      "task": "Draw two clients writing A/B to three replicas in different arrival orders.",
+      "source_pages": [
+        207
+      ]
+    },
+    {
+      "id": "DR08",
+      "name": "Causal version history",
+      "task": "Draw happens-before arrows, sibling branches, merge, tombstone, and a version vector.",
+      "source_pages": [
+        210,
+        211,
+        212,
+        213
+      ]
+    }
+  ],
+  "interview_style_questions": [
+    {
+      "id": "INT01",
+      "question": "When would you choose synchronous vs asynchronous replication?",
+      "strong_answer_outline": [
+        "durability",
+        "write availability",
+        "latency",
+        "failure behavior",
+        "semi-sync"
+      ],
+      "source_pages": [
+        176,
+        177
+      ]
+    },
+    {
+      "id": "INT02",
+      "question": "How would you add a replica without downtime?",
+      "strong_answer_outline": [
+        "consistent snapshot",
+        "log position",
+        "copy",
+        "catch-up",
+        "stream"
+      ],
+      "source_pages": [
+        177,
+        178
+      ]
+    },
+    {
+      "id": "INT03",
+      "question": "What can go wrong during automatic failover?",
+      "strong_answer_outline": [
+        "stale promotion",
+        "write loss",
+        "split brain",
+        "timeout tuning",
+        "rerouting"
+      ],
+      "source_pages": [
+        179,
+        180
+      ]
+    },
+    {
+      "id": "INT04",
+      "question": "How do you provide read-your-writes on async replicas?",
+      "strong_answer_outline": [
+        "leader reads",
+        "post-write time window",
+        "lag-aware routing",
+        "logical write position"
+      ],
+      "source_pages": [
+        185,
+        186
+      ]
+    },
+    {
+      "id": "INT05",
+      "question": "When is multi-leader worth the complexity?",
+      "strong_answer_outline": [
+        "multi-DC",
+        "offline",
+        "collaboration",
+        "local latency",
+        "conflicts"
+      ],
+      "source_pages": [
+        190,
+        191,
+        192,
+        193
+      ]
+    },
+    {
+      "id": "INT06",
+      "question": "How do you resolve concurrent multi-leader writes?",
+      "strong_answer_outline": [
+        "avoidance",
+        "convergence",
+        "LWW risk",
+        "merge",
+        "siblings",
+        "CRDT"
+      ],
+      "source_pages": [
+        194,
+        195,
+        196
+      ]
+    },
+    {
+      "id": "INT07",
+      "question": "Explain a Dynamo-style leaderless database.",
+      "strong_answer_outline": [
+        "no leader",
+        "write replicas",
+        "read replicas",
+        "n/w/r",
+        "repair"
+      ],
+      "source_pages": [
+        199,
+        200,
+        201,
+        202
+      ]
+    },
+    {
+      "id": "INT08",
+      "question": "What does w+r>n guarantee and not guarantee?",
+      "strong_answer_outline": [
+        "strict overlap",
+        "not absolute freshness",
+        "sloppy quorum",
+        "concurrency",
+        "partial failures"
+      ],
+      "source_pages": [
+        201,
+        203,
+        204
+      ]
+    },
+    {
+      "id": "INT09",
+      "question": "What are sloppy quorum and hinted handoff?",
+      "strong_answer_outline": [
+        "non-home nodes",
+        "availability",
+        "durability",
+        "later transfer"
+      ],
+      "source_pages": [
+        205,
+        206
+      ]
+    },
+    {
+      "id": "INT10",
+      "question": "How do version vectors help with concurrent writes?",
+      "strong_answer_outline": [
+        "per-replica versions",
+        "causal context",
+        "overwrite vs sibling",
+        "cross-replica read/write"
+      ],
+      "source_pages": [
+        213
+      ]
+    }
+  ],
+  "practice_problems": [
+    {
+      "id": "P01",
+      "prompt": "For n=3,w=2,r=2, why must a strict read quorum overlap the successful write quorum?",
+      "solution": "Any 2-node read set and 2-node write set drawn from 3 nodes share at least one node.",
+      "based_on_source_pages": [
+        201,
+        202
+      ]
+    },
+    {
+      "id": "P02",
+      "prompt": "For n=5,w=3,r=3, how many unavailable replicas can you tolerate?",
+      "solution": "Two; three responding replicas remain, enough for both w and r.",
+      "based_on_source_pages": [
+        202
+      ]
+    },
+    {
+      "id": "P03",
+      "prompt": "What is the tradeoff of n=5,w=5,r=1?",
+      "solution": "Fast single-replica reads, but any unavailable replica prevents writes.",
+      "based_on_source_pages": [
+        202
+      ]
+    },
+    {
+      "id": "P04",
+      "prompt": "A user sees their own new post disappear. Which guarantee is missing?",
+      "solution": "Read-your-writes.",
+      "based_on_source_pages": [
+        184,
+        185
+      ]
+    },
+    {
+      "id": "P05",
+      "prompt": "A user sees newer data and later older data. Which guarantee is missing?",
+      "solution": "Monotonic reads.",
+      "based_on_source_pages": [
+        186,
+        187
+      ]
+    },
+    {
+      "id": "P06",
+      "prompt": "A reply appears before its causal question. Which guarantee is missing?",
+      "solution": "Consistent-prefix reads.",
+      "based_on_source_pages": [
+        187,
+        188
+      ]
+    },
+    {
+      "id": "P07",
+      "prompt": "Two clients write without observing each other. How are the writes classified?",
+      "solution": "Concurrent: neither happens-before the other.",
+      "based_on_source_pages": [
+        208,
+        209
+      ]
+    },
+    {
+      "id": "P08",
+      "prompt": "Why can a deleted cart item reappear after sibling union?",
+      "solution": "Absence alone does not preserve the deletion's causal history; a tombstone or appropriate CRDT is needed.",
+      "based_on_source_pages": [
+        212,
+        213
+      ]
+    }
+  ],
+  "common_confusions": [
+    {
+      "confusion": "Replication is the same as partitioning.",
+      "correction": "Replication copies the same data; partitioning divides data into subsets.",
+      "source_pages": [
+        173
+      ]
+    },
+    {
+      "confusion": "Async acknowledgement means durable everywhere.",
+      "correction": "A confirmed write may still be lost if leader dies before replication.",
+      "source_pages": [
+        177
+      ]
+    },
+    {
+      "confusion": "Eventual consistency means lag is always short.",
+      "correction": "There is no general upper bound on lag.",
+      "source_pages": [
+        184
+      ]
+    },
+    {
+      "confusion": "Monotonic reads mean globally fresh data.",
+      "correction": "They only prevent a single user from moving backward after seeing newer data.",
+      "source_pages": [
+        187
+      ]
+    },
+    {
+      "confusion": "Multi-leader removes the single-leader bottleneck for free.",
+      "correction": "It introduces concurrent-write conflicts and causal-ordering issues.",
+      "source_pages": [
+        192,
+        193,
+        198
+      ]
+    },
+    {
+      "confusion": "w+r>n means linearizable reads.",
+      "correction": "It gives overlap under strict assumptions, but several failure/concurrency cases still permit stale values.",
+      "source_pages": [
+        203,
+        204
+      ]
+    },
+    {
+      "confusion": "Sloppy quorum is a traditional strict quorum.",
+      "correction": "It may use non-home replicas and mainly provides durability/availability until hinted handoff completes.",
+      "source_pages": [
+        205,
+        206
+      ]
+    },
+    {
+      "confusion": "Concurrency means same wall-clock time.",
+      "correction": "Concurrency means neither operation causally depends on the other.",
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "confusion": "Version vector equals vector clock.",
+      "correction": "The chapter notes a subtle distinction and recommends version vectors for replica-state comparison.",
+      "source_pages": [
+        213
+      ]
+    }
+  ],
+  "mastery_check": {
+    "beginner": [
+      "Define replication and its motivations.",
+      "Explain leader/follower roles.",
+      "Define replication lag and the three lag-related consistency guarantees.",
+      "Distinguish single-leader, multi-leader, and leaderless."
+    ],
+    "intermediate": [
+      "Explain follower bootstrap/failover.",
+      "Compare replication-log implementations.",
+      "Compute n/w/r quorum behavior.",
+      "Explain read repair, anti-entropy, sloppy quorum, and hinted handoff."
+    ],
+    "advanced": [
+      "Reason about causal versus concurrent writes.",
+      "Explain why w+r>n is not a complete consistency guarantee.",
+      "Design conflict resolution using siblings/tombstones/version vectors/CRDT ideas.",
+      "Choose a replication model based on latency, availability, consistency, and conflict requirements."
+    ]
+  },
+  "final_review": {
+    "must_memorize": [
+      "Purposes: availability, disconnected operation, latency, read scaling.",
+      "Single-leader = one write leader, followers replay ordered changes.",
+      "Sync improves durability but can block writes; async improves availability but risks acknowledged write loss.",
+      "Follower bootstrap = snapshot + log position + catch-up.",
+      "Failover hazards include stale promotion, write loss, split brain, timeout mistakes.",
+      "Statement replication has nondeterminism problems; WAL is physical; logical logs are row-level and CDC-friendly.",
+      "Read-your-writes = see own update.",
+      "Monotonic reads = never move backward.",
+      "Consistent prefix = causal order preserved.",
+      "Multi-leader is useful for multi-DC/offline/collaboration but requires conflict resolution.",
+      "LWW converges by discarding writes and can lose data.",
+      "Leaderless uses n replicas, waits for w write acks and r read responses.",
+      "Strict overlap condition: w+r>n.",
+      "Read repair and anti-entropy repair stale replicas.",
+      "Sloppy quorum improves availability by using non-home nodes; hinted handoff returns writes home.",
+      "Happens-before defines causality; concurrency is neither operation happening before the other.",
+      "Siblings preserve concurrent versions; tombstones preserve deletions.",
+      "Version vectors track per-replica causal state."
+    ],
+    "memory_chain": "REPLICATION PURPOSES -> SINGLE LEADER -> SYNC/ASYNC -> SNAPSHOT/CATCH-UP -> FAILOVER -> STATEMENT/WAL/LOGICAL/TRIGGER -> REPLICATION LAG -> READ-YOUR-WRITES -> MONOTONIC -> CONSISTENT PREFIX -> MULTI-LEADER -> CONFLICTS -> TOPOLOGIES -> LEADERLESS -> n/w/r -> READ REPAIR/ANTI-ENTROPY -> SLOPPY QUORUM/HINTED HANDOFF -> LWW -> HAPPENS-BEFORE -> SIBLINGS/TOMBSTONES -> VERSION VECTORS"
+  }
+}

@@ -1,0 +1,4575 @@
+{
+  "chapter": {
+    "number": 13,
+    "title": "Design a Search Autocomplete System",
+    "source": "System Design Interview: An Insider's Guide by Alex Xu",
+    "pdf_pages": {
+      "chapter_start": 200,
+      "chapter_end": 218,
+      "references_page": 219
+    },
+    "alternate_names": [
+      "Autocomplete",
+      "Typeahead",
+      "Search-as-you-type",
+      "Incremental search",
+      "Top K most searched queries"
+    ],
+    "primary_goal": "Design a highly available, scalable, low-latency autocomplete system that returns the five most popular historical search queries matching a user's prefix."
+  },
+  "chapter_summary": {
+    "overview": "Chapter 13 designs a search autocomplete system. The simplified product returns five suggestions that match only the beginning of a user's query, ranks them by historical search frequency, supports lowercase English alphabetic queries, and does not include spell checking. The latency target is under 100 ms, with 10 million DAU and an estimated 24,000 average autocomplete QPS and 48,000 peak QPS. The high-level system has a data-gathering service that aggregates query frequency and a query service that returns the top five matches. A relational frequency table is acceptable for a small data set but becomes a bottleneck at scale. The deep dive replaces direct database searching with a customized trie. A basic trie requires prefix lookup, subtree traversal, and sorting, so the chapter optimizes it by limiting prefix length and caching the top K queries at every trie node, reducing retrieval to O(1) under the chapter's assumptions. The production data pipeline gathers append-only analytics logs, aggregates them, periodically rebuilds the trie with workers, persists snapshots in Trie DB, and keeps the trie in distributed memory cache. The query path reads from Trie Cache and falls back to Trie DB on cache miss. Browser caching, AJAX, and data sampling further reduce latency and load. Trie updates are preferably performed by periodic replacement, while direct node updates require updating ancestors. A filter layer removes unsafe suggestions immediately while physical deletion happens asynchronously. Storage scaling starts with prefix sharding, then evolves to distribution-aware sharding controlled by a shard map manager. The wrap-up discusses Unicode/multilingual support, country-specific tries in CDNs, and possible approaches for real-time trending queries.",
+    "core_design": {
+      "write_side": "Analytics/logging pipeline periodically rebuilds the trie.",
+      "read_side": "API servers serve top-K results from distributed Trie Cache.",
+      "primary_data_structure": "Trie / prefix tree",
+      "ranking_signal": "Historical query frequency",
+      "default_k": 5
+    },
+    "source_pages": [
+      200,
+      201,
+      202,
+      203,
+      204,
+      205,
+      206,
+      207,
+      208,
+      209,
+      210,
+      211,
+      212,
+      213,
+      214,
+      215,
+      216,
+      217,
+      218
+    ]
+  },
+  "learning_objectives": [
+    {
+      "id": "LO01",
+      "objective": "Define autocomplete and its alternate names.",
+      "source_pages": [
+        200
+      ]
+    },
+    {
+      "id": "LO02",
+      "objective": "State the exact matching, ranking, language, character, spell-check, and result-count requirements.",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "LO03",
+      "objective": "Explain the latency, relevance, sorting, scalability, and availability goals.",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "LO04",
+      "objective": "Reproduce the chapter's QPS, peak QPS, query-size, and daily-new-data estimates.",
+      "source_pages": [
+        201,
+        202
+      ]
+    },
+    {
+      "id": "LO05",
+      "objective": "Explain the two high-level services: data gathering and query service.",
+      "source_pages": [
+        203
+      ]
+    },
+    {
+      "id": "LO06",
+      "objective": "Explain the initial frequency-table approach and why it fails at large scale.",
+      "source_pages": [
+        203,
+        204,
+        205
+      ]
+    },
+    {
+      "id": "LO07",
+      "objective": "Define the trie data structure and its node properties.",
+      "source_pages": [
+        206,
+        207
+      ]
+    },
+    {
+      "id": "LO08",
+      "objective": "Explain how query frequency is represented in the trie.",
+      "source_pages": [
+        207
+      ]
+    },
+    {
+      "id": "LO09",
+      "objective": "Derive the basic top-K trie lookup algorithm and its time complexity.",
+      "source_pages": [
+        208,
+        209
+      ]
+    },
+    {
+      "id": "LO10",
+      "objective": "Explain the max-prefix-length optimization.",
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "id": "LO11",
+      "objective": "Explain caching top K at every trie node and its space-time tradeoff.",
+      "source_pages": [
+        209,
+        210
+      ]
+    },
+    {
+      "id": "LO12",
+      "objective": "Explain why the trie is not updated on every query.",
+      "source_pages": [
+        210
+      ]
+    },
+    {
+      "id": "LO13",
+      "objective": "Reconstruct the redesigned data-gathering pipeline.",
+      "source_pages": [
+        210,
+        211,
+        212
+      ]
+    },
+    {
+      "id": "LO14",
+      "objective": "Explain analytics logs, aggregators, aggregated data, workers, Trie Cache, and Trie DB.",
+      "source_pages": [
+        211,
+        212
+      ]
+    },
+    {
+      "id": "LO15",
+      "objective": "Compare document-store and key-value-store persistence for Trie DB.",
+      "source_pages": [
+        212,
+        213
+      ]
+    },
+    {
+      "id": "LO16",
+      "objective": "Explain the improved query-service read path and cache-miss replenishment.",
+      "source_pages": [
+        213,
+        214
+      ]
+    },
+    {
+      "id": "LO17",
+      "objective": "Explain AJAX, browser caching, and data sampling optimizations.",
+      "source_pages": [
+        214,
+        215
+      ]
+    },
+    {
+      "id": "LO18",
+      "objective": "Explain trie create, update, and delete operations.",
+      "source_pages": [
+        215,
+        216
+      ]
+    },
+    {
+      "id": "LO19",
+      "objective": "Explain why direct node updates require updating ancestors.",
+      "source_pages": [
+        215
+      ]
+    },
+    {
+      "id": "LO20",
+      "objective": "Explain the filter layer and asynchronous physical deletion of unwanted suggestions.",
+      "source_pages": [
+        216
+      ]
+    },
+    {
+      "id": "LO21",
+      "objective": "Explain naive prefix-based sharding and its imbalance problem.",
+      "source_pages": [
+        216
+      ]
+    },
+    {
+      "id": "LO22",
+      "objective": "Explain smarter historical-distribution-based sharding with a shard map manager.",
+      "source_pages": [
+        217
+      ]
+    },
+    {
+      "id": "LO23",
+      "objective": "Explain how to extend the design to Unicode and multiple languages.",
+      "source_pages": [
+        218
+      ]
+    },
+    {
+      "id": "LO24",
+      "objective": "Explain country-specific autocomplete and CDN placement.",
+      "source_pages": [
+        218
+      ]
+    },
+    {
+      "id": "LO25",
+      "objective": "Explain why the weekly design fails for trending queries and list the suggested real-time directions.",
+      "source_pages": [
+        218
+      ]
+    }
+  ],
+  "requirements_and_scope": {
+    "matching": "Prefix matching only; matching in the middle of the query is not supported.",
+    "suggestion_count": 5,
+    "ranking": "Popularity based on historical query frequency.",
+    "spell_check": false,
+    "language": "English in the core design.",
+    "allowed_characters": "Lowercase alphabetic characters only.",
+    "daily_active_users": 10000000,
+    "source_pages": [
+      201
+    ]
+  },
+  "non_functional_requirements": [
+    {
+      "requirement": "Fast response time",
+      "target": "Under 100 milliseconds",
+      "reason": "Longer response can cause visible stuttering in the typeahead experience.",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "requirement": "Relevant",
+      "meaning": "Suggestions should match the user's search term/prefix.",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "requirement": "Sorted",
+      "meaning": "Results should be ordered by popularity or another ranking model.",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "requirement": "Scalable",
+      "meaning": "The service must handle high traffic volume.",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "requirement": "Highly available",
+      "meaning": "The service should remain accessible even when part of the system is slow, offline, or affected by network errors.",
+      "source_pages": [
+        201
+      ]
+    }
+  ],
+  "back_of_envelope_estimation": {
+    "daily_active_users": 10000000,
+    "searches_per_user_per_day": 10,
+    "average_query_size": {
+      "assumptions": [
+        "ASCII",
+        "1 character = 1 byte",
+        "4 words per query",
+        "5 characters per word"
+      ],
+      "calculation": "4 * 5 = 20 bytes",
+      "result": "20 bytes/query"
+    },
+    "autocomplete_requests_per_search": {
+      "assumption": 20,
+      "reason": "A backend request is sent for every character typed."
+    },
+    "average_qps": {
+      "formula": "10,000,000 * 10 * 20 / 24 / 3600",
+      "chapter_result": "~24,000 QPS"
+    },
+    "peak_qps": {
+      "formula": "2 * average QPS",
+      "chapter_result": "~48,000 QPS"
+    },
+    "new_query_fraction": "20%",
+    "new_data_per_day": {
+      "formula": "10M users * 10 searches/day * 20 bytes/query * 20%",
+      "chapter_result": "0.4 GB/day"
+    },
+    "example_prefix_requests_for_dinner": [
+      "search?q=d",
+      "search?q=di",
+      "search?q=din",
+      "search?q=dinn",
+      "search?q=dinne",
+      "search?q=dinner"
+    ],
+    "source_pages": [
+      201,
+      202
+    ]
+  },
+  "high_level_design": {
+    "components": [
+      {
+        "component": "Data gathering service",
+        "role": "Collect user search queries and aggregate their frequencies.",
+        "initial_assumption": "Updates frequency data in real time.",
+        "deep_dive_note": "Real-time updates are later replaced with a more scalable periodic aggregation/rebuild pipeline.",
+        "source_pages": [
+          203
+        ]
+      },
+      {
+        "component": "Query service",
+        "role": "Given a prefix, return the five most frequently searched matching terms.",
+        "source_pages": [
+          203
+        ]
+      }
+    ]
+  },
+  "initial_frequency_table_design": {
+    "table_fields": [
+      "query",
+      "frequency"
+    ],
+    "update_example_queries": [
+      "twitch",
+      "twitter",
+      "twitter",
+      "twillo"
+    ],
+    "example_effect": {
+      "twitch": 1,
+      "twitter": 2,
+      "twillo": 1
+    },
+    "top_k_sql_concept": "Filter rows whose query starts with the prefix, sort by frequency descending, and limit to 5.",
+    "illustrative_sql": [
+      "SELECT * FROM frequency_table",
+      "WHERE query LIKE 'prefix%'",
+      "ORDER BY frequency DESC",
+      "LIMIT 5"
+    ],
+    "small_scale_assessment": "Acceptable when the data set is small.",
+    "large_scale_problem": "Direct relational database access becomes a bottleneck.",
+    "source_pages": [
+      203,
+      204,
+      205
+    ]
+  },
+  "trie_basics": {
+    "pronunciation": "try",
+    "origin": "The name comes from retrieval.",
+    "definition": "A tree-like data structure that compactly stores strings and supports prefix retrieval.",
+    "properties": [
+      "The root represents an empty string.",
+      "Each node stores a character.",
+      "Under the core lowercase-English assumption, a node may have up to 26 children.",
+      "Empty child links are omitted to save space in diagrams.",
+      "A node can represent a prefix string or a complete query."
+    ],
+    "example_queries": [
+      "tree",
+      "try",
+      "true",
+      "toy",
+      "wish",
+      "win"
+    ],
+    "frequency_extension": "Frequency metadata is added to query nodes so the system can rank suggestions by popularity.",
+    "example_frequencies": {
+      "tree": 10,
+      "try": 29,
+      "true": 35,
+      "toy": 14,
+      "wish": 25,
+      "win": 50
+    },
+    "source_pages": [
+      206,
+      207
+    ]
+  },
+  "basic_trie_top_k_algorithm": {
+    "variables": {
+      "p": "Length of prefix",
+      "n": "Total number of nodes in trie",
+      "c": "Number of valid children/descendant query candidates examined from the prefix node"
+    },
+    "steps": [
+      {
+        "step": 1,
+        "action": "Find the prefix node.",
+        "complexity": "O(p)"
+      },
+      {
+        "step": 2,
+        "action": "Traverse the subtree and collect valid query candidates.",
+        "complexity": "O(c)"
+      },
+      {
+        "step": 3,
+        "action": "Sort candidates and take top K.",
+        "complexity": "O(c log c)"
+      }
+    ],
+    "total_complexity": "O(p) + O(c) + O(c log c)",
+    "example": {
+      "prefix": "tr",
+      "k": 2,
+      "candidates": [
+        {
+          "query": "tree",
+          "frequency": 10
+        },
+        {
+          "query": "true",
+          "frequency": 35
+        },
+        {
+          "query": "try",
+          "frequency": 29
+        }
+      ],
+      "result": [
+        {
+          "query": "true",
+          "frequency": 35
+        },
+        {
+          "query": "try",
+          "frequency": 29
+        }
+      ]
+    },
+    "main_problem": "In the worst case, the system must traverse a large portion of the trie.",
+    "source_pages": [
+      208,
+      209
+    ]
+  },
+  "trie_query_optimizations": {
+    "limit_prefix_length": {
+      "assumption": "Users rarely type extremely long prefixes.",
+      "example_max_prefix_length": 50,
+      "effect": "Treat prefix traversal as O(1) because p is bounded by a small constant.",
+      "source_pages": [
+        209
+      ]
+    },
+    "cache_top_k_at_every_node": {
+      "k": 5,
+      "mechanism": "Each trie node stores its top K most frequently searched descendant queries.",
+      "why_k_is_small": "5 to 10 suggestions are typically enough.",
+      "benefit": "Avoid traversing the entire subtree and sorting at request time.",
+      "cost": "Higher memory usage because top queries are duplicated across trie nodes.",
+      "tradeoff": "Space is traded for time because autocomplete latency is critical.",
+      "example_prefix": "be",
+      "example_cached_queries": [
+        {
+          "query": "best",
+          "frequency": 35
+        },
+        {
+          "query": "bet",
+          "frequency": 29
+        },
+        {
+          "query": "bee",
+          "frequency": 20
+        },
+        {
+          "query": "be",
+          "frequency": 15
+        },
+        {
+          "query": "beer",
+          "frequency": 10
+        }
+      ],
+      "source_pages": [
+        209,
+        210
+      ]
+    },
+    "optimized_complexity": {
+      "find_prefix": "O(1)",
+      "return_top_k": "O(1)",
+      "overall": "O(1) under the chapter's bounded-prefix and cached-top-K assumptions",
+      "source_pages": [
+        210
+      ]
+    }
+  },
+  "data_gathering_deep_dive": {
+    "why_not_realtime_trie_updates": [
+      "Users may generate billions of queries per day; updating the trie for every query would slow the query service.",
+      "Top suggestions often do not change much after the trie is built, so frequent updates are unnecessary for many use cases."
+    ],
+    "freshness_depends_on_product": {
+      "real_time_example": "Twitter-like applications may need more current autocomplete.",
+      "less_frequent_example": "Many Google keyword suggestions may not change much each day."
+    },
+    "assumed_rebuild_frequency": "Weekly",
+    "data_source": "Analytics/logging services",
+    "pipeline": [
+      "Analytics Logs",
+      "Aggregators",
+      "Aggregated Data",
+      "Workers",
+      "Trie DB",
+      "Trie Cache"
+    ],
+    "source_pages": [
+      210,
+      211,
+      212
+    ]
+  },
+  "data_gathering_components": [
+    {
+      "component": "Analytics Logs",
+      "role": "Store raw search query events.",
+      "properties": [
+        "Append-only",
+        "Not indexed"
+      ],
+      "source_pages": [
+        211
+      ]
+    },
+    {
+      "component": "Aggregators",
+      "role": "Transform very large raw logs into a form that is easier for the autocomplete system to process.",
+      "aggregation_interval_rule": "Use shorter intervals for real-time-sensitive products and longer intervals when suggestions change slowly.",
+      "chapter_assumption": "Weekly aggregation/rebuild is acceptable.",
+      "source_pages": [
+        211
+      ]
+    },
+    {
+      "component": "Aggregated Data",
+      "role": "Stores query-frequency totals over aggregation windows.",
+      "fields": [
+        "query",
+        "time",
+        "frequency"
+      ],
+      "time_meaning": "Start time of the aggregation week.",
+      "frequency_meaning": "Sum of query occurrences in that week.",
+      "source_pages": [
+        211,
+        212
+      ]
+    },
+    {
+      "component": "Workers",
+      "role": "Run asynchronous jobs at regular intervals to build the trie and store it in Trie DB.",
+      "source_pages": [
+        212
+      ]
+    },
+    {
+      "component": "Trie Cache",
+      "role": "Distributed in-memory cache that keeps trie data available for fast reads.",
+      "refresh": "Takes a weekly snapshot from the database.",
+      "source_pages": [
+        212
+      ]
+    },
+    {
+      "component": "Trie DB",
+      "role": "Persistent storage for trie data.",
+      "source_pages": [
+        212
+      ]
+    }
+  ],
+  "trie_db_storage_options": {
+    "document_store": {
+      "mechanism": [
+        "Build a new trie periodically.",
+        "Take a snapshot.",
+        "Serialize the trie.",
+        "Store the serialized data in a document database."
+      ],
+      "example": "MongoDB",
+      "why_fit": "Document stores are suitable for serialized trie snapshots.",
+      "source_pages": [
+        212
+      ]
+    },
+    "key_value_store": {
+      "mechanism": [
+        "Map every trie prefix to a key.",
+        "Map the data stored at that trie node to the corresponding value."
+      ],
+      "example_mapping_concept": {
+        "key": "be",
+        "value": "Top-query data associated with prefix 'be'"
+      },
+      "source_pages": [
+        212,
+        213
+      ]
+    }
+  },
+  "query_service_deep_dive": {
+    "flow": [
+      {
+        "step": 1,
+        "action": "A search-prefix request reaches the load balancer.",
+        "source_pages": [
+          214
+        ]
+      },
+      {
+        "step": 2,
+        "action": "The load balancer sends the request to API servers.",
+        "source_pages": [
+          214
+        ]
+      },
+      {
+        "step": 3,
+        "action": "API servers retrieve trie data from Trie Cache and construct autocomplete suggestions.",
+        "source_pages": [
+          214
+        ]
+      },
+      {
+        "step": 4,
+        "action": "On a Trie Cache miss, retrieve the data from Trie DB and repopulate the cache so later requests for the same prefix are served from cache.",
+        "source_pages": [
+          214
+        ]
+      }
+    ],
+    "cache_miss_causes": [
+      "Cache server is out of memory.",
+      "Cache server is offline."
+    ],
+    "source_pages": [
+      213,
+      214
+    ]
+  },
+  "query_service_optimizations": [
+    {
+      "optimization": "AJAX requests",
+      "benefit": "Fetch autocomplete results without refreshing the entire web page.",
+      "source_pages": [
+        214
+      ]
+    },
+    {
+      "optimization": "Browser caching",
+      "reason": "Suggestions often do not change much over a short period.",
+      "benefit": "Repeated requests may be answered directly by browser cache.",
+      "google_example": {
+        "cache_duration": "1 hour",
+        "cache_control_private": "The response is intended for a single user and should not be cached by a shared cache.",
+        "max_age": "3600 seconds"
+      },
+      "source_pages": [
+        214,
+        215
+      ]
+    },
+    {
+      "optimization": "Data sampling",
+      "reason": "Logging every search at large scale consumes substantial processing and storage.",
+      "example": "Log only 1 out of every N requests.",
+      "source_pages": [
+        215
+      ]
+    }
+  ],
+  "trie_operations": {
+    "create": {
+      "mechanism": "Workers create the trie from aggregated Analytics Log/DB data.",
+      "source_pages": [
+        215
+      ]
+    },
+    "update": {
+      "option_1": {
+        "method": "Weekly full replacement",
+        "details": "Build a new trie and replace the old trie.",
+        "preferred": true
+      },
+      "option_2": {
+        "method": "Direct node update",
+        "details": "Update the affected trie node and every ancestor up to the root because ancestors cache top queries derived from their descendants.",
+        "assessment": "Generally avoided because it is slow; acceptable if the trie is small."
+      },
+      "example": "Updating 'beer' frequency from 10 to 30 requires updating the node and relevant ancestors.",
+      "source_pages": [
+        215
+      ]
+    },
+    "delete": {
+      "reason": "Remove hateful, violent, sexually explicit, or dangerous autocomplete suggestions.",
+      "online_mechanism": "Place a filter layer in front of Trie Cache.",
+      "benefit": "Different filtering rules can be applied flexibly.",
+      "persistent_cleanup": "Physically remove unwanted suggestions from the database asynchronously so the next trie rebuild uses the corrected data set.",
+      "source_pages": [
+        216
+      ]
+    }
+  },
+  "storage_scaling": {
+    "naive_prefix_sharding": {
+      "first_level": {
+        "2_servers_example": [
+          "a-m",
+          "n-z"
+        ],
+        "3_servers_example": [
+          "a-i",
+          "j-r",
+          "s-z"
+        ],
+        "max_first_level_shards": 26
+      },
+      "deeper_levels": {
+        "reason": "More than 26 shards require considering second or third characters.",
+        "example_for_a": [
+          "aa-ag",
+          "ah-an",
+          "ao-au",
+          "av-az"
+        ]
+      },
+      "problem": "Alphabetical ranges do not contain equal query volumes; for example, many more words may start with 'c' than 'x', causing uneven distribution.",
+      "source_pages": [
+        216
+      ]
+    },
+    "distribution_aware_sharding": {
+      "strategy": "Analyze historical query distribution and choose uneven alphabetic ranges that balance load.",
+      "component": "Shard map manager",
+      "role": "Maintains a lookup database identifying which shard owns a query/prefix range.",
+      "example": "If 's' has roughly as many historical queries as 'u' through 'z' combined, use one shard for 's' and another for 'u-z'.",
+      "source_pages": [
+        217
+      ]
+    }
+  },
+  "wrap_up_extensions": [
+    {
+      "topic": "Multiple languages",
+      "solution": "Store Unicode characters in trie nodes.",
+      "source_pages": [
+        218
+      ]
+    },
+    {
+      "topic": "Country-specific popularity",
+      "solution": [
+        "Build different tries for different countries.",
+        "Store country-specific tries in CDNs to improve response time."
+      ],
+      "source_pages": [
+        218
+      ]
+    },
+    {
+      "topic": "Trending / real-time queries",
+      "why_weekly_design_fails": [
+        "Offline workers are not scheduled to rebuild the trie immediately.",
+        "Even when scheduled, building the trie takes too long for sudden trends."
+      ],
+      "ideas": [
+        "Reduce the working data set through sharding.",
+        "Change the ranking model to give more weight to recent searches.",
+        "Use stream-processing systems because data arrives continuously."
+      ],
+      "streaming_technologies_named": [
+        "Apache Hadoop MapReduce",
+        "Apache Spark Streaming",
+        "Apache Storm",
+        "Apache Kafka"
+      ],
+      "scope_note": "A full real-time autocomplete design is explicitly beyond the scope of the chapter.",
+      "source_pages": [
+        218
+      ]
+    }
+  ],
+  "key_concepts": [
+    {
+      "term": "Autocomplete",
+      "definition": "Return matching search suggestions while the user types.",
+      "source_pages": [
+        200
+      ]
+    },
+    {
+      "term": "Prefix Matching",
+      "definition": "Only queries beginning with the typed string are candidates.",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "term": "Historical Frequency",
+      "definition": "The ranking signal used to choose the five most popular matching queries.",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "term": "Trie",
+      "definition": "A tree-like string retrieval structure whose paths correspond to prefixes and queries.",
+      "source_pages": [
+        206
+      ]
+    },
+    {
+      "term": "Top-K Cache per Node",
+      "definition": "Store the most popular descendant queries at each trie node to avoid subtree traversal during reads.",
+      "source_pages": [
+        209,
+        210
+      ]
+    },
+    {
+      "term": "Analytics Log",
+      "definition": "Append-only, unindexed raw storage of search-query events.",
+      "source_pages": [
+        211
+      ]
+    },
+    {
+      "term": "Aggregator",
+      "definition": "Processes raw logs into frequency data suitable for building the trie.",
+      "source_pages": [
+        211
+      ]
+    },
+    {
+      "term": "Trie Cache",
+      "definition": "Distributed in-memory storage for fast autocomplete reads.",
+      "source_pages": [
+        212
+      ]
+    },
+    {
+      "term": "Trie DB",
+      "definition": "Persistent storage for trie snapshots or prefix-to-node data.",
+      "source_pages": [
+        212
+      ]
+    },
+    {
+      "term": "Data Sampling",
+      "definition": "Log only a fraction such as 1/N of requests to reduce processing and storage cost.",
+      "source_pages": [
+        215
+      ]
+    },
+    {
+      "term": "Filter Layer",
+      "definition": "Read-path layer that suppresses unsafe suggestions before asynchronous persistent deletion.",
+      "source_pages": [
+        216
+      ]
+    },
+    {
+      "term": "Shard Map Manager",
+      "definition": "Lookup service that maps prefixes/ranges to shards using distribution-aware partitioning.",
+      "source_pages": [
+        217
+      ]
+    },
+    {
+      "term": "Unicode",
+      "definition": "Character encoding standard used in the wrap-up to support non-English writing systems.",
+      "source_pages": [
+        218
+      ]
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "FC01",
+      "front": "What other names are used for search autocomplete?",
+      "back": "Typeahead, search-as-you-type, and incremental search.",
+      "source_pages": [
+        200
+      ]
+    },
+    {
+      "id": "FC02",
+      "front": "What other interview name is given for this problem?",
+      "back": "Design top K or top K most searched queries.",
+      "source_pages": [
+        200
+      ]
+    },
+    {
+      "id": "FC03",
+      "front": "Does matching occur only at the beginning or also in the middle?",
+      "back": "Only at the beginning of a search query.",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "FC04",
+      "front": "How many suggestions are returned?",
+      "back": "5.",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "FC05",
+      "front": "What determines the five suggestions?",
+      "back": "Popularity based on historical query frequency.",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "FC06",
+      "front": "Is spell check/autocorrect supported?",
+      "back": "No.",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "FC07",
+      "front": "What language is supported in the core design?",
+      "back": "English.",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "FC08",
+      "front": "What characters are allowed in the simplified design?",
+      "back": "Lowercase alphabetic characters only.",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "FC09",
+      "front": "How many DAU are assumed?",
+      "back": "10 million.",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "FC10",
+      "front": "What is the target autocomplete latency?",
+      "back": "Within 100 milliseconds.",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "FC11",
+      "front": "Why is sub-100-ms response important?",
+      "back": "Slower responses can cause visible stuttering.",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "FC12",
+      "front": "What five nonfunctional qualities are listed?",
+      "back": "Fast, relevant, sorted, scalable, and highly available.",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "FC13",
+      "front": "How many searches does an average user perform per day?",
+      "back": "10.",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "FC14",
+      "front": "What average query size is assumed?",
+      "back": "20 bytes.",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "FC15",
+      "front": "How is 20 bytes derived?",
+      "back": "4 words × 5 characters/word × 1 byte/ASCII character.",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "FC16",
+      "front": "How many autocomplete backend requests are assumed per full search?",
+      "back": "20.",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "FC17",
+      "front": "What is average autocomplete QPS?",
+      "back": "About 24,000.",
+      "source_pages": [
+        202
+      ]
+    },
+    {
+      "id": "FC18",
+      "front": "What is peak autocomplete QPS?",
+      "back": "About 48,000.",
+      "source_pages": [
+        202
+      ]
+    },
+    {
+      "id": "FC19",
+      "front": "What fraction of daily queries are assumed to be new?",
+      "back": "20%.",
+      "source_pages": [
+        202
+      ]
+    },
+    {
+      "id": "FC20",
+      "front": "How much new query data is added daily?",
+      "back": "About 0.4 GB.",
+      "source_pages": [
+        202
+      ]
+    },
+    {
+      "id": "FC21",
+      "front": "What are the two high-level services?",
+      "back": "Data gathering service and query service.",
+      "source_pages": [
+        203
+      ]
+    },
+    {
+      "id": "FC22",
+      "front": "What does data gathering service do?",
+      "back": "Collects user queries and aggregates query frequency.",
+      "source_pages": [
+        203
+      ]
+    },
+    {
+      "id": "FC23",
+      "front": "What does query service do?",
+      "back": "Given a prefix, returns the five most frequently searched matching terms.",
+      "source_pages": [
+        203
+      ]
+    },
+    {
+      "id": "FC24",
+      "front": "What fields are in the initial frequency table?",
+      "back": "Query and frequency.",
+      "source_pages": [
+        203
+      ]
+    },
+    {
+      "id": "FC25",
+      "front": "How does the initial SQL query find suggestions?",
+      "back": "Prefix filter, sort by frequency descending, limit 5.",
+      "source_pages": [
+        204
+      ]
+    },
+    {
+      "id": "FC26",
+      "front": "When is the relational approach acceptable?",
+      "back": "When the data set is small.",
+      "source_pages": [
+        205
+      ]
+    },
+    {
+      "id": "FC27",
+      "front": "What happens at large scale with direct DB searching?",
+      "back": "Database access becomes a bottleneck.",
+      "source_pages": [
+        205
+      ]
+    },
+    {
+      "id": "FC28",
+      "front": "What data structure replaces relational prefix lookup?",
+      "back": "A trie/prefix tree.",
+      "source_pages": [
+        206
+      ]
+    },
+    {
+      "id": "FC29",
+      "front": "How is trie pronounced?",
+      "back": "'Try'.",
+      "source_pages": [
+        206
+      ]
+    },
+    {
+      "id": "FC30",
+      "front": "What does the trie root represent?",
+      "back": "The empty string.",
+      "source_pages": [
+        206
+      ]
+    },
+    {
+      "id": "FC31",
+      "front": "What does each trie node store?",
+      "back": "A character.",
+      "source_pages": [
+        206
+      ]
+    },
+    {
+      "id": "FC32",
+      "front": "How many possible children can a node have under the lowercase-English assumption?",
+      "back": "26.",
+      "source_pages": [
+        206
+      ]
+    },
+    {
+      "id": "FC33",
+      "front": "What can a trie node represent?",
+      "back": "A prefix string or a complete query.",
+      "source_pages": [
+        206
+      ]
+    },
+    {
+      "id": "FC34",
+      "front": "What extra metadata is needed to rank trie queries?",
+      "back": "Frequency information.",
+      "source_pages": [
+        207
+      ]
+    },
+    {
+      "id": "FC35",
+      "front": "What does p represent?",
+      "back": "Prefix length.",
+      "source_pages": [
+        208
+      ]
+    },
+    {
+      "id": "FC36",
+      "front": "What does n represent?",
+      "back": "Total number of trie nodes.",
+      "source_pages": [
+        208
+      ]
+    },
+    {
+      "id": "FC37",
+      "front": "What does c represent in the algorithm discussion?",
+      "back": "The number of valid child/descendant query candidates examined.",
+      "source_pages": [
+        208
+      ]
+    },
+    {
+      "id": "FC38",
+      "front": "What is step 1 of basic top-K trie lookup?",
+      "back": "Find the prefix node.",
+      "source_pages": [
+        208
+      ]
+    },
+    {
+      "id": "FC39",
+      "front": "What is the complexity of finding the prefix?",
+      "back": "O(p).",
+      "source_pages": [
+        208
+      ]
+    },
+    {
+      "id": "FC40",
+      "front": "What is step 2 of basic lookup?",
+      "back": "Traverse the prefix subtree and collect valid queries.",
+      "source_pages": [
+        208
+      ]
+    },
+    {
+      "id": "FC41",
+      "front": "What complexity is assigned to subtree candidate collection?",
+      "back": "O(c).",
+      "source_pages": [
+        208
+      ]
+    },
+    {
+      "id": "FC42",
+      "front": "What is step 3 of basic lookup?",
+      "back": "Sort candidates and return top K.",
+      "source_pages": [
+        208
+      ]
+    },
+    {
+      "id": "FC43",
+      "front": "What is sorting complexity in the chapter?",
+      "back": "O(c log c).",
+      "source_pages": [
+        208
+      ]
+    },
+    {
+      "id": "FC44",
+      "front": "What is the total unoptimized lookup complexity?",
+      "back": "O(p) + O(c) + O(c log c).",
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "id": "FC45",
+      "front": "For prefix 'tr', what top two queries are shown?",
+      "back": "'true' at 35 and 'try' at 29.",
+      "source_pages": [
+        208
+      ]
+    },
+    {
+      "id": "FC46",
+      "front": "Why is the basic trie algorithm still too slow?",
+      "back": "Worst-case retrieval may traverse the entire trie/subtree.",
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "id": "FC47",
+      "front": "What are the two trie-query optimizations?",
+      "back": "Limit maximum prefix length and cache top queries at every node.",
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "id": "FC48",
+      "front": "What maximum prefix length example is used?",
+      "back": "50.",
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "id": "FC49",
+      "front": "Why can bounded prefix lookup be treated as O(1)?",
+      "back": "p is capped at a small constant.",
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "id": "FC50",
+      "front": "How many top queries are cached at each node in this design?",
+      "back": "5.",
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "id": "FC51",
+      "front": "Why cache top K at each trie node?",
+      "back": "To avoid subtree traversal and sorting during query serving.",
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "id": "FC52",
+      "front": "What is the cost of caching top K at every node?",
+      "back": "Significant extra memory usage.",
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "id": "FC53",
+      "front": "Why is that memory tradeoff accepted?",
+      "back": "Fast autocomplete response is very important.",
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "id": "FC54",
+      "front": "What top-five list is cached for prefix 'be' in the example?",
+      "back": "best:35, bet:29, bee:20, be:15, beer:10.",
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "id": "FC55",
+      "front": "What is optimized prefix-node lookup complexity?",
+      "back": "O(1).",
+      "source_pages": [
+        210
+      ]
+    },
+    {
+      "id": "FC56",
+      "front": "What is optimized top-K retrieval complexity?",
+      "back": "O(1).",
+      "source_pages": [
+        210
+      ]
+    },
+    {
+      "id": "FC57",
+      "front": "What overall query complexity does the chapter claim after both optimizations?",
+      "back": "O(1).",
+      "source_pages": [
+        210
+      ]
+    },
+    {
+      "id": "FC58",
+      "front": "Why not update the trie for every search query?",
+      "back": "Billions of daily queries would make constant trie updates slow the query service.",
+      "source_pages": [
+        210
+      ]
+    },
+    {
+      "id": "FC59",
+      "front": "What is the second reason not to update on every query?",
+      "back": "Top suggestions often do not change very much once the trie is built.",
+      "source_pages": [
+        210
+      ]
+    },
+    {
+      "id": "FC60",
+      "front": "What type of products may require more frequent autocomplete updates?",
+      "back": "Real-time products such as Twitter.",
+      "source_pages": [
+        210
+      ]
+    },
+    {
+      "id": "FC61",
+      "front": "What trie rebuild frequency is assumed?",
+      "back": "Weekly.",
+      "source_pages": [
+        211
+      ]
+    },
+    {
+      "id": "FC62",
+      "front": "Where does trie-building data usually originate?",
+      "back": "Analytics or logging services.",
+      "source_pages": [
+        210
+      ]
+    },
+    {
+      "id": "FC63",
+      "front": "What are Analytics Logs like?",
+      "back": "Raw, append-only, and not indexed.",
+      "source_pages": [
+        211
+      ]
+    },
+    {
+      "id": "FC64",
+      "front": "Why are aggregators required?",
+      "back": "Raw logs are huge and not in the right format for the autocomplete pipeline.",
+      "source_pages": [
+        211
+      ]
+    },
+    {
+      "id": "FC65",
+      "front": "How should aggregation frequency be chosen?",
+      "back": "Based on how important real-time freshness is for the product.",
+      "source_pages": [
+        211
+      ]
+    },
+    {
+      "id": "FC66",
+      "front": "What does the time field in aggregated weekly data represent?",
+      "back": "The start time of the week.",
+      "source_pages": [
+        211
+      ]
+    },
+    {
+      "id": "FC67",
+      "front": "What does the aggregated frequency field represent?",
+      "back": "The sum of query occurrences during the aggregation window.",
+      "source_pages": [
+        211
+      ]
+    },
+    {
+      "id": "FC68",
+      "front": "What do workers do?",
+      "back": "Run asynchronous jobs that build the trie and store it in Trie DB.",
+      "source_pages": [
+        212
+      ]
+    },
+    {
+      "id": "FC69",
+      "front": "What is Trie Cache?",
+      "back": "A distributed in-memory cache containing trie data for fast reads.",
+      "source_pages": [
+        212
+      ]
+    },
+    {
+      "id": "FC70",
+      "front": "What is Trie DB?",
+      "back": "Persistent trie storage.",
+      "source_pages": [
+        212
+      ]
+    },
+    {
+      "id": "FC71",
+      "front": "What two Trie DB storage options are discussed?",
+      "back": "Document store and key-value store.",
+      "source_pages": [
+        212
+      ]
+    },
+    {
+      "id": "FC72",
+      "front": "How does the document-store option work?",
+      "back": "Serialize periodic trie snapshots and store them as documents.",
+      "source_pages": [
+        212
+      ]
+    },
+    {
+      "id": "FC73",
+      "front": "Which document database is named?",
+      "back": "MongoDB.",
+      "source_pages": [
+        212
+      ]
+    },
+    {
+      "id": "FC74",
+      "front": "How is a trie represented in a KV store?",
+      "back": "Each prefix becomes a key and node/top-query data becomes the value.",
+      "source_pages": [
+        212,
+        213
+      ]
+    },
+    {
+      "id": "FC75",
+      "front": "What is the first component in the improved query path?",
+      "back": "Load balancer.",
+      "source_pages": [
+        214
+      ]
+    },
+    {
+      "id": "FC76",
+      "front": "Where do API servers get autocomplete data first?",
+      "back": "Trie Cache.",
+      "source_pages": [
+        214
+      ]
+    },
+    {
+      "id": "FC77",
+      "front": "What happens on a Trie Cache miss?",
+      "back": "Fetch from Trie DB and repopulate the cache.",
+      "source_pages": [
+        214
+      ]
+    },
+    {
+      "id": "FC78",
+      "front": "What can cause a cache miss?",
+      "back": "A cache server being out of memory or offline.",
+      "source_pages": [
+        214
+      ]
+    },
+    {
+      "id": "FC79",
+      "front": "What is the benefit of AJAX for autocomplete?",
+      "back": "Fetch suggestions without reloading the whole web page.",
+      "source_pages": [
+        214
+      ]
+    },
+    {
+      "id": "FC80",
+      "front": "Why use browser caching?",
+      "back": "Suggestions often remain stable for short periods, so repeat requests can be served locally.",
+      "source_pages": [
+        214
+      ]
+    },
+    {
+      "id": "FC81",
+      "front": "How long does the Google example cache autocomplete results?",
+      "back": "One hour.",
+      "source_pages": [
+        215
+      ]
+    },
+    {
+      "id": "FC82",
+      "front": "What does Cache-Control private mean in the example?",
+      "back": "The result is intended for one user and should not be cached by a shared cache.",
+      "source_pages": [
+        215
+      ]
+    },
+    {
+      "id": "FC83",
+      "front": "What does max-age=3600 mean?",
+      "back": "The cached result is valid for 3600 seconds, or one hour.",
+      "source_pages": [
+        215
+      ]
+    },
+    {
+      "id": "FC84",
+      "front": "What is data sampling?",
+      "back": "Logging only a fraction such as 1 out of every N requests.",
+      "source_pages": [
+        215
+      ]
+    },
+    {
+      "id": "FC85",
+      "front": "How is the trie created?",
+      "back": "Workers build it from aggregated Analytics Log/DB data.",
+      "source_pages": [
+        215
+      ]
+    },
+    {
+      "id": "FC86",
+      "front": "What is the preferred trie update strategy?",
+      "back": "Build a new trie weekly and replace the old one.",
+      "source_pages": [
+        215
+      ]
+    },
+    {
+      "id": "FC87",
+      "front": "Why is direct node update expensive?",
+      "back": "The node and all ancestors up to the root may need their cached top-query lists updated.",
+      "source_pages": [
+        215
+      ]
+    },
+    {
+      "id": "FC88",
+      "front": "What example direct update is shown?",
+      "back": "'beer' frequency increases from 10 to 30.",
+      "source_pages": [
+        215
+      ]
+    },
+    {
+      "id": "FC89",
+      "front": "Why is a filter layer placed in front of Trie Cache?",
+      "back": "To suppress hateful, violent, sexually explicit, or dangerous suggestions immediately.",
+      "source_pages": [
+        216
+      ]
+    },
+    {
+      "id": "FC90",
+      "front": "When are filtered suggestions physically deleted from persistent storage?",
+      "back": "Asynchronously, so the next trie rebuild uses the corrected data.",
+      "source_pages": [
+        216
+      ]
+    },
+    {
+      "id": "FC91",
+      "front": "What is first-level trie sharding?",
+      "back": "Partition storage based on the first character of the query.",
+      "source_pages": [
+        216
+      ]
+    },
+    {
+      "id": "FC92",
+      "front": "How many first-character shards are possible for English lowercase letters?",
+      "back": "26.",
+      "source_pages": [
+        216
+      ]
+    },
+    {
+      "id": "FC93",
+      "front": "How can the design exceed 26 shards?",
+      "back": "Shard by second or third character as well.",
+      "source_pages": [
+        216
+      ]
+    },
+    {
+      "id": "FC94",
+      "front": "Why is equal alphabetical-range sharding flawed?",
+      "back": "Query volume is not evenly distributed across starting letters.",
+      "source_pages": [
+        216
+      ]
+    },
+    {
+      "id": "FC95",
+      "front": "What fixes shard imbalance?",
+      "back": "Use historical distribution to build smarter shard ranges.",
+      "source_pages": [
+        217
+      ]
+    },
+    {
+      "id": "FC96",
+      "front": "What does the shard map manager do?",
+      "back": "Looks up which shard stores a query/prefix range.",
+      "source_pages": [
+        217
+      ]
+    },
+    {
+      "id": "FC97",
+      "front": "How is multilingual support added?",
+      "back": "Store Unicode characters in trie nodes.",
+      "source_pages": [
+        218
+      ]
+    },
+    {
+      "id": "FC98",
+      "front": "How can autocomplete differ by country?",
+      "back": "Build different tries for different countries.",
+      "source_pages": [
+        218
+      ]
+    },
+    {
+      "id": "FC99",
+      "front": "Where can country-specific tries be placed for speed?",
+      "back": "CDNs.",
+      "source_pages": [
+        218
+      ]
+    },
+    {
+      "id": "FC100",
+      "front": "Why does the weekly design fail for sudden trending queries?",
+      "back": "The next offline rebuild is too late, and trie construction itself takes too long.",
+      "source_pages": [
+        218
+      ]
+    },
+    {
+      "id": "FC101",
+      "front": "What ranking change is suggested for real-time trends?",
+      "back": "Give more weight to recent search queries.",
+      "source_pages": [
+        218
+      ]
+    },
+    {
+      "id": "FC102",
+      "front": "What stream-processing technologies are named?",
+      "back": "Hadoop MapReduce, Spark Streaming, Storm, and Kafka.",
+      "source_pages": [
+        218
+      ]
+    }
+  ],
+  "multiple_choice_questions": [
+    {
+      "id": "MCQ01",
+      "difficulty": "easy",
+      "question": "Which is another name for autocomplete?",
+      "choices": {
+        "A": "Typeahead",
+        "B": "Replication",
+        "C": "Sharding",
+        "D": "Polling"
+      },
+      "answer": "A",
+      "source_pages": [
+        200
+      ]
+    },
+    {
+      "id": "MCQ02",
+      "difficulty": "medium",
+      "question": "Where must the typed text match?",
+      "choices": {
+        "A": "Only the query prefix",
+        "B": "Anywhere in the query",
+        "C": "Only the final word",
+        "D": "Only exact full queries"
+      },
+      "answer": "A",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "MCQ03",
+      "difficulty": "easy",
+      "question": "How many suggestions are returned?",
+      "choices": {
+        "A": "3",
+        "B": "5",
+        "C": "10",
+        "D": "20"
+      },
+      "answer": "B",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "MCQ04",
+      "difficulty": "medium",
+      "question": "What ranks suggestions?",
+      "choices": {
+        "A": "Historical query frequency",
+        "B": "Alphabetical order only",
+        "C": "Query length only",
+        "D": "Random score"
+      },
+      "answer": "A",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "MCQ05",
+      "difficulty": "medium",
+      "question": "Is spell check supported?",
+      "choices": {
+        "A": "Yes",
+        "B": "No",
+        "C": "Only mobile",
+        "D": "Only English typos"
+      },
+      "answer": "B",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "MCQ06",
+      "difficulty": "medium",
+      "question": "Which character set is assumed in the core design?",
+      "choices": {
+        "A": "Lowercase English alphabetic",
+        "B": "All Unicode",
+        "C": "Digits only",
+        "D": "Uppercase only"
+      },
+      "answer": "A",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "MCQ07",
+      "difficulty": "medium",
+      "question": "What DAU scale is assumed?",
+      "choices": {
+        "A": "1M",
+        "B": "10M",
+        "C": "100M",
+        "D": "1B"
+      },
+      "answer": "B",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "MCQ08",
+      "difficulty": "medium",
+      "question": "What response-time target is mentioned?",
+      "choices": {
+        "A": "10 ms",
+        "B": "100 ms",
+        "C": "1 second",
+        "D": "5 seconds"
+      },
+      "answer": "B",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "MCQ09",
+      "difficulty": "medium",
+      "question": "What average query size is assumed?",
+      "choices": {
+        "A": "5 bytes",
+        "B": "20 bytes",
+        "C": "100 bytes",
+        "D": "1 KB"
+      },
+      "answer": "B",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "MCQ10",
+      "difficulty": "medium",
+      "question": "How many searches/day per user are assumed?",
+      "choices": {
+        "A": "1",
+        "B": "5",
+        "C": "10",
+        "D": "20"
+      },
+      "answer": "C",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "MCQ11",
+      "difficulty": "hard",
+      "question": "Why are 20 autocomplete requests assumed per search?",
+      "choices": {
+        "A": "One request per typed character",
+        "B": "20 data centers",
+        "C": "20 result pages",
+        "D": "20 shards"
+      },
+      "answer": "A",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "MCQ12",
+      "difficulty": "medium",
+      "question": "What is average autocomplete QPS?",
+      "choices": {
+        "A": "2,400",
+        "B": "24,000",
+        "C": "48,000",
+        "D": "240,000"
+      },
+      "answer": "B",
+      "source_pages": [
+        202
+      ]
+    },
+    {
+      "id": "MCQ13",
+      "difficulty": "medium",
+      "question": "What is peak QPS?",
+      "choices": {
+        "A": "12,000",
+        "B": "24,000",
+        "C": "48,000",
+        "D": "96,000"
+      },
+      "answer": "C",
+      "source_pages": [
+        202
+      ]
+    },
+    {
+      "id": "MCQ14",
+      "difficulty": "medium",
+      "question": "What fraction of daily queries are assumed new?",
+      "choices": {
+        "A": "5%",
+        "B": "10%",
+        "C": "20%",
+        "D": "50%"
+      },
+      "answer": "C",
+      "source_pages": [
+        202
+      ]
+    },
+    {
+      "id": "MCQ15",
+      "difficulty": "hard",
+      "question": "How much new data is estimated per day?",
+      "choices": {
+        "A": "0.04 GB",
+        "B": "0.4 GB",
+        "C": "4 GB",
+        "D": "40 GB"
+      },
+      "answer": "B",
+      "source_pages": [
+        202
+      ]
+    },
+    {
+      "id": "MCQ16",
+      "difficulty": "medium",
+      "question": "What are the two high-level services?",
+      "choices": {
+        "A": "Data gathering and query service",
+        "B": "Chat and presence",
+        "C": "Upload and CDN",
+        "D": "Write and replica"
+      },
+      "answer": "A",
+      "source_pages": [
+        203
+      ]
+    },
+    {
+      "id": "MCQ17",
+      "difficulty": "medium",
+      "question": "What does query service return?",
+      "choices": {
+        "A": "Top 5 matching frequent queries",
+        "B": "All queries",
+        "C": "Only exact matches",
+        "D": "Spell corrections"
+      },
+      "answer": "A",
+      "source_pages": [
+        203
+      ]
+    },
+    {
+      "id": "MCQ18",
+      "difficulty": "medium",
+      "question": "What are the frequency table fields?",
+      "choices": {
+        "A": "query, frequency",
+        "B": "user, password",
+        "C": "prefix, shard only",
+        "D": "query, IP"
+      },
+      "answer": "A",
+      "source_pages": [
+        203
+      ]
+    },
+    {
+      "id": "MCQ19",
+      "difficulty": "hard",
+      "question": "Why does the initial relational design fail at scale?",
+      "choices": {
+        "A": "Database access becomes a bottleneck",
+        "B": "SQL cannot sort",
+        "C": "Queries cannot store strings",
+        "D": "Frequency cannot be counted"
+      },
+      "answer": "A",
+      "source_pages": [
+        205
+      ]
+    },
+    {
+      "id": "MCQ20",
+      "difficulty": "medium",
+      "question": "What data structure replaces direct relational lookup?",
+      "choices": {
+        "A": "Trie",
+        "B": "Linked list",
+        "C": "Stack",
+        "D": "Bloom filter only"
+      },
+      "answer": "A",
+      "source_pages": [
+        206
+      ]
+    },
+    {
+      "id": "MCQ21",
+      "difficulty": "medium",
+      "question": "What does the trie root represent?",
+      "choices": {
+        "A": "Empty string",
+        "B": "Most popular query",
+        "C": "First character",
+        "D": "Shard ID"
+      },
+      "answer": "A",
+      "source_pages": [
+        206
+      ]
+    },
+    {
+      "id": "MCQ22",
+      "difficulty": "medium",
+      "question": "Under lowercase English, how many child positions may each node have?",
+      "choices": {
+        "A": "10",
+        "B": "26",
+        "C": "52",
+        "D": "62"
+      },
+      "answer": "B",
+      "source_pages": [
+        206
+      ]
+    },
+    {
+      "id": "MCQ23",
+      "difficulty": "hard",
+      "question": "What extra data must trie nodes include for popularity ranking?",
+      "choices": {
+        "A": "Frequency",
+        "B": "Password",
+        "C": "IP address",
+        "D": "Video ID"
+      },
+      "answer": "A",
+      "source_pages": [
+        207
+      ]
+    },
+    {
+      "id": "MCQ24",
+      "difficulty": "medium",
+      "question": "What does p denote?",
+      "choices": {
+        "A": "Prefix length",
+        "B": "Number of shards",
+        "C": "Popularity score",
+        "D": "Peak QPS"
+      },
+      "answer": "A",
+      "source_pages": [
+        208
+      ]
+    },
+    {
+      "id": "MCQ25",
+      "difficulty": "hard",
+      "question": "What is the prefix lookup complexity before optimization?",
+      "choices": {
+        "A": "O(1)",
+        "B": "O(p)",
+        "C": "O(c)",
+        "D": "O(n log n)"
+      },
+      "answer": "B",
+      "source_pages": [
+        208
+      ]
+    },
+    {
+      "id": "MCQ26",
+      "difficulty": "hard",
+      "question": "What is candidate sorting complexity?",
+      "choices": {
+        "A": "O(c log c)",
+        "B": "O(1)",
+        "C": "O(p)",
+        "D": "O(log p)"
+      },
+      "answer": "A",
+      "source_pages": [
+        208
+      ]
+    },
+    {
+      "id": "MCQ27",
+      "difficulty": "hard",
+      "question": "What top-two results are returned for prefix 'tr' in the example?",
+      "choices": {
+        "A": "true and try",
+        "B": "tree and toy",
+        "C": "wish and win",
+        "D": "try and tree"
+      },
+      "answer": "A",
+      "source_pages": [
+        208
+      ]
+    },
+    {
+      "id": "MCQ28",
+      "difficulty": "hard",
+      "question": "What makes the basic algorithm too slow?",
+      "choices": {
+        "A": "Worst-case subtree traversal",
+        "B": "The root stores no character",
+        "C": "Queries are lowercase",
+        "D": "There are only five results"
+      },
+      "answer": "A",
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "id": "MCQ29",
+      "difficulty": "medium",
+      "question": "What are the two key trie query optimizations?",
+      "choices": {
+        "A": "Bound prefix length and cache top K at each node",
+        "B": "Delete frequency and use SQL",
+        "C": "Poll and long-poll",
+        "D": "Add spellcheck and OCR"
+      },
+      "answer": "A",
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "id": "MCQ30",
+      "difficulty": "medium",
+      "question": "What maximum prefix length is used as an example?",
+      "choices": {
+        "A": "10",
+        "B": "20",
+        "C": "50",
+        "D": "100"
+      },
+      "answer": "C",
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "id": "MCQ31",
+      "difficulty": "hard",
+      "question": "Why does caching top K at nodes speed reads?",
+      "choices": {
+        "A": "It avoids subtree traversal and sorting",
+        "B": "It reduces alphabet size",
+        "C": "It eliminates prefixes",
+        "D": "It guarantees no cache misses"
+      },
+      "answer": "A",
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "id": "MCQ32",
+      "difficulty": "hard",
+      "question": "What is the tradeoff of node-level top-K caching?",
+      "choices": {
+        "A": "More memory for faster reads",
+        "B": "More latency for less memory",
+        "C": "No persistent storage",
+        "D": "No ranking"
+      },
+      "answer": "A",
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "id": "MCQ33",
+      "difficulty": "hard",
+      "question": "What overall complexity does the chapter claim after optimization?",
+      "choices": {
+        "A": "O(1)",
+        "B": "O(p)",
+        "C": "O(c log c)",
+        "D": "O(n)"
+      },
+      "answer": "A",
+      "source_pages": [
+        210
+      ]
+    },
+    {
+      "id": "MCQ34",
+      "difficulty": "hard",
+      "question": "Why is real-time trie updating impractical?",
+      "choices": {
+        "A": "Huge query volume would slow query serving",
+        "B": "Tries cannot be updated",
+        "C": "Logs cannot be stored",
+        "D": "Queries have no frequency"
+      },
+      "answer": "A",
+      "source_pages": [
+        210
+      ]
+    },
+    {
+      "id": "MCQ35",
+      "difficulty": "medium",
+      "question": "What rebuild frequency is assumed?",
+      "choices": {
+        "A": "Every second",
+        "B": "Hourly",
+        "C": "Daily",
+        "D": "Weekly"
+      },
+      "answer": "D",
+      "source_pages": [
+        211
+      ]
+    },
+    {
+      "id": "MCQ36",
+      "difficulty": "medium",
+      "question": "What are Analytics Logs?",
+      "choices": {
+        "A": "Append-only raw query data",
+        "B": "The final trie",
+        "C": "User profiles",
+        "D": "CDN objects"
+      },
+      "answer": "A",
+      "source_pages": [
+        211
+      ]
+    },
+    {
+      "id": "MCQ37",
+      "difficulty": "medium",
+      "question": "What do aggregators produce?",
+      "choices": {
+        "A": "Aggregated query-frequency data",
+        "B": "WebSocket sessions",
+        "C": "Search spell corrections",
+        "D": "Image thumbnails"
+      },
+      "answer": "A",
+      "source_pages": [
+        211
+      ]
+    },
+    {
+      "id": "MCQ38",
+      "difficulty": "medium",
+      "question": "What do workers build?",
+      "choices": {
+        "A": "The trie",
+        "B": "Browser cache only",
+        "C": "DNS records",
+        "D": "Friend graph"
+      },
+      "answer": "A",
+      "source_pages": [
+        212
+      ]
+    },
+    {
+      "id": "MCQ39",
+      "difficulty": "medium",
+      "question": "What is Trie Cache?",
+      "choices": {
+        "A": "Distributed in-memory trie storage",
+        "B": "Relational query log",
+        "C": "Client-only history",
+        "D": "Shard manager"
+      },
+      "answer": "A",
+      "source_pages": [
+        212
+      ]
+    },
+    {
+      "id": "MCQ40",
+      "difficulty": "medium",
+      "question": "What is Trie DB?",
+      "choices": {
+        "A": "Persistent trie storage",
+        "B": "Only browser cache",
+        "C": "Rate limiter",
+        "D": "Search UI"
+      },
+      "answer": "A",
+      "source_pages": [
+        212
+      ]
+    },
+    {
+      "id": "MCQ41",
+      "difficulty": "medium",
+      "question": "What document DB is named?",
+      "choices": {
+        "A": "MongoDB",
+        "B": "HBase",
+        "C": "Cassandra",
+        "D": "SQLite"
+      },
+      "answer": "A",
+      "source_pages": [
+        212
+      ]
+    },
+    {
+      "id": "MCQ42",
+      "difficulty": "hard",
+      "question": "How does a KV representation of a trie work?",
+      "choices": {
+        "A": "Prefix -> key, node data -> value",
+        "B": "Character -> server only",
+        "C": "Frequency -> HTTP header",
+        "D": "User -> trie root"
+      },
+      "answer": "A",
+      "source_pages": [
+        212,
+        213
+      ]
+    },
+    {
+      "id": "MCQ43",
+      "difficulty": "medium",
+      "question": "What serves autocomplete data first in the query path?",
+      "choices": {
+        "A": "Trie Cache",
+        "B": "Analytics Log",
+        "C": "Aggregator",
+        "D": "Worker"
+      },
+      "answer": "A",
+      "source_pages": [
+        214
+      ]
+    },
+    {
+      "id": "MCQ44",
+      "difficulty": "hard",
+      "question": "What happens after a Trie Cache miss?",
+      "choices": {
+        "A": "Read from Trie DB and refill cache",
+        "B": "Return no results forever",
+        "C": "Rebuild the entire trie synchronously",
+        "D": "Query analytics logs directly"
+      },
+      "answer": "A",
+      "source_pages": [
+        214
+      ]
+    },
+    {
+      "id": "MCQ45",
+      "difficulty": "medium",
+      "question": "Why use AJAX?",
+      "choices": {
+        "A": "Fetch results without full page reload",
+        "B": "Persist trie snapshots",
+        "C": "Shard data",
+        "D": "Delete unsafe terms"
+      },
+      "answer": "A",
+      "source_pages": [
+        214
+      ]
+    },
+    {
+      "id": "MCQ46",
+      "difficulty": "medium",
+      "question": "What browser cache duration is shown in the Google example?",
+      "choices": {
+        "A": "1 minute",
+        "B": "10 minutes",
+        "C": "1 hour",
+        "D": "1 day"
+      },
+      "answer": "C",
+      "source_pages": [
+        215
+      ]
+    },
+    {
+      "id": "MCQ47",
+      "difficulty": "hard",
+      "question": "What does cache-control private mean?",
+      "choices": {
+        "A": "Only the individual user's cache should store it",
+        "B": "Only CDN should store it",
+        "C": "No cache allowed",
+        "D": "Only shared proxies cache it"
+      },
+      "answer": "A",
+      "source_pages": [
+        215
+      ]
+    },
+    {
+      "id": "MCQ48",
+      "difficulty": "medium",
+      "question": "What is data sampling?",
+      "choices": {
+        "A": "Log only 1 in N requests",
+        "B": "Store every request twice",
+        "C": "Delete all logs",
+        "D": "Rank by random sample only"
+      },
+      "answer": "A",
+      "source_pages": [
+        215
+      ]
+    },
+    {
+      "id": "MCQ49",
+      "difficulty": "medium",
+      "question": "What is the preferred trie update method?",
+      "choices": {
+        "A": "Build new trie periodically and replace old one",
+        "B": "Synchronously update every node on every query",
+        "C": "Never update",
+        "D": "Use only SQL"
+      },
+      "answer": "A",
+      "source_pages": [
+        215
+      ]
+    },
+    {
+      "id": "MCQ50",
+      "difficulty": "hard",
+      "question": "Why must ancestors change after a direct node update?",
+      "choices": {
+        "A": "They cache top queries from descendants",
+        "B": "They store passwords",
+        "C": "They are separate shards",
+        "D": "They contain timestamps only"
+      },
+      "answer": "A",
+      "source_pages": [
+        215
+      ]
+    },
+    {
+      "id": "MCQ51",
+      "difficulty": "medium",
+      "question": "What is placed in front of Trie Cache for unsafe suggestions?",
+      "choices": {
+        "A": "Filter layer",
+        "B": "DNS resolver",
+        "C": "Message queue",
+        "D": "Load balancer only"
+      },
+      "answer": "A",
+      "source_pages": [
+        216
+      ]
+    },
+    {
+      "id": "MCQ52",
+      "difficulty": "hard",
+      "question": "When is unwanted data physically removed from storage?",
+      "choices": {
+        "A": "Asynchronously",
+        "B": "Never",
+        "C": "Before every read synchronously",
+        "D": "Only in browser"
+      },
+      "answer": "A",
+      "source_pages": [
+        216
+      ]
+    },
+    {
+      "id": "MCQ53",
+      "difficulty": "medium",
+      "question": "What is first-level sharding based on?",
+      "choices": {
+        "A": "First character",
+        "B": "User ID",
+        "C": "Timestamp",
+        "D": "Query frequency only"
+      },
+      "answer": "A",
+      "source_pages": [
+        216
+      ]
+    },
+    {
+      "id": "MCQ54",
+      "difficulty": "medium",
+      "question": "How many first-level English alphabet shards are possible?",
+      "choices": {
+        "A": "10",
+        "B": "26",
+        "C": "52",
+        "D": "62"
+      },
+      "answer": "B",
+      "source_pages": [
+        216
+      ]
+    },
+    {
+      "id": "MCQ55",
+      "difficulty": "hard",
+      "question": "Why is equal alphabetical partitioning insufficient?",
+      "choices": {
+        "A": "Starting-letter query distributions are uneven",
+        "B": "There are too few databases",
+        "C": "Every letter has identical load",
+        "D": "Trie cannot be partitioned"
+      },
+      "answer": "A",
+      "source_pages": [
+        216
+      ]
+    },
+    {
+      "id": "MCQ56",
+      "difficulty": "hard",
+      "question": "What component enables distribution-aware sharding?",
+      "choices": {
+        "A": "Shard map manager",
+        "B": "Browser cache",
+        "C": "AJAX",
+        "D": "Trie worker only"
+      },
+      "answer": "A",
+      "source_pages": [
+        217
+      ]
+    },
+    {
+      "id": "MCQ57",
+      "difficulty": "medium",
+      "question": "How is multilingual support proposed?",
+      "choices": {
+        "A": "Store Unicode in trie nodes",
+        "B": "Use ASCII only",
+        "C": "Build one node per country",
+        "D": "Use SQL LIKE only"
+      },
+      "answer": "A",
+      "source_pages": [
+        218
+      ]
+    },
+    {
+      "id": "MCQ58",
+      "difficulty": "medium",
+      "question": "How should country-specific popularity be handled?",
+      "choices": {
+        "A": "Different tries per country",
+        "B": "One universal ranking only",
+        "C": "Disable ranking",
+        "D": "Use spell check"
+      },
+      "answer": "A",
+      "source_pages": [
+        218
+      ]
+    },
+    {
+      "id": "MCQ59",
+      "difficulty": "medium",
+      "question": "Where can country-specific tries be stored for latency?",
+      "choices": {
+        "A": "CDNs",
+        "B": "Only analytics logs",
+        "C": "Only browser cookies",
+        "D": "Message queues"
+      },
+      "answer": "A",
+      "source_pages": [
+        218
+      ]
+    },
+    {
+      "id": "MCQ60",
+      "difficulty": "hard",
+      "question": "Why does weekly rebuilding not support sudden trends?",
+      "choices": {
+        "A": "The rebuild schedule and build time are too slow",
+        "B": "Trie cannot rank queries",
+        "C": "Unicode is missing",
+        "D": "CDN is too fast"
+      },
+      "answer": "A",
+      "source_pages": [
+        218
+      ]
+    },
+    {
+      "id": "MCQ61",
+      "difficulty": "hard",
+      "question": "What ranking change is suggested for trending search?",
+      "choices": {
+        "A": "Weight recent searches more heavily",
+        "B": "Ignore recent data",
+        "C": "Sort alphabetically",
+        "D": "Remove frequency"
+      },
+      "answer": "A",
+      "source_pages": [
+        218
+      ]
+    },
+    {
+      "id": "MCQ62",
+      "difficulty": "medium",
+      "question": "Which technology is named for stream-processing discussion?",
+      "choices": {
+        "A": "Apache Kafka",
+        "B": "APNS",
+        "C": "ZooKeeper only",
+        "D": "HBase only"
+      },
+      "answer": "A",
+      "source_pages": [
+        218
+      ]
+    }
+  ],
+  "mix_and_match": [
+    {
+      "id": "MM01",
+      "title": "Requirement to Value",
+      "left": {
+        "A": "Suggestions returned",
+        "B": "Latency target",
+        "C": "DAU",
+        "D": "Average QPS",
+        "E": "Peak QPS",
+        "F": "New data/day"
+      },
+      "right": {
+        "1": "~48,000",
+        "2": "5",
+        "3": "0.4 GB",
+        "4": "10 million",
+        "5": "<100 ms",
+        "6": "~24,000"
+      },
+      "answer_key": {
+        "A": "2",
+        "B": "5",
+        "C": "4",
+        "D": "6",
+        "E": "1",
+        "F": "3"
+      },
+      "source_pages": [
+        201,
+        202
+      ]
+    },
+    {
+      "id": "MM02",
+      "title": "Trie Algorithm Step to Complexity",
+      "left": {
+        "A": "Find prefix",
+        "B": "Collect subtree candidates",
+        "C": "Sort candidates",
+        "D": "Optimized full lookup"
+      },
+      "right": {
+        "1": "O(c log c)",
+        "2": "O(1)",
+        "3": "O(p)",
+        "4": "O(c)"
+      },
+      "answer_key": {
+        "A": "3",
+        "B": "4",
+        "C": "1",
+        "D": "2"
+      },
+      "source_pages": [
+        208,
+        209,
+        210
+      ]
+    },
+    {
+      "id": "MM03",
+      "title": "Data Pipeline Component to Role",
+      "left": {
+        "A": "Analytics Logs",
+        "B": "Aggregators",
+        "C": "Workers",
+        "D": "Trie DB",
+        "E": "Trie Cache"
+      },
+      "right": {
+        "1": "Persistent trie storage",
+        "2": "Raw append-only query events",
+        "3": "Build trie asynchronously",
+        "4": "In-memory distributed read layer",
+        "5": "Transform logs into query-frequency aggregates"
+      },
+      "answer_key": {
+        "A": "2",
+        "B": "5",
+        "C": "3",
+        "D": "1",
+        "E": "4"
+      },
+      "source_pages": [
+        211,
+        212
+      ]
+    },
+    {
+      "id": "MM04",
+      "title": "Optimization to Benefit",
+      "left": {
+        "A": "Top-K cache at trie nodes",
+        "B": "AJAX",
+        "C": "Browser cache",
+        "D": "Data sampling",
+        "E": "Shard map manager"
+      },
+      "right": {
+        "1": "Avoid full page reload",
+        "2": "Reduce logging/processing volume",
+        "3": "Avoid subtree traversal during reads",
+        "4": "Serve repeated results locally",
+        "5": "Balance prefix data using historical distribution"
+      },
+      "answer_key": {
+        "A": "3",
+        "B": "1",
+        "C": "4",
+        "D": "2",
+        "E": "5"
+      },
+      "source_pages": [
+        209,
+        214,
+        215,
+        217
+      ]
+    },
+    {
+      "id": "MM05",
+      "title": "Extension to Technique",
+      "left": {
+        "A": "Multiple languages",
+        "B": "Country-specific popularity",
+        "C": "Trending queries",
+        "D": "Unsafe suggestion",
+        "E": "Very large trie"
+      },
+      "right": {
+        "1": "Unicode nodes",
+        "2": "Country-specific tries/CDN",
+        "3": "Recent-weighted ranking + streaming ideas",
+        "4": "Filter layer + async deletion",
+        "5": "Shard storage"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        216,
+        217,
+        218
+      ]
+    }
+  ],
+  "true_false": [
+    {
+      "id": "TF01",
+      "statement": "The core design supports substring matching anywhere in a query.",
+      "answer": false,
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "TF02",
+      "statement": "The system returns five autocomplete suggestions.",
+      "answer": true,
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "TF03",
+      "statement": "Historical search frequency is the ranking signal.",
+      "answer": true,
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "TF04",
+      "statement": "Spell checking is part of the core design.",
+      "answer": false,
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "TF05",
+      "statement": "The core design assumes lowercase alphabetic English queries.",
+      "answer": true,
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "TF06",
+      "statement": "The response-time target is within 100 ms.",
+      "answer": true,
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "TF07",
+      "statement": "Average QPS is about 24,000.",
+      "answer": true,
+      "source_pages": [
+        202
+      ]
+    },
+    {
+      "id": "TF08",
+      "statement": "Peak QPS is estimated as half the average QPS.",
+      "answer": false,
+      "source_pages": [
+        202
+      ]
+    },
+    {
+      "id": "TF09",
+      "statement": "About 0.4 GB of new query data is estimated per day.",
+      "answer": true,
+      "source_pages": [
+        202
+      ]
+    },
+    {
+      "id": "TF10",
+      "statement": "The high-level design contains data gathering and query service.",
+      "answer": true,
+      "source_pages": [
+        203
+      ]
+    },
+    {
+      "id": "TF11",
+      "statement": "Direct relational DB querying is the final large-scale design.",
+      "answer": false,
+      "source_pages": [
+        205,
+        206
+      ]
+    },
+    {
+      "id": "TF12",
+      "statement": "The trie root represents an empty string.",
+      "answer": true,
+      "source_pages": [
+        206
+      ]
+    },
+    {
+      "id": "TF13",
+      "statement": "Every trie node must always have exactly 26 populated children.",
+      "answer": false,
+      "source_pages": [
+        206
+      ]
+    },
+    {
+      "id": "TF14",
+      "statement": "Frequency metadata is added to support ranking.",
+      "answer": true,
+      "source_pages": [
+        207
+      ]
+    },
+    {
+      "id": "TF15",
+      "statement": "Basic prefix lookup is O(p).",
+      "answer": true,
+      "source_pages": [
+        208
+      ]
+    },
+    {
+      "id": "TF16",
+      "statement": "Basic candidate sorting is O(c log c).",
+      "answer": true,
+      "source_pages": [
+        208
+      ]
+    },
+    {
+      "id": "TF17",
+      "statement": "The unoptimized algorithm may need to traverse a large subtree.",
+      "answer": true,
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "id": "TF18",
+      "statement": "One optimization is to allow prefixes of unlimited length.",
+      "answer": false,
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "id": "TF19",
+      "statement": "The chapter uses 50 as an example prefix-length bound.",
+      "answer": true,
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "id": "TF20",
+      "statement": "Each trie node caches the top five matching queries in this design.",
+      "answer": true,
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "id": "TF21",
+      "statement": "Top-K node caching saves both time and memory.",
+      "answer": false,
+      "explanation": "It saves query time but uses more memory.",
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "id": "TF22",
+      "statement": "The optimized lookup is presented as O(1).",
+      "answer": true,
+      "source_pages": [
+        210
+      ]
+    },
+    {
+      "id": "TF23",
+      "statement": "The production trie is updated synchronously after every query.",
+      "answer": false,
+      "source_pages": [
+        210
+      ]
+    },
+    {
+      "id": "TF24",
+      "statement": "The chapter assumes a weekly trie rebuild.",
+      "answer": true,
+      "source_pages": [
+        211
+      ]
+    },
+    {
+      "id": "TF25",
+      "statement": "Analytics logs are append-only and unindexed.",
+      "answer": true,
+      "source_pages": [
+        211
+      ]
+    },
+    {
+      "id": "TF26",
+      "statement": "Aggregation interval should depend on freshness requirements.",
+      "answer": true,
+      "source_pages": [
+        211
+      ]
+    },
+    {
+      "id": "TF27",
+      "statement": "Workers build the trie asynchronously.",
+      "answer": true,
+      "source_pages": [
+        212
+      ]
+    },
+    {
+      "id": "TF28",
+      "statement": "Trie Cache is persistent disk storage.",
+      "answer": false,
+      "source_pages": [
+        212
+      ]
+    },
+    {
+      "id": "TF29",
+      "statement": "Trie DB is persistent storage.",
+      "answer": true,
+      "source_pages": [
+        212
+      ]
+    },
+    {
+      "id": "TF30",
+      "statement": "MongoDB is named as a document-store option.",
+      "answer": true,
+      "source_pages": [
+        212
+      ]
+    },
+    {
+      "id": "TF31",
+      "statement": "A KV representation maps prefixes to keys.",
+      "answer": true,
+      "source_pages": [
+        212,
+        213
+      ]
+    },
+    {
+      "id": "TF32",
+      "statement": "API servers read Trie Cache before Trie DB.",
+      "answer": true,
+      "source_pages": [
+        214
+      ]
+    },
+    {
+      "id": "TF33",
+      "statement": "A cache miss can trigger loading data from Trie DB into the cache.",
+      "answer": true,
+      "source_pages": [
+        214
+      ]
+    },
+    {
+      "id": "TF34",
+      "statement": "AJAX requires a full-page refresh for every autocomplete result.",
+      "answer": false,
+      "source_pages": [
+        214
+      ]
+    },
+    {
+      "id": "TF35",
+      "statement": "The Google cache example uses max-age=3600.",
+      "answer": true,
+      "source_pages": [
+        215
+      ]
+    },
+    {
+      "id": "TF36",
+      "statement": "Data sampling means logging every request.",
+      "answer": false,
+      "source_pages": [
+        215
+      ]
+    },
+    {
+      "id": "TF37",
+      "statement": "Direct trie-node updates may require updating all ancestors to the root.",
+      "answer": true,
+      "source_pages": [
+        215
+      ]
+    },
+    {
+      "id": "TF38",
+      "statement": "The filter layer immediately removes unsafe suggestions from query results.",
+      "answer": true,
+      "source_pages": [
+        216
+      ]
+    },
+    {
+      "id": "TF39",
+      "statement": "Persistent deletion of filtered suggestions is asynchronous.",
+      "answer": true,
+      "source_pages": [
+        216
+      ]
+    },
+    {
+      "id": "TF40",
+      "statement": "First-level sharding can produce at most 26 English-letter partitions.",
+      "answer": true,
+      "source_pages": [
+        216
+      ]
+    },
+    {
+      "id": "TF41",
+      "statement": "Equal alphabetical ranges guarantee equal shard load.",
+      "answer": false,
+      "source_pages": [
+        216
+      ]
+    },
+    {
+      "id": "TF42",
+      "statement": "Historical query distribution can guide better shard boundaries.",
+      "answer": true,
+      "source_pages": [
+        217
+      ]
+    },
+    {
+      "id": "TF43",
+      "statement": "Unicode is suggested for multilingual support.",
+      "answer": true,
+      "source_pages": [
+        218
+      ]
+    },
+    {
+      "id": "TF44",
+      "statement": "Country-specific tries may be stored in CDNs.",
+      "answer": true,
+      "source_pages": [
+        218
+      ]
+    },
+    {
+      "id": "TF45",
+      "statement": "The weekly architecture handles sudden trending queries perfectly without changes.",
+      "answer": false,
+      "source_pages": [
+        218
+      ]
+    },
+    {
+      "id": "TF46",
+      "statement": "Recent queries can receive extra ranking weight for trending search.",
+      "answer": true,
+      "source_pages": [
+        218
+      ]
+    }
+  ],
+  "fill_in_the_blank": [
+    {
+      "id": "FIB01",
+      "prompt": "Autocomplete is also called ______ahead.",
+      "answer": "type",
+      "source_pages": [
+        200
+      ]
+    },
+    {
+      "id": "FIB02",
+      "prompt": "The system returns the top ______ suggestions.",
+      "answer": "5",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "FIB03",
+      "prompt": "Suggestions are ranked by historical query ______.",
+      "answer": "frequency",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "FIB04",
+      "prompt": "The target response time is under ______ ms.",
+      "answer": "100",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "FIB05",
+      "prompt": "The system assumes ______ million DAU.",
+      "answer": "10",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "FIB06",
+      "prompt": "Average query size is assumed to be ______ bytes.",
+      "answer": "20",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "FIB07",
+      "prompt": "Average autocomplete QPS is about ______.",
+      "answer": "24,000",
+      "source_pages": [
+        202
+      ]
+    },
+    {
+      "id": "FIB08",
+      "prompt": "Peak autocomplete QPS is about ______.",
+      "answer": "48,000",
+      "source_pages": [
+        202
+      ]
+    },
+    {
+      "id": "FIB09",
+      "prompt": "New query data added daily is about ______ GB.",
+      "answer": "0.4",
+      "source_pages": [
+        202
+      ]
+    },
+    {
+      "id": "FIB10",
+      "prompt": "The string data structure used in the deep dive is a ______.",
+      "answer": "trie",
+      "source_pages": [
+        206
+      ]
+    },
+    {
+      "id": "FIB11",
+      "prompt": "The trie root represents the ______ string.",
+      "answer": "empty",
+      "source_pages": [
+        206
+      ]
+    },
+    {
+      "id": "FIB12",
+      "prompt": "Unoptimized prefix lookup takes O(______).",
+      "answer": "p",
+      "source_pages": [
+        208
+      ]
+    },
+    {
+      "id": "FIB13",
+      "prompt": "Sorting c candidates takes O(c log ______).",
+      "answer": "c",
+      "source_pages": [
+        208
+      ]
+    },
+    {
+      "id": "FIB14",
+      "prompt": "The example maximum prefix length is ______.",
+      "answer": "50",
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "id": "FIB15",
+      "prompt": "Each optimized trie node caches the top ______ queries.",
+      "answer": "5",
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "id": "FIB16",
+      "prompt": "Optimized top-K retrieval is presented as O(______).",
+      "answer": "1",
+      "source_pages": [
+        210
+      ]
+    },
+    {
+      "id": "FIB17",
+      "prompt": "Raw search events are kept in Analytics ______.",
+      "answer": "Logs",
+      "source_pages": [
+        211
+      ]
+    },
+    {
+      "id": "FIB18",
+      "prompt": "The chapter assumes the trie is rebuilt ______.",
+      "answer": "weekly",
+      "source_pages": [
+        211
+      ]
+    },
+    {
+      "id": "FIB19",
+      "prompt": "Persistent trie storage is called Trie ______.",
+      "answer": "DB",
+      "source_pages": [
+        212
+      ]
+    },
+    {
+      "id": "FIB20",
+      "prompt": "The distributed memory layer is Trie ______.",
+      "answer": "Cache",
+      "source_pages": [
+        212
+      ]
+    },
+    {
+      "id": "FIB21",
+      "prompt": "MongoDB is given as a ______ store example.",
+      "answer": "document",
+      "source_pages": [
+        212
+      ]
+    },
+    {
+      "id": "FIB22",
+      "prompt": "In KV representation, each trie ______ becomes a key.",
+      "answer": "prefix",
+      "source_pages": [
+        212
+      ]
+    },
+    {
+      "id": "FIB23",
+      "prompt": "Browser cache max-age=3600 equals one ______.",
+      "answer": "hour",
+      "source_pages": [
+        215
+      ]
+    },
+    {
+      "id": "FIB24",
+      "prompt": "Logging only 1 of every N requests is data ______.",
+      "answer": "sampling",
+      "source_pages": [
+        215
+      ]
+    },
+    {
+      "id": "FIB25",
+      "prompt": "Unsafe results are suppressed by a ______ layer.",
+      "answer": "filter",
+      "source_pages": [
+        216
+      ]
+    },
+    {
+      "id": "FIB26",
+      "prompt": "The service that maps prefix ranges to shards is the shard map ______.",
+      "answer": "manager",
+      "source_pages": [
+        217
+      ]
+    },
+    {
+      "id": "FIB27",
+      "prompt": "Multiple languages require storing ______ characters.",
+      "answer": "Unicode",
+      "source_pages": [
+        218
+      ]
+    },
+    {
+      "id": "FIB28",
+      "prompt": "Country-specific tries may be stored in ______.",
+      "answer": "CDNs",
+      "source_pages": [
+        218
+      ]
+    }
+  ],
+  "ordering_exercises": [
+    {
+      "id": "ORD01",
+      "title": "Basic Trie Lookup",
+      "items_scrambled": [
+        "Sort candidates and take top K",
+        "Find the prefix node",
+        "Traverse the subtree for valid queries"
+      ],
+      "correct_order": [
+        "Find the prefix node",
+        "Traverse the subtree for valid queries",
+        "Sort candidates and take top K"
+      ],
+      "source_pages": [
+        208
+      ]
+    },
+    {
+      "id": "ORD02",
+      "title": "Data Gathering Pipeline",
+      "items_scrambled": [
+        "Workers build trie",
+        "Analytics Logs",
+        "Trie DB",
+        "Aggregators",
+        "Aggregated Data",
+        "Trie Cache"
+      ],
+      "correct_order": [
+        "Analytics Logs",
+        "Aggregators",
+        "Aggregated Data",
+        "Workers build trie",
+        "Trie DB",
+        "Trie Cache"
+      ],
+      "source_pages": [
+        210,
+        211,
+        212
+      ]
+    },
+    {
+      "id": "ORD03",
+      "title": "Query Service Read Path",
+      "items_scrambled": [
+        "API server reads Trie Cache",
+        "Request reaches load balancer",
+        "Return suggestions",
+        "Load balancer selects API server",
+        "On miss fetch from Trie DB and refill cache"
+      ],
+      "correct_order": [
+        "Request reaches load balancer",
+        "Load balancer selects API server",
+        "API server reads Trie Cache",
+        "On miss fetch from Trie DB and refill cache",
+        "Return suggestions"
+      ],
+      "source_pages": [
+        214
+      ]
+    },
+    {
+      "id": "ORD04",
+      "title": "Direct Trie Update",
+      "items_scrambled": [
+        "Update ancestors",
+        "Query frequency changes",
+        "Update affected node",
+        "Continue to root"
+      ],
+      "correct_order": [
+        "Query frequency changes",
+        "Update affected node",
+        "Update ancestors",
+        "Continue to root"
+      ],
+      "source_pages": [
+        215
+      ]
+    }
+  ],
+  "scenario_questions": [
+    {
+      "id": "SC01",
+      "difficulty": "medium",
+      "scenario": "A user types 'din' and the system also returns a query where 'din' appears only in the middle.",
+      "question": "Does this satisfy the chapter's requirement?",
+      "expected_answer": "No. The core design supports prefix matching only.",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "SC02",
+      "difficulty": "medium",
+      "scenario": "Autocomplete results take 400 ms to appear.",
+      "question": "Which requirement is being violated?",
+      "expected_answer": "The fast-response requirement; the target is within 100 ms.",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "SC03",
+      "difficulty": "hard",
+      "scenario": "The system issues one backend request per character and has 10M DAU, 10 searches/day, 20 characters/search.",
+      "question": "What average QPS does the chapter estimate?",
+      "expected_answer": "Approximately 24,000 QPS.",
+      "source_pages": [
+        201,
+        202
+      ]
+    },
+    {
+      "id": "SC04",
+      "difficulty": "hard",
+      "scenario": "A relational frequency table must serve top-five prefix searches at very large scale.",
+      "question": "What bottleneck appears and what data structure replaces it?",
+      "expected_answer": "Database access becomes the bottleneck; use a trie/prefix tree.",
+      "source_pages": [
+        205,
+        206
+      ]
+    },
+    {
+      "id": "SC05",
+      "difficulty": "hard",
+      "scenario": "Prefix 'tr' has tree:10, true:35, and try:29.",
+      "question": "What are the top two results?",
+      "expected_answer": "true:35 and try:29.",
+      "source_pages": [
+        208
+      ]
+    },
+    {
+      "id": "SC06",
+      "difficulty": "hard",
+      "scenario": "Every autocomplete request traverses the entire subtree and sorts all descendants.",
+      "question": "What two optimizations should be introduced?",
+      "expected_answer": "Bound prefix length and cache top-K queries at every trie node.",
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "id": "SC07",
+      "difficulty": "hard",
+      "scenario": "Memory usage increases after storing top-five suggestions at every trie node.",
+      "question": "Why is this considered acceptable?",
+      "expected_answer": "The chapter intentionally trades space for time because low autocomplete latency is critical.",
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "id": "SC08",
+      "difficulty": "hard",
+      "scenario": "The system rebuilds autocomplete ranking after every user query.",
+      "question": "Why is that problematic?",
+      "expected_answer": "Billions of daily queries would make constant trie updates expensive and slow the query service; top suggestions often do not change enough to justify it.",
+      "source_pages": [
+        210
+      ]
+    },
+    {
+      "id": "SC09",
+      "difficulty": "medium",
+      "scenario": "Your product's autocomplete changes slowly from week to week.",
+      "question": "What rebuild schedule does the chapter assume?",
+      "expected_answer": "Weekly.",
+      "source_pages": [
+        211
+      ]
+    },
+    {
+      "id": "SC10",
+      "difficulty": "hard",
+      "scenario": "Raw query logs are huge and unsuitable for direct trie construction.",
+      "question": "Which component transforms them?",
+      "expected_answer": "Aggregators.",
+      "source_pages": [
+        211
+      ]
+    },
+    {
+      "id": "SC11",
+      "difficulty": "medium",
+      "scenario": "You need durable serialized snapshots of a newly rebuilt trie.",
+      "question": "Which persistence option is suggested?",
+      "expected_answer": "A document store such as MongoDB.",
+      "source_pages": [
+        212
+      ]
+    },
+    {
+      "id": "SC12",
+      "difficulty": "hard",
+      "scenario": "You want each prefix to be directly addressable in persistent storage.",
+      "question": "Which Trie DB model fits?",
+      "expected_answer": "A key-value store where the prefix is the key and node/top-query data is the value.",
+      "source_pages": [
+        212,
+        213
+      ]
+    },
+    {
+      "id": "SC13",
+      "difficulty": "medium",
+      "scenario": "A Trie Cache server runs out of memory and a requested prefix is missing.",
+      "question": "What happens?",
+      "expected_answer": "Read the required trie data from Trie DB and replenish the cache.",
+      "source_pages": [
+        214
+      ]
+    },
+    {
+      "id": "SC14",
+      "difficulty": "medium",
+      "scenario": "The browser requests autocomplete as the user types but should not reload the entire page.",
+      "question": "What optimization is used?",
+      "expected_answer": "AJAX.",
+      "source_pages": [
+        214
+      ]
+    },
+    {
+      "id": "SC15",
+      "difficulty": "medium",
+      "scenario": "The same autocomplete prefix is repeatedly typed within an hour.",
+      "question": "Which client-side optimization can avoid backend requests?",
+      "expected_answer": "Browser caching.",
+      "source_pages": [
+        214,
+        215
+      ]
+    },
+    {
+      "id": "SC16",
+      "difficulty": "hard",
+      "scenario": "Logging every request becomes too expensive.",
+      "question": "What technique is suggested?",
+      "expected_answer": "Data sampling, such as logging 1 out of every N requests.",
+      "source_pages": [
+        215
+      ]
+    },
+    {
+      "id": "SC17",
+      "difficulty": "hard",
+      "scenario": "The frequency of 'beer' rises and you directly update its trie node.",
+      "question": "Why must ancestors also be updated?",
+      "expected_answer": "Ancestors cache top-query results derived from descendants, so their cached rankings may change.",
+      "source_pages": [
+        215
+      ]
+    },
+    {
+      "id": "SC18",
+      "difficulty": "medium",
+      "scenario": "A hateful phrase is currently in Trie Cache and must disappear from suggestions immediately.",
+      "question": "How does the chapter handle this?",
+      "expected_answer": "Use a filter layer in front of Trie Cache, then remove it from persistent storage asynchronously.",
+      "source_pages": [
+        216
+      ]
+    },
+    {
+      "id": "SC19",
+      "difficulty": "hard",
+      "scenario": "One shard contains words beginning with 'c' and another with 'x', and the first is overloaded.",
+      "question": "Why did naive sharding fail?",
+      "expected_answer": "Alphabetical prefix ranges have uneven query distributions.",
+      "source_pages": [
+        216
+      ]
+    },
+    {
+      "id": "SC20",
+      "difficulty": "hard",
+      "scenario": "You want balanced shards based on observed traffic rather than equal alphabet ranges.",
+      "question": "What component is introduced?",
+      "expected_answer": "A shard map manager backed by historical distribution-aware mappings.",
+      "source_pages": [
+        217
+      ]
+    },
+    {
+      "id": "SC21",
+      "difficulty": "medium",
+      "scenario": "The product expands to Japanese and Arabic queries.",
+      "question": "What trie change is suggested?",
+      "expected_answer": "Store Unicode characters in trie nodes.",
+      "source_pages": [
+        218
+      ]
+    },
+    {
+      "id": "SC22",
+      "difficulty": "medium",
+      "scenario": "Popular searches differ significantly between the US and Japan.",
+      "question": "What architecture is suggested?",
+      "expected_answer": "Build separate country-specific tries and optionally place them in CDNs.",
+      "source_pages": [
+        218
+      ]
+    },
+    {
+      "id": "SC23",
+      "difficulty": "hard",
+      "scenario": "A breaking-news query becomes popular within minutes but trie rebuilds occur weekly.",
+      "question": "Why is the existing architecture inadequate?",
+      "expected_answer": "The next scheduled offline rebuild is too late, and rebuilding the trie itself is too slow for sudden trends.",
+      "source_pages": [
+        218
+      ]
+    },
+    {
+      "id": "SC24",
+      "difficulty": "hard",
+      "scenario": "You need to react more quickly to trending searches.",
+      "question": "What three directions does the chapter suggest?",
+      "expected_answer": "Shard to reduce the working data set, weight recent queries more heavily, and use stream-processing systems.",
+      "source_pages": [
+        218
+      ]
+    }
+  ],
+  "short_answer_questions": [
+    {
+      "id": "SA01",
+      "question": "What exact product behavior is the chapter designing?",
+      "model_answer": "As the user types a lowercase English prefix, return five matching suggestions ranked primarily by historical search frequency, without spell correction.",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "SA02",
+      "question": "Reproduce the core traffic estimate.",
+      "model_answer": "10M DAU × 10 searches/day × 20 autocomplete requests/search divided by 86,400 seconds/day gives roughly 24,000 QPS; peak is estimated at twice that, about 48,000 QPS.",
+      "source_pages": [
+        201,
+        202
+      ]
+    },
+    {
+      "id": "SA03",
+      "question": "Why isn't the initial relational frequency table sufficient?",
+      "model_answer": "A SQL prefix filter plus frequency sort is acceptable for a small data set, but repeatedly scanning/querying the database becomes a bottleneck as the query corpus and traffic grow.",
+      "source_pages": [
+        204,
+        205
+      ]
+    },
+    {
+      "id": "SA04",
+      "question": "How does the basic trie top-K algorithm work?",
+      "model_answer": "Find the prefix node in O(p), traverse descendant valid queries in O(c), sort those candidates in O(c log c), then return the top K.",
+      "source_pages": [
+        208,
+        209
+      ]
+    },
+    {
+      "id": "SA05",
+      "question": "How does the chapter reduce trie lookup to O(1)?",
+      "model_answer": "It bounds maximum prefix length so prefix traversal is treated as constant time and stores top K results at every node so no subtree traversal or runtime sorting is needed.",
+      "source_pages": [
+        209,
+        210
+      ]
+    },
+    {
+      "id": "SA06",
+      "question": "What is the main tradeoff of storing top K at every trie node?",
+      "model_answer": "It duplicates ranking data and increases memory usage, but dramatically reduces read latency. The chapter explicitly favors that space-for-time tradeoff.",
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "id": "SA07",
+      "question": "Why is the trie rebuilt periodically instead of updated for every search?",
+      "model_answer": "The query volume can be enormous, making synchronous updates expensive, and many autocomplete rankings change slowly enough that frequent updates are unnecessary.",
+      "source_pages": [
+        210,
+        211
+      ]
+    },
+    {
+      "id": "SA08",
+      "question": "Walk through the production data-gathering pipeline.",
+      "model_answer": "Append raw searches to Analytics Logs, aggregate them into query-frequency windows, have asynchronous workers build a new trie, persist the trie in Trie DB, and load snapshots into distributed Trie Cache for serving.",
+      "source_pages": [
+        210,
+        211,
+        212
+      ]
+    },
+    {
+      "id": "SA09",
+      "question": "Compare the two Trie DB persistence options.",
+      "model_answer": "A document store can persist serialized full-trie snapshots, while a key-value store maps each prefix to a key and that node's ranking data to the value.",
+      "source_pages": [
+        212,
+        213
+      ]
+    },
+    {
+      "id": "SA10",
+      "question": "Describe the improved query service.",
+      "model_answer": "The request reaches a load balancer and API server, which reads from Trie Cache. If the entry is missing, the service fetches from Trie DB and refills the cache for future requests.",
+      "source_pages": [
+        213,
+        214
+      ]
+    },
+    {
+      "id": "SA11",
+      "question": "How do AJAX, browser caching, and sampling help?",
+      "model_answer": "AJAX avoids page reloads, browser caching serves stable repeated suggestions locally, and data sampling lowers the processing/storage cost of logging every query.",
+      "source_pages": [
+        214,
+        215
+      ]
+    },
+    {
+      "id": "SA12",
+      "question": "Why is a direct trie-node update expensive?",
+      "model_answer": "A node's frequency change can alter the top-K lists of every ancestor on the path to the root, so all of those cached results may need recomputation.",
+      "source_pages": [
+        215
+      ]
+    },
+    {
+      "id": "SA13",
+      "question": "How are unwanted suggestions removed?",
+      "model_answer": "A filter layer blocks them from live results immediately, while the persistent record is deleted asynchronously so later trie rebuilds no longer include it.",
+      "source_pages": [
+        216
+      ]
+    },
+    {
+      "id": "SA14",
+      "question": "Why does naive alphabetical sharding cause hotspots?",
+      "model_answer": "Search-query frequencies are not uniformly distributed across letters, so equal alphabetic ranges can contain drastically different data and traffic volumes.",
+      "source_pages": [
+        216,
+        217
+      ]
+    },
+    {
+      "id": "SA15",
+      "question": "How does distribution-aware sharding work?",
+      "model_answer": "Analyze historical query distribution, choose shard boundaries that better balance volume, and use a shard map manager to tell servers which shard owns each range.",
+      "source_pages": [
+        217
+      ]
+    },
+    {
+      "id": "SA16",
+      "question": "How would the design evolve for multilingual, localized, or trending autocomplete?",
+      "model_answer": "Use Unicode for multilingual tries, separate tries per country and CDN placement for localization, and for trends consider smaller sharded working sets, more weight on recent searches, and stream-processing systems.",
+      "source_pages": [
+        218
+      ]
+    }
+  ],
+  "active_recall_prompts": [
+    {
+      "id": "AR01",
+      "prompt": "Recite every product requirement.",
+      "target_points": [
+        "Prefix only",
+        "5 suggestions",
+        "historical frequency",
+        "no spell check",
+        "English",
+        "lowercase alphabetic",
+        "10M DAU"
+      ],
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "AR02",
+      "prompt": "Reconstruct the back-of-envelope estimate.",
+      "target_points": [
+        "10M DAU",
+        "10 searches/day",
+        "20 bytes/query",
+        "20 autocomplete requests/search",
+        "24k QPS",
+        "48k peak",
+        "20% new",
+        "0.4GB/day"
+      ],
+      "source_pages": [
+        201,
+        202
+      ]
+    },
+    {
+      "id": "AR03",
+      "prompt": "Explain the high-level design.",
+      "target_points": [
+        "Data gathering service",
+        "Query service",
+        "Frequency table starting point",
+        "DB bottleneck"
+      ],
+      "source_pages": [
+        203,
+        204,
+        205
+      ]
+    },
+    {
+      "id": "AR04",
+      "prompt": "Describe trie fundamentals.",
+      "target_points": [
+        "Root empty",
+        "character nodes",
+        "26 lowercase children",
+        "prefix/query nodes",
+        "frequency metadata"
+      ],
+      "source_pages": [
+        206,
+        207
+      ]
+    },
+    {
+      "id": "AR05",
+      "prompt": "Reconstruct the unoptimized top-K algorithm and complexity.",
+      "target_points": [
+        "Find prefix O(p)",
+        "Traverse candidates O(c)",
+        "Sort O(c log c)",
+        "Total sum"
+      ],
+      "source_pages": [
+        208,
+        209
+      ]
+    },
+    {
+      "id": "AR06",
+      "prompt": "Explain both trie read optimizations and the resulting complexity.",
+      "target_points": [
+        "Bound prefix length",
+        "Top K cached per node",
+        "Space-for-time",
+        "O(1)+O(1)=O(1)"
+      ],
+      "source_pages": [
+        209,
+        210
+      ]
+    },
+    {
+      "id": "AR07",
+      "prompt": "Reconstruct the production data pipeline.",
+      "target_points": [
+        "Analytics Logs",
+        "Aggregators",
+        "Aggregated Data",
+        "Workers",
+        "Trie DB",
+        "Trie Cache",
+        "Weekly"
+      ],
+      "source_pages": [
+        210,
+        211,
+        212
+      ]
+    },
+    {
+      "id": "AR08",
+      "prompt": "Compare Trie DB storage options.",
+      "target_points": [
+        "Document snapshot/serialization/MongoDB",
+        "KV prefix->key,node data->value"
+      ],
+      "source_pages": [
+        212,
+        213
+      ]
+    },
+    {
+      "id": "AR09",
+      "prompt": "Reconstruct the query service.",
+      "target_points": [
+        "Request",
+        "Load balancer",
+        "API server",
+        "Trie Cache",
+        "Trie DB on miss",
+        "Refill cache"
+      ],
+      "source_pages": [
+        214
+      ]
+    },
+    {
+      "id": "AR10",
+      "prompt": "Name the three query/logging optimizations.",
+      "target_points": [
+        "AJAX",
+        "Browser caching",
+        "Data sampling"
+      ],
+      "source_pages": [
+        214,
+        215
+      ]
+    },
+    {
+      "id": "AR11",
+      "prompt": "Explain trie create/update/delete.",
+      "target_points": [
+        "Create from aggregated data",
+        "Weekly replacement",
+        "Direct update + ancestors",
+        "Filter layer",
+        "Async persistent delete"
+      ],
+      "source_pages": [
+        215,
+        216
+      ]
+    },
+    {
+      "id": "AR12",
+      "prompt": "Explain storage sharding.",
+      "target_points": [
+        "First-char ranges",
+        "26 first-level limit",
+        "Second/third-level split",
+        "Uneven letters",
+        "Historical distribution",
+        "Shard map manager"
+      ],
+      "source_pages": [
+        216,
+        217
+      ]
+    },
+    {
+      "id": "AR13",
+      "prompt": "Name all wrap-up extensions.",
+      "target_points": [
+        "Unicode",
+        "Country tries",
+        "CDN",
+        "Trending limitations",
+        "Shard working set",
+        "Recent-weighted ranking",
+        "Streaming"
+      ],
+      "source_pages": [
+        218
+      ]
+    }
+  ],
+  "diagram_reconstruction_drills": [
+    {
+      "id": "DR01",
+      "name": "Figure 13-2 Frequency Updates",
+      "task": "Draw an initially empty query-frequency table updated by twitch, twitter, twitter, twillo.",
+      "source_pages": [
+        203
+      ]
+    },
+    {
+      "id": "DR02",
+      "name": "Figures 13-3 and 13-4 Query Service",
+      "task": "Draw prefix 'tw' producing top five frequency-ranked rows and write the conceptual SQL prefix/sort/limit query.",
+      "source_pages": [
+        204
+      ]
+    },
+    {
+      "id": "DR03",
+      "name": "Figures 13-5 and 13-6 Trie",
+      "task": "Draw root -> t/w branches for tree, try, true, toy, wish, win, then annotate complete-query nodes with frequencies.",
+      "source_pages": [
+        206,
+        207,
+        208
+      ]
+    },
+    {
+      "id": "DR04",
+      "name": "Figure 13-7 Top-K Trie Lookup",
+      "task": "Draw prefix 'tr', descendant candidates tree:10/true:35/try:29, and select true/try as top two.",
+      "source_pages": [
+        208,
+        209
+      ]
+    },
+    {
+      "id": "DR05",
+      "name": "Figure 13-8 Cached Top Queries",
+      "task": "Draw top-query lists stored directly at root/intermediate trie nodes, including the 'be' node top five.",
+      "source_pages": [
+        209,
+        210
+      ]
+    },
+    {
+      "id": "DR06",
+      "name": "Figure 13-9 Data Gathering Service",
+      "task": "Draw Analytics Logs -> Aggregators -> Aggregated Data -> Workers -> Trie DB -> Trie Cache.",
+      "source_pages": [
+        210,
+        211,
+        212
+      ]
+    },
+    {
+      "id": "DR07",
+      "name": "Figure 13-10 Trie to KV Mapping",
+      "task": "Draw trie prefixes such as b, be, bee, bes, beer, best mapped to key-value entries.",
+      "source_pages": [
+        212,
+        213
+      ]
+    },
+    {
+      "id": "DR08",
+      "name": "Figure 13-11 Query Service",
+      "task": "Draw User -> Load Balancer -> API Servers -> Trie Cache -> Trie DB fallback.",
+      "source_pages": [
+        213,
+        214
+      ]
+    },
+    {
+      "id": "DR09",
+      "name": "Figure 13-13 Direct Trie Update",
+      "task": "Draw the before/after update where beer changes from frequency 10 to 30 and ancestors' cached top queries change.",
+      "source_pages": [
+        215,
+        216
+      ]
+    },
+    {
+      "id": "DR10",
+      "name": "Figure 13-14 Filter Layer",
+      "task": "Draw API Servers <- Filter Layer <- Trie Cache to show live filtering before results reach clients.",
+      "source_pages": [
+        216
+      ]
+    },
+    {
+      "id": "DR11",
+      "name": "Figure 13-15 Shard Map",
+      "task": "Draw Web Servers -> Shard Map Manager lookup -> selected database shard.",
+      "source_pages": [
+        217
+      ]
+    }
+  ],
+  "interview_style_questions": [
+    {
+      "id": "INT01",
+      "question": "What requirements should you clarify for autocomplete?",
+      "strong_answer_outline": [
+        "Prefix vs substring",
+        "Top K",
+        "Ranking signal",
+        "Spell check",
+        "Languages",
+        "Character set",
+        "DAU",
+        "Latency"
+      ],
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "id": "INT02",
+      "question": "What capacity estimates should you calculate?",
+      "strong_answer_outline": [
+        "DAU",
+        "Searches/user/day",
+        "Bytes/query",
+        "Requests/search",
+        "Average QPS",
+        "Peak QPS",
+        "New-data fraction",
+        "Daily added storage"
+      ],
+      "source_pages": [
+        201,
+        202
+      ]
+    },
+    {
+      "id": "INT03",
+      "question": "Why use a trie instead of SQL LIKE + ORDER BY?",
+      "strong_answer_outline": [
+        "SQL approach fine for small corpus",
+        "DB bottleneck at scale",
+        "Trie optimized for prefix retrieval",
+        "Can precompute top K"
+      ],
+      "source_pages": [
+        204,
+        205,
+        206
+      ]
+    },
+    {
+      "id": "INT04",
+      "question": "How do you make trie reads fast enough for sub-100-ms latency?",
+      "strong_answer_outline": [
+        "Bound prefix length",
+        "Cache top K per node",
+        "Avoid subtree traversal",
+        "Trade memory for latency",
+        "Distributed Trie Cache"
+      ],
+      "source_pages": [
+        209,
+        210,
+        212,
+        214
+      ]
+    },
+    {
+      "id": "INT05",
+      "question": "How do you build and update the trie at scale?",
+      "strong_answer_outline": [
+        "Append-only logs",
+        "Aggregate",
+        "Periodic async workers",
+        "Weekly rebuild assumption",
+        "Persist snapshot",
+        "Replace trie rather than mutate constantly"
+      ],
+      "source_pages": [
+        210,
+        211,
+        212,
+        215
+      ]
+    },
+    {
+      "id": "INT06",
+      "question": "How does the query path handle cache misses?",
+      "strong_answer_outline": [
+        "LB",
+        "API servers",
+        "Trie Cache",
+        "Trie DB fallback",
+        "Refill cache",
+        "Subsequent hits"
+      ],
+      "source_pages": [
+        214
+      ]
+    },
+    {
+      "id": "INT07",
+      "question": "How do you reduce frontend and logging overhead?",
+      "strong_answer_outline": [
+        "AJAX",
+        "Browser caching",
+        "Cache-Control/max-age",
+        "Data sampling"
+      ],
+      "source_pages": [
+        214,
+        215
+      ]
+    },
+    {
+      "id": "INT08",
+      "question": "How do you remove harmful autocomplete results?",
+      "strong_answer_outline": [
+        "Filter in front of cache",
+        "Flexible rules",
+        "Immediate suppression",
+        "Async DB deletion",
+        "Next rebuild clean"
+      ],
+      "source_pages": [
+        216
+      ]
+    },
+    {
+      "id": "INT09",
+      "question": "How would you shard a very large trie?",
+      "strong_answer_outline": [
+        "Prefix sharding",
+        "First/second/third characters",
+        "Uneven distribution issue",
+        "Historical distribution",
+        "Shard map manager"
+      ],
+      "source_pages": [
+        216,
+        217
+      ]
+    },
+    {
+      "id": "INT10",
+      "question": "How would you extend the system to multilingual, localized, and trending results?",
+      "strong_answer_outline": [
+        "Unicode",
+        "Country tries",
+        "CDN",
+        "Recent-weighted ranking",
+        "Sharded smaller working set",
+        "Streaming systems"
+      ],
+      "source_pages": [
+        218
+      ]
+    }
+  ],
+  "common_confusions": [
+    {
+      "confusion": "Autocomplete searches for the typed string anywhere inside a query.",
+      "correction": "The core scope supports matching only at the beginning of the query.",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "confusion": "The five suggestions are chosen alphabetically.",
+      "correction": "They are ranked by popularity, represented by historical search frequency.",
+      "source_pages": [
+        201
+      ]
+    },
+    {
+      "confusion": "The relational frequency table is the final architecture.",
+      "correction": "It is a high-level starting point; large-scale query serving moves to a trie and cache.",
+      "source_pages": [
+        205,
+        206
+      ]
+    },
+    {
+      "confusion": "A trie alone makes top-K retrieval automatically O(1).",
+      "correction": "The basic trie algorithm still traverses candidates and sorts them. O(1) comes from bounded prefix length plus top-K caching at each node under the chapter's assumptions.",
+      "source_pages": [
+        208,
+        209,
+        210
+      ]
+    },
+    {
+      "confusion": "Caching top K at every node is free.",
+      "correction": "It consumes substantial extra space; the design intentionally trades memory for latency.",
+      "source_pages": [
+        209
+      ]
+    },
+    {
+      "confusion": "The trie is updated every time someone searches.",
+      "correction": "The production design avoids that because of massive write volume and relatively slow-changing rankings; the chapter assumes weekly rebuilds.",
+      "source_pages": [
+        210,
+        211
+      ]
+    },
+    {
+      "confusion": "Trie Cache is the source of truth.",
+      "correction": "Trie DB is persistent storage; Trie Cache is the distributed in-memory read layer.",
+      "source_pages": [
+        212
+      ]
+    },
+    {
+      "confusion": "A cache miss means no suggestion exists.",
+      "correction": "The query service falls back to Trie DB and replenishes Trie Cache.",
+      "source_pages": [
+        214
+      ]
+    },
+    {
+      "confusion": "Deleting an unsafe result requires rebuilding the whole trie before it disappears.",
+      "correction": "The filter layer suppresses it immediately; physical DB removal occurs asynchronously.",
+      "source_pages": [
+        216
+      ]
+    },
+    {
+      "confusion": "Splitting a-z into equal alphabetical ranges balances load.",
+      "correction": "Starting-letter query volume is uneven, so distribution-aware shard boundaries are needed.",
+      "source_pages": [
+        216,
+        217
+      ]
+    },
+    {
+      "confusion": "Weekly offline rebuilding is sufficient for real-time trends.",
+      "correction": "The chapter explicitly says it is not; real-time trends require different ranking and streaming-oriented approaches.",
+      "source_pages": [
+        218
+      ]
+    }
+  ],
+  "practice_problems": [
+    {
+      "id": "PRACTICE01",
+      "type": "qps",
+      "prompt": "If DAU doubled to 20 million while all other chapter assumptions stayed the same, estimate average autocomplete QPS.",
+      "solution": "About 48,000 QPS.",
+      "note": "Derived from doubling the chapter's ~24,000 QPS estimate.",
+      "based_on_source_pages": [
+        201,
+        202
+      ]
+    },
+    {
+      "id": "PRACTICE02",
+      "type": "peak_qps",
+      "prompt": "If average QPS is 48,000 and peak is modeled as 2x average, what is peak QPS?",
+      "solution": "96,000 QPS.",
+      "note": "Derived using the chapter's peak-QPS rule.",
+      "based_on_source_pages": [
+        202
+      ]
+    },
+    {
+      "id": "PRACTICE03",
+      "type": "trie_ranking",
+      "prompt": "Prefix 'ca' has cat:90, car:80, cake:30, cabin:70, camera:60, can:100. Return top five.",
+      "solution": "can:100, cat:90, car:80, cabin:70, camera:60.",
+      "note": "New practice data using the chapter's frequency-ranking rule.",
+      "based_on_source_pages": [
+        208,
+        209
+      ]
+    },
+    {
+      "id": "PRACTICE04",
+      "type": "complexity",
+      "prompt": "Why does top-K caching eliminate O(c log c) work from the request path?",
+      "solution": "The top-K list is already precomputed and stored on the prefix node, so candidates do not need to be collected and sorted during the read.",
+      "based_on_source_pages": [
+        209,
+        210
+      ]
+    },
+    {
+      "id": "PRACTICE05",
+      "type": "cache",
+      "prompt": "A requested prefix is absent from Trie Cache but exists in Trie DB. What should the service do?",
+      "solution": "Read the trie data from Trie DB, return/build the suggestions, and replenish Trie Cache for subsequent requests.",
+      "based_on_source_pages": [
+        214
+      ]
+    },
+    {
+      "id": "PRACTICE06",
+      "type": "update",
+      "prompt": "A direct frequency update causes a query to enter the top five for its prefix. Which trie nodes may need updates?",
+      "solution": "The query's node and all ancestors up to the root whose cached top-K lists may change.",
+      "based_on_source_pages": [
+        215
+      ]
+    },
+    {
+      "id": "PRACTICE07",
+      "type": "sharding",
+      "prompt": "Why might one shard be dedicated solely to 's' while another holds 'u-z'?",
+      "solution": "Historical query distribution may show that 's' alone has roughly the same volume as all of 'u-z', so uneven alphabet ranges can produce better balance.",
+      "based_on_source_pages": [
+        217
+      ]
+    },
+    {
+      "id": "PRACTICE08",
+      "type": "realtime",
+      "prompt": "A breaking event makes a query spike within five minutes. Name two changes from the chapter that could help.",
+      "solution": "Examples: reduce the working set through sharding, weight recent queries more heavily, or introduce stream-processing infrastructure.",
+      "based_on_source_pages": [
+        218
+      ]
+    }
+  ],
+  "mastery_check": {
+    "beginner": [
+      "Can define autocomplete/typeahead and state the exact core requirements.",
+      "Can reproduce 10M DAU, 24k QPS, 48k peak QPS, and 0.4GB/day.",
+      "Can explain data gathering service versus query service.",
+      "Can define a trie and explain prefix lookup."
+    ],
+    "intermediate": [
+      "Can derive the basic trie query complexity.",
+      "Can explain both O(1)-oriented optimizations and the space-time tradeoff.",
+      "Can reconstruct the analytics-to-trie pipeline.",
+      "Can compare document-store and KV Trie DB representations.",
+      "Can reconstruct the cache-first query path.",
+      "Can explain AJAX, browser caching, and sampling."
+    ],
+    "advanced": [
+      "Can defend periodic rebuilds over per-query trie mutation.",
+      "Can explain ancestor propagation for direct updates.",
+      "Can design live filtering plus asynchronous physical deletion.",
+      "Can explain why naive alphabetical sharding is unbalanced.",
+      "Can design distribution-aware prefix sharding with a shard map manager.",
+      "Can explain multilingual, country-specific, and trending-query extensions.",
+      "Can redraw all major chapter diagrams from memory."
+    ]
+  },
+  "chapter_thirteen_final_review": {
+    "must_memorize": [
+      "Autocomplete = typeahead/search-as-you-type/incremental search.",
+      "Prefix matching only; return top 5.",
+      "Ranking signal = historical query frequency.",
+      "No spellcheck; core design uses lowercase English alphabetic queries.",
+      "Latency target = under 100 ms.",
+      "Scale = 10M DAU, 10 searches/user/day, 20 requests/search.",
+      "Average QPS ≈ 24k; peak QPS ≈ 48k.",
+      "Average query = 20 bytes; 20% new queries -> ~0.4GB/day.",
+      "High level = data gathering service + query service.",
+      "Relational frequency-table lookup is a starting point, not the scalable final path.",
+      "Trie root = empty string; character nodes represent prefixes/queries.",
+      "Basic lookup = O(p) + O(c) + O(c log c).",
+      "Optimization 1 = cap prefix length.",
+      "Optimization 2 = cache top 5 queries at every node.",
+      "Optimized read complexity is presented as O(1).",
+      "Top-K node caching trades memory for latency.",
+      "Do not update trie on every query.",
+      "Production data path = Analytics Logs -> Aggregators -> Aggregated Data -> Workers -> Trie DB -> Trie Cache.",
+      "Chapter assumes weekly trie rebuild.",
+      "Trie DB options = serialized document snapshot or prefix-keyed KV store.",
+      "Read path = LB -> API servers -> Trie Cache -> Trie DB on miss -> refill cache.",
+      "Query optimizations = AJAX + browser cache + data sampling.",
+      "Preferred update = rebuild and replace trie.",
+      "Direct node update requires ancestor updates.",
+      "Unsafe suggestions = filter layer now, async physical deletion later.",
+      "Naive sharding = alphabetic prefix ranges; problem = uneven distribution.",
+      "Better sharding = historical distribution + shard map manager.",
+      "Multilingual = Unicode trie nodes.",
+      "Localization = different tries by country, optionally in CDNs.",
+      "Trending = sharded smaller data set + recent-weighted ranking + streaming systems."
+    ],
+    "memory_chain": "REQUIREMENTS -> QPS -> FREQUENCY TABLE -> TRIE -> BASIC O(p)+O(c)+O(c log c) -> BOUND PREFIX + TOP-K CACHE -> O(1) READ -> ANALYTICS LOGS -> AGGREGATE -> WORKERS -> TRIE DB -> TRIE CACHE -> QUERY SERVICE -> AJAX/BROWSER CACHE/SAMPLING -> CREATE/UPDATE/FILTER -> SHARD MAP -> UNICODE/COUNTRY/TRENDING",
+    "one_sentence_takeaway": "A scalable autocomplete system shifts expensive popularity computation to an offline analytics-and-trie-build pipeline, precomputes top-K suggestions at each prefix, and serves reads from a distributed cache with constant-time lookup under bounded-prefix assumptions."
+  }
+}

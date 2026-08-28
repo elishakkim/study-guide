@@ -1,0 +1,4845 @@
+{
+  "chapter": {
+    "number": 7,
+    "title": "Transactions",
+    "book": "Designing Data-Intensive Applications",
+    "author": "Martin Kleppmann",
+    "pdf_pages": {
+      "start": 243,
+      "summary_end": 289
+    },
+    "book_pages": {
+      "start": 221,
+      "summary_end": 267
+    }
+  },
+  "chapter_summary": {
+    "overview": "Transactions simplify partial failures and concurrency by grouping reads and writes into a logical unit that either commits or aborts. The chapter unpacks ACID, distinguishes read committed, snapshot isolation, and serializable isolation, then analyzes dirty reads, dirty writes, read skew, lost updates, write skew, and phantoms. It explains MVCC, explicit locks, compare-and-set, and automatic lost-update detection. Finally it compares the three major ways of implementing serializable isolation: actual serial execution, two-phase locking (2PL), and serializable snapshot isolation (SSI).",
+    "major_sections": [
+      "The Slippery Concept of a Transaction",
+      "The Meaning of ACID",
+      "Single-Object and Multi-Object Operations",
+      "Handling Errors and Aborts",
+      "Weak Isolation Levels",
+      "Read Committed",
+      "Snapshot Isolation and Repeatable Read",
+      "Preventing Lost Updates",
+      "Write Skew and Phantoms",
+      "Serializability",
+      "Actual Serial Execution",
+      "Two-Phase Locking (2PL)",
+      "Serializable Snapshot Isolation (SSI)"
+    ],
+    "source_pages": [
+      243,
+      244,
+      245,
+      246,
+      247,
+      248,
+      249,
+      250,
+      251,
+      252,
+      253,
+      254,
+      255,
+      256,
+      257,
+      258,
+      259,
+      260,
+      261,
+      262,
+      263,
+      264,
+      265,
+      266,
+      267,
+      268,
+      269,
+      270,
+      271,
+      272,
+      273,
+      274,
+      275,
+      276,
+      277,
+      278,
+      279,
+      280,
+      281,
+      282,
+      283,
+      284,
+      285,
+      286,
+      287,
+      288,
+      289
+    ]
+  },
+  "learning_objectives": [
+    {
+      "id": "LO01",
+      "objective": "Explain how transactions simplify faults and concurrency.",
+      "source_pages": [
+        243,
+        244
+      ]
+    },
+    {
+      "id": "LO02",
+      "objective": "Define ACID using the chapter's precise framing.",
+      "source_pages": [
+        245,
+        246,
+        247,
+        248
+      ]
+    },
+    {
+      "id": "LO03",
+      "objective": "Distinguish atomicity from isolation.",
+      "source_pages": [
+        246,
+        247
+      ]
+    },
+    {
+      "id": "LO04",
+      "objective": "Explain ACID consistency as application invariants.",
+      "source_pages": [
+        246,
+        247
+      ]
+    },
+    {
+      "id": "LO05",
+      "objective": "Explain durability and why no technique is perfect.",
+      "source_pages": [
+        248,
+        249
+      ]
+    },
+    {
+      "id": "LO06",
+      "objective": "Explain why multi-object transactions are useful.",
+      "source_pages": [
+        250,
+        251,
+        253
+      ]
+    },
+    {
+      "id": "LO07",
+      "objective": "Identify transaction retry hazards.",
+      "source_pages": [
+        253,
+        254
+      ]
+    },
+    {
+      "id": "LO08",
+      "objective": "Define dirty reads and dirty writes.",
+      "source_pages": [
+        256,
+        257
+      ]
+    },
+    {
+      "id": "LO09",
+      "objective": "Explain read committed and its implementation.",
+      "source_pages": [
+        256,
+        258,
+        259
+      ]
+    },
+    {
+      "id": "LO10",
+      "objective": "Define read skew/nonrepeatable reads.",
+      "source_pages": [
+        259,
+        260
+      ]
+    },
+    {
+      "id": "LO11",
+      "objective": "Explain snapshot isolation and MVCC.",
+      "source_pages": [
+        260,
+        261,
+        262,
+        263
+      ]
+    },
+    {
+      "id": "LO12",
+      "objective": "Explain MVCC visibility rules.",
+      "source_pages": [
+        262,
+        263
+      ]
+    },
+    {
+      "id": "LO13",
+      "objective": "Explain why repeatable-read terminology is inconsistent.",
+      "source_pages": [
+        264
+      ]
+    },
+    {
+      "id": "LO14",
+      "objective": "Define lost updates and compare prevention techniques.",
+      "source_pages": [
+        265,
+        266,
+        267,
+        268
+      ]
+    },
+    {
+      "id": "LO15",
+      "objective": "Define write skew and why snapshot isolation permits it.",
+      "source_pages": [
+        269,
+        270
+      ]
+    },
+    {
+      "id": "LO16",
+      "objective": "Recognize write-skew examples and phantoms.",
+      "source_pages": [
+        271,
+        272,
+        273
+      ]
+    },
+    {
+      "id": "LO17",
+      "objective": "Define serializability.",
+      "source_pages": [
+        273,
+        274
+      ]
+    },
+    {
+      "id": "LO18",
+      "objective": "Explain actual serial execution and stored procedures.",
+      "source_pages": [
+        274,
+        275,
+        276,
+        277,
+        278
+      ]
+    },
+    {
+      "id": "LO19",
+      "objective": "Explain 2PL, deadlocks, predicate locks, and index-range locks.",
+      "source_pages": [
+        279,
+        280,
+        281,
+        282,
+        283
+      ]
+    },
+    {
+      "id": "LO20",
+      "objective": "Explain SSI as optimistic serializability over snapshot isolation.",
+      "source_pages": [
+        283,
+        284,
+        285,
+        286,
+        287,
+        288
+      ]
+    }
+  ],
+  "core_concepts": {
+    "transactions": {
+      "definition": "Logical group of reads and writes treated as one unit.",
+      "commit": "All transaction operations succeed.",
+      "abort": "The transaction fails and database writes are discarded/undone.",
+      "benefit": "Converts many partial-failure and concurrency cases into abort-and-retry.",
+      "source_pages": [
+        243,
+        244
+      ]
+    },
+    "acid": {
+      "atomicity": "Abortability when a transaction partially fails; not a concurrency property.",
+      "consistency": "Application-defined invariants remain valid; the application bears primary responsibility.",
+      "isolation": "Concurrent transactions should behave as though they do not interfere; strongest form is serializability.",
+      "durability": "Committed writes should survive faults.",
+      "warning": "'ACID compliant' is not a precise statement of identical guarantees across products.",
+      "source_pages": [
+        245,
+        246,
+        247,
+        248
+      ]
+    },
+    "durability_details": {
+      "single_node": "Nonvolatile storage plus WAL or similar recovery log.",
+      "replicated": "May wait for replication to some number of nodes before acknowledging commit.",
+      "no_perfect_solution": true,
+      "combine": [
+        "Disk/SSD persistence",
+        "Remote replication",
+        "Backups"
+      ],
+      "source_pages": [
+        248,
+        249
+      ]
+    },
+    "multi_object_transactions": {
+      "atomicity": "All-or-nothing across multiple writes.",
+      "isolation": "Other transactions see either all or none of the grouped writes.",
+      "why_needed": [
+        "Foreign-key/graph relationships",
+        "Denormalized data",
+        "Secondary indexes"
+      ],
+      "source_pages": [
+        250,
+        251,
+        253
+      ]
+    },
+    "retry_hazards": {
+      "items": [
+        "Commit may have succeeded even if acknowledgement was lost.",
+        "Retry under overload can worsen overload.",
+        "Permanent errors such as constraint violations should not be retried.",
+        "External side effects may occur even if the DB transaction aborts.",
+        "Client process can fail during retries."
+      ],
+      "mitigations": [
+        "Deduplication/idempotency",
+        "Retry limits",
+        "Exponential backoff",
+        "Classify transient vs permanent errors"
+      ],
+      "source_pages": [
+        254
+      ]
+    },
+    "read_committed": {
+      "guarantees": [
+        "No dirty reads",
+        "No dirty writes"
+      ],
+      "dirty_read": "Reading another transaction's uncommitted write.",
+      "dirty_write": "Overwriting another transaction's uncommitted write.",
+      "write_implementation": "Object/row write lock held until commit or abort.",
+      "read_implementation": "Readers commonly see the previous committed value until the writer commits.",
+      "does_not_prevent": [
+        "Read skew",
+        "Lost updates in general",
+        "Write skew"
+      ],
+      "source_pages": [
+        256,
+        257,
+        258,
+        259
+      ]
+    },
+    "snapshot_isolation": {
+      "definition": "Each transaction reads from a consistent point-in-time snapshot.",
+      "best_for": [
+        "Backups",
+        "Long-running analytics",
+        "Integrity checks"
+      ],
+      "principle": "Readers never block writers and writers never block readers.",
+      "implementation": "MVCC keeps multiple committed object versions.",
+      "source_pages": [
+        260,
+        261
+      ]
+    },
+    "mvcc": {
+      "txid": "Unique increasing transaction ID.",
+      "created_by": "Transaction that created a row version.",
+      "deleted_by": "Transaction that marked a row version deleted.",
+      "update": "Delete old version + create new version.",
+      "visibility": [
+        "Ignore writes from transactions in progress when the reader started.",
+        "Ignore aborted writes.",
+        "Ignore writes from transactions started after the reader.",
+        "Other valid committed versions are visible."
+      ],
+      "garbage_collection": "Remove versions once no active transaction can see them.",
+      "source_pages": [
+        261,
+        262,
+        263
+      ]
+    },
+    "lost_updates": {
+      "definition": "Concurrent read-modify-write cycles cause one change to clobber another.",
+      "examples": [
+        "Counter increment",
+        "Account balance",
+        "JSON-document edit",
+        "Concurrent wiki edit"
+      ],
+      "solutions": [
+        "Atomic database-side update",
+        "Explicit SELECT FOR UPDATE locking",
+        "Automatic lost-update detection and abort",
+        "Compare-and-set"
+      ],
+      "cas_warning": "Verify the database's semantics; a stale snapshot predicate can make CAS unsafe.",
+      "source_pages": [
+        265,
+        266,
+        267
+      ]
+    },
+    "replicated_lost_updates": {
+      "problem": "Locks/CAS assume one up-to-date copy and do not directly fit multi-leader/leaderless replication.",
+      "approach": "Keep concurrent siblings and merge later; commutative operations are especially useful.",
+      "warning": "LWW is prone to lost updates.",
+      "source_pages": [
+        268
+      ]
+    },
+    "write_skew": {
+      "definition": "Transactions read overlapping state, make decisions, then update different objects so a shared invariant is violated.",
+      "doctor_example": "Both doctors see two on call and independently go off call, leaving zero.",
+      "not_prevented_by": "Snapshot isolation in the implementations discussed.",
+      "general_solution": "Serializable isolation.",
+      "fallback": "Explicitly lock rows the transaction depends on if possible.",
+      "source_pages": [
+        269,
+        270
+      ]
+    },
+    "phantoms": {
+      "definition": "A write changes the set of rows matching another transaction's search condition.",
+      "pattern": [
+        "Query condition",
+        "Application decision",
+        "Write changes condition result"
+      ],
+      "materializing_conflicts": "Create concrete lockable rows for otherwise phantom conflicts; considered a last resort.",
+      "source_pages": [
+        272,
+        273
+      ]
+    },
+    "serializability": {
+      "definition": "Outcome equivalent to executing transactions one at a time in some serial order.",
+      "implementations": [
+        "Actual serial execution",
+        "Two-phase locking (2PL)",
+        "Serializable snapshot isolation (SSI)"
+      ],
+      "source_pages": [
+        273,
+        274
+      ]
+    },
+    "serial_execution": {
+      "idea": "One transaction at a time on one thread.",
+      "why_practical": [
+        "Active data can often fit in memory",
+        "OLTP transactions are usually short"
+      ],
+      "systems": [
+        "VoltDB/H-Store",
+        "Redis",
+        "Datomic"
+      ],
+      "stored_procedure_reason": "Avoid interactive application/database network waits by sending the entire transaction program in advance.",
+      "scaling": "Partition data and run one serial thread per independent partition.",
+      "cross_partition_cost": "Transactions spanning partitions require lock-step coordination and are much slower.",
+      "constraints": [
+        "Small and fast transactions",
+        "Active data in memory",
+        "Write load fits one core/partition",
+        "Limited cross-partition transactions"
+      ],
+      "source_pages": [
+        274,
+        275,
+        276,
+        277,
+        278
+      ]
+    },
+    "two_phase_locking": {
+      "not_two_phase_commit": true,
+      "shared_lock": "Multiple readers allowed unless an exclusive lock exists.",
+      "exclusive_lock": "Required for writes; no other lock holder allowed.",
+      "upgrade": "Shared lock may be upgraded to exclusive.",
+      "held_until": "Commit or abort.",
+      "why_two_phase": "Locks acquired during transaction, released at transaction end.",
+      "deadlock": "Mutual waiting; DB aborts one transaction.",
+      "performance": [
+        "Lock overhead",
+        "Reduced concurrency",
+        "Queueing",
+        "Bad tail latency",
+        "Deadlock retries"
+      ],
+      "source_pages": [
+        279,
+        280,
+        281
+      ]
+    },
+    "predicate_and_range_locks": {
+      "predicate_lock": "Covers all current and future objects matching a search predicate.",
+      "purpose": "Prevent phantoms/write skew in serializable 2PL.",
+      "index_range_lock": "Lower-overhead approximation attached to an index entry/range; also called next-key locking.",
+      "fallback": "Whole-table lock if no suitable index exists.",
+      "source_pages": [
+        281,
+        282,
+        283
+      ]
+    },
+    "ssi": {
+      "full_name": "Serializable Snapshot Isolation",
+      "type": "Optimistic concurrency control",
+      "base": "Snapshot isolation",
+      "additional_mechanism": "Detect serialization conflicts and abort unsafe transactions.",
+      "outdated_premise": "A transaction makes a decision from snapshot state that is no longer true at commit time.",
+      "detects": [
+        "Reads of stale MVCC versions whose conflicting writes later commit",
+        "Writes that affect data/predicates another transaction previously read"
+      ],
+      "tripwire": "Read tracking notifies potential conflicts rather than blocking.",
+      "tradeoffs": [
+        "High contention causes more aborts",
+        "Fine tracking costs bookkeeping",
+        "Coarse tracking may cause unnecessary aborts"
+      ],
+      "advantages": [
+        "Readers/writers do not block each other",
+        "More predictable latency than 2PL",
+        "Not limited to one CPU core"
+      ],
+      "source_pages": [
+        283,
+        284,
+        285,
+        286,
+        287,
+        288
+      ]
+    }
+  },
+  "flashcards": [
+    {
+      "id": "FC001",
+      "front": "What is a transaction?",
+      "back": "A logical unit grouping reads and writes so they commit or abort together.",
+      "source_pages": [
+        244
+      ]
+    },
+    {
+      "id": "FC002",
+      "front": "What is commit?",
+      "back": "Successful completion of the entire transaction.",
+      "source_pages": [
+        244
+      ]
+    },
+    {
+      "id": "FC003",
+      "front": "What is abort/rollback?",
+      "back": "Failure of the transaction with its DB writes discarded or undone.",
+      "source_pages": [
+        244
+      ]
+    },
+    {
+      "id": "FC004",
+      "front": "Why do transactions simplify applications?",
+      "back": "They hide many partial-failure and concurrency scenarios behind safety guarantees.",
+      "source_pages": [
+        244
+      ]
+    },
+    {
+      "id": "FC005",
+      "front": "Are transactions mandatory for every application?",
+      "back": "No; guarantees can be weakened for performance/availability.",
+      "source_pages": [
+        244
+      ]
+    },
+    {
+      "id": "FC006",
+      "front": "What does ACID stand for?",
+      "back": "Atomicity, Consistency, Isolation, Durability.",
+      "source_pages": [
+        245
+      ]
+    },
+    {
+      "id": "FC007",
+      "front": "What does atomicity mean in ACID?",
+      "back": "Abortability on partial failure.",
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "FC008",
+      "front": "Is ACID atomicity mainly about concurrency?",
+      "back": "No; concurrency is isolation.",
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "FC009",
+      "front": "Why does atomicity enable safe DB retry?",
+      "back": "After abort, the transaction should have changed nothing.",
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "FC010",
+      "front": "What does ACID consistency mean?",
+      "back": "Application-defined invariants remain true.",
+      "source_pages": [
+        246,
+        247
+      ]
+    },
+    {
+      "id": "FC011",
+      "front": "Who is primarily responsible for ACID consistency?",
+      "back": "The application.",
+      "source_pages": [
+        247
+      ]
+    },
+    {
+      "id": "FC012",
+      "front": "What constraints can a DB enforce directly?",
+      "back": "Examples include foreign keys and uniqueness constraints.",
+      "source_pages": [
+        247
+      ]
+    },
+    {
+      "id": "FC013",
+      "front": "Which ACID properties are DB properties?",
+      "back": "Atomicity, isolation, durability.",
+      "source_pages": [
+        247
+      ]
+    },
+    {
+      "id": "FC014",
+      "front": "What is isolation?",
+      "back": "Concurrent transactions should not interfere with one another.",
+      "source_pages": [
+        247
+      ]
+    },
+    {
+      "id": "FC015",
+      "front": "What is serializability?",
+      "back": "Concurrent outcome equals some one-at-a-time transaction order.",
+      "source_pages": [
+        247,
+        248
+      ]
+    },
+    {
+      "id": "FC016",
+      "front": "What is durability?",
+      "back": "Committed data should survive faults/crashes.",
+      "source_pages": [
+        248
+      ]
+    },
+    {
+      "id": "FC017",
+      "front": "How is single-node durability commonly implemented?",
+      "back": "Nonvolatile storage plus WAL or similar recovery log.",
+      "source_pages": [
+        248
+      ]
+    },
+    {
+      "id": "FC018",
+      "front": "Can replication provide durability?",
+      "back": "Yes, by waiting for copies on multiple nodes before commit acknowledgement.",
+      "source_pages": [
+        248
+      ]
+    },
+    {
+      "id": "FC019",
+      "front": "Is perfect durability possible?",
+      "back": "No.",
+      "source_pages": [
+        248,
+        249
+      ]
+    },
+    {
+      "id": "FC020",
+      "front": "What durability techniques should be combined?",
+      "back": "Persistence, remote replication, and backups.",
+      "source_pages": [
+        249
+      ]
+    },
+    {
+      "id": "FC021",
+      "front": "What is multi-object atomicity?",
+      "back": "All writes succeed or all are rolled back.",
+      "source_pages": [
+        250
+      ]
+    },
+    {
+      "id": "FC022",
+      "front": "What is multi-object isolation?",
+      "back": "Other transactions see all or none of the transaction's writes.",
+      "source_pages": [
+        250
+      ]
+    },
+    {
+      "id": "FC023",
+      "front": "What email example motivates multi-object transactions?",
+      "back": "Insert message and update unread counter together.",
+      "source_pages": [
+        250,
+        251
+      ]
+    },
+    {
+      "id": "FC024",
+      "front": "Does multi-put necessarily mean transaction semantics?",
+      "back": "No.",
+      "source_pages": [
+        252
+      ]
+    },
+    {
+      "id": "FC025",
+      "front": "Do DBs usually protect single-object writes atomically?",
+      "back": "Yes.",
+      "source_pages": [
+        252
+      ]
+    },
+    {
+      "id": "FC026",
+      "front": "What is compare-and-set?",
+      "back": "Write only if a value has not changed since it was read.",
+      "source_pages": [
+        252,
+        267
+      ]
+    },
+    {
+      "id": "FC027",
+      "front": "Why do foreign keys motivate transactions?",
+      "back": "Related records must remain valid together.",
+      "source_pages": [
+        253
+      ]
+    },
+    {
+      "id": "FC028",
+      "front": "Why does denormalization motivate transactions?",
+      "back": "Duplicated data across documents must stay synchronized.",
+      "source_pages": [
+        253
+      ]
+    },
+    {
+      "id": "FC029",
+      "front": "Why do secondary indexes motivate transactions?",
+      "back": "Base rows and index objects need coordinated updates.",
+      "source_pages": [
+        253
+      ]
+    },
+    {
+      "id": "FC030",
+      "front": "What can ambiguous commit acknowledgement cause?",
+      "back": "Duplicate execution if the client retries a transaction that actually committed.",
+      "source_pages": [
+        254
+      ]
+    },
+    {
+      "id": "FC031",
+      "front": "How do you reduce duplicate retry risk?",
+      "back": "Application-level deduplication/idempotency.",
+      "source_pages": [
+        254
+      ]
+    },
+    {
+      "id": "FC032",
+      "front": "Why can retries worsen overload?",
+      "back": "They add more work to an already overloaded system.",
+      "source_pages": [
+        254
+      ]
+    },
+    {
+      "id": "FC033",
+      "front": "What retry strategy is suggested?",
+      "back": "Limit retries and use exponential backoff.",
+      "source_pages": [
+        254
+      ]
+    },
+    {
+      "id": "FC034",
+      "front": "What errors should usually be retried?",
+      "back": "Transient errors such as deadlocks, isolation violations, temporary network failure, failover.",
+      "source_pages": [
+        254
+      ]
+    },
+    {
+      "id": "FC035",
+      "front": "What errors should not normally be retried?",
+      "back": "Permanent errors such as constraint violations.",
+      "source_pages": [
+        254
+      ]
+    },
+    {
+      "id": "FC036",
+      "front": "Why are external side effects difficult?",
+      "back": "They may happen even if the transaction aborts.",
+      "source_pages": [
+        254
+      ]
+    },
+    {
+      "id": "FC037",
+      "front": "Why are concurrency bugs hard to test?",
+      "back": "They depend on rare nondeterministic timing.",
+      "source_pages": [
+        255
+      ]
+    },
+    {
+      "id": "FC038",
+      "front": "Why do databases use weaker isolation?",
+      "back": "Serializable isolation can have performance costs.",
+      "source_pages": [
+        255
+      ]
+    },
+    {
+      "id": "FC039",
+      "front": "What is read uncommitted?",
+      "back": "A weaker level that prevents dirty writes but permits dirty reads.",
+      "source_pages": [
+        256
+      ]
+    },
+    {
+      "id": "FC040",
+      "front": "What are read committed's two guarantees?",
+      "back": "No dirty reads and no dirty writes.",
+      "source_pages": [
+        256
+      ]
+    },
+    {
+      "id": "FC041",
+      "front": "What is a dirty read?",
+      "back": "Reading another transaction's uncommitted write.",
+      "source_pages": [
+        256
+      ]
+    },
+    {
+      "id": "FC042",
+      "front": "What is a dirty write?",
+      "back": "Overwriting another transaction's uncommitted write.",
+      "source_pages": [
+        257
+      ]
+    },
+    {
+      "id": "FC043",
+      "front": "How does read committed prevent dirty writes?",
+      "back": "Delay conflicting writer using a row/object lock until first transaction ends.",
+      "source_pages": [
+        257,
+        258
+      ]
+    },
+    {
+      "id": "FC044",
+      "front": "Does read committed prevent lost updates?",
+      "back": "Not generally.",
+      "source_pages": [
+        257
+      ]
+    },
+    {
+      "id": "FC045",
+      "front": "Why avoid read locks for dirty-read prevention?",
+      "back": "Long writers can block many readers and hurt latency.",
+      "source_pages": [
+        258
+      ]
+    },
+    {
+      "id": "FC046",
+      "front": "How are dirty reads commonly prevented instead?",
+      "back": "Serve the previous committed value until the new value commits.",
+      "source_pages": [
+        259
+      ]
+    },
+    {
+      "id": "FC047",
+      "front": "What is read skew?",
+      "back": "Seeing different DB values from different points in time.",
+      "source_pages": [
+        259,
+        260
+      ]
+    },
+    {
+      "id": "FC048",
+      "front": "What is another name for read skew?",
+      "back": "Nonrepeatable read.",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "FC049",
+      "front": "What happens in the bank example?",
+      "back": "A $1,000 total can temporarily appear as $900.",
+      "source_pages": [
+        259,
+        260
+      ]
+    },
+    {
+      "id": "FC050",
+      "front": "Is read skew allowed under read committed?",
+      "back": "Yes.",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "FC051",
+      "front": "Why is read skew dangerous for backups?",
+      "back": "A backup can permanently combine incompatible points in time.",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "FC052",
+      "front": "What is snapshot isolation?",
+      "back": "Every transaction reads from one consistent point-in-time snapshot.",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "FC053",
+      "front": "What workloads benefit most?",
+      "back": "Long-running read-only backups and analytics.",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "FC054",
+      "front": "What is the snapshot-isolation concurrency mantra?",
+      "back": "Readers never block writers; writers never block readers.",
+      "source_pages": [
+        261
+      ]
+    },
+    {
+      "id": "FC055",
+      "front": "What does MVCC stand for?",
+      "back": "Multi-Version Concurrency Control.",
+      "source_pages": [
+        261
+      ]
+    },
+    {
+      "id": "FC056",
+      "front": "Why keep multiple versions?",
+      "back": "Different transactions need different historical snapshots.",
+      "source_pages": [
+        261
+      ]
+    },
+    {
+      "id": "FC057",
+      "front": "What is a txid?",
+      "back": "A unique increasing transaction ID.",
+      "source_pages": [
+        261
+      ]
+    },
+    {
+      "id": "FC058",
+      "front": "What does created_by identify?",
+      "back": "The transaction that created a row version.",
+      "source_pages": [
+        262
+      ]
+    },
+    {
+      "id": "FC059",
+      "front": "What does deleted_by identify?",
+      "back": "The transaction that marked a row version deleted.",
+      "source_pages": [
+        262
+      ]
+    },
+    {
+      "id": "FC060",
+      "front": "How is an MVCC update represented?",
+      "back": "Delete old version plus create new version.",
+      "source_pages": [
+        262
+      ]
+    },
+    {
+      "id": "FC061",
+      "front": "When are old versions removed?",
+      "back": "When no active transaction can still see them.",
+      "source_pages": [
+        262,
+        263
+      ]
+    },
+    {
+      "id": "FC062",
+      "front": "Which transactions' writes does a snapshot ignore?",
+      "back": "In-progress at snapshot start, aborted, and later-starting transactions.",
+      "source_pages": [
+        263
+      ]
+    },
+    {
+      "id": "FC063",
+      "front": "How can indexes work with MVCC?",
+      "back": "Point to versions and filter them by snapshot visibility.",
+      "source_pages": [
+        263
+      ]
+    },
+    {
+      "id": "FC064",
+      "front": "What copy-on-write systems are cited?",
+      "back": "CouchDB, Datomic, LMDB.",
+      "source_pages": [
+        264
+      ]
+    },
+    {
+      "id": "FC065",
+      "front": "What can a historical copy-on-write B-tree root represent?",
+      "back": "A consistent database snapshot.",
+      "source_pages": [
+        264
+      ]
+    },
+    {
+      "id": "FC066",
+      "front": "Why is 'repeatable read' confusing?",
+      "back": "Different databases use the name for different guarantees.",
+      "source_pages": [
+        264
+      ]
+    },
+    {
+      "id": "FC067",
+      "front": "What does PostgreSQL/MySQL call snapshot isolation?",
+      "back": "Repeatable read.",
+      "source_pages": [
+        264
+      ]
+    },
+    {
+      "id": "FC068",
+      "front": "What does Oracle call snapshot isolation in the cited version?",
+      "back": "Serializable.",
+      "source_pages": [
+        264
+      ]
+    },
+    {
+      "id": "FC069",
+      "front": "What is a lost update?",
+      "back": "A concurrent read-modify-write clobbers another transaction's modification.",
+      "source_pages": [
+        265
+      ]
+    },
+    {
+      "id": "FC070",
+      "front": "Give lost-update examples.",
+      "back": "Counter, balance, JSON list, wiki editing.",
+      "source_pages": [
+        265
+      ]
+    },
+    {
+      "id": "FC071",
+      "front": "Preferred lost-update solution when possible?",
+      "back": "Database-side atomic operation.",
+      "source_pages": [
+        265
+      ]
+    },
+    {
+      "id": "FC072",
+      "front": "What SQL pattern safely increments a counter?",
+      "back": "UPDATE ... SET value = value + 1.",
+      "source_pages": [
+        265
+      ]
+    },
+    {
+      "id": "FC073",
+      "front": "What is SELECT FOR UPDATE used for?",
+      "back": "Explicitly locking rows before application read-modify-write logic.",
+      "source_pages": [
+        266
+      ]
+    },
+    {
+      "id": "FC074",
+      "front": "What is explicit locking's weakness?",
+      "back": "Developers can forget necessary locks.",
+      "source_pages": [
+        266
+      ]
+    },
+    {
+      "id": "FC075",
+      "front": "What is automatic lost-update detection?",
+      "back": "DB detects conflict and aborts one transaction for retry.",
+      "source_pages": [
+        267
+      ]
+    },
+    {
+      "id": "FC076",
+      "front": "Which cited DB does not auto-detect lost updates in repeatable read?",
+      "back": "MySQL/InnoDB.",
+      "source_pages": [
+        267
+      ]
+    },
+    {
+      "id": "FC077",
+      "front": "What is CAS intended to prevent?",
+      "back": "Lost updates.",
+      "source_pages": [
+        267
+      ]
+    },
+    {
+      "id": "FC078",
+      "front": "Why can CAS be unsafe?",
+      "back": "Its predicate may read from an old snapshot.",
+      "source_pages": [
+        267
+      ]
+    },
+    {
+      "id": "FC079",
+      "front": "Why don't locks/CAS directly solve multi-leader writes?",
+      "back": "They assume one up-to-date copy.",
+      "source_pages": [
+        268
+      ]
+    },
+    {
+      "id": "FC080",
+      "front": "How do replicated systems often retain concurrent writes?",
+      "back": "Keep siblings and merge later.",
+      "source_pages": [
+        268
+      ]
+    },
+    {
+      "id": "FC081",
+      "front": "What are useful replicated operations?",
+      "back": "Commutative operations such as increment and set add.",
+      "source_pages": [
+        268
+      ]
+    },
+    {
+      "id": "FC082",
+      "front": "What conflict method is prone to lost updates?",
+      "back": "Last-write-wins.",
+      "source_pages": [
+        268
+      ]
+    },
+    {
+      "id": "FC083",
+      "front": "What is write skew?",
+      "back": "Transactions decide from overlapping snapshots and update different objects, breaking an invariant.",
+      "source_pages": [
+        269,
+        270
+      ]
+    },
+    {
+      "id": "FC084",
+      "front": "What is the doctor-on-call invariant?",
+      "back": "At least one doctor must remain on call.",
+      "source_pages": [
+        269
+      ]
+    },
+    {
+      "id": "FC085",
+      "front": "Why do both doctors commit under snapshot isolation?",
+      "back": "Each snapshot sees two doctors on call.",
+      "source_pages": [
+        269
+      ]
+    },
+    {
+      "id": "FC086",
+      "front": "Why isn't this a lost update?",
+      "back": "They update different records.",
+      "source_pages": [
+        269,
+        270
+      ]
+    },
+    {
+      "id": "FC087",
+      "front": "What generally prevents write skew?",
+      "back": "True serializable isolation.",
+      "source_pages": [
+        270
+      ]
+    },
+    {
+      "id": "FC088",
+      "front": "What fallback can help in the doctor example?",
+      "back": "SELECT FOR UPDATE on all rows the decision depends on.",
+      "source_pages": [
+        270
+      ]
+    },
+    {
+      "id": "FC089",
+      "front": "What is the meeting-room anomaly?",
+      "back": "Both transactions see no conflict and insert overlapping bookings.",
+      "source_pages": [
+        271
+      ]
+    },
+    {
+      "id": "FC090",
+      "front": "What solves concurrent username claiming?",
+      "back": "A unique constraint.",
+      "source_pages": [
+        272
+      ]
+    },
+    {
+      "id": "FC091",
+      "front": "What is double-spending write skew?",
+      "back": "Two spends each pass a balance check but together make balance negative.",
+      "source_pages": [
+        272
+      ]
+    },
+    {
+      "id": "FC092",
+      "front": "What is a phantom?",
+      "back": "A write changes another transaction's search-query result set.",
+      "source_pages": [
+        273
+      ]
+    },
+    {
+      "id": "FC093",
+      "front": "Why can SELECT FOR UPDATE fail against a phantom?",
+      "back": "The query may return no existing row to lock.",
+      "source_pages": [
+        273
+      ]
+    },
+    {
+      "id": "FC094",
+      "front": "What is materializing conflicts?",
+      "back": "Create concrete rows purely to lock an otherwise phantom conflict.",
+      "source_pages": [
+        273
+      ]
+    },
+    {
+      "id": "FC095",
+      "front": "Why is materializing conflicts a last resort?",
+      "back": "It is error-prone and leaks concurrency control into the data model.",
+      "source_pages": [
+        273
+      ]
+    },
+    {
+      "id": "FC096",
+      "front": "What is the strongest isolation level discussed?",
+      "back": "Serializable isolation.",
+      "source_pages": [
+        274
+      ]
+    },
+    {
+      "id": "FC097",
+      "front": "What are the three serializability implementations?",
+      "back": "Serial execution, 2PL, SSI.",
+      "source_pages": [
+        274
+      ]
+    },
+    {
+      "id": "FC098",
+      "front": "What is actual serial execution?",
+      "back": "One transaction at a time on one thread.",
+      "source_pages": [
+        274
+      ]
+    },
+    {
+      "id": "FC099",
+      "front": "Why did it become practical?",
+      "back": "More data fits in RAM and OLTP transactions are short.",
+      "source_pages": [
+        275
+      ]
+    },
+    {
+      "id": "FC100",
+      "front": "Which systems are cited?",
+      "back": "VoltDB/H-Store, Redis, Datomic.",
+      "source_pages": [
+        275
+      ]
+    },
+    {
+      "id": "FC101",
+      "front": "Why do serial systems use stored procedures?",
+      "back": "To eliminate interactive network waits inside a one-at-a-time execution loop.",
+      "source_pages": [
+        276
+      ]
+    },
+    {
+      "id": "FC102",
+      "front": "What must VoltDB replicated stored procedures be?",
+      "back": "Deterministic.",
+      "source_pages": [
+        277
+      ]
+    },
+    {
+      "id": "FC103",
+      "front": "How does serial execution scale across cores?",
+      "back": "Partition data and give each partition its own transaction thread.",
+      "source_pages": [
+        278
+      ]
+    },
+    {
+      "id": "FC104",
+      "front": "What is required for good partition scaling?",
+      "back": "Transactions mostly stay inside one partition.",
+      "source_pages": [
+        278
+      ]
+    },
+    {
+      "id": "FC105",
+      "front": "Why are cross-partition transactions slow?",
+      "back": "They require coordinated lock-step execution.",
+      "source_pages": [
+        278
+      ]
+    },
+    {
+      "id": "FC106",
+      "front": "What constraints summarize serial execution?",
+      "back": "Small/fast, in-memory active data, write load fits one core/partition, limited cross-partition work.",
+      "source_pages": [
+        278
+      ]
+    },
+    {
+      "id": "FC107",
+      "front": "What does 2PL stand for?",
+      "back": "Two-Phase Locking.",
+      "source_pages": [
+        279
+      ]
+    },
+    {
+      "id": "FC108",
+      "front": "Is 2PL two-phase commit?",
+      "back": "No.",
+      "source_pages": [
+        279
+      ]
+    },
+    {
+      "id": "FC109",
+      "front": "How does 2PL differ from snapshot isolation?",
+      "back": "Readers and writers block each other.",
+      "source_pages": [
+        279
+      ]
+    },
+    {
+      "id": "FC110",
+      "front": "What is a shared lock?",
+      "back": "A read lock that multiple readers can hold.",
+      "source_pages": [
+        280
+      ]
+    },
+    {
+      "id": "FC111",
+      "front": "What is an exclusive lock?",
+      "back": "A write lock that excludes all other holders.",
+      "source_pages": [
+        280
+      ]
+    },
+    {
+      "id": "FC112",
+      "front": "How long are 2PL locks held?",
+      "back": "Until commit or abort.",
+      "source_pages": [
+        280
+      ]
+    },
+    {
+      "id": "FC113",
+      "front": "Why is it called two-phase locking?",
+      "back": "Locks are acquired during execution and released at transaction end.",
+      "source_pages": [
+        280
+      ]
+    },
+    {
+      "id": "FC114",
+      "front": "What is a deadlock?",
+      "back": "Transactions mutually wait on one another's locks.",
+      "source_pages": [
+        280
+      ]
+    },
+    {
+      "id": "FC115",
+      "front": "How does the DB break deadlocks?",
+      "back": "Abort one transaction and let the application retry.",
+      "source_pages": [
+        280
+      ]
+    },
+    {
+      "id": "FC116",
+      "front": "Why can 2PL have bad tail latency?",
+      "back": "A slow lock holder can queue many waiting transactions.",
+      "source_pages": [
+        281
+      ]
+    },
+    {
+      "id": "FC117",
+      "front": "What is a predicate lock?",
+      "back": "A lock over all current/future rows matching a search condition.",
+      "source_pages": [
+        281,
+        282
+      ]
+    },
+    {
+      "id": "FC118",
+      "front": "Why are predicate locks useful?",
+      "back": "They prevent phantoms and write skew.",
+      "source_pages": [
+        281,
+        282
+      ]
+    },
+    {
+      "id": "FC119",
+      "front": "What is an index-range lock?",
+      "back": "A lower-overhead approximation of a predicate lock.",
+      "source_pages": [
+        282
+      ]
+    },
+    {
+      "id": "FC120",
+      "front": "What is another name for index-range locking?",
+      "back": "Next-key locking.",
+      "source_pages": [
+        282
+      ]
+    },
+    {
+      "id": "FC121",
+      "front": "What if no suitable index exists?",
+      "back": "A whole-table lock may be used.",
+      "source_pages": [
+        283
+      ]
+    },
+    {
+      "id": "FC122",
+      "front": "What does SSI stand for?",
+      "back": "Serializable Snapshot Isolation.",
+      "source_pages": [
+        283
+      ]
+    },
+    {
+      "id": "FC123",
+      "front": "Is SSI pessimistic or optimistic?",
+      "back": "Optimistic.",
+      "source_pages": [
+        283
+      ]
+    },
+    {
+      "id": "FC124",
+      "front": "What is pessimistic concurrency control?",
+      "back": "Wait/block when a potential conflict appears.",
+      "source_pages": [
+        283
+      ]
+    },
+    {
+      "id": "FC125",
+      "front": "What is optimistic concurrency control?",
+      "back": "Let transactions run and abort unsafe executions later.",
+      "source_pages": [
+        283,
+        284
+      ]
+    },
+    {
+      "id": "FC126",
+      "front": "When does optimistic control perform poorly?",
+      "back": "High contention causing many aborts/retries.",
+      "source_pages": [
+        284
+      ]
+    },
+    {
+      "id": "FC127",
+      "front": "What is SSI based on?",
+      "back": "Snapshot isolation.",
+      "source_pages": [
+        284
+      ]
+    },
+    {
+      "id": "FC128",
+      "front": "What does SSI add?",
+      "back": "Serialization-conflict detection and selective aborts.",
+      "source_pages": [
+        284
+      ]
+    },
+    {
+      "id": "FC129",
+      "front": "What is an outdated premise?",
+      "back": "A decision based on snapshot data that is no longer true by commit.",
+      "source_pages": [
+        284,
+        285
+      ]
+    },
+    {
+      "id": "FC130",
+      "front": "What two cases does SSI detect?",
+      "back": "Stale MVCC reads and later writes affecting prior reads.",
+      "source_pages": [
+        285
+      ]
+    },
+    {
+      "id": "FC131",
+      "front": "Why not abort immediately after detecting an invisible write?",
+      "back": "Reader may be read-only or the writer may abort/not commit in time.",
+      "source_pages": [
+        286
+      ]
+    },
+    {
+      "id": "FC132",
+      "front": "How does SSI track writes affecting prior reads?",
+      "back": "Read tracking acts like a nonblocking tripwire on index ranges/table predicates.",
+      "source_pages": [
+        286,
+        287
+      ]
+    },
+    {
+      "id": "FC133",
+      "front": "What is SSI's tracking tradeoff?",
+      "back": "Fine tracking costs more bookkeeping; coarse tracking creates more false aborts.",
+      "source_pages": [
+        287
+      ]
+    },
+    {
+      "id": "FC134",
+      "front": "How does SSI compare with 2PL on reader/writer blocking?",
+      "back": "Readers and writers do not block one another.",
+      "source_pages": [
+        287
+      ]
+    },
+    {
+      "id": "FC135",
+      "front": "Is SSI single-core limited?",
+      "back": "No.",
+      "source_pages": [
+        287
+      ]
+    },
+    {
+      "id": "FC136",
+      "front": "What strongly affects SSI throughput?",
+      "back": "Abort rate.",
+      "source_pages": [
+        288
+      ]
+    },
+    {
+      "id": "FC137",
+      "front": "What transaction type should be short under SSI?",
+      "back": "Read-write transactions.",
+      "source_pages": [
+        288
+      ]
+    },
+    {
+      "id": "FC138",
+      "front": "Can long read-only SSI transactions be acceptable?",
+      "back": "Yes.",
+      "source_pages": [
+        288
+      ]
+    }
+  ],
+  "multiple_choice_questions": [
+    {
+      "id": "MCQ001",
+      "difficulty": "medium",
+      "question": "ACID atomicity mainly means?",
+      "choices": {
+        "A": "Abortability",
+        "B": "Isolation",
+        "C": "Replication",
+        "D": "Durability"
+      },
+      "answer": "A",
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "MCQ002",
+      "difficulty": "medium",
+      "question": "ACID consistency mainly refers to?",
+      "choices": {
+        "A": "Application invariants",
+        "B": "Replica lag",
+        "C": "Hashing",
+        "D": "WAL"
+      },
+      "answer": "A",
+      "source_pages": [
+        247
+      ]
+    },
+    {
+      "id": "MCQ003",
+      "difficulty": "medium",
+      "question": "Serializable isolation means?",
+      "choices": {
+        "A": "Equivalent to serial execution",
+        "B": "No aborts",
+        "C": "One replica",
+        "D": "No locks ever"
+      },
+      "answer": "A",
+      "source_pages": [
+        247,
+        248
+      ]
+    },
+    {
+      "id": "MCQ004",
+      "difficulty": "medium",
+      "question": "Durability guarantees are?",
+      "choices": {
+        "A": "Risk reduction, not perfection",
+        "B": "Perfect with SSD",
+        "C": "Perfect with replication",
+        "D": "Only in RAM"
+      },
+      "answer": "A",
+      "source_pages": [
+        248,
+        249
+      ]
+    },
+    {
+      "id": "MCQ005",
+      "difficulty": "medium",
+      "question": "Multi-object isolation means?",
+      "choices": {
+        "A": "See all or none of grouped writes",
+        "B": "Only one object exists",
+        "C": "No concurrent reads",
+        "D": "No indexes"
+      },
+      "answer": "A",
+      "source_pages": [
+        250
+      ]
+    },
+    {
+      "id": "MCQ006",
+      "difficulty": "medium",
+      "question": "A multi-put API necessarily means transaction semantics?",
+      "choices": {
+        "A": "No",
+        "B": "Yes",
+        "C": "Only in key-value stores",
+        "D": "Only if replicated"
+      },
+      "answer": "A",
+      "source_pages": [
+        252
+      ]
+    },
+    {
+      "id": "MCQ007",
+      "difficulty": "medium",
+      "question": "Which motivates multi-object transactions?",
+      "choices": {
+        "A": "Secondary indexes",
+        "B": "Only compression",
+        "C": "DNS",
+        "D": "Hashing"
+      },
+      "answer": "A",
+      "source_pages": [
+        253
+      ]
+    },
+    {
+      "id": "MCQ008",
+      "difficulty": "medium",
+      "question": "What can make retry duplicate a transaction?",
+      "choices": {
+        "A": "Lost commit acknowledgement",
+        "B": "A dirty read",
+        "C": "MVCC",
+        "D": "A shared lock"
+      },
+      "answer": "A",
+      "source_pages": [
+        254
+      ]
+    },
+    {
+      "id": "MCQ009",
+      "difficulty": "medium",
+      "question": "Which should usually NOT be retried?",
+      "choices": {
+        "A": "Permanent constraint violation",
+        "B": "Deadlock",
+        "C": "Failover",
+        "D": "Temporary network interruption"
+      },
+      "answer": "A",
+      "source_pages": [
+        254
+      ]
+    },
+    {
+      "id": "MCQ010",
+      "difficulty": "medium",
+      "question": "Read committed guarantees?",
+      "choices": {
+        "A": "No dirty reads/writes",
+        "B": "No read skew",
+        "C": "No write skew",
+        "D": "Full serializability"
+      },
+      "answer": "A",
+      "source_pages": [
+        256
+      ]
+    },
+    {
+      "id": "MCQ011",
+      "difficulty": "medium",
+      "question": "Dirty read means?",
+      "choices": {
+        "A": "Read uncommitted data",
+        "B": "Overwrite uncommitted data",
+        "C": "Read an old snapshot",
+        "D": "Read a phantom only"
+      },
+      "answer": "A",
+      "source_pages": [
+        256
+      ]
+    },
+    {
+      "id": "MCQ012",
+      "difficulty": "medium",
+      "question": "Dirty write means?",
+      "choices": {
+        "A": "Overwrite uncommitted data",
+        "B": "Read uncommitted data",
+        "C": "Lose a committed replica",
+        "D": "Read skew"
+      },
+      "answer": "A",
+      "source_pages": [
+        257
+      ]
+    },
+    {
+      "id": "MCQ013",
+      "difficulty": "medium",
+      "question": "How are dirty writes usually prevented?",
+      "choices": {
+        "A": "Write locks",
+        "B": "MVCC snapshots only",
+        "C": "LWW",
+        "D": "Hashing"
+      },
+      "answer": "A",
+      "source_pages": [
+        258
+      ]
+    },
+    {
+      "id": "MCQ014",
+      "difficulty": "medium",
+      "question": "Read skew means?",
+      "choices": {
+        "A": "Mixed points in time",
+        "B": "Uncommitted read",
+        "C": "Uncommitted overwrite",
+        "D": "Deadlock"
+      },
+      "answer": "A",
+      "source_pages": [
+        259,
+        260
+      ]
+    },
+    {
+      "id": "MCQ015",
+      "difficulty": "medium",
+      "question": "What most commonly prevents read skew?",
+      "choices": {
+        "A": "Snapshot isolation",
+        "B": "Read committed",
+        "C": "Read uncommitted",
+        "D": "LWW"
+      },
+      "answer": "A",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "MCQ016",
+      "difficulty": "medium",
+      "question": "Snapshot isolation uses?",
+      "choices": {
+        "A": "Consistent transaction snapshot",
+        "B": "Latest value per statement only",
+        "C": "Exclusive read locks",
+        "D": "Serial thread only"
+      },
+      "answer": "A",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "MCQ017",
+      "difficulty": "medium",
+      "question": "MVCC stands for?",
+      "choices": {
+        "A": "Multi-Version Concurrency Control",
+        "B": "Multi-Value Commit Check",
+        "C": "Memory Version Clock Control",
+        "D": "Multi-Vector Consistency"
+      },
+      "answer": "A",
+      "source_pages": [
+        261
+      ]
+    },
+    {
+      "id": "MCQ018",
+      "difficulty": "medium",
+      "question": "MVCC updates are often represented as?",
+      "choices": {
+        "A": "Delete old + create new",
+        "B": "In-place only",
+        "C": "Drop index",
+        "D": "Commit log only"
+      },
+      "answer": "A",
+      "source_pages": [
+        262
+      ]
+    },
+    {
+      "id": "MCQ019",
+      "difficulty": "medium",
+      "question": "Why keep old MVCC versions?",
+      "choices": {
+        "A": "Active transactions may still need them",
+        "B": "For hashing",
+        "C": "For replication only",
+        "D": "No reason"
+      },
+      "answer": "A",
+      "source_pages": [
+        261,
+        263
+      ]
+    },
+    {
+      "id": "MCQ020",
+      "difficulty": "medium",
+      "question": "What is lost update?",
+      "choices": {
+        "A": "Concurrent read-modify-write clobber",
+        "B": "Dirty read",
+        "C": "Read skew",
+        "D": "Phantom only"
+      },
+      "answer": "A",
+      "source_pages": [
+        265
+      ]
+    },
+    {
+      "id": "MCQ021",
+      "difficulty": "medium",
+      "question": "Best lost-update fix when possible?",
+      "choices": {
+        "A": "Atomic DB operation",
+        "B": "Sleep and retry",
+        "C": "LWW",
+        "D": "Random locking"
+      },
+      "answer": "A",
+      "source_pages": [
+        265
+      ]
+    },
+    {
+      "id": "MCQ022",
+      "difficulty": "medium",
+      "question": "SELECT FOR UPDATE provides?",
+      "choices": {
+        "A": "Explicit row locking",
+        "B": "Snapshot creation",
+        "C": "Replication",
+        "D": "Durability"
+      },
+      "answer": "A",
+      "source_pages": [
+        266
+      ]
+    },
+    {
+      "id": "MCQ023",
+      "difficulty": "medium",
+      "question": "Automatic lost-update detection does what?",
+      "choices": {
+        "A": "Aborts a conflicting transaction",
+        "B": "Always blocks reads",
+        "C": "Keeps both values always",
+        "D": "Disables writes"
+      },
+      "answer": "A",
+      "source_pages": [
+        267
+      ]
+    },
+    {
+      "id": "MCQ024",
+      "difficulty": "medium",
+      "question": "CAS writes only if?",
+      "choices": {
+        "A": "Value still matches prior read",
+        "B": "Timestamp is largest",
+        "C": "No transaction exists",
+        "D": "Replica is leader"
+      },
+      "answer": "A",
+      "source_pages": [
+        267
+      ]
+    },
+    {
+      "id": "MCQ025",
+      "difficulty": "medium",
+      "question": "Why may CAS fail semantically?",
+      "choices": {
+        "A": "Predicate may read old snapshot",
+        "B": "No WHERE clause",
+        "C": "It uses locks",
+        "D": "It is serializable"
+      },
+      "answer": "A",
+      "source_pages": [
+        267
+      ]
+    },
+    {
+      "id": "MCQ026",
+      "difficulty": "medium",
+      "question": "Write skew differs from lost update because?",
+      "choices": {
+        "A": "Different objects may be updated",
+        "B": "No writes happen",
+        "C": "Only one transaction",
+        "D": "It is a dirty read"
+      },
+      "answer": "A",
+      "source_pages": [
+        269,
+        270
+      ]
+    },
+    {
+      "id": "MCQ027",
+      "difficulty": "medium",
+      "question": "What generally prevents write skew?",
+      "choices": {
+        "A": "Serializable isolation",
+        "B": "Read committed",
+        "C": "Snapshot isolation alone",
+        "D": "Read uncommitted"
+      },
+      "answer": "A",
+      "source_pages": [
+        270
+      ]
+    },
+    {
+      "id": "MCQ028",
+      "difficulty": "medium",
+      "question": "Concurrent username claims are simply handled by?",
+      "choices": {
+        "A": "Unique constraint",
+        "B": "LWW",
+        "C": "Read committed only",
+        "D": "No index"
+      },
+      "answer": "A",
+      "source_pages": [
+        272
+      ]
+    },
+    {
+      "id": "MCQ029",
+      "difficulty": "medium",
+      "question": "A phantom occurs when?",
+      "choices": {
+        "A": "A write changes a predicate result",
+        "B": "A read sees uncommitted data",
+        "C": "A writer overwrites uncommitted data",
+        "D": "A leader fails"
+      },
+      "answer": "A",
+      "source_pages": [
+        273
+      ]
+    },
+    {
+      "id": "MCQ030",
+      "difficulty": "medium",
+      "question": "Materializing conflicts means?",
+      "choices": {
+        "A": "Create rows to lock a phantom conflict",
+        "B": "Create snapshots",
+        "C": "Use LWW",
+        "D": "Use replication"
+      },
+      "answer": "A",
+      "source_pages": [
+        273
+      ]
+    },
+    {
+      "id": "MCQ031",
+      "difficulty": "medium",
+      "question": "The three serializability approaches are?",
+      "choices": {
+        "A": "Serial execution, 2PL, SSI",
+        "B": "Read committed, MVCC, WAL",
+        "C": "LWW, quorum, CRDT",
+        "D": "Hash, range, local"
+      },
+      "answer": "A",
+      "source_pages": [
+        274
+      ]
+    },
+    {
+      "id": "MCQ032",
+      "difficulty": "medium",
+      "question": "Serial execution means?",
+      "choices": {
+        "A": "One transaction at a time",
+        "B": "One query at a time across entire company",
+        "C": "Many transactions with 2PL",
+        "D": "Only reads"
+      },
+      "answer": "A",
+      "source_pages": [
+        274
+      ]
+    },
+    {
+      "id": "MCQ033",
+      "difficulty": "medium",
+      "question": "Why use stored procedures in serial execution?",
+      "choices": {
+        "A": "Avoid network round-trip idle time",
+        "B": "Cause deadlocks",
+        "C": "Enable read skew",
+        "D": "Add locks"
+      },
+      "answer": "A",
+      "source_pages": [
+        276
+      ]
+    },
+    {
+      "id": "MCQ034",
+      "difficulty": "medium",
+      "question": "Serial execution scales well when?",
+      "choices": {
+        "A": "Transactions are single-partition",
+        "B": "Every transaction spans all partitions",
+        "C": "Data is always on disk",
+        "D": "Transactions wait for users"
+      },
+      "answer": "A",
+      "source_pages": [
+        278
+      ]
+    },
+    {
+      "id": "MCQ035",
+      "difficulty": "medium",
+      "question": "2PL stands for?",
+      "choices": {
+        "A": "Two-Phase Locking",
+        "B": "Two-Phase Commit",
+        "C": "Two-Partition Logging",
+        "D": "Two-Process Lock"
+      },
+      "answer": "A",
+      "source_pages": [
+        279
+      ]
+    },
+    {
+      "id": "MCQ036",
+      "difficulty": "medium",
+      "question": "2PL and 2PC are?",
+      "choices": {
+        "A": "Different",
+        "B": "Identical",
+        "C": "Both snapshot levels",
+        "D": "Both locks"
+      },
+      "answer": "A",
+      "source_pages": [
+        279
+      ]
+    },
+    {
+      "id": "MCQ037",
+      "difficulty": "medium",
+      "question": "What lock is used for reads under 2PL?",
+      "choices": {
+        "A": "Shared",
+        "B": "Exclusive",
+        "C": "Predicate-exclusive only",
+        "D": "None"
+      },
+      "answer": "A",
+      "source_pages": [
+        280
+      ]
+    },
+    {
+      "id": "MCQ038",
+      "difficulty": "medium",
+      "question": "What lock is used for writes under 2PL?",
+      "choices": {
+        "A": "Exclusive",
+        "B": "Shared",
+        "C": "Read",
+        "D": "None"
+      },
+      "answer": "A",
+      "source_pages": [
+        280
+      ]
+    },
+    {
+      "id": "MCQ039",
+      "difficulty": "medium",
+      "question": "Deadlock resolution typically requires?",
+      "choices": {
+        "A": "Abort one transaction",
+        "B": "Commit both",
+        "C": "Ignore locks",
+        "D": "Rebuild index"
+      },
+      "answer": "A",
+      "source_pages": [
+        280
+      ]
+    },
+    {
+      "id": "MCQ040",
+      "difficulty": "medium",
+      "question": "2PL tail latency can be high because?",
+      "choices": {
+        "A": "Transactions queue behind lock holders",
+        "B": "No blocking exists",
+        "C": "It is single-threaded only",
+        "D": "MVCC removes waits"
+      },
+      "answer": "A",
+      "source_pages": [
+        281
+      ]
+    },
+    {
+      "id": "MCQ041",
+      "difficulty": "medium",
+      "question": "Predicate locks cover?",
+      "choices": {
+        "A": "Search conditions including future rows",
+        "B": "Only one existing row",
+        "C": "Only indexes",
+        "D": "Only writers"
+      },
+      "answer": "A",
+      "source_pages": [
+        281,
+        282
+      ]
+    },
+    {
+      "id": "MCQ042",
+      "difficulty": "medium",
+      "question": "Next-key locking is?",
+      "choices": {
+        "A": "Index-range locking",
+        "B": "SSI",
+        "C": "Serial execution",
+        "D": "WAL"
+      },
+      "answer": "A",
+      "source_pages": [
+        282
+      ]
+    },
+    {
+      "id": "MCQ043",
+      "difficulty": "medium",
+      "question": "Why use index-range locks?",
+      "choices": {
+        "A": "Cheaper approximation of predicate locks",
+        "B": "More precise than predicate locks",
+        "C": "No index needed",
+        "D": "No blocking"
+      },
+      "answer": "A",
+      "source_pages": [
+        282
+      ]
+    },
+    {
+      "id": "MCQ044",
+      "difficulty": "medium",
+      "question": "SSI is?",
+      "choices": {
+        "A": "Optimistic",
+        "B": "Pessimistic 2PL",
+        "C": "Read uncommitted",
+        "D": "Leaderless"
+      },
+      "answer": "A",
+      "source_pages": [
+        283
+      ]
+    },
+    {
+      "id": "MCQ045",
+      "difficulty": "hard",
+      "question": "SSI builds on?",
+      "choices": {
+        "A": "Snapshot isolation",
+        "B": "Read committed only",
+        "C": "2PC",
+        "D": "WAL"
+      },
+      "answer": "A",
+      "source_pages": [
+        284
+      ]
+    },
+    {
+      "id": "MCQ046",
+      "difficulty": "hard",
+      "question": "SSI additionally detects?",
+      "choices": {
+        "A": "Serialization conflicts",
+        "B": "Replication lag",
+        "C": "Disk corruption",
+        "D": "Hash skew"
+      },
+      "answer": "A",
+      "source_pages": [
+        284
+      ]
+    },
+    {
+      "id": "MCQ047",
+      "difficulty": "hard",
+      "question": "An outdated premise is?",
+      "choices": {
+        "A": "A decision based on state no longer true at commit",
+        "B": "A dirty write only",
+        "C": "A deadlock",
+        "D": "A failed disk"
+      },
+      "answer": "A",
+      "source_pages": [
+        284,
+        285
+      ]
+    },
+    {
+      "id": "MCQ048",
+      "difficulty": "hard",
+      "question": "SSI read tracking behaves like?",
+      "choices": {
+        "A": "Nonblocking tripwire",
+        "B": "Blocking exclusive lock",
+        "C": "Global mutex",
+        "D": "Leader election"
+      },
+      "answer": "A",
+      "source_pages": [
+        287
+      ]
+    },
+    {
+      "id": "MCQ049",
+      "difficulty": "hard",
+      "question": "High SSI contention causes?",
+      "choices": {
+        "A": "High abort rates",
+        "B": "No aborts",
+        "C": "Only blocking",
+        "D": "No retries"
+      },
+      "answer": "A",
+      "source_pages": [
+        284,
+        288
+      ]
+    },
+    {
+      "id": "MCQ050",
+      "difficulty": "hard",
+      "question": "SSI vs 2PL latency is often?",
+      "choices": {
+        "A": "More predictable because readers/writers don't block",
+        "B": "Always worse",
+        "C": "Single-core only",
+        "D": "Identical"
+      },
+      "answer": "A",
+      "source_pages": [
+        287
+      ]
+    },
+    {
+      "id": "MCQ051",
+      "difficulty": "hard",
+      "question": "Which anomaly does read committed stop?",
+      "choices": {
+        "A": "Dirty reads",
+        "B": "Read skew",
+        "C": "Write skew",
+        "D": "All phantoms"
+      },
+      "answer": "A",
+      "source_pages": [
+        288
+      ]
+    },
+    {
+      "id": "MCQ052",
+      "difficulty": "hard",
+      "question": "Which anomaly does snapshot isolation mainly stop beyond read committed?",
+      "choices": {
+        "A": "Read skew",
+        "B": "All write skew",
+        "C": "All lost updates in every DB",
+        "D": "Every phantom write-skew"
+      },
+      "answer": "A",
+      "source_pages": [
+        288,
+        289
+      ]
+    },
+    {
+      "id": "MCQ053",
+      "difficulty": "hard",
+      "question": "Which anomaly generally requires serializable isolation?",
+      "choices": {
+        "A": "Write skew",
+        "B": "Dirty read",
+        "C": "Dirty write",
+        "D": "Single-object torn write"
+      },
+      "answer": "A",
+      "source_pages": [
+        289
+      ]
+    },
+    {
+      "id": "MCQ054",
+      "difficulty": "hard",
+      "question": "Why is 'repeatable read' confusing?",
+      "choices": {
+        "A": "Different DBs implement different guarantees",
+        "B": "It always means serializable",
+        "C": "It always means snapshot isolation",
+        "D": "It means no reads"
+      },
+      "answer": "A",
+      "source_pages": [
+        264
+      ]
+    },
+    {
+      "id": "MCQ055",
+      "difficulty": "hard",
+      "question": "Which cited implementation does not auto-detect lost updates?",
+      "choices": {
+        "A": "MySQL/InnoDB repeatable read",
+        "B": "PostgreSQL repeatable read",
+        "C": "Oracle serializable",
+        "D": "SQL Server snapshot isolation"
+      },
+      "answer": "A",
+      "source_pages": [
+        267
+      ]
+    },
+    {
+      "id": "MCQ056",
+      "difficulty": "hard",
+      "question": "Which replicated policy can lose updates?",
+      "choices": {
+        "A": "LWW",
+        "B": "Commutative increment",
+        "C": "Sibling merge",
+        "D": "CRDT-style merge"
+      },
+      "answer": "A",
+      "source_pages": [
+        268
+      ]
+    },
+    {
+      "id": "MCQ057",
+      "difficulty": "hard",
+      "question": "Why can SELECT FOR UPDATE miss a phantom?",
+      "choices": {
+        "A": "No existing row may match and be locked",
+        "B": "It never locks rows",
+        "C": "It only works on indexes",
+        "D": "It is read-only"
+      },
+      "answer": "A",
+      "source_pages": [
+        273
+      ]
+    },
+    {
+      "id": "MCQ058",
+      "difficulty": "hard",
+      "question": "What limits serial execution throughput?",
+      "choices": {
+        "A": "One CPU core per serial partition/thread",
+        "B": "No memory",
+        "C": "No transactions",
+        "D": "Only replication"
+      },
+      "answer": "A",
+      "source_pages": [
+        275,
+        278
+      ]
+    },
+    {
+      "id": "MCQ059",
+      "difficulty": "hard",
+      "question": "What is a 2PL shared->exclusive change called?",
+      "choices": {
+        "A": "Lock upgrade",
+        "B": "Failover",
+        "C": "Commit",
+        "D": "Snapshot"
+      },
+      "answer": "A",
+      "source_pages": [
+        280
+      ]
+    },
+    {
+      "id": "MCQ060",
+      "difficulty": "hard",
+      "question": "If no suitable index exists for predicate approximation?",
+      "choices": {
+        "A": "Whole-table shared lock may be used",
+        "B": "Serializable impossible",
+        "C": "Use read committed",
+        "D": "Use LWW"
+      },
+      "answer": "A",
+      "source_pages": [
+        283
+      ]
+    },
+    {
+      "id": "MCQ061",
+      "difficulty": "hard",
+      "question": "SSI stale-read detection checks?",
+      "choices": {
+        "A": "Whether an ignored concurrent write committed before reader commit",
+        "B": "Only timestamps",
+        "C": "Only WAL",
+        "D": "Only locks"
+      },
+      "answer": "A",
+      "source_pages": [
+        285,
+        286
+      ]
+    },
+    {
+      "id": "MCQ062",
+      "difficulty": "hard",
+      "question": "Why defer SSI abort decision?",
+      "choices": {
+        "A": "The conflicting writer may abort and the reader may be read-only",
+        "B": "No conflict exists",
+        "C": "To wait for replication",
+        "D": "To create deadlock"
+      },
+      "answer": "A",
+      "source_pages": [
+        286
+      ]
+    },
+    {
+      "id": "MCQ063",
+      "difficulty": "hard",
+      "question": "What strongly determines SSI performance?",
+      "choices": {
+        "A": "Abort rate",
+        "B": "Hash function",
+        "C": "Disk block size only",
+        "D": "Replica count only"
+      },
+      "answer": "A",
+      "source_pages": [
+        288
+      ]
+    }
+  ],
+  "mix_and_match": [
+    {
+      "id": "MM01",
+      "title": "ACID",
+      "left": {
+        "A": "Atomicity",
+        "B": "Consistency",
+        "C": "Isolation",
+        "D": "Durability",
+        "E": "Serializable"
+      },
+      "right": {
+        "1": "Abort partial transaction",
+        "2": "Application invariants",
+        "3": "Concurrency safety",
+        "4": "Committed data survives faults",
+        "5": "Equivalent to serial order"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        245,
+        246,
+        247,
+        248
+      ]
+    },
+    {
+      "id": "MM02",
+      "title": "Anomalies",
+      "left": {
+        "A": "Dirty read",
+        "B": "Dirty write",
+        "C": "Read skew",
+        "D": "Lost update",
+        "E": "Write skew"
+      },
+      "right": {
+        "1": "Read uncommitted",
+        "2": "Overwrite uncommitted",
+        "3": "Mixed-time view",
+        "4": "Clobbered read-modify-write",
+        "5": "Different-object invariant violation"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        256,
+        257,
+        259,
+        265,
+        269
+      ]
+    },
+    {
+      "id": "MM03",
+      "title": "Lost-update defenses",
+      "left": {
+        "A": "Atomic op",
+        "B": "Explicit lock",
+        "C": "Auto detection",
+        "D": "CAS",
+        "E": "Sibling merge"
+      },
+      "right": {
+        "1": "DB-side update",
+        "2": "SELECT FOR UPDATE",
+        "3": "Abort detected loser",
+        "4": "Conditional write if unchanged",
+        "5": "Preserve concurrent versions"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        265,
+        266,
+        267,
+        268
+      ]
+    },
+    {
+      "id": "MM04",
+      "title": "Serializable techniques",
+      "left": {
+        "A": "Serial execution",
+        "B": "2PL",
+        "C": "SSI",
+        "D": "Predicate lock",
+        "E": "Index-range lock"
+      },
+      "right": {
+        "1": "No concurrent txns per thread",
+        "2": "Pessimistic blocking locks",
+        "3": "Optimistic detect/abort",
+        "4": "Search-condition lock",
+        "5": "Practical predicate approximation"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        274,
+        279,
+        281,
+        282,
+        283,
+        284
+      ]
+    },
+    {
+      "id": "MM05",
+      "title": "MVCC",
+      "left": {
+        "A": "txid",
+        "B": "created_by",
+        "C": "deleted_by",
+        "D": "snapshot",
+        "E": "GC"
+      },
+      "right": {
+        "1": "Transaction ID",
+        "2": "Creator tx",
+        "3": "Deleting tx",
+        "4": "Point-in-time visibility",
+        "5": "Remove no-longer-visible versions"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        261,
+        262,
+        263
+      ]
+    }
+  ],
+  "true_false": [
+    {
+      "id": "TF001",
+      "statement": "Transactions reduce many errors to abort-and-retry.",
+      "answer": true,
+      "source_pages": [
+        244
+      ]
+    },
+    {
+      "id": "TF002",
+      "statement": "ACID atomicity is mainly about concurrent visibility.",
+      "answer": false,
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "TF003",
+      "statement": "ACID consistency is application-specific.",
+      "answer": true,
+      "source_pages": [
+        247
+      ]
+    },
+    {
+      "id": "TF004",
+      "statement": "Serializability means the result matches some serial order.",
+      "answer": true,
+      "source_pages": [
+        247,
+        248
+      ]
+    },
+    {
+      "id": "TF005",
+      "statement": "Perfect durability is possible with replication.",
+      "answer": false,
+      "source_pages": [
+        248,
+        249
+      ]
+    },
+    {
+      "id": "TF006",
+      "statement": "Disk, replication, and backups can be combined.",
+      "answer": true,
+      "source_pages": [
+        249
+      ]
+    },
+    {
+      "id": "TF007",
+      "statement": "A multi-put API always has full transaction semantics.",
+      "answer": false,
+      "source_pages": [
+        252
+      ]
+    },
+    {
+      "id": "TF008",
+      "statement": "Single-object operations are always full multi-object transactions.",
+      "answer": false,
+      "source_pages": [
+        252
+      ]
+    },
+    {
+      "id": "TF009",
+      "statement": "Denormalized data can motivate multi-object transactions.",
+      "answer": true,
+      "source_pages": [
+        253
+      ]
+    },
+    {
+      "id": "TF010",
+      "statement": "Retrying after a lost commit acknowledgement can duplicate work.",
+      "answer": true,
+      "source_pages": [
+        254
+      ]
+    },
+    {
+      "id": "TF011",
+      "statement": "Overload errors should be retried infinitely and immediately.",
+      "answer": false,
+      "source_pages": [
+        254
+      ]
+    },
+    {
+      "id": "TF012",
+      "statement": "Read uncommitted allows dirty reads.",
+      "answer": true,
+      "source_pages": [
+        256
+      ]
+    },
+    {
+      "id": "TF013",
+      "statement": "Read committed prevents dirty reads.",
+      "answer": true,
+      "source_pages": [
+        256
+      ]
+    },
+    {
+      "id": "TF014",
+      "statement": "Read committed prevents dirty writes.",
+      "answer": true,
+      "source_pages": [
+        256,
+        257
+      ]
+    },
+    {
+      "id": "TF015",
+      "statement": "Read committed prevents all lost updates.",
+      "answer": false,
+      "source_pages": [
+        257
+      ]
+    },
+    {
+      "id": "TF016",
+      "statement": "Most DBs need reader locks to prevent dirty reads.",
+      "answer": false,
+      "source_pages": [
+        258,
+        259
+      ]
+    },
+    {
+      "id": "TF017",
+      "statement": "Read skew is allowed under read committed.",
+      "answer": true,
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "TF018",
+      "statement": "Snapshot isolation gives one consistent transaction snapshot.",
+      "answer": true,
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "TF019",
+      "statement": "Snapshot isolation requires readers to block writers.",
+      "answer": false,
+      "source_pages": [
+        261
+      ]
+    },
+    {
+      "id": "TF020",
+      "statement": "MVCC keeps multiple row/object versions.",
+      "answer": true,
+      "source_pages": [
+        261
+      ]
+    },
+    {
+      "id": "TF021",
+      "statement": "MVCC updates may create a new version rather than overwrite in place.",
+      "answer": true,
+      "source_pages": [
+        262
+      ]
+    },
+    {
+      "id": "TF022",
+      "statement": "Old MVCC versions can be garbage-collected later.",
+      "answer": true,
+      "source_pages": [
+        262,
+        263
+      ]
+    },
+    {
+      "id": "TF023",
+      "statement": "A snapshot sees writes from later-starting transactions.",
+      "answer": false,
+      "source_pages": [
+        263
+      ]
+    },
+    {
+      "id": "TF024",
+      "statement": "Repeatable read has one identical meaning across DBs.",
+      "answer": false,
+      "source_pages": [
+        264
+      ]
+    },
+    {
+      "id": "TF025",
+      "statement": "Lost updates arise from concurrent read-modify-write.",
+      "answer": true,
+      "source_pages": [
+        265
+      ]
+    },
+    {
+      "id": "TF026",
+      "statement": "Atomic DB operations can prevent lost updates.",
+      "answer": true,
+      "source_pages": [
+        265
+      ]
+    },
+    {
+      "id": "TF027",
+      "statement": "SELECT FOR UPDATE is explicit locking.",
+      "answer": true,
+      "source_pages": [
+        266
+      ]
+    },
+    {
+      "id": "TF028",
+      "statement": "Some DBs automatically detect lost updates.",
+      "answer": true,
+      "source_pages": [
+        267
+      ]
+    },
+    {
+      "id": "TF029",
+      "statement": "MySQL/InnoDB repeatable read is cited as auto-detecting lost updates.",
+      "answer": false,
+      "source_pages": [
+        267
+      ]
+    },
+    {
+      "id": "TF030",
+      "statement": "CAS is always safe regardless of snapshot semantics.",
+      "answer": false,
+      "source_pages": [
+        267
+      ]
+    },
+    {
+      "id": "TF031",
+      "statement": "Locks/CAS assume a single up-to-date copy.",
+      "answer": true,
+      "source_pages": [
+        268
+      ]
+    },
+    {
+      "id": "TF032",
+      "statement": "Commutative operations can help replicated conflict handling.",
+      "answer": true,
+      "source_pages": [
+        268
+      ]
+    },
+    {
+      "id": "TF033",
+      "statement": "LWW can lose updates.",
+      "answer": true,
+      "source_pages": [
+        268
+      ]
+    },
+    {
+      "id": "TF034",
+      "statement": "Write skew may update different rows.",
+      "answer": true,
+      "source_pages": [
+        269,
+        270
+      ]
+    },
+    {
+      "id": "TF035",
+      "statement": "Snapshot isolation prevents all write skew.",
+      "answer": false,
+      "source_pages": [
+        270
+      ]
+    },
+    {
+      "id": "TF036",
+      "statement": "Serializable isolation can prevent write skew.",
+      "answer": true,
+      "source_pages": [
+        270
+      ]
+    },
+    {
+      "id": "TF037",
+      "statement": "Unique constraints solve the username example.",
+      "answer": true,
+      "source_pages": [
+        272
+      ]
+    },
+    {
+      "id": "TF038",
+      "statement": "A phantom changes a predicate result set.",
+      "answer": true,
+      "source_pages": [
+        273
+      ]
+    },
+    {
+      "id": "TF039",
+      "statement": "SELECT FOR UPDATE can lock a row that does not exist with no special mechanism.",
+      "answer": false,
+      "source_pages": [
+        273
+      ]
+    },
+    {
+      "id": "TF040",
+      "statement": "Materializing conflicts is considered a last resort.",
+      "answer": true,
+      "source_pages": [
+        273
+      ]
+    },
+    {
+      "id": "TF041",
+      "statement": "Serializable is the strongest isolation level discussed.",
+      "answer": true,
+      "source_pages": [
+        274
+      ]
+    },
+    {
+      "id": "TF042",
+      "statement": "Serial execution removes transaction concurrency.",
+      "answer": true,
+      "source_pages": [
+        274
+      ]
+    },
+    {
+      "id": "TF043",
+      "statement": "Serial execution is a good fit for transactions waiting on human input.",
+      "answer": false,
+      "source_pages": [
+        275,
+        276
+      ]
+    },
+    {
+      "id": "TF044",
+      "statement": "Stored procedures reduce network waiting in a serial execution loop.",
+      "answer": true,
+      "source_pages": [
+        276
+      ]
+    },
+    {
+      "id": "TF045",
+      "statement": "VoltDB replicated stored procedures must be deterministic.",
+      "answer": true,
+      "source_pages": [
+        277
+      ]
+    },
+    {
+      "id": "TF046",
+      "statement": "Single-partition transactions help serial execution scale.",
+      "answer": true,
+      "source_pages": [
+        278
+      ]
+    },
+    {
+      "id": "TF047",
+      "statement": "Cross-partition serial transactions are cheap.",
+      "answer": false,
+      "source_pages": [
+        278
+      ]
+    },
+    {
+      "id": "TF048",
+      "statement": "2PL and 2PC are the same.",
+      "answer": false,
+      "source_pages": [
+        279
+      ]
+    },
+    {
+      "id": "TF049",
+      "statement": "2PL lets multiple shared readers coexist.",
+      "answer": true,
+      "source_pages": [
+        280
+      ]
+    },
+    {
+      "id": "TF050",
+      "statement": "2PL lets readers and writers freely coexist on the same object.",
+      "answer": false,
+      "source_pages": [
+        279,
+        280
+      ]
+    },
+    {
+      "id": "TF051",
+      "statement": "2PL locks are held until commit/abort.",
+      "answer": true,
+      "source_pages": [
+        280
+      ]
+    },
+    {
+      "id": "TF052",
+      "statement": "Deadlocks can force transaction aborts.",
+      "answer": true,
+      "source_pages": [
+        280
+      ]
+    },
+    {
+      "id": "TF053",
+      "statement": "2PL can have poor high-percentile latency.",
+      "answer": true,
+      "source_pages": [
+        281
+      ]
+    },
+    {
+      "id": "TF054",
+      "statement": "Predicate locks can cover future rows.",
+      "answer": true,
+      "source_pages": [
+        282
+      ]
+    },
+    {
+      "id": "TF055",
+      "statement": "Index-range locking approximates predicate locking.",
+      "answer": true,
+      "source_pages": [
+        282
+      ]
+    },
+    {
+      "id": "TF056",
+      "statement": "SSI is pessimistic locking.",
+      "answer": false,
+      "source_pages": [
+        283
+      ]
+    },
+    {
+      "id": "TF057",
+      "statement": "SSI is optimistic.",
+      "answer": true,
+      "source_pages": [
+        283
+      ]
+    },
+    {
+      "id": "TF058",
+      "statement": "SSI is based on snapshot isolation.",
+      "answer": true,
+      "source_pages": [
+        284
+      ]
+    },
+    {
+      "id": "TF059",
+      "statement": "High contention can increase SSI abort rates.",
+      "answer": true,
+      "source_pages": [
+        284
+      ]
+    },
+    {
+      "id": "TF060",
+      "statement": "SSI detects stale decision premises.",
+      "answer": true,
+      "source_pages": [
+        284,
+        285
+      ]
+    },
+    {
+      "id": "TF061",
+      "statement": "SSI may delay abort decisions until commit.",
+      "answer": true,
+      "source_pages": [
+        286
+      ]
+    },
+    {
+      "id": "TF062",
+      "statement": "SSI read tracking can act as a nonblocking tripwire.",
+      "answer": true,
+      "source_pages": [
+        287
+      ]
+    },
+    {
+      "id": "TF063",
+      "statement": "SSI forces readers to wait for writers.",
+      "answer": false,
+      "source_pages": [
+        287
+      ]
+    },
+    {
+      "id": "TF064",
+      "statement": "SSI is limited to one CPU core.",
+      "answer": false,
+      "source_pages": [
+        287
+      ]
+    },
+    {
+      "id": "TF065",
+      "statement": "Abort rate strongly affects SSI performance.",
+      "answer": true,
+      "source_pages": [
+        288
+      ]
+    },
+    {
+      "id": "TF066",
+      "statement": "Long read-only transactions may be okay under SSI.",
+      "answer": true,
+      "source_pages": [
+        288
+      ]
+    },
+    {
+      "id": "TF067",
+      "statement": "Write skew generally requires serializable isolation to prevent.",
+      "answer": true,
+      "source_pages": [
+        289
+      ]
+    }
+  ],
+  "fill_in_the_blank": [
+    {
+      "id": "FIB001",
+      "prompt": "A successful transaction ______s.",
+      "answer": "commit",
+      "source_pages": [
+        244
+      ]
+    },
+    {
+      "id": "FIB002",
+      "prompt": "A failed transaction may be ______ed.",
+      "answer": "abort",
+      "source_pages": [
+        244
+      ]
+    },
+    {
+      "id": "FIB003",
+      "prompt": "ACID: Atomicity, Consistency, Isolation, ______.",
+      "answer": "Durability",
+      "source_pages": [
+        245
+      ]
+    },
+    {
+      "id": "FIB004",
+      "prompt": "ACID atomicity is best understood as ______.",
+      "answer": "abortability",
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "FIB005",
+      "prompt": "Application correctness rules are ______.",
+      "answer": "invariants",
+      "source_pages": [
+        247
+      ]
+    },
+    {
+      "id": "FIB006",
+      "prompt": "Equivalent-to-serial concurrency is ______.",
+      "answer": "serializability",
+      "source_pages": [
+        247,
+        248
+      ]
+    },
+    {
+      "id": "FIB007",
+      "prompt": "Reading uncommitted data is a dirty ______.",
+      "answer": "read",
+      "source_pages": [
+        256
+      ]
+    },
+    {
+      "id": "FIB008",
+      "prompt": "Overwriting uncommitted data is a dirty ______.",
+      "answer": "write",
+      "source_pages": [
+        257
+      ]
+    },
+    {
+      "id": "FIB009",
+      "prompt": "Mixed-time reads are read ______.",
+      "answer": "skew",
+      "source_pages": [
+        259,
+        260
+      ]
+    },
+    {
+      "id": "FIB010",
+      "prompt": "MVCC = Multi-Version Concurrency ______.",
+      "answer": "Control",
+      "source_pages": [
+        261
+      ]
+    },
+    {
+      "id": "FIB011",
+      "prompt": "A read-modify-write race can cause a lost ______.",
+      "answer": "update",
+      "source_pages": [
+        265
+      ]
+    },
+    {
+      "id": "FIB012",
+      "prompt": "SELECT ... FOR ______ requests update locks.",
+      "answer": "UPDATE",
+      "source_pages": [
+        266
+      ]
+    },
+    {
+      "id": "FIB013",
+      "prompt": "Conditional write-if-unchanged is compare-and-______.",
+      "answer": "set",
+      "source_pages": [
+        267
+      ]
+    },
+    {
+      "id": "FIB014",
+      "prompt": "Concurrent replicated versions are ______.",
+      "answer": "siblings",
+      "source_pages": [
+        268
+      ]
+    },
+    {
+      "id": "FIB015",
+      "prompt": "The doctor example is write ______.",
+      "answer": "skew",
+      "source_pages": [
+        269
+      ]
+    },
+    {
+      "id": "FIB016",
+      "prompt": "A write changing a predicate result creates a ______.",
+      "answer": "phantom",
+      "source_pages": [
+        273
+      ]
+    },
+    {
+      "id": "FIB017",
+      "prompt": "Creating artificial lock rows is ______ conflicts.",
+      "answer": "materializing",
+      "source_pages": [
+        273
+      ]
+    },
+    {
+      "id": "FIB018",
+      "prompt": "One-at-a-time processing is actual ______ execution.",
+      "answer": "serial",
+      "source_pages": [
+        274
+      ]
+    },
+    {
+      "id": "FIB019",
+      "prompt": "Pre-submitted transaction code is a stored ______.",
+      "answer": "procedure",
+      "source_pages": [
+        276
+      ]
+    },
+    {
+      "id": "FIB020",
+      "prompt": "2PL = two-phase ______.",
+      "answer": "locking",
+      "source_pages": [
+        279
+      ]
+    },
+    {
+      "id": "FIB021",
+      "prompt": "Read-mode 2PL lock = ______ lock.",
+      "answer": "shared",
+      "source_pages": [
+        280
+      ]
+    },
+    {
+      "id": "FIB022",
+      "prompt": "Write-mode 2PL lock = ______ lock.",
+      "answer": "exclusive",
+      "source_pages": [
+        280
+      ]
+    },
+    {
+      "id": "FIB023",
+      "prompt": "Mutual lock waiting is a ______.",
+      "answer": "deadlock",
+      "source_pages": [
+        280
+      ]
+    },
+    {
+      "id": "FIB024",
+      "prompt": "A search-condition lock is a ______ lock.",
+      "answer": "predicate",
+      "source_pages": [
+        281
+      ]
+    },
+    {
+      "id": "FIB025",
+      "prompt": "Next-key locking is index-______ locking.",
+      "answer": "range",
+      "source_pages": [
+        282
+      ]
+    },
+    {
+      "id": "FIB026",
+      "prompt": "SSI = Serializable Snapshot ______.",
+      "answer": "Isolation",
+      "source_pages": [
+        283
+      ]
+    },
+    {
+      "id": "FIB027",
+      "prompt": "SSI is an ______ concurrency technique.",
+      "answer": "optimistic",
+      "source_pages": [
+        283
+      ]
+    },
+    {
+      "id": "FIB028",
+      "prompt": "A stale decision basis is an outdated ______.",
+      "answer": "premise",
+      "source_pages": [
+        284,
+        285
+      ]
+    },
+    {
+      "id": "FIB029",
+      "prompt": "SSI read tracking can work like a ______.",
+      "answer": "tripwire",
+      "source_pages": [
+        287
+      ]
+    }
+  ],
+  "ordering_exercises": [
+    {
+      "id": "ORD01",
+      "title": "Atomic failure",
+      "items_scrambled": [
+        "Undo writes",
+        "Fault",
+        "Retry",
+        "Begin/write"
+      ],
+      "correct_order": [
+        "Begin/write",
+        "Fault",
+        "Undo writes",
+        "Retry"
+      ],
+      "source_pages": [
+        244,
+        246
+      ]
+    },
+    {
+      "id": "ORD02",
+      "title": "MVCC update",
+      "items_scrambled": [
+        "GC old version",
+        "Create new version",
+        "Mark old deleted",
+        "Snapshot selects visible version"
+      ],
+      "correct_order": [
+        "Mark old deleted",
+        "Create new version",
+        "Snapshot selects visible version",
+        "GC old version"
+      ],
+      "source_pages": [
+        262,
+        263
+      ]
+    },
+    {
+      "id": "ORD03",
+      "title": "Explicit lock update",
+      "items_scrambled": [
+        "Commit",
+        "SELECT FOR UPDATE",
+        "Validate/compute",
+        "Update"
+      ],
+      "correct_order": [
+        "SELECT FOR UPDATE",
+        "Validate/compute",
+        "Update",
+        "Commit"
+      ],
+      "source_pages": [
+        266
+      ]
+    },
+    {
+      "id": "ORD04",
+      "title": "2PL lifecycle",
+      "items_scrambled": [
+        "Release locks",
+        "Acquire locks",
+        "Execute",
+        "Commit/abort"
+      ],
+      "correct_order": [
+        "Acquire locks",
+        "Execute",
+        "Commit/abort",
+        "Release locks"
+      ],
+      "source_pages": [
+        280
+      ]
+    },
+    {
+      "id": "ORD05",
+      "title": "SSI",
+      "items_scrambled": [
+        "Commit if safe",
+        "Read snapshot",
+        "Track conflicts",
+        "Execute writes",
+        "Abort if unsafe"
+      ],
+      "correct_order": [
+        "Read snapshot",
+        "Track conflicts",
+        "Execute writes",
+        "Abort if unsafe",
+        "Commit if safe"
+      ],
+      "source_pages": [
+        284,
+        285,
+        286,
+        287
+      ]
+    }
+  ],
+  "scenario_questions": [
+    {
+      "id": "SC001",
+      "scenario": "A transaction inserts an order and updates inventory, then crashes halfway.",
+      "question": "What property prevents a partial DB state?",
+      "expected_answer": "Atomicity aborts and undoes the transaction's writes.",
+      "source_pages": [
+        244,
+        246
+      ]
+    },
+    {
+      "id": "SC002",
+      "scenario": "A client times out waiting for commit acknowledgement and retries.",
+      "question": "What risk exists?",
+      "expected_answer": "The first commit may have succeeded, so retry can duplicate work without deduplication.",
+      "source_pages": [
+        254
+      ]
+    },
+    {
+      "id": "SC003",
+      "scenario": "A transaction fails because of a permanent unique constraint violation.",
+      "question": "Retry?",
+      "expected_answer": "Usually no; permanent errors are not useful retry candidates.",
+      "source_pages": [
+        254
+      ]
+    },
+    {
+      "id": "SC004",
+      "scenario": "T1 writes x=3 but has not committed. T2 reads x=3.",
+      "question": "Name the anomaly.",
+      "expected_answer": "Dirty read.",
+      "source_pages": [
+        256
+      ]
+    },
+    {
+      "id": "SC005",
+      "scenario": "T2 overwrites T1's uncommitted write.",
+      "question": "Name the anomaly.",
+      "expected_answer": "Dirty write.",
+      "source_pages": [
+        257
+      ]
+    },
+    {
+      "id": "SC006",
+      "scenario": "A $100 transfer is observed as $400 + $500.",
+      "question": "Name the anomaly and solution.",
+      "expected_answer": "Read skew/nonrepeatable read; snapshot isolation provides a consistent snapshot.",
+      "source_pages": [
+        259,
+        260
+      ]
+    },
+    {
+      "id": "SC007",
+      "scenario": "A backup runs for hours while writes continue.",
+      "question": "Why use snapshot isolation?",
+      "expected_answer": "The backup sees one consistent point in time.",
+      "source_pages": [
+        260
+      ]
+    },
+    {
+      "id": "SC008",
+      "scenario": "Two clients read counter=42 and both write 43.",
+      "question": "What happened?",
+      "expected_answer": "Lost update; use atomic value=value+1 when possible.",
+      "source_pages": [
+        265
+      ]
+    },
+    {
+      "id": "SC009",
+      "scenario": "Game logic is too complex for one atomic expression.",
+      "question": "How prevent lost update?",
+      "expected_answer": "Lock the relevant rows with SELECT FOR UPDATE before validating/updating.",
+      "source_pages": [
+        266
+      ]
+    },
+    {
+      "id": "SC010",
+      "scenario": "CAS predicate is evaluated on an old snapshot.",
+      "question": "Why can this fail?",
+      "expected_answer": "The condition may appear true despite a concurrent write, allowing a lost update.",
+      "source_pages": [
+        267
+      ]
+    },
+    {
+      "id": "SC011",
+      "scenario": "Two doctors both see count=2 and each sets only their own row off-call.",
+      "question": "What anomaly?",
+      "expected_answer": "Write skew.",
+      "source_pages": [
+        269,
+        270
+      ]
+    },
+    {
+      "id": "SC012",
+      "scenario": "Two room-booking transactions both see zero conflicts and insert overlapping bookings.",
+      "question": "What is happening?",
+      "expected_answer": "Phantom-related write skew; snapshot isolation is insufficient.",
+      "source_pages": [
+        271,
+        273
+      ]
+    },
+    {
+      "id": "SC013",
+      "scenario": "A username is claimed concurrently by two transactions.",
+      "question": "Simple defense?",
+      "expected_answer": "Unique constraint.",
+      "source_pages": [
+        272
+      ]
+    },
+    {
+      "id": "SC014",
+      "scenario": "A phantom query returns zero rows so FOR UPDATE locks nothing.",
+      "question": "Last-resort workaround?",
+      "expected_answer": "Materialize the conflict with concrete lock rows.",
+      "source_pages": [
+        273
+      ]
+    },
+    {
+      "id": "SC015",
+      "scenario": "A single-thread serial DB uses interactive client/server statements.",
+      "question": "Why slow?",
+      "expected_answer": "The only transaction thread waits on network round trips.",
+      "source_pages": [
+        276
+      ]
+    },
+    {
+      "id": "SC016",
+      "scenario": "Eight partitions exist but most transactions span several partitions.",
+      "question": "Why won't serial execution scale linearly?",
+      "expected_answer": "Cross-partition lock-step coordination dominates.",
+      "source_pages": [
+        278
+      ]
+    },
+    {
+      "id": "SC017",
+      "scenario": "T1 holds a shared lock and T2 requests exclusive on same row.",
+      "question": "What happens?",
+      "expected_answer": "T2 waits until T1 ends.",
+      "source_pages": [
+        279,
+        280
+      ]
+    },
+    {
+      "id": "SC018",
+      "scenario": "T1 waits for a lock held by T2 while T2 waits for T1.",
+      "question": "What happens?",
+      "expected_answer": "Deadlock; DB aborts one transaction.",
+      "source_pages": [
+        280
+      ]
+    },
+    {
+      "id": "SC019",
+      "scenario": "A booking query locks a room/time index range and another txn inserts overlap.",
+      "question": "What mechanism is this?",
+      "expected_answer": "Index-range/next-key locking approximating a predicate lock.",
+      "source_pages": [
+        281,
+        282
+      ]
+    },
+    {
+      "id": "SC020",
+      "scenario": "Under SSI, T1 reads old state while T2's write is uncommitted; T2 commits before T1.",
+      "question": "What can happen?",
+      "expected_answer": "T1 may abort because its premise became stale.",
+      "source_pages": [
+        285,
+        286
+      ]
+    },
+    {
+      "id": "SC021",
+      "scenario": "T1 reads an index range; T2 later writes into it under SSI.",
+      "question": "Does T2 block?",
+      "expected_answer": "No. Read tracking is a tripwire; serializability is checked via conflict detection.",
+      "source_pages": [
+        286,
+        287
+      ]
+    },
+    {
+      "id": "SC022",
+      "scenario": "An SSI workload has extreme contention and frequent aborts.",
+      "question": "What performance problem follows?",
+      "expected_answer": "Retries add more work and can reduce throughput.",
+      "source_pages": [
+        284,
+        288
+      ]
+    }
+  ],
+  "short_answer_questions": [
+    {
+      "id": "SA001",
+      "question": "Why are transactions an abstraction?",
+      "model_answer": "They let applications treat multiple reads/writes as one logical commit-or-abort unit and ignore many partial-failure/concurrency cases.",
+      "source_pages": [
+        243,
+        244
+      ]
+    },
+    {
+      "id": "SA002",
+      "question": "Why is ACID consistency unusual?",
+      "model_answer": "It is primarily about application-defined invariants rather than a guarantee the database can define by itself.",
+      "source_pages": [
+        246,
+        247
+      ]
+    },
+    {
+      "id": "SA003",
+      "question": "Why is durability never absolute?",
+      "model_answer": "Disks, replicas, firmware, filesystems, power, and backups can all fail; multiple techniques only reduce risk.",
+      "source_pages": [
+        248,
+        249
+      ]
+    },
+    {
+      "id": "SA004",
+      "question": "Why are multi-object transactions useful?",
+      "model_answer": "Related records, denormalized data, and secondary indexes often require coordinated changes.",
+      "source_pages": [
+        250,
+        251,
+        253
+      ]
+    },
+    {
+      "id": "SA005",
+      "question": "Why is retry logic subtle?",
+      "model_answer": "Ambiguous commits, overload, permanent errors, external side effects, and client failure complicate retry.",
+      "source_pages": [
+        254
+      ]
+    },
+    {
+      "id": "SA006",
+      "question": "What does read committed prevent?",
+      "model_answer": "Dirty reads and dirty writes, but not read skew or all write races.",
+      "source_pages": [
+        256,
+        257,
+        259
+      ]
+    },
+    {
+      "id": "SA007",
+      "question": "Why is snapshot isolation good for analytics?",
+      "model_answer": "Long reads observe a stable snapshot while writers continue.",
+      "source_pages": [
+        260,
+        261
+      ]
+    },
+    {
+      "id": "SA008",
+      "question": "Explain MVCC.",
+      "model_answer": "Keep multiple row versions tagged by transaction IDs; readers select versions visible to their snapshot; obsolete versions are GC'd later.",
+      "source_pages": [
+        261,
+        262,
+        263
+      ]
+    },
+    {
+      "id": "SA009",
+      "question": "Compare lost-update defenses.",
+      "model_answer": "Atomic DB updates, explicit locks, automatic conflict detection, or compare-and-set; replicated systems may merge siblings.",
+      "source_pages": [
+        265,
+        266,
+        267,
+        268
+      ]
+    },
+    {
+      "id": "SA010",
+      "question": "Why is write skew subtle?",
+      "model_answer": "Transactions can update different rows while violating one cross-object invariant, so ordinary same-row conflict detection misses it.",
+      "source_pages": [
+        269,
+        270
+      ]
+    },
+    {
+      "id": "SA011",
+      "question": "What is a phantom?",
+      "model_answer": "A write changes the result of another transaction's search predicate, potentially invalidating a decision.",
+      "source_pages": [
+        272,
+        273
+      ]
+    },
+    {
+      "id": "SA012",
+      "question": "Why does serializability simplify correctness?",
+      "model_answer": "Concurrent execution behaves like some serial order, preventing the race conditions discussed.",
+      "source_pages": [
+        274
+      ]
+    },
+    {
+      "id": "SA013",
+      "question": "When is serial execution practical?",
+      "model_answer": "Small fast in-memory OLTP transactions submitted as stored procedures and mostly restricted to one partition.",
+      "source_pages": [
+        275,
+        276,
+        278
+      ]
+    },
+    {
+      "id": "SA014",
+      "question": "Explain 2PL.",
+      "model_answer": "Reads take shared locks, writes exclusive locks, locks remain until transaction end, and deadlocks cause abort/retry.",
+      "source_pages": [
+        279,
+        280
+      ]
+    },
+    {
+      "id": "SA015",
+      "question": "Why is 2PL operationally painful?",
+      "model_answer": "Blocking reduces concurrency, queues build, slow transactions inflate tail latency, and deadlocks waste work.",
+      "source_pages": [
+        280,
+        281
+      ]
+    },
+    {
+      "id": "SA016",
+      "question": "What do predicate locks solve?",
+      "model_answer": "They protect search conditions—including rows that do not yet exist—from phantom writes.",
+      "source_pages": [
+        281,
+        282
+      ]
+    },
+    {
+      "id": "SA017",
+      "question": "How is SSI different from 2PL?",
+      "model_answer": "SSI optimistically runs on snapshots and detects/aborts unsafe executions instead of blocking potential conflicts up front.",
+      "source_pages": [
+        283,
+        284
+      ]
+    },
+    {
+      "id": "SA018",
+      "question": "What does SSI's outdated-premise logic detect?",
+      "model_answer": "Whether a transaction's reads were invalidated by writes that committed before it, or whether later writes affected its earlier reads.",
+      "source_pages": [
+        285,
+        286,
+        287
+      ]
+    },
+    {
+      "id": "SA019",
+      "question": "What controls SSI performance?",
+      "model_answer": "Contention, abort rate, transaction length, and read/write tracking granularity.",
+      "source_pages": [
+        284,
+        287,
+        288
+      ]
+    }
+  ],
+  "active_recall_prompts": [
+    {
+      "id": "AR001",
+      "prompt": "Recite ACID using the chapter's framing.",
+      "target_points": [
+        "atomicity=abortability",
+        "consistency=invariants/application",
+        "isolation=serializability",
+        "durability=survival"
+      ],
+      "source_pages": [
+        245,
+        246,
+        247,
+        248
+      ]
+    },
+    {
+      "id": "AR002",
+      "prompt": "List all retry hazards.",
+      "target_points": [
+        "ambiguous commit",
+        "duplicate",
+        "overload",
+        "permanent error",
+        "external side effect",
+        "client failure"
+      ],
+      "source_pages": [
+        254
+      ]
+    },
+    {
+      "id": "AR003",
+      "prompt": "Define all six anomalies.",
+      "target_points": [
+        "dirty read",
+        "dirty write",
+        "read skew",
+        "lost update",
+        "write skew",
+        "phantom"
+      ],
+      "source_pages": [
+        256,
+        257,
+        259,
+        265,
+        269,
+        273
+      ]
+    },
+    {
+      "id": "AR004",
+      "prompt": "Explain read committed implementation.",
+      "target_points": [
+        "write lock",
+        "old committed value",
+        "new uncommitted value",
+        "visibility at commit"
+      ],
+      "source_pages": [
+        258,
+        259
+      ]
+    },
+    {
+      "id": "AR005",
+      "prompt": "Reconstruct MVCC.",
+      "target_points": [
+        "txid",
+        "versions",
+        "created_by",
+        "deleted_by",
+        "visibility",
+        "GC"
+      ],
+      "source_pages": [
+        261,
+        262,
+        263
+      ]
+    },
+    {
+      "id": "AR006",
+      "prompt": "List lost-update defenses.",
+      "target_points": [
+        "atomic op",
+        "explicit lock",
+        "auto detection",
+        "CAS",
+        "replica sibling merge"
+      ],
+      "source_pages": [
+        265,
+        266,
+        267,
+        268
+      ]
+    },
+    {
+      "id": "AR007",
+      "prompt": "Walk through doctor write skew.",
+      "target_points": [
+        "both see 2",
+        "different row updates",
+        "both commit",
+        "zero on-call"
+      ],
+      "source_pages": [
+        269,
+        270
+      ]
+    },
+    {
+      "id": "AR008",
+      "prompt": "Explain phantom write skew.",
+      "target_points": [
+        "predicate query",
+        "no row to lock",
+        "concurrent insert",
+        "condition changes"
+      ],
+      "source_pages": [
+        272,
+        273
+      ]
+    },
+    {
+      "id": "AR009",
+      "prompt": "Compare the 3 serializable approaches.",
+      "target_points": [
+        "serial=no concurrency",
+        "2PL=pessimistic block",
+        "SSI=optimistic detect/abort"
+      ],
+      "source_pages": [
+        274,
+        279,
+        283,
+        284
+      ]
+    },
+    {
+      "id": "AR010",
+      "prompt": "Explain why serial execution uses stored procedures.",
+      "target_points": [
+        "single thread",
+        "network waits bad",
+        "submit whole txn",
+        "in-memory fast"
+      ],
+      "source_pages": [
+        275,
+        276
+      ]
+    },
+    {
+      "id": "AR011",
+      "prompt": "Explain 2PL lock semantics.",
+      "target_points": [
+        "shared",
+        "exclusive",
+        "upgrade",
+        "hold until end",
+        "deadlock"
+      ],
+      "source_pages": [
+        279,
+        280
+      ]
+    },
+    {
+      "id": "AR012",
+      "prompt": "Explain predicate vs index-range locks.",
+      "target_points": [
+        "exact predicate",
+        "future rows",
+        "expensive",
+        "approx index range",
+        "table fallback"
+      ],
+      "source_pages": [
+        281,
+        282,
+        283
+      ]
+    },
+    {
+      "id": "AR013",
+      "prompt": "Explain SSI stale-read detection.",
+      "target_points": [
+        "ignored uncommitted write",
+        "track dependency",
+        "writer commits",
+        "reader may abort"
+      ],
+      "source_pages": [
+        285,
+        286
+      ]
+    },
+    {
+      "id": "AR014",
+      "prompt": "Explain SSI tripwire detection.",
+      "target_points": [
+        "track prior reads",
+        "writer affects read",
+        "no blocking",
+        "commit conflict",
+        "abort unsafe txn"
+      ],
+      "source_pages": [
+        286,
+        287
+      ]
+    },
+    {
+      "id": "AR015",
+      "prompt": "Compare 2PL vs SSI performance.",
+      "target_points": [
+        "blocking",
+        "tail latency",
+        "deadlock",
+        "optimistic aborts",
+        "contention",
+        "predictable reads"
+      ],
+      "source_pages": [
+        280,
+        281,
+        284,
+        287,
+        288
+      ]
+    }
+  ],
+  "diagram_reconstruction_drills": [
+    {
+      "id": "DR01",
+      "name": "Lost counter update",
+      "task": "Draw two clients reading 42 and both writing 43 instead of reaching 44.",
+      "source_pages": [
+        247,
+        248
+      ]
+    },
+    {
+      "id": "DR02",
+      "name": "Dirty read / rollback",
+      "task": "Draw email insertion plus unread counter showing partial visibility and rollback.",
+      "source_pages": [
+        250,
+        251
+      ]
+    },
+    {
+      "id": "DR03",
+      "name": "Read committed",
+      "task": "Draw writer setting x=3 while another reader continues seeing committed x=2 until commit.",
+      "source_pages": [
+        256
+      ]
+    },
+    {
+      "id": "DR04",
+      "name": "Read skew",
+      "task": "Draw two $500 accounts, $100 transfer, and reader observing $400+$500.",
+      "source_pages": [
+        259,
+        260
+      ]
+    },
+    {
+      "id": "DR05",
+      "name": "MVCC",
+      "task": "Draw txids, old/new row versions, created_by/deleted_by, and snapshot visibility.",
+      "source_pages": [
+        261,
+        262,
+        263
+      ]
+    },
+    {
+      "id": "DR06",
+      "name": "Doctor write skew",
+      "task": "Draw Alice/Bob both reading count=2, updating different rows, and leaving zero on call.",
+      "source_pages": [
+        269,
+        270
+      ]
+    },
+    {
+      "id": "DR07",
+      "name": "Interactive vs stored procedure",
+      "task": "Compare repeated app/DB round trips with one pre-submitted transaction program.",
+      "source_pages": [
+        275,
+        276
+      ]
+    },
+    {
+      "id": "DR08",
+      "name": "2PL matrix",
+      "task": "Draw shared/shared allowed and every shared/exclusive or exclusive/* conflict blocked.",
+      "source_pages": [
+        279,
+        280
+      ]
+    },
+    {
+      "id": "DR09",
+      "name": "Predicate/range lock",
+      "task": "Draw a room/time predicate and a future overlapping booking colliding with the locked range.",
+      "source_pages": [
+        281,
+        282
+      ]
+    },
+    {
+      "id": "DR10",
+      "name": "SSI conflicts",
+      "task": "Draw one stale-MVCC-read conflict and one write-affects-prior-read tripwire.",
+      "source_pages": [
+        285,
+        286,
+        287
+      ]
+    }
+  ],
+  "interview_style_questions": [
+    {
+      "id": "INT01",
+      "question": "What does ACID actually guarantee?",
+      "strong_answer_outline": [
+        "abortability",
+        "application invariants",
+        "serializability/isolation",
+        "durability risk reduction",
+        "implementation ambiguity"
+      ],
+      "source_pages": [
+        245,
+        246,
+        247,
+        248
+      ]
+    },
+    {
+      "id": "INT02",
+      "question": "Why are multi-object transactions valuable?",
+      "strong_answer_outline": [
+        "foreign keys",
+        "denormalization",
+        "indexes",
+        "partial failures",
+        "coordination"
+      ],
+      "source_pages": [
+        250,
+        251,
+        253
+      ]
+    },
+    {
+      "id": "INT03",
+      "question": "What can go wrong with transaction retries?",
+      "strong_answer_outline": [
+        "ambiguous commit",
+        "dedupe",
+        "overload/backoff",
+        "permanent error",
+        "side effects"
+      ],
+      "source_pages": [
+        254
+      ]
+    },
+    {
+      "id": "INT04",
+      "question": "Read committed vs snapshot isolation?",
+      "strong_answer_outline": [
+        "dirty read/write",
+        "read skew",
+        "consistent snapshot",
+        "MVCC",
+        "blocking behavior"
+      ],
+      "source_pages": [
+        256,
+        257,
+        259,
+        260,
+        261
+      ]
+    },
+    {
+      "id": "INT05",
+      "question": "How does MVCC work?",
+      "strong_answer_outline": [
+        "txids",
+        "versions",
+        "create/delete metadata",
+        "visibility",
+        "GC",
+        "indexes"
+      ],
+      "source_pages": [
+        261,
+        262,
+        263,
+        264
+      ]
+    },
+    {
+      "id": "INT06",
+      "question": "How do you prevent lost updates?",
+      "strong_answer_outline": [
+        "atomic op",
+        "SELECT FOR UPDATE",
+        "auto detect",
+        "CAS",
+        "replicated merge"
+      ],
+      "source_pages": [
+        265,
+        266,
+        267,
+        268
+      ]
+    },
+    {
+      "id": "INT07",
+      "question": "What is write skew?",
+      "strong_answer_outline": [
+        "same snapshot",
+        "different rows",
+        "shared invariant",
+        "doctor example",
+        "serializable"
+      ],
+      "source_pages": [
+        269,
+        270
+      ]
+    },
+    {
+      "id": "INT08",
+      "question": "What is a phantom?",
+      "strong_answer_outline": [
+        "predicate changes",
+        "absence of rows",
+        "predicate locks",
+        "index-range locks",
+        "serializable"
+      ],
+      "source_pages": [
+        272,
+        273,
+        281,
+        282
+      ]
+    },
+    {
+      "id": "INT09",
+      "question": "When is actual serial execution viable?",
+      "strong_answer_outline": [
+        "short OLTP",
+        "in-memory",
+        "stored procedures",
+        "one core/partition",
+        "single-partition locality"
+      ],
+      "source_pages": [
+        274,
+        275,
+        276,
+        278
+      ]
+    },
+    {
+      "id": "INT10",
+      "question": "How does 2PL implement serializability?",
+      "strong_answer_outline": [
+        "shared/exclusive",
+        "blocking",
+        "locks to end",
+        "deadlock",
+        "predicate/range locks"
+      ],
+      "source_pages": [
+        279,
+        280,
+        281,
+        282
+      ]
+    },
+    {
+      "id": "INT11",
+      "question": "How does SSI work?",
+      "strong_answer_outline": [
+        "snapshot isolation",
+        "optimistic",
+        "outdated premise",
+        "dependency tracking",
+        "tripwire",
+        "commit abort"
+      ],
+      "source_pages": [
+        283,
+        284,
+        285,
+        286,
+        287
+      ]
+    },
+    {
+      "id": "INT12",
+      "question": "Compare serial execution, 2PL, and SSI.",
+      "strong_answer_outline": [
+        "one-thread simplicity",
+        "blocking/deadlock",
+        "optimistic aborts",
+        "latency",
+        "contention",
+        "scaling"
+      ],
+      "source_pages": [
+        274,
+        278,
+        279,
+        280,
+        281,
+        283,
+        284,
+        287,
+        288
+      ]
+    }
+  ],
+  "common_confusions": [
+    {
+      "confusion": "Atomicity means no concurrent observer can see a half-finished operation.",
+      "correction": "In ACID, atomicity is abortability; concurrency is isolation.",
+      "source_pages": [
+        246
+      ]
+    },
+    {
+      "confusion": "The C in ACID is fully a database guarantee.",
+      "correction": "The application defines and must preserve most invariants.",
+      "source_pages": [
+        247
+      ]
+    },
+    {
+      "confusion": "Durability means impossible data loss.",
+      "correction": "No persistence/replication/backup combination is perfect.",
+      "source_pages": [
+        248,
+        249
+      ]
+    },
+    {
+      "confusion": "Read committed is enough to avoid all concurrency bugs.",
+      "correction": "It allows read skew, lost updates, and write skew.",
+      "source_pages": [
+        256,
+        257,
+        259,
+        270
+      ]
+    },
+    {
+      "confusion": "Snapshot isolation equals serializability.",
+      "correction": "Snapshot isolation can permit write skew and phantom-related races.",
+      "source_pages": [
+        260,
+        269,
+        270,
+        273
+      ]
+    },
+    {
+      "confusion": "Lost update and write skew are identical.",
+      "correction": "Lost update clobbers changes to the same object; write skew can update different objects while breaking a shared invariant.",
+      "source_pages": [
+        265,
+        269,
+        270
+      ]
+    },
+    {
+      "confusion": "CAS is always safe.",
+      "correction": "It depends on whether the conditional predicate observes the current value rather than a stale snapshot.",
+      "source_pages": [
+        267
+      ]
+    },
+    {
+      "confusion": "SELECT FOR UPDATE can always lock against future inserts.",
+      "correction": "If no row exists, no ordinary row lock exists; predicate/range locking is needed.",
+      "source_pages": [
+        273,
+        281,
+        282
+      ]
+    },
+    {
+      "confusion": "2PL means two-phase commit.",
+      "correction": "Two-phase locking and two-phase commit are completely different.",
+      "source_pages": [
+        279
+      ]
+    },
+    {
+      "confusion": "SSI prevents conflicts by blocking.",
+      "correction": "SSI is optimistic and detects conflicts while allowing transactions to proceed.",
+      "source_pages": [
+        283,
+        284
+      ]
+    }
+  ],
+  "practice_problems": [
+    {
+      "id": "P01",
+      "type": "atomicity",
+      "prompt": "Writes A and B succeed, C fails, transaction aborts. What remains?",
+      "solution": "None of A/B/C should remain.",
+      "based_on_source_pages": [
+        246
+      ]
+    },
+    {
+      "id": "P02",
+      "type": "read_skew",
+      "prompt": "A=$500,B=$500; transfer $100 A->B. Reader sees A=$400 and B=$500. What total/anomaly?",
+      "solution": "$900; read skew.",
+      "based_on_source_pages": [
+        259,
+        260
+      ]
+    },
+    {
+      "id": "P03",
+      "type": "lost_update",
+      "prompt": "Two clients read 10, each increments, both write 11. Correct result?",
+      "solution": "12; 11 is a lost update.",
+      "based_on_source_pages": [
+        265
+      ]
+    },
+    {
+      "id": "P04",
+      "type": "mvcc",
+      "prompt": "T12 starts before T13 updates 500->400. What may T12 continue seeing?",
+      "solution": "500 from its older snapshot.",
+      "based_on_source_pages": [
+        262,
+        263
+      ]
+    },
+    {
+      "id": "P05",
+      "type": "write_skew",
+      "prompt": "Two on-call doctors both see count=2 and both go off call. Final count?",
+      "solution": "0; write skew violates the invariant.",
+      "based_on_source_pages": [
+        269,
+        270
+      ]
+    },
+    {
+      "id": "P06",
+      "type": "phantom",
+      "prompt": "Booking query returns no rows and two txns insert same slot. Why ordinary row locks fail?",
+      "solution": "No existing row existed to lock; this is a phantom predicate conflict.",
+      "based_on_source_pages": [
+        271,
+        273
+      ]
+    },
+    {
+      "id": "P07",
+      "type": "2pl",
+      "prompt": "T1 has shared lock; T2 requests exclusive. What happens?",
+      "solution": "T2 waits until T1 ends.",
+      "based_on_source_pages": [
+        279,
+        280
+      ]
+    },
+    {
+      "id": "P08",
+      "type": "deadlock",
+      "prompt": "T1 waits for B held by T2; T2 waits for A held by T1. Resolution?",
+      "solution": "DB detects deadlock and aborts one transaction.",
+      "based_on_source_pages": [
+        280
+      ]
+    },
+    {
+      "id": "P09",
+      "type": "ssi",
+      "prompt": "T1 reads a predicate; T2 changes it and commits first. What may SSI do to T1?",
+      "solution": "Abort T1 because its premise may be stale.",
+      "based_on_source_pages": [
+        284,
+        285,
+        286,
+        287
+      ]
+    },
+    {
+      "id": "P10",
+      "type": "serial_execution",
+      "prompt": "8 independent partitions and all txns are single-partition. Benefit?",
+      "solution": "Each partition can run its own serial transaction thread/core and scale throughput across cores.",
+      "based_on_source_pages": [
+        278
+      ]
+    }
+  ],
+  "mastery_check": {
+    "beginner": [
+      "Define ACID accurately.",
+      "Recognize the six major anomalies.",
+      "Explain read committed, snapshot isolation, and serializable isolation."
+    ],
+    "intermediate": [
+      "Explain MVCC visibility.",
+      "Choose a lost-update defense.",
+      "Walk through write skew and phantoms.",
+      "Explain serial execution and 2PL."
+    ],
+    "advanced": [
+      "Determine which isolation level permits a concrete anomaly.",
+      "Explain predicate/index-range locking.",
+      "Explain SSI's dependency detection and abort logic.",
+      "Compare serial execution, 2PL, and SSI under real workload constraints."
+    ]
+  },
+  "final_review": {
+    "must_memorize": [
+      "Atomicity = abortability; isolation = concurrency safety.",
+      "ACID consistency = application invariants.",
+      "Durability is risk reduction, never absolute.",
+      "Read committed prevents dirty reads and dirty writes.",
+      "Snapshot isolation prevents read skew by using a consistent snapshot.",
+      "MVCC keeps multiple versions and uses transaction visibility rules.",
+      "Lost update defenses: atomic operations, locks, detection, CAS.",
+      "Write skew updates different objects based on the same stale premise.",
+      "Phantoms change a predicate result and can cause write skew.",
+      "Serializable isolation prevents the chapter's race conditions.",
+      "Three serializable approaches: serial execution, 2PL, SSI.",
+      "Serial execution favors short, in-memory, stored-procedure, single-partition transactions.",
+      "2PL is pessimistic: shared/exclusive locks, blocking, deadlocks, range locks.",
+      "SSI is optimistic: snapshot reads plus serialization-conflict detection and aborts.",
+      "SSI performance is strongly affected by contention and abort rate."
+    ],
+    "anomaly_matrix": {
+      "read_committed": {
+        "dirty_read": "prevented",
+        "dirty_write": "prevented",
+        "read_skew": "possible",
+        "lost_update": "possible",
+        "write_skew": "possible"
+      },
+      "snapshot_isolation": {
+        "dirty_read": "prevented",
+        "dirty_write": "prevented",
+        "read_skew": "prevented",
+        "lost_update": "implementation-dependent",
+        "write_skew": "possible"
+      },
+      "serializable": {
+        "dirty_read": "prevented",
+        "dirty_write": "prevented",
+        "read_skew": "prevented",
+        "lost_update": "prevented",
+        "write_skew": "prevented",
+        "phantom_write_skew": "prevented"
+      }
+    },
+    "memory_chain": "TRANSACTION -> ACID -> RETRY -> READ COMMITTED -> DIRTY READ/WRITE -> READ SKEW -> SNAPSHOT/MVCC -> LOST UPDATE -> WRITE SKEW -> PHANTOM -> SERIALIZABLE -> SERIAL EXECUTION -> 2PL -> PREDICATE LOCKS -> SSI",
+    "one_sentence_takeaway": "Weak isolation removes some race conditions while leaving others to application code; serializable execution aims to make concurrent transactions behave like a correct one-at-a-time history."
+  }
+}

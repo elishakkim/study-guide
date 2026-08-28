@@ -1,0 +1,4701 @@
+{
+  "chapter": {
+    "number": 2,
+    "title": "Data Models and Query Languages",
+    "book": "Designing Data-Intensive Applications",
+    "author": "Martin Kleppmann",
+    "pdf_pages": {
+      "chapter_start": 49,
+      "chapter_summary_end": 86
+    },
+    "book_pages": {
+      "chapter_start": 27,
+      "chapter_summary_end": 64
+    },
+    "primary_goal": "Understand how relational, document, and graph data models represent relationships, how their query languages shape application design, and why the right model depends on the application's data."
+  },
+  "chapter_summary": {
+    "overview": "Chapter 2 argues that data models profoundly shape both software structure and how engineers think about a problem. Applications are built as layers of representation: real-world concepts become application objects, those objects become relational tables, documents, or graphs, those models become bytes, and eventually hardware representations. The chapter compares relational and document models, showing that document databases fit self-contained tree-shaped data well, while relational databases handle many-to-one and many-to-many relationships more naturally through references and joins. It traces this tradeoff back to hierarchical databases, CODASYL's network model, and the relational model's decision to remove application-managed access paths in favor of declarative queries and query optimizers. It then compares schema-on-read with schema-on-write, discusses document locality and its limits, and observes that relational and document systems are converging. The query-language section contrasts imperative programming with declarative SQL, CSS, and XPath/XSL, emphasizing that declarative languages hide execution details and allow optimization and parallelization. MapReduce is presented as an intermediate model between declarative and imperative querying, with pure map/reduce functions enabling distributed execution. The final major section covers graph-shaped data: property graphs, Cypher, recursive SQL, triple-stores, RDF, SPARQL, and Datalog. The chapter's central conclusion is that document, relational, and graph models are all useful in different domains; trying to force one model into another is possible but often awkward.",
+    "major_sections": [
+      "Layered data models",
+      "Relational model versus document model",
+      "The birth of NoSQL",
+      "Object-relational mismatch",
+      "Many-to-one and many-to-many relationships",
+      "Hierarchical and network models",
+      "Relational versus document databases today",
+      "Schema-on-read versus schema-on-write",
+      "Data locality",
+      "Declarative versus imperative query languages",
+      "MapReduce querying",
+      "Graph-like data models",
+      "Property graphs and Cypher",
+      "Graph queries in SQL",
+      "Triple-stores, RDF, and SPARQL",
+      "Datalog"
+    ],
+    "source_pages": [
+      49,
+      50,
+      51,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59,
+      60,
+      61,
+      62,
+      63,
+      64,
+      65,
+      66,
+      67,
+      68,
+      69,
+      70,
+      71,
+      72,
+      73,
+      74,
+      75,
+      76,
+      77,
+      78,
+      79,
+      80,
+      81,
+      82,
+      83,
+      84,
+      85,
+      86
+    ]
+  },
+  "learning_objectives": [
+    {
+      "id": "LO01",
+      "objective": "Explain the layered nature of data models from real-world concepts down to hardware representation.",
+      "source_pages": [
+        49,
+        50
+      ]
+    },
+    {
+      "id": "LO02",
+      "objective": "Explain why every data model embodies assumptions about its intended usage.",
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "LO03",
+      "objective": "Define the relational model and summarize its historical dominance.",
+      "source_pages": [
+        50,
+        51
+      ]
+    },
+    {
+      "id": "LO04",
+      "objective": "Explain the motivations behind NoSQL adoption and polyglot persistence.",
+      "source_pages": [
+        51
+      ]
+    },
+    {
+      "id": "LO05",
+      "objective": "Explain the object-relational impedance mismatch and the limits of ORMs.",
+      "source_pages": [
+        51,
+        52
+      ]
+    },
+    {
+      "id": "LO06",
+      "objective": "Compare normalized relational and JSON representations of a one-to-many résumé/profile.",
+      "source_pages": [
+        52,
+        53,
+        54
+      ]
+    },
+    {
+      "id": "LO07",
+      "objective": "Explain why IDs and normalization reduce duplication and inconsistency.",
+      "source_pages": [
+        55
+      ]
+    },
+    {
+      "id": "LO08",
+      "objective": "Explain why many-to-one and many-to-many relationships challenge document models.",
+      "source_pages": [
+        55,
+        56,
+        57
+      ]
+    },
+    {
+      "id": "LO09",
+      "objective": "Compare the hierarchical, network/CODASYL, and relational models historically.",
+      "source_pages": [
+        58,
+        59,
+        60
+      ]
+    },
+    {
+      "id": "LO10",
+      "objective": "Explain access paths in CODASYL and why they made application code inflexible.",
+      "source_pages": [
+        59
+      ]
+    },
+    {
+      "id": "LO11",
+      "objective": "Explain how relational query optimizers replaced application-managed access paths.",
+      "source_pages": [
+        59,
+        60
+      ]
+    },
+    {
+      "id": "LO12",
+      "objective": "Compare document and relational models for application-code simplicity.",
+      "source_pages": [
+        60,
+        61
+      ]
+    },
+    {
+      "id": "LO13",
+      "objective": "Distinguish schema-on-read and schema-on-write.",
+      "source_pages": [
+        61,
+        62
+      ]
+    },
+    {
+      "id": "LO14",
+      "objective": "Explain when schema flexibility is useful and when explicit schemas are beneficial.",
+      "source_pages": [
+        62,
+        63
+      ]
+    },
+    {
+      "id": "LO15",
+      "objective": "Explain document data locality, including its benefits and performance limitations.",
+      "source_pages": [
+        63
+      ]
+    },
+    {
+      "id": "LO16",
+      "objective": "Explain the convergence of relational and document databases.",
+      "source_pages": [
+        63,
+        64
+      ]
+    },
+    {
+      "id": "LO17",
+      "objective": "Compare imperative and declarative query languages.",
+      "source_pages": [
+        64,
+        65
+      ]
+    },
+    {
+      "id": "LO18",
+      "objective": "Explain why declarative languages enable database optimization and parallel execution.",
+      "source_pages": [
+        65
+      ]
+    },
+    {
+      "id": "LO19",
+      "objective": "Use CSS/XPath as analogies for declarative data querying.",
+      "source_pages": [
+        66,
+        67,
+        68
+      ]
+    },
+    {
+      "id": "LO20",
+      "objective": "Explain MapReduce's map/reduce execution model and purity restrictions.",
+      "source_pages": [
+        68,
+        69,
+        70
+      ]
+    },
+    {
+      "id": "LO21",
+      "objective": "Explain why MongoDB introduced the aggregation pipeline in addition to MapReduce.",
+      "source_pages": [
+        70
+      ]
+    },
+    {
+      "id": "LO22",
+      "objective": "Identify when graph models are a natural fit.",
+      "source_pages": [
+        71
+      ]
+    },
+    {
+      "id": "LO23",
+      "objective": "Define property-graph vertices and edges.",
+      "source_pages": [
+        72,
+        73
+      ]
+    },
+    {
+      "id": "LO24",
+      "objective": "Explain the flexibility and evolvability properties of graph models.",
+      "source_pages": [
+        73,
+        74
+      ]
+    },
+    {
+      "id": "LO25",
+      "objective": "Explain Cypher pattern matching and variable-length graph traversal.",
+      "source_pages": [
+        74,
+        75,
+        76
+      ]
+    },
+    {
+      "id": "LO26",
+      "objective": "Explain why recursive graph traversal is more cumbersome in SQL.",
+      "source_pages": [
+        75,
+        76,
+        77
+      ]
+    },
+    {
+      "id": "LO27",
+      "objective": "Define the triple-store subject-predicate-object model.",
+      "source_pages": [
+        77,
+        78
+      ]
+    },
+    {
+      "id": "LO28",
+      "objective": "Explain RDF's relation to the semantic web and URI namespaces.",
+      "source_pages": [
+        79,
+        80
+      ]
+    },
+    {
+      "id": "LO29",
+      "objective": "Explain SPARQL graph-pattern queries and compare them with Cypher.",
+      "source_pages": [
+        81
+      ]
+    },
+    {
+      "id": "LO30",
+      "objective": "Distinguish modern graph databases from CODASYL's network model.",
+      "source_pages": [
+        82
+      ]
+    },
+    {
+      "id": "LO31",
+      "objective": "Explain Datalog facts, predicates, rules, recursion, and derived results.",
+      "source_pages": [
+        82,
+        83,
+        84,
+        85
+      ]
+    },
+    {
+      "id": "LO32",
+      "objective": "Choose among document, relational, and graph models based on relationship structure.",
+      "source_pages": [
+        85,
+        86
+      ]
+    }
+  ],
+  "data_model_layering": {
+    "layers": [
+      {
+        "layer": 1,
+        "representation": "Real-world people, organizations, goods, actions, money, sensors, etc. become application objects/data structures and APIs."
+      },
+      {
+        "layer": 2,
+        "representation": "Application structures are expressed in a general-purpose model such as JSON/XML documents, relational tables, or graphs."
+      },
+      {
+        "layer": 3,
+        "representation": "Database engines encode the chosen data model into bytes in memory, on disk, or on the network."
+      },
+      {
+        "layer": 4,
+        "representation": "Hardware represents bytes using electrical currents, light pulses, magnetic fields, and other physical mechanisms."
+      }
+    ],
+    "main_point": "Each layer hides lower-level complexity behind a cleaner data model, enabling different groups of engineers to work independently.",
+    "model_assumptions": "Every data model makes some operations natural or fast and others awkward, slow, or unsupported.",
+    "source_pages": [
+      49,
+      50
+    ]
+  },
+  "relational_model": {
+    "origin": "Proposed by Edgar Codd in 1970.",
+    "structure": "Data is organized into relations/tables, each an unordered collection of tuples/rows.",
+    "historical_use_cases": [
+      "Transaction processing",
+      "Sales and banking",
+      "Airline reservations",
+      "Warehouse stock keeping",
+      "Customer invoicing",
+      "Payroll",
+      "Reporting"
+    ],
+    "key_idea": "Hide physical/internal data representation behind a clean logical interface.",
+    "historical_outcome": "By the mid-1980s relational databases and SQL became dominant and generalized well beyond their initial business-processing use cases.",
+    "source_pages": [
+      50,
+      51
+    ]
+  },
+  "nosql": {
+    "name_origin": "NoSQL originally appeared as a Twitter hashtag for a 2009 meetup about open-source, distributed, nonrelational databases; it was later reinterpreted as 'Not Only SQL.'",
+    "drivers": [
+      "Need for scale beyond what relational systems could easily achieve, including huge datasets or high write throughput.",
+      "Preference for free/open-source software.",
+      "Specialized query operations poorly supported by the relational model.",
+      "Frustration with rigid relational schemas and desire for more dynamic/expressive models."
+    ],
+    "polyglot_persistence": "Relational and nonrelational databases are likely to coexist because different applications have different requirements.",
+    "source_pages": [
+      51
+    ]
+  },
+  "object_relational_mismatch": {
+    "definition": "The awkward translation between object-oriented application data structures and relational tables, rows, and columns.",
+    "orm_examples": [
+      "ActiveRecord",
+      "Hibernate"
+    ],
+    "orm_limit": "ORMs reduce boilerplate but cannot fully hide differences between object and relational models.",
+    "linkedin_profile": {
+      "one_to_one_fields": [
+        "first_name",
+        "last_name",
+        "summary"
+      ],
+      "one_to_many_fields": [
+        "positions",
+        "education",
+        "contact information"
+      ],
+      "relational_approach": "Put repeated child collections in separate tables with foreign keys to users.",
+      "document_approach": "Store the profile as one self-contained JSON document.",
+      "document_locality_advantage": "A profile can be fetched in one query because related one-to-many data is co-located."
+    },
+    "source_pages": [
+      52,
+      53,
+      54
+    ]
+  },
+  "normalization_and_relationships": {
+    "why_ids_are_used": [
+      "Consistent spelling and style",
+      "Avoid ambiguity",
+      "Easy global update",
+      "Localization",
+      "Better search and structured inference"
+    ],
+    "id_property": "A database ID has no human meaning and therefore can remain stable even if the human-readable information changes.",
+    "normalization": "Removing duplication by storing a human-meaningful fact once and referring to it by ID, reducing update overhead and inconsistency risk.",
+    "document_model_problem": "Normalization creates many-to-one references, and growing application features often create many-to-many relationships. These require joins or application-managed follow-up queries, which document databases may handle poorly.",
+    "source_pages": [
+      55,
+      56,
+      57
+    ]
+  },
+  "historical_models": {
+    "hierarchical_model": {
+      "example": "IBM IMS",
+      "structure": "Tree of records nested inside records; every record has exactly one parent.",
+      "strength": "Good for one-to-many relationships.",
+      "weakness": "Poor for many-to-many relationships and no joins.",
+      "similarity_to_documents": "Strong resemblance to nested JSON/document databases.",
+      "source_pages": [
+        58
+      ]
+    },
+    "network_model_codasyL": {
+      "structure": "Generalized hierarchy where a record can have multiple parents.",
+      "relationship_links": "Disk-stored pointer-like links rather than relational foreign keys.",
+      "access_path": "Applications traverse predefined paths through links/cursors to reach records.",
+      "problem": "Application developers had to understand and maintain all access paths. Changing paths could require rewriting large amounts of query code, making the data model difficult to evolve.",
+      "source_pages": [
+        58,
+        59
+      ]
+    },
+    "relational_response": {
+      "structure": "Expose tables as simple sets of rows without application-visible navigation paths.",
+      "query_optimizer": "The database optimizer chooses indexes, join strategies, and execution order automatically.",
+      "benefit": "New indexes and new query patterns can often be added without rewriting application queries around new access paths.",
+      "source_pages": [
+        59,
+        60
+      ]
+    }
+  },
+  "document_vs_relational_today": {
+    "document_strengths": [
+      "Schema flexibility",
+      "Locality for self-contained documents",
+      "Closer match to application structures for tree-shaped one-to-many data"
+    ],
+    "relational_strengths": [
+      "Joins",
+      "Many-to-one relationships",
+      "Many-to-many relationships"
+    ],
+    "guidance": {
+      "document_model": "Best fit when data is document-like/tree-shaped and generally loaded as a whole.",
+      "relational_model": "Usually better for connected data requiring many joins and references.",
+      "graph_model": "Most natural when data is highly interconnected."
+    },
+    "denormalization_tradeoff": "Denormalization can avoid joins but moves consistency-maintenance work into application code.",
+    "source_pages": [
+      60,
+      61
+    ]
+  },
+  "schema_flexibility": {
+    "schema_on_read": {
+      "definition": "Structure is implicit and interpreted by application code when data is read.",
+      "analogy": "Dynamic/runtime type checking."
+    },
+    "schema_on_write": {
+      "definition": "Schema is explicit and the database validates written data against it.",
+      "analogy": "Static/compile-time type checking."
+    },
+    "migration_example": {
+      "change": "Split a single name field into first_name and last_name.",
+      "document_strategy": "Start writing new fields and let read code handle older documents.",
+      "relational_strategy": "ALTER TABLE to add fields, then potentially UPDATE existing rows.",
+      "important_nuance": "ALTER TABLE is fast in many relational databases, but rewriting all rows with UPDATE can be expensive; an application may also fill missing fields at read time."
+    },
+    "schema_on_read_good_for": [
+      "Heterogeneous object structures",
+      "Data shaped by external systems that may change unpredictably"
+    ],
+    "schema_on_write_good_for": "Collections where records are expected to share the same structure and the schema is useful for documentation/enforcement.",
+    "source_pages": [
+      61,
+      62,
+      63
+    ]
+  },
+  "data_locality": {
+    "benefit": "A document stored as one contiguous JSON/XML/BSON object can be efficient when the application usually reads most or all of it.",
+    "costs": [
+      "The entire document may need loading even if only a small field is needed.",
+      "Updates often require rewriting the entire document.",
+      "Growing documents are particularly expensive."
+    ],
+    "recommendation": "Keep documents fairly small and avoid writes that significantly increase their size.",
+    "not_document_exclusive": [
+      "Google Spanner interleaved rows",
+      "Oracle multi-table index cluster tables",
+      "Bigtable/Cassandra/HBase column-family locality"
+    ],
+    "source_pages": [
+      63
+    ]
+  },
+  "model_convergence": {
+    "relational_direction": "Relational systems increasingly support XML/JSON querying and indexing.",
+    "document_direction": "Document systems increasingly add joins or database-reference resolution.",
+    "conclusion": "Relational and document models complement each other, so hybrid systems supporting both are a useful direction.",
+    "source_pages": [
+      63,
+      64
+    ]
+  },
+  "query_languages": {
+    "imperative": {
+      "definition": "Tell the computer which operations to perform and in what order.",
+      "example": "Loop through animals and append sharks to an output list."
+    },
+    "declarative": {
+      "definition": "Specify the pattern/conditions of the desired result and let the system choose how to execute the query.",
+      "example": "SELECT * FROM animals WHERE family = 'Sharks';"
+    },
+    "benefits_of_declarative": [
+      "Usually more concise.",
+      "Hides database implementation details.",
+      "Allows the optimizer to change indexes/join algorithms/execution order without changing application queries.",
+      "Provides more freedom for parallel execution."
+    ],
+    "source_pages": [
+      64,
+      65
+    ]
+  },
+  "declarative_web_analogy": {
+    "css": "li.selected > p declares which elements should receive a style.",
+    "xpath_xsl": "XPath/XSL similarly declare matching document patterns.",
+    "imperative_js_problem": "DOM-manipulation code is longer, must explicitly undo prior state, and must be rewritten to exploit newer traversal APIs.",
+    "lesson": "Declarative systems can automatically react to changing data/state and allow the implementation to be optimized independently.",
+    "source_pages": [
+      66,
+      67,
+      68
+    ]
+  },
+  "mapreduce": {
+    "definition": "A bulk data-processing programming model popularized by Google for execution across many machines.",
+    "position_on_spectrum": "Between declarative and fully imperative querying.",
+    "functions": {
+      "map": "Runs once per matching input document and emits key-value pairs.",
+      "reduce": "Runs for each grouped key and combines its values."
+    },
+    "shark_example": {
+      "goal": "Count shark sightings per month.",
+      "map_outputs": [
+        "emit('1995-12', 3)",
+        "emit('1995-12', 4)"
+      ],
+      "reduce_input": "reduce('1995-12', [3, 4])",
+      "result": 7
+    },
+    "purity_requirements": [
+      "Use only passed input.",
+      "No additional database queries.",
+      "No side effects."
+    ],
+    "why_purity_matters": "The framework can run functions anywhere, in any order, and rerun them after failure.",
+    "limitations": [
+      "Low-level compared with SQL-like languages.",
+      "Requires coordinated map and reduce functions.",
+      "Provides fewer optimization opportunities than a declarative query."
+    ],
+    "mongodb_aggregation_pipeline": "MongoDB added a more declarative aggregation pipeline, similar in expressiveness to a subset of SQL.",
+    "source_pages": [
+      68,
+      69,
+      70
+    ]
+  },
+  "graph_models": {
+    "when_natural": "When many-to-many relationships are common and connections among records become complex.",
+    "examples": {
+      "social_graph": "People as vertices, relationships as edges.",
+      "web_graph": "Web pages as vertices, hyperlinks as edges.",
+      "road_rail": "Junctions as vertices, roads/rail lines as edges."
+    },
+    "heterogeneous_graph": "A graph may contain different kinds of vertices and edges in the same model, such as people, places, events, check-ins, and comments.",
+    "source_pages": [
+      71
+    ]
+  },
+  "property_graph": {
+    "vertex_fields": [
+      "Unique identifier",
+      "Outgoing edges",
+      "Incoming edges",
+      "Key-value properties"
+    ],
+    "edge_fields": [
+      "Unique identifier",
+      "Tail/start vertex",
+      "Head/end vertex",
+      "Relationship label",
+      "Key-value properties"
+    ],
+    "important_properties": [
+      "Any vertex can connect to any other vertex.",
+      "Incoming and outgoing traversal can be efficient.",
+      "Relationship labels allow many types of information in one graph."
+    ],
+    "evolvability": "Graphs are easy to extend with new vertex and edge types as application requirements change.",
+    "source_pages": [
+      72,
+      73,
+      74
+    ]
+  },
+  "cypher": {
+    "definition": "Declarative property-graph query language created for Neo4j.",
+    "edge_example": "(Idaho) -[:WITHIN]-> (USA)",
+    "pattern_query": "MATCH can express relationships such as a person born somewhere recursively WITHIN the United States and living somewhere recursively WITHIN Europe.",
+    "variable_length_path": ":WITHIN*0.. means follow WITHIN zero or more times.",
+    "optimizer": "Because Cypher is declarative, execution direction/order can be chosen by the query optimizer.",
+    "source_pages": [
+      74,
+      75,
+      76
+    ]
+  },
+  "graph_queries_in_sql": {
+    "challenge": "Graph traversals may require an unknown number of edges/joins, whereas ordinary SQL queries usually specify a fixed number of joins.",
+    "solution": "Recursive common table expressions using WITH RECURSIVE, available since SQL:1999.",
+    "tradeoff": "Possible in SQL, but the example is much more verbose than Cypher.",
+    "lesson": "Different data models/query languages are optimized for different use cases.",
+    "source_pages": [
+      75,
+      76,
+      77
+    ]
+  },
+  "triple_stores": {
+    "triple": "(subject, predicate, object)",
+    "subject": "Equivalent to a graph vertex.",
+    "object_cases": [
+      "Primitive value: predicate/object act like a property key/value.",
+      "Another vertex: predicate acts like an edge label between subject and object vertices."
+    ],
+    "turtle": "Human-readable triple representation based on Notation3.",
+    "example_property": "(lucy, age, 33)",
+    "example_edge": "(lucy, marriedTo, alain)",
+    "source_pages": [
+      77,
+      78,
+      79
+    ]
+  },
+  "rdf_and_semantic_web": {
+    "semantic_web_idea": "Publish machine-readable data alongside human-readable web content so information from sites can be combined.",
+    "rdf": "Resource Description Framework; a consistent data model for publishing and combining web data.",
+    "chapter_assessment": "The semantic web was overhyped and has not been realized as originally envisioned, but useful ideas and tools emerged from it.",
+    "uri_namespaces": "RDF often uses URIs for subjects/predicates/objects so independently created vocabularies do not collide.",
+    "source_pages": [
+      79,
+      80
+    ]
+  },
+  "sparql": {
+    "definition": "SPARQL Protocol and RDF Query Language for triple-stores using RDF.",
+    "relationship_to_cypher": "Cypher's pattern matching is influenced by SPARQL and the syntax is conceptually similar.",
+    "strength": "Concise declarative graph-pattern querying, including path expressions.",
+    "source_pages": [
+      81
+    ]
+  },
+  "graph_vs_codasyL": {
+    "differences": [
+      "Graph DB: any vertex can connect to any other; CODASYL schema restricts nesting/relationships.",
+      "Graph DB: vertices can be addressed directly by ID or index; CODASYL requires traversal through access paths.",
+      "Graph DB: vertices/edges are unordered; CODASYL children are ordered sets.",
+      "Graph DB: usually supports declarative languages; CODASYL queries were imperative."
+    ],
+    "source_pages": [
+      82
+    ]
+  },
+  "datalog": {
+    "history": "Studied extensively by academics in the 1980s and foundational to later query-language ideas.",
+    "uses_named": [
+      "Datomic",
+      "Cascalog for Hadoop"
+    ],
+    "model": "Generalizes triples by writing predicate(subject, object).",
+    "facts": "Stored base assertions such as within(idaho, usa).",
+    "rules": "Rules derive new predicates from stored facts or other rules; rules may call other rules recursively.",
+    "syntax": "A rule applies when all predicates on the right side of :- match; the left side is then derived.",
+    "strength": "Complex logic can be built incrementally from reusable rules.",
+    "tradeoff": "Less convenient for simple one-off queries, but powerful for complex data.",
+    "source_pages": [
+      82,
+      83,
+      84,
+      85
+    ]
+  },
+  "chapter_conclusion": {
+    "document": "Best suited to self-contained documents with few inter-document relationships.",
+    "relational": "Strong general-purpose choice for structured data with joins and many-to-one/many-to-many relationships.",
+    "graph": "Best suited to heavily interconnected data where almost anything may relate to anything.",
+    "schema_note": "Document and graph databases often do not enforce schema, but the application still normally assumes a structure; the distinction is whether it is explicit on write or implicit on read.",
+    "query_languages_named": [
+      "SQL",
+      "MapReduce",
+      "MongoDB aggregation pipeline",
+      "Cypher",
+      "SPARQL",
+      "Datalog"
+    ],
+    "specialized_models": [
+      "Genome sequence-similarity databases such as GenBank",
+      "Custom large-scale particle-physics systems",
+      "Full-text search/information retrieval"
+    ],
+    "source_pages": [
+      85,
+      86
+    ]
+  },
+  "flashcards": [
+    {
+      "id": "FC001",
+      "front": "Why are data models so important?",
+      "back": "They affect both how software is written and how engineers think about the problem.",
+      "source_pages": [
+        49
+      ]
+    },
+    {
+      "id": "FC002",
+      "front": "What is the first data-model layer?",
+      "back": "Represent real-world concepts as application-specific objects/data structures and APIs.",
+      "source_pages": [
+        49
+      ]
+    },
+    {
+      "id": "FC003",
+      "front": "What is the second data-model layer?",
+      "back": "Represent application structures using general-purpose models such as documents, relations, or graphs.",
+      "source_pages": [
+        49
+      ]
+    },
+    {
+      "id": "FC004",
+      "front": "What is the third data-model layer?",
+      "back": "Database software represents those models as bytes in memory, on disk, or on a network.",
+      "source_pages": [
+        49
+      ]
+    },
+    {
+      "id": "FC005",
+      "front": "What do data-model layers provide?",
+      "back": "Abstractions that hide lower-level complexity.",
+      "source_pages": [
+        49,
+        50
+      ]
+    },
+    {
+      "id": "FC006",
+      "front": "Why is data-model choice important?",
+      "back": "Every model makes some uses easy and others awkward, slow, or unsupported.",
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "FC007",
+      "front": "Who proposed the relational model?",
+      "back": "Edgar Codd in 1970.",
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "FC008",
+      "front": "What is a relation in SQL terminology?",
+      "back": "A table: an unordered collection of tuples/rows.",
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "FC009",
+      "front": "What was a major goal of the relational model?",
+      "back": "Hide internal storage representation behind a cleaner interface.",
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "FC010",
+      "front": "When did relational databases become dominant?",
+      "back": "By the mid-1980s.",
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "FC011",
+      "front": "What did NoSQL originally mean?",
+      "back": "A catchy Twitter hashtag for a 2009 meetup on open-source distributed nonrelational databases.",
+      "source_pages": [
+        51
+      ]
+    },
+    {
+      "id": "FC012",
+      "front": "What was NoSQL later reinterpreted as?",
+      "back": "Not Only SQL.",
+      "source_pages": [
+        51
+      ]
+    },
+    {
+      "id": "FC013",
+      "front": "Name four NoSQL adoption drivers.",
+      "back": "Scale/write throughput, open source, specialized queries, schema flexibility.",
+      "source_pages": [
+        51
+      ]
+    },
+    {
+      "id": "FC014",
+      "front": "What is polyglot persistence?",
+      "back": "Using relational and nonrelational datastores together because different use cases need different tools.",
+      "source_pages": [
+        51
+      ]
+    },
+    {
+      "id": "FC015",
+      "front": "What is object-relational impedance mismatch?",
+      "back": "The awkward mapping between object-oriented structures and relational tables/rows/columns.",
+      "source_pages": [
+        52
+      ]
+    },
+    {
+      "id": "FC016",
+      "front": "Name two ORM examples.",
+      "back": "ActiveRecord and Hibernate.",
+      "source_pages": [
+        52
+      ]
+    },
+    {
+      "id": "FC017",
+      "front": "Can ORMs completely hide relational/object differences?",
+      "back": "No.",
+      "source_pages": [
+        52
+      ]
+    },
+    {
+      "id": "FC018",
+      "front": "How are repeated résumé items traditionally normalized?",
+      "back": "Separate positions/education/contact tables with foreign keys to users.",
+      "source_pages": [
+        52
+      ]
+    },
+    {
+      "id": "FC019",
+      "front": "Why can a résumé fit a JSON document well?",
+      "back": "It is mostly a self-contained tree of one-to-many relationships.",
+      "source_pages": [
+        53,
+        54
+      ]
+    },
+    {
+      "id": "FC020",
+      "front": "What locality advantage does JSON have for the résumé?",
+      "back": "All profile information can be fetched together in one query.",
+      "source_pages": [
+        54
+      ]
+    },
+    {
+      "id": "FC021",
+      "front": "What structure do one-to-many relationships naturally form?",
+      "back": "A tree.",
+      "source_pages": [
+        54
+      ]
+    },
+    {
+      "id": "FC022",
+      "front": "Why store region_id instead of the text name directly?",
+      "back": "To normalize human-readable information and avoid duplication.",
+      "source_pages": [
+        55
+      ]
+    },
+    {
+      "id": "FC023",
+      "front": "Why are stable IDs useful?",
+      "back": "They need not change even when human-readable attributes change.",
+      "source_pages": [
+        55
+      ]
+    },
+    {
+      "id": "FC024",
+      "front": "What is normalization's core idea?",
+      "back": "Store a fact once and refer to it, avoiding duplicated values.",
+      "source_pages": [
+        55
+      ]
+    },
+    {
+      "id": "FC025",
+      "front": "What consistency risk comes from duplicated human-readable data?",
+      "back": "Some copies may be updated while others remain stale.",
+      "source_pages": [
+        55
+      ]
+    },
+    {
+      "id": "FC026",
+      "front": "Why do normalized references challenge document databases?",
+      "back": "They create many-to-one relationships requiring joins or application-level lookups.",
+      "source_pages": [
+        56
+      ]
+    },
+    {
+      "id": "FC027",
+      "front": "What happens if a document DB lacks joins?",
+      "back": "Application code must emulate joins using multiple queries.",
+      "source_pages": [
+        56
+      ]
+    },
+    {
+      "id": "FC028",
+      "front": "How can added features make document data more interconnected?",
+      "back": "Organizations, schools, recommendations, and users become referenced entities.",
+      "source_pages": [
+        56,
+        57
+      ]
+    },
+    {
+      "id": "FC029",
+      "front": "What historical database resembles modern nested documents?",
+      "back": "IBM IMS's hierarchical model.",
+      "source_pages": [
+        58
+      ]
+    },
+    {
+      "id": "FC030",
+      "front": "When was IMS commercially released?",
+      "back": "1968.",
+      "source_pages": [
+        58
+      ]
+    },
+    {
+      "id": "FC031",
+      "front": "What is the hierarchical model's key structural rule?",
+      "back": "Each record has exactly one parent.",
+      "source_pages": [
+        58
+      ]
+    },
+    {
+      "id": "FC032",
+      "front": "What relationship shape does the hierarchical model handle well?",
+      "back": "One-to-many.",
+      "source_pages": [
+        58
+      ]
+    },
+    {
+      "id": "FC033",
+      "front": "What relationship shape does it handle poorly?",
+      "back": "Many-to-many.",
+      "source_pages": [
+        58
+      ]
+    },
+    {
+      "id": "FC034",
+      "front": "What is CODASYL's network model?",
+      "back": "A generalization of the hierarchical model allowing records to have multiple parents.",
+      "source_pages": [
+        58
+      ]
+    },
+    {
+      "id": "FC035",
+      "front": "What is an access path in CODASYL?",
+      "back": "A predefined navigation path through pointer-like links among records.",
+      "source_pages": [
+        59
+      ]
+    },
+    {
+      "id": "FC036",
+      "front": "How were CODASYL queries performed?",
+      "back": "Imperatively, by moving a cursor and following access paths.",
+      "source_pages": [
+        59
+      ]
+    },
+    {
+      "id": "FC037",
+      "front": "Why were CODASYL access paths inflexible?",
+      "back": "Changing them could require rewriting application query code.",
+      "source_pages": [
+        59
+      ]
+    },
+    {
+      "id": "FC038",
+      "front": "How does the relational model differ from CODASYL navigation?",
+      "back": "Applications declare what data they need; the optimizer chooses access paths.",
+      "source_pages": [
+        59,
+        60
+      ]
+    },
+    {
+      "id": "FC039",
+      "front": "Who chooses indexes and join order in a relational DB?",
+      "back": "The query optimizer.",
+      "source_pages": [
+        59,
+        60
+      ]
+    },
+    {
+      "id": "FC040",
+      "front": "Why is a reusable optimizer valuable?",
+      "back": "It is built once and benefits all applications using the database.",
+      "source_pages": [
+        60
+      ]
+    },
+    {
+      "id": "FC041",
+      "front": "What are the main document-model advantages?",
+      "back": "Schema flexibility, locality, and a close match to tree-shaped application data.",
+      "source_pages": [
+        60
+      ]
+    },
+    {
+      "id": "FC042",
+      "front": "What are the main relational-model advantages?",
+      "back": "Joins and support for many-to-one/many-to-many relationships.",
+      "source_pages": [
+        60
+      ]
+    },
+    {
+      "id": "FC043",
+      "front": "When is a document model likely simpler?",
+      "back": "When the data is tree-shaped and usually loaded as a whole.",
+      "source_pages": [
+        60,
+        61
+      ]
+    },
+    {
+      "id": "FC044",
+      "front": "When does document modeling become awkward?",
+      "back": "When data is highly interconnected or requires many-to-many relationships.",
+      "source_pages": [
+        61
+      ]
+    },
+    {
+      "id": "FC045",
+      "front": "What is one way to avoid document joins?",
+      "back": "Denormalization.",
+      "source_pages": [
+        61
+      ]
+    },
+    {
+      "id": "FC046",
+      "front": "What cost comes with denormalization?",
+      "back": "Application code must keep redundant data consistent.",
+      "source_pages": [
+        61
+      ]
+    },
+    {
+      "id": "FC047",
+      "front": "What is schema-on-read?",
+      "back": "Schema is implicit and interpreted when data is read.",
+      "source_pages": [
+        61
+      ]
+    },
+    {
+      "id": "FC048",
+      "front": "What is schema-on-write?",
+      "back": "Schema is explicit and enforced when data is written.",
+      "source_pages": [
+        61,
+        62
+      ]
+    },
+    {
+      "id": "FC049",
+      "front": "What programming-language analogy is used for schema-on-read?",
+      "back": "Dynamic/runtime type checking.",
+      "source_pages": [
+        62
+      ]
+    },
+    {
+      "id": "FC050",
+      "front": "What programming-language analogy is used for schema-on-write?",
+      "back": "Static/compile-time type checking.",
+      "source_pages": [
+        62
+      ]
+    },
+    {
+      "id": "FC051",
+      "front": "How can a document model evolve from name to first_name?",
+      "back": "Start writing the new fields and handle old documents at read time.",
+      "source_pages": [
+        62
+      ]
+    },
+    {
+      "id": "FC052",
+      "front": "How does a relational schema typically evolve for the same change?",
+      "back": "ALTER TABLE, followed by UPDATE or read-time fallback.",
+      "source_pages": [
+        62
+      ]
+    },
+    {
+      "id": "FC053",
+      "front": "Is ALTER TABLE always slow?",
+      "back": "No; many relational databases execute simple ALTER TABLE quickly, though some cases/databases differ.",
+      "source_pages": [
+        62
+      ]
+    },
+    {
+      "id": "FC054",
+      "front": "What operation is likely slow on a large table?",
+      "back": "UPDATE rewriting every row.",
+      "source_pages": [
+        62
+      ]
+    },
+    {
+      "id": "FC055",
+      "front": "When is schema-on-read advantageous?",
+      "back": "Heterogeneous records or externally controlled structures that may change.",
+      "source_pages": [
+        62,
+        63
+      ]
+    },
+    {
+      "id": "FC056",
+      "front": "When is an explicit schema useful?",
+      "back": "When records should have the same structure and enforcement/documentation is valuable.",
+      "source_pages": [
+        63
+      ]
+    },
+    {
+      "id": "FC057",
+      "front": "What is document locality?",
+      "back": "Related data is physically stored together in one encoded document.",
+      "source_pages": [
+        63
+      ]
+    },
+    {
+      "id": "FC058",
+      "front": "When does locality help?",
+      "back": "When the application reads most or all of the document together.",
+      "source_pages": [
+        63
+      ]
+    },
+    {
+      "id": "FC059",
+      "front": "When can locality hurt?",
+      "back": "When only a small field is needed from a large document.",
+      "source_pages": [
+        63
+      ]
+    },
+    {
+      "id": "FC060",
+      "front": "What update cost can documents have?",
+      "back": "The entire document often needs rewriting.",
+      "source_pages": [
+        63
+      ]
+    },
+    {
+      "id": "FC061",
+      "front": "What document-sizing guidance is given?",
+      "back": "Keep documents fairly small and avoid growth-heavy writes.",
+      "source_pages": [
+        63
+      ]
+    },
+    {
+      "id": "FC062",
+      "front": "Is locality unique to document DBs?",
+      "back": "No; Spanner, Oracle, and Bigtable-style models can also provide locality.",
+      "source_pages": [
+        63
+      ]
+    },
+    {
+      "id": "FC063",
+      "front": "How are relational and document databases converging?",
+      "back": "Relational systems add JSON/XML support while document systems add join-like features.",
+      "source_pages": [
+        63,
+        64
+      ]
+    },
+    {
+      "id": "FC064",
+      "front": "What is an imperative query?",
+      "back": "A sequence of operations describing how to compute the result.",
+      "source_pages": [
+        64,
+        65
+      ]
+    },
+    {
+      "id": "FC065",
+      "front": "What is a declarative query?",
+      "back": "A description of what result is wanted, leaving execution strategy to the system.",
+      "source_pages": [
+        65
+      ]
+    },
+    {
+      "id": "FC066",
+      "front": "What is the SQL shark example?",
+      "back": "SELECT * FROM animals WHERE family = 'Sharks';",
+      "source_pages": [
+        65
+      ]
+    },
+    {
+      "id": "FC067",
+      "front": "Why are declarative queries concise?",
+      "back": "They describe desired result conditions instead of step-by-step execution.",
+      "source_pages": [
+        65
+      ]
+    },
+    {
+      "id": "FC068",
+      "front": "Why do declarative queries aid optimization?",
+      "back": "The engine can change indexes, joins, order, or execution strategy without changing the query.",
+      "source_pages": [
+        65
+      ]
+    },
+    {
+      "id": "FC069",
+      "front": "Why can declarative queries parallelize more easily?",
+      "back": "They do not prescribe a fixed instruction sequence.",
+      "source_pages": [
+        65
+      ]
+    },
+    {
+      "id": "FC070",
+      "front": "What web language is used as a declarative analogy?",
+      "back": "CSS.",
+      "source_pages": [
+        66
+      ]
+    },
+    {
+      "id": "FC071",
+      "front": "What other declarative web technology is compared?",
+      "back": "XSL/XPath.",
+      "source_pages": [
+        67
+      ]
+    },
+    {
+      "id": "FC072",
+      "front": "Why is imperative DOM styling brittle?",
+      "back": "It must manually update/undo state and may need rewriting for new APIs.",
+      "source_pages": [
+        67
+      ]
+    },
+    {
+      "id": "FC073",
+      "front": "What is MapReduce?",
+      "back": "A bulk data-processing programming model for distributed execution across many machines.",
+      "source_pages": [
+        68
+      ]
+    },
+    {
+      "id": "FC074",
+      "front": "Is MapReduce fully declarative?",
+      "back": "No; it sits between declarative and fully imperative models.",
+      "source_pages": [
+        68
+      ]
+    },
+    {
+      "id": "FC075",
+      "front": "What does map do?",
+      "back": "Runs on each input and emits key-value pairs.",
+      "source_pages": [
+        69
+      ]
+    },
+    {
+      "id": "FC076",
+      "front": "What does reduce do?",
+      "back": "Combines values grouped under the same key.",
+      "source_pages": [
+        69
+      ]
+    },
+    {
+      "id": "FC077",
+      "front": "What does the shark example reduce to?",
+      "back": "3 + 4 = 7 sharks for December 1995.",
+      "source_pages": [
+        69,
+        70
+      ]
+    },
+    {
+      "id": "FC078",
+      "front": "What does purity mean for map/reduce functions?",
+      "back": "They only use inputs, make no extra DB queries, and have no side effects.",
+      "source_pages": [
+        70
+      ]
+    },
+    {
+      "id": "FC079",
+      "front": "Why are pure functions useful for distributed execution?",
+      "back": "They can run anywhere, in any order, and be rerun after failure.",
+      "source_pages": [
+        70
+      ]
+    },
+    {
+      "id": "FC080",
+      "front": "What MapReduce usability issue is described?",
+      "back": "Two coordinated functions are harder than one declarative query.",
+      "source_pages": [
+        70
+      ]
+    },
+    {
+      "id": "FC081",
+      "front": "What did MongoDB add in 2.2?",
+      "back": "The declarative aggregation pipeline.",
+      "source_pages": [
+        70
+      ]
+    },
+    {
+      "id": "FC082",
+      "front": "When is a graph model natural?",
+      "back": "When many-to-many relationships are pervasive and data is highly interconnected.",
+      "source_pages": [
+        71
+      ]
+    },
+    {
+      "id": "FC083",
+      "front": "What are a graph's two core object types?",
+      "back": "Vertices and edges.",
+      "source_pages": [
+        71
+      ]
+    },
+    {
+      "id": "FC084",
+      "front": "What are vertices also called?",
+      "back": "Nodes or entities.",
+      "source_pages": [
+        71
+      ]
+    },
+    {
+      "id": "FC085",
+      "front": "What are edges also called?",
+      "back": "Relationships or arcs.",
+      "source_pages": [
+        71
+      ]
+    },
+    {
+      "id": "FC086",
+      "front": "Give three graph examples.",
+      "back": "Social graph, web graph, road/rail network.",
+      "source_pages": [
+        71
+      ]
+    },
+    {
+      "id": "FC087",
+      "front": "Can graph vertices be heterogeneous?",
+      "back": "Yes; one graph can contain people, places, events, comments, etc.",
+      "source_pages": [
+        71
+      ]
+    },
+    {
+      "id": "FC088",
+      "front": "What fields does a property-graph vertex have?",
+      "back": "ID, incoming edges, outgoing edges, and key-value properties.",
+      "source_pages": [
+        72,
+        73
+      ]
+    },
+    {
+      "id": "FC089",
+      "front": "What fields does a property-graph edge have?",
+      "back": "ID, tail, head, label, and key-value properties.",
+      "source_pages": [
+        72,
+        73
+      ]
+    },
+    {
+      "id": "FC090",
+      "front": "What graph property improves evolvability?",
+      "back": "Any vertex may connect to any other without rigid relationship restrictions.",
+      "source_pages": [
+        73,
+        74
+      ]
+    },
+    {
+      "id": "FC091",
+      "front": "What is Cypher?",
+      "back": "A declarative query language for property graphs, created for Neo4j.",
+      "source_pages": [
+        74
+      ]
+    },
+    {
+      "id": "FC092",
+      "front": "What does (Idaho)-[:WITHIN]->(USA) mean?",
+      "back": "An edge labeled WITHIN from Idaho to USA.",
+      "source_pages": [
+        74
+      ]
+    },
+    {
+      "id": "FC093",
+      "front": "What does :WITHIN*0.. mean?",
+      "back": "Follow a WITHIN edge zero or more times.",
+      "source_pages": [
+        76
+      ]
+    },
+    {
+      "id": "FC094",
+      "front": "Why can Cypher choose different traversal strategies?",
+      "back": "It is declarative and the optimizer chooses execution details.",
+      "source_pages": [
+        75
+      ]
+    },
+    {
+      "id": "FC095",
+      "front": "How can SQL express variable-length graph traversal?",
+      "back": "Recursive common table expressions using WITH RECURSIVE.",
+      "source_pages": [
+        76
+      ]
+    },
+    {
+      "id": "FC096",
+      "front": "Why is graph SQL often awkward?",
+      "back": "Graph traversals may require an unknown number of joins.",
+      "source_pages": [
+        75,
+        76,
+        77
+      ]
+    },
+    {
+      "id": "FC097",
+      "front": "What is a triple-store statement?",
+      "back": "(subject, predicate, object).",
+      "source_pages": [
+        77
+      ]
+    },
+    {
+      "id": "FC098",
+      "front": "What does a primitive object represent in a triple?",
+      "back": "A vertex property value.",
+      "source_pages": [
+        78
+      ]
+    },
+    {
+      "id": "FC099",
+      "front": "What does a vertex object represent in a triple?",
+      "back": "An edge from the subject to another vertex.",
+      "source_pages": [
+        78
+      ]
+    },
+    {
+      "id": "FC100",
+      "front": "What is Turtle?",
+      "back": "A human-readable syntax for triples/RDF.",
+      "source_pages": [
+        78,
+        79
+      ]
+    },
+    {
+      "id": "FC101",
+      "front": "What is the semantic web idea?",
+      "back": "Publish machine-readable structured data across websites so it can be combined.",
+      "source_pages": [
+        79
+      ]
+    },
+    {
+      "id": "FC102",
+      "front": "What is RDF?",
+      "back": "Resource Description Framework.",
+      "source_pages": [
+        79
+      ]
+    },
+    {
+      "id": "FC103",
+      "front": "Why does RDF use URI namespaces?",
+      "back": "To prevent vocabulary/name collisions when data from different sources is combined.",
+      "source_pages": [
+        80
+      ]
+    },
+    {
+      "id": "FC104",
+      "front": "What is SPARQL?",
+      "back": "A declarative query language for RDF triple-stores.",
+      "source_pages": [
+        81
+      ]
+    },
+    {
+      "id": "FC105",
+      "front": "How are SPARQL and Cypher related?",
+      "back": "Both use similar graph-pattern matching; Cypher borrowed ideas from SPARQL.",
+      "source_pages": [
+        81
+      ]
+    },
+    {
+      "id": "FC106",
+      "front": "Are graph databases simply CODASYL reborn?",
+      "back": "No; graph DBs differ in flexibility, direct access, ordering, and query languages.",
+      "source_pages": [
+        82
+      ]
+    },
+    {
+      "id": "FC107",
+      "front": "What is Datalog?",
+      "back": "A logic/declarative query language foundational to later query-language ideas.",
+      "source_pages": [
+        82
+      ]
+    },
+    {
+      "id": "FC108",
+      "front": "How does Datalog write a triple-like fact?",
+      "back": "predicate(subject, object).",
+      "source_pages": [
+        83
+      ]
+    },
+    {
+      "id": "FC109",
+      "front": "What is a Datalog rule?",
+      "back": "A derivation that creates a new predicate when predicates on the right side match.",
+      "source_pages": [
+        83,
+        84
+      ]
+    },
+    {
+      "id": "FC110",
+      "front": "Can Datalog rules be recursive?",
+      "back": "Yes.",
+      "source_pages": [
+        83,
+        84
+      ]
+    },
+    {
+      "id": "FC111",
+      "front": "What is Datalog good at?",
+      "back": "Building complex queries incrementally from reusable rules.",
+      "source_pages": [
+        85
+      ]
+    },
+    {
+      "id": "FC112",
+      "front": "What is Datalog less convenient for?",
+      "back": "Simple one-off queries.",
+      "source_pages": [
+        85
+      ]
+    },
+    {
+      "id": "FC113",
+      "front": "What use case do document DBs target in the summary?",
+      "back": "Self-contained documents with rare relationships between documents.",
+      "source_pages": [
+        85
+      ]
+    },
+    {
+      "id": "FC114",
+      "front": "What use case do graph DBs target?",
+      "back": "Highly interconnected data where anything may relate to anything.",
+      "source_pages": [
+        85
+      ]
+    },
+    {
+      "id": "FC115",
+      "front": "Can one model emulate another?",
+      "back": "Yes, but the result is often awkward.",
+      "source_pages": [
+        85
+      ]
+    },
+    {
+      "id": "FC116",
+      "front": "What query languages/frameworks are summarized?",
+      "back": "SQL, MapReduce, MongoDB aggregation pipeline, Cypher, SPARQL, Datalog.",
+      "source_pages": [
+        85
+      ]
+    }
+  ],
+  "multiple_choice_questions": [
+    {
+      "id": "MCQ001",
+      "difficulty": "medium",
+      "question": "Why are data models important?",
+      "choices": {
+        "A": "They affect software and thought structure",
+        "B": "They only affect disk size",
+        "C": "They only affect UI",
+        "D": "They only affect CPU"
+      },
+      "answer": "A",
+      "source_pages": [
+        49
+      ]
+    },
+    {
+      "id": "MCQ002",
+      "difficulty": "medium",
+      "question": "What is a general-purpose model named in the chapter?",
+      "choices": {
+        "A": "JSON",
+        "B": "Assembly only",
+        "C": "CSS only",
+        "D": "TCP"
+      },
+      "answer": "A",
+      "source_pages": [
+        49
+      ]
+    },
+    {
+      "id": "MCQ003",
+      "difficulty": "medium",
+      "question": "What does each abstraction layer do?",
+      "choices": {
+        "A": "Hides lower-level complexity",
+        "B": "Exposes all hardware details",
+        "C": "Removes data",
+        "D": "Prevents APIs"
+      },
+      "answer": "A",
+      "source_pages": [
+        49,
+        50
+      ]
+    },
+    {
+      "id": "MCQ004",
+      "difficulty": "medium",
+      "question": "Who proposed the relational model?",
+      "choices": {
+        "A": "Edgar Codd",
+        "B": "Alan Turing",
+        "C": "Tim Berners-Lee",
+        "D": "Leslie Lamport"
+      },
+      "answer": "A",
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "MCQ005",
+      "difficulty": "medium",
+      "question": "In SQL, a relation is a?",
+      "choices": {
+        "A": "Table",
+        "B": "Queue",
+        "C": "Graph edge",
+        "D": "File"
+      },
+      "answer": "A",
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "MCQ006",
+      "difficulty": "medium",
+      "question": "What was a goal of the relational model?",
+      "choices": {
+        "A": "Hide internal representation",
+        "B": "Expose disk pointers",
+        "C": "Require access paths",
+        "D": "Remove querying"
+      },
+      "answer": "A",
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "MCQ007",
+      "difficulty": "medium",
+      "question": "What was NoSQL originally?",
+      "choices": {
+        "A": "A meetup hashtag",
+        "B": "A formal language",
+        "C": "A storage engine",
+        "D": "A SQL extension"
+      },
+      "answer": "A",
+      "source_pages": [
+        51
+      ]
+    },
+    {
+      "id": "MCQ008",
+      "difficulty": "medium",
+      "question": "What is one NoSQL driver?",
+      "choices": {
+        "A": "High write throughput",
+        "B": "Less flexibility",
+        "C": "Mandatory commercial licensing",
+        "D": "Only small datasets"
+      },
+      "answer": "A",
+      "source_pages": [
+        51
+      ]
+    },
+    {
+      "id": "MCQ009",
+      "difficulty": "medium",
+      "question": "What is polyglot persistence?",
+      "choices": {
+        "A": "Using multiple datastore types",
+        "B": "Only SQL everywhere",
+        "C": "Only graph DBs",
+        "D": "No persistence"
+      },
+      "answer": "A",
+      "source_pages": [
+        51
+      ]
+    },
+    {
+      "id": "MCQ010",
+      "difficulty": "medium",
+      "question": "What is impedance mismatch?",
+      "choices": {
+        "A": "Mismatch between object and relational models",
+        "B": "Network packet loss",
+        "C": "Schema migration downtime",
+        "D": "Graph traversal"
+      },
+      "answer": "A",
+      "source_pages": [
+        52
+      ]
+    },
+    {
+      "id": "MCQ011",
+      "difficulty": "medium",
+      "question": "Which is an ORM?",
+      "choices": {
+        "A": "Hibernate",
+        "B": "Kafka",
+        "C": "RDF",
+        "D": "SPARQL"
+      },
+      "answer": "A",
+      "source_pages": [
+        52
+      ]
+    },
+    {
+      "id": "MCQ012",
+      "difficulty": "medium",
+      "question": "What is a good JSON/document fit?",
+      "choices": {
+        "A": "Self-contained résumé",
+        "B": "Dense arbitrary graph",
+        "C": "Fixed join-heavy OLTP only",
+        "D": "Access-path database"
+      },
+      "answer": "A",
+      "source_pages": [
+        53,
+        54
+      ]
+    },
+    {
+      "id": "MCQ013",
+      "difficulty": "medium",
+      "question": "Why can JSON improve locality?",
+      "choices": {
+        "A": "Related profile data sits together",
+        "B": "It always uses less disk",
+        "C": "It removes relationships",
+        "D": "It guarantees joins"
+      },
+      "answer": "A",
+      "source_pages": [
+        54
+      ]
+    },
+    {
+      "id": "MCQ014",
+      "difficulty": "medium",
+      "question": "Why use an ID for region/industry?",
+      "choices": {
+        "A": "Reduce duplicated human-readable data",
+        "B": "Make values harder to update",
+        "C": "Prevent search",
+        "D": "Force denormalization"
+      },
+      "answer": "A",
+      "source_pages": [
+        55
+      ]
+    },
+    {
+      "id": "MCQ015",
+      "difficulty": "medium",
+      "question": "What is normalization primarily about?",
+      "choices": {
+        "A": "Reducing duplication",
+        "B": "Increasing duplication",
+        "C": "Removing IDs",
+        "D": "Avoiding tables"
+      },
+      "answer": "A",
+      "source_pages": [
+        55
+      ]
+    },
+    {
+      "id": "MCQ016",
+      "difficulty": "medium",
+      "question": "What relationship does normalization often introduce?",
+      "choices": {
+        "A": "Many-to-one",
+        "B": "No relationship",
+        "C": "Only one-to-one",
+        "D": "Only tree root"
+      },
+      "answer": "A",
+      "source_pages": [
+        56
+      ]
+    },
+    {
+      "id": "MCQ017",
+      "difficulty": "medium",
+      "question": "What if a document DB lacks joins?",
+      "choices": {
+        "A": "Application performs multiple queries",
+        "B": "Relationships vanish",
+        "C": "The DB becomes relational",
+        "D": "No solution exists"
+      },
+      "answer": "A",
+      "source_pages": [
+        56
+      ]
+    },
+    {
+      "id": "MCQ018",
+      "difficulty": "medium",
+      "question": "What historical model resembles nested documents?",
+      "choices": {
+        "A": "Hierarchical model",
+        "B": "Relational model",
+        "C": "Columnar analytics only",
+        "D": "Vector model"
+      },
+      "answer": "A",
+      "source_pages": [
+        58
+      ]
+    },
+    {
+      "id": "MCQ019",
+      "difficulty": "medium",
+      "question": "Which database used the hierarchical model?",
+      "choices": {
+        "A": "IBM IMS",
+        "B": "PostgreSQL",
+        "C": "Neo4j",
+        "D": "MongoDB"
+      },
+      "answer": "A",
+      "source_pages": [
+        58
+      ]
+    },
+    {
+      "id": "MCQ020",
+      "difficulty": "medium",
+      "question": "What does CODASYL allow that hierarchy does not?",
+      "choices": {
+        "A": "Multiple parents",
+        "B": "No links",
+        "C": "Only one parent",
+        "D": "Declarative SQL"
+      },
+      "answer": "A",
+      "source_pages": [
+        58
+      ]
+    },
+    {
+      "id": "MCQ021",
+      "difficulty": "medium",
+      "question": "What is an access path?",
+      "choices": {
+        "A": "Predefined traversal through links",
+        "B": "A SQL index only",
+        "C": "A document field",
+        "D": "An RDF URI"
+      },
+      "answer": "A",
+      "source_pages": [
+        59
+      ]
+    },
+    {
+      "id": "MCQ022",
+      "difficulty": "medium",
+      "question": "Why was CODASYL inflexible?",
+      "choices": {
+        "A": "Application code depended on access paths",
+        "B": "It had no relationships",
+        "C": "It had automatic optimizers",
+        "D": "It was schema-free"
+      },
+      "answer": "A",
+      "source_pages": [
+        59
+      ]
+    },
+    {
+      "id": "MCQ023",
+      "difficulty": "medium",
+      "question": "Who chooses access paths in relational databases?",
+      "choices": {
+        "A": "Query optimizer",
+        "B": "Application cursor code",
+        "C": "End user manually",
+        "D": "Network router"
+      },
+      "answer": "A",
+      "source_pages": [
+        59,
+        60
+      ]
+    },
+    {
+      "id": "MCQ024",
+      "difficulty": "medium",
+      "question": "Main document-model strengths?",
+      "choices": {
+        "A": "Schema flexibility and locality",
+        "B": "Only joins",
+        "C": "Fixed schema",
+        "D": "Pointer navigation"
+      },
+      "answer": "A",
+      "source_pages": [
+        60
+      ]
+    },
+    {
+      "id": "MCQ025",
+      "difficulty": "medium",
+      "question": "Main relational strengths?",
+      "choices": {
+        "A": "Joins and many-to-many relationships",
+        "B": "No relationships",
+        "C": "Always better locality",
+        "D": "Schema-on-read only"
+      },
+      "answer": "A",
+      "source_pages": [
+        60
+      ]
+    },
+    {
+      "id": "MCQ026",
+      "difficulty": "medium",
+      "question": "When is document model simpler?",
+      "choices": {
+        "A": "Tree-shaped data loaded together",
+        "B": "Highly interconnected graph",
+        "C": "Unknown-length traversal",
+        "D": "Many-to-many everywhere"
+      },
+      "answer": "A",
+      "source_pages": [
+        60,
+        61
+      ]
+    },
+    {
+      "id": "MCQ027",
+      "difficulty": "medium",
+      "question": "What is a cost of denormalization?",
+      "choices": {
+        "A": "Application must maintain consistency",
+        "B": "No write overhead",
+        "C": "No duplicate data",
+        "D": "Automatic joins"
+      },
+      "answer": "A",
+      "source_pages": [
+        61
+      ]
+    },
+    {
+      "id": "MCQ028",
+      "difficulty": "medium",
+      "question": "What is schema-on-read?",
+      "choices": {
+        "A": "Interpret implicit structure at read time",
+        "B": "Validate structure before write",
+        "C": "No structure exists anywhere",
+        "D": "Compile SQL"
+      },
+      "answer": "A",
+      "source_pages": [
+        61
+      ]
+    },
+    {
+      "id": "MCQ029",
+      "difficulty": "medium",
+      "question": "Schema-on-write is analogous to?",
+      "choices": {
+        "A": "Static type checking",
+        "B": "Dynamic type checking",
+        "C": "No types",
+        "D": "Garbage collection"
+      },
+      "answer": "A",
+      "source_pages": [
+        62
+      ]
+    },
+    {
+      "id": "MCQ030",
+      "difficulty": "medium",
+      "question": "Schema-on-read is useful for?",
+      "choices": {
+        "A": "Heterogeneous data",
+        "B": "Uniform enforced rows only",
+        "C": "Only relational joins",
+        "D": "Only graph traversal"
+      },
+      "answer": "A",
+      "source_pages": [
+        62,
+        63
+      ]
+    },
+    {
+      "id": "MCQ031",
+      "difficulty": "medium",
+      "question": "What is a document locality benefit?",
+      "choices": {
+        "A": "Fewer lookups when reading most of a document",
+        "B": "Free partial updates",
+        "C": "Unlimited document size",
+        "D": "No disk reads"
+      },
+      "answer": "A",
+      "source_pages": [
+        63
+      ]
+    },
+    {
+      "id": "MCQ032",
+      "difficulty": "medium",
+      "question": "What is a locality limitation?",
+      "choices": {
+        "A": "Whole document may be loaded/re-written",
+        "B": "Documents cannot be stored",
+        "C": "No fields can change",
+        "D": "All reads require joins"
+      },
+      "answer": "A",
+      "source_pages": [
+        63
+      ]
+    },
+    {
+      "id": "MCQ033",
+      "difficulty": "medium",
+      "question": "Which relational system is cited for interleaved locality?",
+      "choices": {
+        "A": "Spanner",
+        "B": "Redis",
+        "C": "Kafka",
+        "D": "Neo4j"
+      },
+      "answer": "A",
+      "source_pages": [
+        63
+      ]
+    },
+    {
+      "id": "MCQ034",
+      "difficulty": "medium",
+      "question": "What trend is observed between relational/document DBs?",
+      "choices": {
+        "A": "Convergence",
+        "B": "Increasing separation only",
+        "C": "Document DB disappearance",
+        "D": "SQL removal"
+      },
+      "answer": "A",
+      "source_pages": [
+        63,
+        64
+      ]
+    },
+    {
+      "id": "MCQ035",
+      "difficulty": "medium",
+      "question": "What is an imperative query style?",
+      "choices": {
+        "A": "Specify execution steps/order",
+        "B": "Specify only desired pattern",
+        "C": "No operations",
+        "D": "Only indexes"
+      },
+      "answer": "A",
+      "source_pages": [
+        65
+      ]
+    },
+    {
+      "id": "MCQ036",
+      "difficulty": "medium",
+      "question": "What is a declarative query style?",
+      "choices": {
+        "A": "Specify desired result",
+        "B": "Specify every loop",
+        "C": "Navigate pointer chains",
+        "D": "Write disk offsets"
+      },
+      "answer": "A",
+      "source_pages": [
+        65
+      ]
+    },
+    {
+      "id": "MCQ037",
+      "difficulty": "medium",
+      "question": "What is a major declarative advantage?",
+      "choices": {
+        "A": "Optimizer freedom",
+        "B": "No optimization possible",
+        "C": "Requires record order",
+        "D": "Cannot parallelize"
+      },
+      "answer": "A",
+      "source_pages": [
+        65
+      ]
+    },
+    {
+      "id": "MCQ038",
+      "difficulty": "medium",
+      "question": "Which web technology is declarative?",
+      "choices": {
+        "A": "CSS",
+        "B": "Imperative DOM loops",
+        "C": "Assembly",
+        "D": "TCP"
+      },
+      "answer": "A",
+      "source_pages": [
+        66
+      ]
+    },
+    {
+      "id": "MCQ039",
+      "difficulty": "medium",
+      "question": "Why is CSS used as an analogy?",
+      "choices": {
+        "A": "It declares a pattern and lets browser manage updates",
+        "B": "It is a database",
+        "C": "It requires cursor traversal",
+        "D": "It stores graphs"
+      },
+      "answer": "A",
+      "source_pages": [
+        66,
+        67
+      ]
+    },
+    {
+      "id": "MCQ040",
+      "difficulty": "medium",
+      "question": "What is MapReduce used for?",
+      "choices": {
+        "A": "Bulk distributed data processing",
+        "B": "Only transactions",
+        "C": "Only graph edges",
+        "D": "CSS styling"
+      },
+      "answer": "A",
+      "source_pages": [
+        68
+      ]
+    },
+    {
+      "id": "MCQ041",
+      "difficulty": "medium",
+      "question": "Where is MapReduce on the declarative/imperative spectrum?",
+      "choices": {
+        "A": "In between",
+        "B": "Fully declarative only",
+        "C": "Fully imperative only",
+        "D": "Neither executable"
+      },
+      "answer": "A",
+      "source_pages": [
+        68
+      ]
+    },
+    {
+      "id": "MCQ042",
+      "difficulty": "medium",
+      "question": "What does map emit?",
+      "choices": {
+        "A": "Key-value pairs",
+        "B": "Only SQL rows",
+        "C": "Only graph edges",
+        "D": "Nothing"
+      },
+      "answer": "A",
+      "source_pages": [
+        69
+      ]
+    },
+    {
+      "id": "MCQ043",
+      "difficulty": "medium",
+      "question": "What does reduce do?",
+      "choices": {
+        "A": "Combine values by key",
+        "B": "Create schema",
+        "C": "Choose joins",
+        "D": "Render CSS"
+      },
+      "answer": "A",
+      "source_pages": [
+        69
+      ]
+    },
+    {
+      "id": "MCQ044",
+      "difficulty": "medium",
+      "question": "What must map/reduce functions avoid?",
+      "choices": {
+        "A": "Side effects",
+        "B": "Input data",
+        "C": "Calculations",
+        "D": "String parsing"
+      },
+      "answer": "A",
+      "source_pages": [
+        70
+      ]
+    },
+    {
+      "id": "MCQ045",
+      "difficulty": "hard",
+      "question": "Why require purity?",
+      "choices": {
+        "A": "Allow arbitrary placement/order/retry",
+        "B": "Prevent distribution",
+        "C": "Force single-node use",
+        "D": "Disable recovery"
+      },
+      "answer": "A",
+      "source_pages": [
+        70
+      ]
+    },
+    {
+      "id": "MCQ046",
+      "difficulty": "hard",
+      "question": "What did MongoDB add as a more declarative alternative?",
+      "choices": {
+        "A": "Aggregation pipeline",
+        "B": "Cypher",
+        "C": "SPARQL",
+        "D": "SQL recursive CTE"
+      },
+      "answer": "A",
+      "source_pages": [
+        70
+      ]
+    },
+    {
+      "id": "MCQ047",
+      "difficulty": "hard",
+      "question": "When are graph models natural?",
+      "choices": {
+        "A": "Dense many-to-many relationships",
+        "B": "Only self-contained trees",
+        "C": "No relationships",
+        "D": "Only batch files"
+      },
+      "answer": "A",
+      "source_pages": [
+        71
+      ]
+    },
+    {
+      "id": "MCQ048",
+      "difficulty": "hard",
+      "question": "What are graph objects?",
+      "choices": {
+        "A": "Vertices and edges",
+        "B": "Rows and columns only",
+        "C": "Files and folders only",
+        "D": "Map and reduce"
+      },
+      "answer": "A",
+      "source_pages": [
+        71
+      ]
+    },
+    {
+      "id": "MCQ049",
+      "difficulty": "hard",
+      "question": "Which is a graph example?",
+      "choices": {
+        "A": "Social network",
+        "B": "Single scalar",
+        "C": "Flat CSV with no relationships",
+        "D": "Cache counter"
+      },
+      "answer": "A",
+      "source_pages": [
+        71
+      ]
+    },
+    {
+      "id": "MCQ050",
+      "difficulty": "hard",
+      "question": "What does a property-graph vertex contain?",
+      "choices": {
+        "A": "ID, edges, properties",
+        "B": "Only one string",
+        "C": "SQL join plan",
+        "D": "Map function"
+      },
+      "answer": "A",
+      "source_pages": [
+        72,
+        73
+      ]
+    },
+    {
+      "id": "MCQ051",
+      "difficulty": "hard",
+      "question": "What does a property-graph edge contain?",
+      "choices": {
+        "A": "Tail, head, label, properties",
+        "B": "Only a value",
+        "C": "Only subject",
+        "D": "Only schema"
+      },
+      "answer": "A",
+      "source_pages": [
+        72,
+        73
+      ]
+    },
+    {
+      "id": "MCQ052",
+      "difficulty": "hard",
+      "question": "What is Cypher?",
+      "choices": {
+        "A": "Declarative property-graph language",
+        "B": "MapReduce framework",
+        "C": "RDF serialization only",
+        "D": "ORM"
+      },
+      "answer": "A",
+      "source_pages": [
+        74
+      ]
+    },
+    {
+      "id": "MCQ053",
+      "difficulty": "hard",
+      "question": "What does *0.. mean in Cypher path syntax?",
+      "choices": {
+        "A": "Zero or more traversals",
+        "B": "Exactly zero",
+        "C": "Exactly one",
+        "D": "At most two"
+      },
+      "answer": "A",
+      "source_pages": [
+        76
+      ]
+    },
+    {
+      "id": "MCQ054",
+      "difficulty": "hard",
+      "question": "How can SQL perform recursive graph traversal?",
+      "choices": {
+        "A": "WITH RECURSIVE",
+        "B": "GROUP BY only",
+        "C": "ORDER BY only",
+        "D": "ALTER TABLE"
+      },
+      "answer": "A",
+      "source_pages": [
+        76
+      ]
+    },
+    {
+      "id": "MCQ055",
+      "difficulty": "hard",
+      "question": "Why is recursive graph SQL cumbersome?",
+      "choices": {
+        "A": "Unknown path length creates recursive joins",
+        "B": "SQL cannot query rows",
+        "C": "Graphs have no IDs",
+        "D": "No optimizer exists"
+      },
+      "answer": "A",
+      "source_pages": [
+        76,
+        77
+      ]
+    },
+    {
+      "id": "MCQ056",
+      "difficulty": "hard",
+      "question": "What is a triple?",
+      "choices": {
+        "A": "Subject-predicate-object",
+        "B": "Row-column-index",
+        "C": "Map-reduce-output",
+        "D": "Head-tail-only"
+      },
+      "answer": "A",
+      "source_pages": [
+        77
+      ]
+    },
+    {
+      "id": "MCQ057",
+      "difficulty": "hard",
+      "question": "What is Turtle?",
+      "choices": {
+        "A": "Human-readable RDF/triple syntax",
+        "B": "SQL optimizer",
+        "C": "Graph engine",
+        "D": "ORM"
+      },
+      "answer": "A",
+      "source_pages": [
+        78,
+        79
+      ]
+    },
+    {
+      "id": "MCQ058",
+      "difficulty": "hard",
+      "question": "What does RDF stand for?",
+      "choices": {
+        "A": "Resource Description Framework",
+        "B": "Recursive Data Function",
+        "C": "Relational Document Format",
+        "D": "Runtime Data Flow"
+      },
+      "answer": "A",
+      "source_pages": [
+        79
+      ]
+    },
+    {
+      "id": "MCQ059",
+      "difficulty": "hard",
+      "question": "Why use URI namespaces in RDF?",
+      "choices": {
+        "A": "Avoid vocabulary collisions",
+        "B": "Improve CPU speed",
+        "C": "Replace all edges",
+        "D": "Force HTTP requests"
+      },
+      "answer": "A",
+      "source_pages": [
+        80
+      ]
+    },
+    {
+      "id": "MCQ060",
+      "difficulty": "hard",
+      "question": "What is SPARQL?",
+      "choices": {
+        "A": "RDF triple-store query language",
+        "B": "ORM",
+        "C": "Storage engine",
+        "D": "Map function"
+      },
+      "answer": "A",
+      "source_pages": [
+        81
+      ]
+    },
+    {
+      "id": "MCQ061",
+      "difficulty": "hard",
+      "question": "How does a graph DB differ from CODASYL?",
+      "choices": {
+        "A": "Vertices can be directly found by ID/index",
+        "B": "Only access paths allowed",
+        "C": "Children must be ordered",
+        "D": "Queries are always imperative"
+      },
+      "answer": "A",
+      "source_pages": [
+        82
+      ]
+    },
+    {
+      "id": "MCQ062",
+      "difficulty": "hard",
+      "question": "What is Datalog based around?",
+      "choices": {
+        "A": "Facts, predicates, and rules",
+        "B": "DOM elements",
+        "C": "Disk pages only",
+        "D": "CSS selectors only"
+      },
+      "answer": "A",
+      "source_pages": [
+        82,
+        83
+      ]
+    },
+    {
+      "id": "MCQ063",
+      "difficulty": "hard",
+      "question": "Can Datalog rules call themselves recursively?",
+      "choices": {
+        "A": "Yes",
+        "B": "No",
+        "C": "Only in SQL",
+        "D": "Only in CSS"
+      },
+      "answer": "A",
+      "source_pages": [
+        83,
+        84
+      ]
+    },
+    {
+      "id": "MCQ064",
+      "difficulty": "hard",
+      "question": "What is Datalog especially useful for?",
+      "choices": {
+        "A": "Complex reusable rule-based queries",
+        "B": "Only simple one-off queries",
+        "C": "UI styling",
+        "D": "Binary encoding"
+      },
+      "answer": "A",
+      "source_pages": [
+        85
+      ]
+    },
+    {
+      "id": "MCQ065",
+      "difficulty": "hard",
+      "question": "What data model fits self-contained documents?",
+      "choices": {
+        "A": "Document",
+        "B": "Graph only",
+        "C": "CODASYL only",
+        "D": "No model"
+      },
+      "answer": "A",
+      "source_pages": [
+        85
+      ]
+    },
+    {
+      "id": "MCQ066",
+      "difficulty": "hard",
+      "question": "What data model fits highly interconnected data?",
+      "choices": {
+        "A": "Graph",
+        "B": "Document only",
+        "C": "Flat file only",
+        "D": "Hierarchical only"
+      },
+      "answer": "A",
+      "source_pages": [
+        85
+      ]
+    },
+    {
+      "id": "MCQ067",
+      "difficulty": "hard",
+      "question": "Can graph data be represented relationally?",
+      "choices": {
+        "A": "Yes, though often awkward",
+        "B": "No",
+        "C": "Only with RDF",
+        "D": "Only in memory"
+      },
+      "answer": "A",
+      "source_pages": [
+        85
+      ]
+    }
+  ],
+  "mix_and_match": [
+    {
+      "id": "MM01",
+      "title": "Data model to best-fit structure",
+      "left": {
+        "A": "Document",
+        "B": "Relational",
+        "C": "Graph",
+        "D": "Hierarchical",
+        "E": "CODASYL network"
+      },
+      "right": {
+        "1": "Self-contained tree-shaped data",
+        "2": "Structured data with joins/references",
+        "3": "Highly interconnected data",
+        "4": "One parent per record",
+        "5": "Multiple parents plus application-managed access paths"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        58,
+        60,
+        61,
+        71,
+        85
+      ]
+    },
+    {
+      "id": "MM02",
+      "title": "Query language/framework to role",
+      "left": {
+        "A": "SQL",
+        "B": "MapReduce",
+        "C": "Cypher",
+        "D": "SPARQL",
+        "E": "Datalog"
+      },
+      "right": {
+        "1": "Declarative relational querying",
+        "2": "Map + reduce distributed programming model",
+        "3": "Property-graph query language",
+        "4": "RDF/triple-store query language",
+        "5": "Rule/predicate-based logic query language"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        65,
+        68,
+        74,
+        81,
+        82,
+        83
+      ]
+    },
+    {
+      "id": "MM03",
+      "title": "Concept to meaning",
+      "left": {
+        "A": "Normalization",
+        "B": "Schema-on-read",
+        "C": "Schema-on-write",
+        "D": "Locality",
+        "E": "Denormalization"
+      },
+      "right": {
+        "1": "Remove duplication through references",
+        "2": "Interpret structure when reading",
+        "3": "Validate structure when writing",
+        "4": "Keep related data physically together",
+        "5": "Duplicate data to reduce joins"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        55,
+        61,
+        62,
+        63
+      ]
+    },
+    {
+      "id": "MM04",
+      "title": "Graph term to meaning",
+      "left": {
+        "A": "Vertex",
+        "B": "Edge",
+        "C": "Tail",
+        "D": "Head",
+        "E": "Label"
+      },
+      "right": {
+        "1": "Node/entity",
+        "2": "Relationship/arc",
+        "3": "Edge's start vertex",
+        "4": "Edge's end vertex",
+        "5": "Relationship type"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        71,
+        72,
+        73
+      ]
+    },
+    {
+      "id": "MM05",
+      "title": "Historical model to characteristic",
+      "left": {
+        "A": "IMS",
+        "B": "CODASYL",
+        "C": "Relational",
+        "D": "Document",
+        "E": "Property graph"
+      },
+      "right": {
+        "1": "Hierarchical tree",
+        "2": "Pointer-like access paths",
+        "3": "Query optimizer chooses access path",
+        "4": "Nested document/tree locality",
+        "5": "Any vertex can connect to any other"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        58,
+        59,
+        60,
+        73
+      ]
+    }
+  ],
+  "true_false": [
+    {
+      "id": "TF001",
+      "statement": "Data models affect how engineers think about problems.",
+      "answer": true,
+      "source_pages": [
+        49
+      ]
+    },
+    {
+      "id": "TF002",
+      "statement": "Every data model supports all operations equally well.",
+      "answer": false,
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "TF003",
+      "statement": "The relational model was proposed in 1970.",
+      "answer": true,
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "TF004",
+      "statement": "Relational databases were designed originally only for social networks.",
+      "answer": false,
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "TF005",
+      "statement": "NoSQL originally referred to one specific technology.",
+      "answer": false,
+      "source_pages": [
+        51
+      ]
+    },
+    {
+      "id": "TF006",
+      "statement": "Not Only SQL is a later reinterpretation of NoSQL.",
+      "answer": true,
+      "source_pages": [
+        51
+      ]
+    },
+    {
+      "id": "TF007",
+      "statement": "Polyglot persistence means using different datastore models where appropriate.",
+      "answer": true,
+      "source_pages": [
+        51
+      ]
+    },
+    {
+      "id": "TF008",
+      "statement": "ORMs completely eliminate object-relational mismatch.",
+      "answer": false,
+      "source_pages": [
+        52
+      ]
+    },
+    {
+      "id": "TF009",
+      "statement": "A résumé can naturally form a one-to-many tree.",
+      "answer": true,
+      "source_pages": [
+        53,
+        54
+      ]
+    },
+    {
+      "id": "TF010",
+      "statement": "JSON can improve locality for a self-contained profile.",
+      "answer": true,
+      "source_pages": [
+        54
+      ]
+    },
+    {
+      "id": "TF011",
+      "statement": "Normalization increases duplication.",
+      "answer": false,
+      "source_pages": [
+        55
+      ]
+    },
+    {
+      "id": "TF012",
+      "statement": "IDs can remain stable while names change.",
+      "answer": true,
+      "source_pages": [
+        55
+      ]
+    },
+    {
+      "id": "TF013",
+      "statement": "Many-to-many relationships are usually easy in join-poor document databases.",
+      "answer": false,
+      "source_pages": [
+        56,
+        57
+      ]
+    },
+    {
+      "id": "TF014",
+      "statement": "IMS used a hierarchical model.",
+      "answer": true,
+      "source_pages": [
+        58
+      ]
+    },
+    {
+      "id": "TF015",
+      "statement": "Hierarchical records can have unlimited parents.",
+      "answer": false,
+      "source_pages": [
+        58
+      ]
+    },
+    {
+      "id": "TF016",
+      "statement": "CODASYL allows a record to have multiple parents.",
+      "answer": true,
+      "source_pages": [
+        58
+      ]
+    },
+    {
+      "id": "TF017",
+      "statement": "CODASYL access paths were chosen automatically by a relational optimizer.",
+      "answer": false,
+      "source_pages": [
+        59
+      ]
+    },
+    {
+      "id": "TF018",
+      "statement": "Relational optimizers choose indexes and execution order.",
+      "answer": true,
+      "source_pages": [
+        59,
+        60
+      ]
+    },
+    {
+      "id": "TF019",
+      "statement": "Document models are always simpler than relational models.",
+      "answer": false,
+      "source_pages": [
+        61
+      ]
+    },
+    {
+      "id": "TF020",
+      "statement": "Schema-on-read means the database strictly validates every write.",
+      "answer": false,
+      "source_pages": [
+        61,
+        62
+      ]
+    },
+    {
+      "id": "TF021",
+      "statement": "Schema-on-write resembles static type checking.",
+      "answer": true,
+      "source_pages": [
+        62
+      ]
+    },
+    {
+      "id": "TF022",
+      "statement": "Schema-on-read can suit heterogeneous data.",
+      "answer": true,
+      "source_pages": [
+        62,
+        63
+      ]
+    },
+    {
+      "id": "TF023",
+      "statement": "ALTER TABLE is necessarily slow in every relational database.",
+      "answer": false,
+      "source_pages": [
+        62
+      ]
+    },
+    {
+      "id": "TF024",
+      "statement": "Updating every row of a large table can be slow.",
+      "answer": true,
+      "source_pages": [
+        62
+      ]
+    },
+    {
+      "id": "TF025",
+      "statement": "Document locality is always beneficial.",
+      "answer": false,
+      "source_pages": [
+        63
+      ]
+    },
+    {
+      "id": "TF026",
+      "statement": "Large documents may be wasteful when only a small field is needed.",
+      "answer": true,
+      "source_pages": [
+        63
+      ]
+    },
+    {
+      "id": "TF027",
+      "statement": "Locality techniques exist outside document databases.",
+      "answer": true,
+      "source_pages": [
+        63
+      ]
+    },
+    {
+      "id": "TF028",
+      "statement": "Relational and document databases are becoming more similar.",
+      "answer": true,
+      "source_pages": [
+        64
+      ]
+    },
+    {
+      "id": "TF029",
+      "statement": "Imperative code specifies what result is wanted but not how.",
+      "answer": false,
+      "source_pages": [
+        65
+      ]
+    },
+    {
+      "id": "TF030",
+      "statement": "Declarative SQL allows the optimizer to choose execution strategies.",
+      "answer": true,
+      "source_pages": [
+        65
+      ]
+    },
+    {
+      "id": "TF031",
+      "statement": "Declarative languages often provide more room for parallel execution.",
+      "answer": true,
+      "source_pages": [
+        65
+      ]
+    },
+    {
+      "id": "TF032",
+      "statement": "CSS is used as a declarative-language analogy.",
+      "answer": true,
+      "source_pages": [
+        66,
+        67
+      ]
+    },
+    {
+      "id": "TF033",
+      "statement": "Imperative DOM code automatically removes stale styles without extra logic.",
+      "answer": false,
+      "source_pages": [
+        67
+      ]
+    },
+    {
+      "id": "TF034",
+      "statement": "MapReduce is completely declarative.",
+      "answer": false,
+      "source_pages": [
+        68
+      ]
+    },
+    {
+      "id": "TF035",
+      "statement": "Map emits key-value pairs.",
+      "answer": true,
+      "source_pages": [
+        69
+      ]
+    },
+    {
+      "id": "TF036",
+      "statement": "Reduce combines values grouped by key.",
+      "answer": true,
+      "source_pages": [
+        69
+      ]
+    },
+    {
+      "id": "TF037",
+      "statement": "Map/reduce functions may freely perform extra DB queries.",
+      "answer": false,
+      "source_pages": [
+        70
+      ]
+    },
+    {
+      "id": "TF038",
+      "statement": "Purity lets MapReduce tasks be rerun after failure.",
+      "answer": true,
+      "source_pages": [
+        70
+      ]
+    },
+    {
+      "id": "TF039",
+      "statement": "MongoDB's aggregation pipeline is more declarative than MapReduce.",
+      "answer": true,
+      "source_pages": [
+        70
+      ]
+    },
+    {
+      "id": "TF040",
+      "statement": "Graph models become natural when relationships are highly interconnected.",
+      "answer": true,
+      "source_pages": [
+        71
+      ]
+    },
+    {
+      "id": "TF041",
+      "statement": "Vertices and edges must all represent the same kind of entity.",
+      "answer": false,
+      "source_pages": [
+        71
+      ]
+    },
+    {
+      "id": "TF042",
+      "statement": "Property-graph vertices can have key-value properties.",
+      "answer": true,
+      "source_pages": [
+        72,
+        73
+      ]
+    },
+    {
+      "id": "TF043",
+      "statement": "Property-graph edges have labels.",
+      "answer": true,
+      "source_pages": [
+        73
+      ]
+    },
+    {
+      "id": "TF044",
+      "statement": "Any property-graph vertex can generally connect to any other vertex.",
+      "answer": true,
+      "source_pages": [
+        73
+      ]
+    },
+    {
+      "id": "TF045",
+      "statement": "Cypher is imperative pointer-traversal code.",
+      "answer": false,
+      "source_pages": [
+        74,
+        75
+      ]
+    },
+    {
+      "id": "TF046",
+      "statement": "Cypher supports variable-length paths.",
+      "answer": true,
+      "source_pages": [
+        76
+      ]
+    },
+    {
+      "id": "TF047",
+      "statement": "SQL cannot express recursive graph traversal at all.",
+      "answer": false,
+      "source_pages": [
+        76
+      ]
+    },
+    {
+      "id": "TF048",
+      "statement": "Triple-stores represent information as subject-predicate-object statements.",
+      "answer": true,
+      "source_pages": [
+        77
+      ]
+    },
+    {
+      "id": "TF049",
+      "statement": "In a triple, the object must always be a primitive value.",
+      "answer": false,
+      "source_pages": [
+        78
+      ]
+    },
+    {
+      "id": "TF050",
+      "statement": "Turtle is a human-readable RDF syntax.",
+      "answer": true,
+      "source_pages": [
+        79
+      ]
+    },
+    {
+      "id": "TF051",
+      "statement": "RDF URI namespaces help avoid vocabulary collisions.",
+      "answer": true,
+      "source_pages": [
+        80
+      ]
+    },
+    {
+      "id": "TF052",
+      "statement": "SPARQL is an RDF query language.",
+      "answer": true,
+      "source_pages": [
+        81
+      ]
+    },
+    {
+      "id": "TF053",
+      "statement": "Graph databases and CODASYL are identical.",
+      "answer": false,
+      "source_pages": [
+        82
+      ]
+    },
+    {
+      "id": "TF054",
+      "statement": "Graph databases usually require all vertices to be reached only through access paths.",
+      "answer": false,
+      "source_pages": [
+        82
+      ]
+    },
+    {
+      "id": "TF055",
+      "statement": "Datalog rules may derive new predicates from other rules.",
+      "answer": true,
+      "source_pages": [
+        83,
+        84
+      ]
+    },
+    {
+      "id": "TF056",
+      "statement": "Datalog supports recursion.",
+      "answer": true,
+      "source_pages": [
+        83,
+        84
+      ]
+    },
+    {
+      "id": "TF057",
+      "statement": "Datalog is especially convenient for every simple one-off query.",
+      "answer": false,
+      "source_pages": [
+        85
+      ]
+    },
+    {
+      "id": "TF058",
+      "statement": "Document, relational, and graph models are all useful in different domains.",
+      "answer": true,
+      "source_pages": [
+        85
+      ]
+    },
+    {
+      "id": "TF059",
+      "statement": "Emulating one model using another is always elegant.",
+      "answer": false,
+      "source_pages": [
+        85
+      ]
+    },
+    {
+      "id": "TF060",
+      "statement": "Document and graph systems may have implicit rather than enforced schemas.",
+      "answer": true,
+      "source_pages": [
+        85
+      ]
+    }
+  ],
+  "fill_in_the_blank": [
+    {
+      "id": "FIB001",
+      "prompt": "The relational model was proposed by Edgar ______.",
+      "answer": "Codd",
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "FIB002",
+      "prompt": "Relations are called ______ in SQL.",
+      "answer": "tables",
+      "source_pages": [
+        50
+      ]
+    },
+    {
+      "id": "FIB003",
+      "prompt": "NoSQL was later interpreted as Not Only ______.",
+      "answer": "SQL",
+      "source_pages": [
+        51
+      ]
+    },
+    {
+      "id": "FIB004",
+      "prompt": "Using multiple database paradigms is called polyglot ______.",
+      "answer": "persistence",
+      "source_pages": [
+        51
+      ]
+    },
+    {
+      "id": "FIB005",
+      "prompt": "The object-relational disconnect is called an impedance ______.",
+      "answer": "mismatch",
+      "source_pages": [
+        52
+      ]
+    },
+    {
+      "id": "FIB006",
+      "prompt": "Removing duplicated information is called ______.",
+      "answer": "normalization",
+      "source_pages": [
+        55
+      ]
+    },
+    {
+      "id": "FIB007",
+      "prompt": "IBM IMS uses the ______ model.",
+      "answer": "hierarchical",
+      "source_pages": [
+        58
+      ]
+    },
+    {
+      "id": "FIB008",
+      "prompt": "The network model is also known as the ______ model.",
+      "answer": "CODASYL",
+      "source_pages": [
+        58
+      ]
+    },
+    {
+      "id": "FIB009",
+      "prompt": "A predefined traversal route in CODASYL is an access ______.",
+      "answer": "path",
+      "source_pages": [
+        59
+      ]
+    },
+    {
+      "id": "FIB010",
+      "prompt": "Relational databases delegate access-path selection to the query ______.",
+      "answer": "optimizer",
+      "source_pages": [
+        59,
+        60
+      ]
+    },
+    {
+      "id": "FIB011",
+      "prompt": "Implicit structure interpreted when reading is schema-on-______.",
+      "answer": "read",
+      "source_pages": [
+        61
+      ]
+    },
+    {
+      "id": "FIB012",
+      "prompt": "Explicit schema enforced on writes is schema-on-______.",
+      "answer": "write",
+      "source_pages": [
+        61,
+        62
+      ]
+    },
+    {
+      "id": "FIB013",
+      "prompt": "Keeping related document data together provides data ______.",
+      "answer": "locality",
+      "source_pages": [
+        63
+      ]
+    },
+    {
+      "id": "FIB014",
+      "prompt": "SQL is a ______ query language.",
+      "answer": "declarative",
+      "source_pages": [
+        64,
+        65
+      ]
+    },
+    {
+      "id": "FIB015",
+      "prompt": "A step-by-step query style is ______.",
+      "answer": "imperative",
+      "source_pages": [
+        65
+      ]
+    },
+    {
+      "id": "FIB016",
+      "prompt": "CSS and XPath are examples of ______ approaches.",
+      "answer": "declarative",
+      "source_pages": [
+        66,
+        67
+      ]
+    },
+    {
+      "id": "FIB017",
+      "prompt": "MapReduce consists of map and ______ functions.",
+      "answer": "reduce",
+      "source_pages": [
+        68
+      ]
+    },
+    {
+      "id": "FIB018",
+      "prompt": "Map/reduce functions must be ______ functions.",
+      "answer": "pure",
+      "source_pages": [
+        70
+      ]
+    },
+    {
+      "id": "FIB019",
+      "prompt": "Graph objects are vertices and ______.",
+      "answer": "edges",
+      "source_pages": [
+        71
+      ]
+    },
+    {
+      "id": "FIB020",
+      "prompt": "A vertex is also known as a ______.",
+      "answer": "node",
+      "source_pages": [
+        71
+      ]
+    },
+    {
+      "id": "FIB021",
+      "prompt": "Cypher was created for ______.",
+      "answer": "Neo4j",
+      "source_pages": [
+        74
+      ]
+    },
+    {
+      "id": "FIB022",
+      "prompt": "The SQL syntax for recursive traversal uses WITH ______.",
+      "answer": "RECURSIVE",
+      "source_pages": [
+        76
+      ]
+    },
+    {
+      "id": "FIB023",
+      "prompt": "Triple-stores use subject, predicate, and ______.",
+      "answer": "object",
+      "source_pages": [
+        77
+      ]
+    },
+    {
+      "id": "FIB024",
+      "prompt": "RDF stands for Resource Description ______.",
+      "answer": "Framework",
+      "source_pages": [
+        79
+      ]
+    },
+    {
+      "id": "FIB025",
+      "prompt": "SPARQL is pronounced ______.",
+      "answer": "sparkle",
+      "source_pages": [
+        81
+      ]
+    },
+    {
+      "id": "FIB026",
+      "prompt": "Datalog expresses facts like predicate(subject, ______).",
+      "answer": "object",
+      "source_pages": [
+        83
+      ]
+    },
+    {
+      "id": "FIB027",
+      "prompt": "Datalog rules can be ______.",
+      "answer": "recursive",
+      "source_pages": [
+        83,
+        84
+      ]
+    }
+  ],
+  "ordering_exercises": [
+    {
+      "id": "ORD01",
+      "title": "Representation layers",
+      "items_scrambled": [
+        "Database model becomes bytes",
+        "Real world becomes application structures",
+        "Bytes become physical hardware representation",
+        "Application structures become documents/tables/graphs"
+      ],
+      "correct_order": [
+        "Real world becomes application structures",
+        "Application structures become documents/tables/graphs",
+        "Database model becomes bytes",
+        "Bytes become physical hardware representation"
+      ],
+      "source_pages": [
+        49
+      ]
+    },
+    {
+      "id": "ORD02",
+      "title": "MapReduce shark report",
+      "items_scrambled": [
+        "Reduce values",
+        "Group by emitted key",
+        "Map matching observations",
+        "Write/report result"
+      ],
+      "correct_order": [
+        "Map matching observations",
+        "Group by emitted key",
+        "Reduce values",
+        "Write/report result"
+      ],
+      "source_pages": [
+        69,
+        70
+      ]
+    },
+    {
+      "id": "ORD03",
+      "title": "Datalog recursive containment",
+      "items_scrambled": [
+        "Derive Idaho within North America",
+        "Base fact: North America has its name",
+        "Derive North America contains/identifies itself through rule",
+        "Use Idaho within USA and USA within North America"
+      ],
+      "correct_order": [
+        "Base fact: North America has its name",
+        "Derive North America contains/identifies itself through rule",
+        "Use Idaho within USA and USA within North America",
+        "Derive Idaho within North America"
+      ],
+      "source_pages": [
+        83,
+        84
+      ]
+    },
+    {
+      "id": "ORD04",
+      "title": "Schema evolution example",
+      "items_scrambled": [
+        "Read old/new records compatibly",
+        "Requirement changes from full name to split name",
+        "Start writing or add new fields",
+        "Optionally backfill older rows/documents"
+      ],
+      "correct_order": [
+        "Requirement changes from full name to split name",
+        "Start writing or add new fields",
+        "Optionally backfill older rows/documents",
+        "Read old/new records compatibly"
+      ],
+      "source_pages": [
+        62
+      ]
+    }
+  ],
+  "scenario_questions": [
+    {
+      "id": "SC01",
+      "difficulty": "medium",
+      "scenario": "A user profile contains name, a list of jobs, a list of schools, and contact information and is almost always loaded in full.",
+      "question": "Which data model has a natural fit?",
+      "expected_answer": "A document model, because the structure is a self-contained tree of one-to-many relationships with good locality.",
+      "source_pages": [
+        53,
+        54,
+        60,
+        61
+      ]
+    },
+    {
+      "id": "SC02",
+      "difficulty": "hard",
+      "scenario": "The profile system adds company pages, school pages, recommendations, and references between users.",
+      "question": "How does this change the data-model tradeoff?",
+      "expected_answer": "The data becomes more interconnected with many-to-one/many-to-many relationships, making joins/references more important and the relational or graph model more attractive.",
+      "source_pages": [
+        56,
+        57,
+        61
+      ]
+    },
+    {
+      "id": "SC03",
+      "difficulty": "medium",
+      "scenario": "Every profile stores 'Greater Seattle Area' as a string. The city name must now change.",
+      "question": "What normalization issue appears?",
+      "expected_answer": "The human-readable value is duplicated. Using a stable region ID would allow the name to be updated once.",
+      "source_pages": [
+        55
+      ]
+    },
+    {
+      "id": "SC04",
+      "difficulty": "hard",
+      "scenario": "A database forces application code to walk pointer paths to reach records, and a schema change requires rewriting traversal code.",
+      "question": "Which historical model does this resemble?",
+      "expected_answer": "CODASYL/network model with application-managed access paths.",
+      "source_pages": [
+        58,
+        59
+      ]
+    },
+    {
+      "id": "SC05",
+      "difficulty": "hard",
+      "scenario": "You add a new database index and existing SQL queries get faster without code changes.",
+      "question": "What design advantage does this demonstrate?",
+      "expected_answer": "Declarative relational queries separate what is requested from the access path, allowing the query optimizer to adopt the new index automatically.",
+      "source_pages": [
+        59,
+        60,
+        65
+      ]
+    },
+    {
+      "id": "SC06",
+      "difficulty": "medium",
+      "scenario": "Incoming records have different structures because third-party providers evolve independently.",
+      "question": "Which schema style may be advantageous?",
+      "expected_answer": "Schema-on-read, because heterogeneous externally controlled data can be handled by read-time logic.",
+      "source_pages": [
+        62,
+        63
+      ]
+    },
+    {
+      "id": "SC07",
+      "difficulty": "medium",
+      "scenario": "Every record is expected to contain the same required fields and invalid shapes should be rejected immediately.",
+      "question": "Which schema style is attractive?",
+      "expected_answer": "Schema-on-write with explicit database-enforced structure.",
+      "source_pages": [
+        62,
+        63
+      ]
+    },
+    {
+      "id": "SC08",
+      "difficulty": "hard",
+      "scenario": "A 5 MB document is read frequently, but only a 30-byte status field is needed.",
+      "question": "What document-locality limitation applies?",
+      "expected_answer": "The database may need to load the entire document, wasting I/O for a tiny partial read.",
+      "source_pages": [
+        63
+      ]
+    },
+    {
+      "id": "SC09",
+      "difficulty": "medium",
+      "scenario": "A query specifies only filtering/grouping conditions, while the database chooses indexes and execution order.",
+      "question": "What query style is this?",
+      "expected_answer": "Declarative.",
+      "source_pages": [
+        65
+      ]
+    },
+    {
+      "id": "SC10",
+      "difficulty": "hard",
+      "scenario": "A CSS rule automatically stops applying when an element's class changes.",
+      "question": "What database-query concept does the chapter use this to illustrate?",
+      "expected_answer": "Declarative specifications let the underlying system manage execution/state changes without imperative application code.",
+      "source_pages": [
+        66,
+        67
+      ]
+    },
+    {
+      "id": "SC11",
+      "difficulty": "hard",
+      "scenario": "You need distributed aggregation where tasks can be retried on arbitrary workers after failures.",
+      "question": "What MapReduce restriction helps?",
+      "expected_answer": "Map and reduce functions are pure: input-only, no extra database queries, and no side effects.",
+      "source_pages": [
+        70
+      ]
+    },
+    {
+      "id": "SC12",
+      "difficulty": "medium",
+      "scenario": "Your records form a social network in which people, events, locations, and comments can all connect in many ways.",
+      "question": "What data model is most natural?",
+      "expected_answer": "A graph model.",
+      "source_pages": [
+        71
+      ]
+    },
+    {
+      "id": "SC13",
+      "difficulty": "hard",
+      "scenario": "A query needs to follow 'within' relationships through an unknown number of geographic levels.",
+      "question": "How do Cypher and SQL express this?",
+      "expected_answer": "Cypher uses a variable-length path such as :WITHIN*0..; SQL can use recursive CTEs with WITH RECURSIVE, but more verbosely.",
+      "source_pages": [
+        75,
+        76,
+        77
+      ]
+    },
+    {
+      "id": "SC14",
+      "difficulty": "medium",
+      "scenario": "You need to express 'Lucy marriedTo Alain' using a triple-store.",
+      "question": "What is the triple?",
+      "expected_answer": "(lucy, marriedTo, alain), where marriedTo is the predicate/edge.",
+      "source_pages": [
+        78
+      ]
+    },
+    {
+      "id": "SC15",
+      "difficulty": "hard",
+      "scenario": "Two organizations both define a predicate called 'within' with different meanings.",
+      "question": "How does RDF avoid collision?",
+      "expected_answer": "Use distinct URI namespaces so the predicates have globally distinguishable identifiers.",
+      "source_pages": [
+        80
+      ]
+    },
+    {
+      "id": "SC16",
+      "difficulty": "hard",
+      "scenario": "A graph query requires reusable recursive rules about geographic containment and migration.",
+      "question": "Which language in the chapter is especially suited?",
+      "expected_answer": "Datalog, because rules can derive predicates recursively and be composed/reused.",
+      "source_pages": [
+        83,
+        84,
+        85
+      ]
+    }
+  ],
+  "short_answer_questions": [
+    {
+      "id": "SA01",
+      "question": "Why does the chapter begin with layers of data models?",
+      "model_answer": "To show that software continually translates one representation into another, and each layer provides an abstraction that hides lower-level complexity.",
+      "source_pages": [
+        49,
+        50
+      ]
+    },
+    {
+      "id": "SA02",
+      "question": "Why did NoSQL emerge despite relational database dominance?",
+      "model_answer": "Different applications needed greater scale/write throughput, open-source options, specialized queries, and more flexible data models, so nonrelational systems complemented rather than simply replaced relational systems.",
+      "source_pages": [
+        51
+      ]
+    },
+    {
+      "id": "SA03",
+      "question": "Why can a résumé be easier to model as JSON than normalized SQL?",
+      "model_answer": "It is primarily a self-contained one-to-many tree. JSON mirrors the application structure and gives good locality, whereas normalized SQL splits the tree across multiple tables.",
+      "source_pages": [
+        52,
+        53,
+        54
+      ]
+    },
+    {
+      "id": "SA04",
+      "question": "What does normalization buy you?",
+      "model_answer": "It stores human-meaningful information once behind stable IDs, reducing duplicated writes and the risk that copies become inconsistent.",
+      "source_pages": [
+        55
+      ]
+    },
+    {
+      "id": "SA05",
+      "question": "Why do document databases become less attractive as applications mature?",
+      "model_answer": "Features often introduce more references and many-to-many relationships, which require joins or application-level lookup/consistency logic.",
+      "source_pages": [
+        56,
+        57,
+        61
+      ]
+    },
+    {
+      "id": "SA06",
+      "question": "What was the relational model's major improvement over CODASYL?",
+      "model_answer": "It removed application-visible access-path navigation. Queries declare desired data and a reusable optimizer chooses indexes, joins, and execution order.",
+      "source_pages": [
+        59,
+        60
+      ]
+    },
+    {
+      "id": "SA07",
+      "question": "Compare schema-on-read and schema-on-write.",
+      "model_answer": "Schema-on-read leaves structure implicit and handles compatibility in read code; schema-on-write makes structure explicit and validates writes. The choice depends on heterogeneity and desired enforcement.",
+      "source_pages": [
+        61,
+        62,
+        63
+      ]
+    },
+    {
+      "id": "SA08",
+      "question": "What is the locality tradeoff in document databases?",
+      "model_answer": "Co-located data can make whole-document reads efficient, but partial reads can waste I/O and updates may require rewriting the whole document.",
+      "source_pages": [
+        63
+      ]
+    },
+    {
+      "id": "SA09",
+      "question": "Why are declarative query languages powerful?",
+      "model_answer": "They describe desired results rather than execution steps, allowing the engine to optimize indexes, join strategies, storage layout, and parallel execution independently of application code.",
+      "source_pages": [
+        64,
+        65
+      ]
+    },
+    {
+      "id": "SA10",
+      "question": "Why must MapReduce functions be pure?",
+      "model_answer": "Purity allows tasks to be moved, reordered, and retried across workers without changing semantics.",
+      "source_pages": [
+        70
+      ]
+    },
+    {
+      "id": "SA11",
+      "question": "When should you consider a graph model?",
+      "model_answer": "When many-to-many relationships dominate and the application needs to traverse complex, evolving connections among heterogeneous entities.",
+      "source_pages": [
+        71,
+        73,
+        74
+      ]
+    },
+    {
+      "id": "SA12",
+      "question": "Why can Cypher be clearer than SQL for graph traversal?",
+      "model_answer": "Cypher directly expresses variable-length relationship patterns, while SQL often requires recursive CTEs and much more verbose join logic.",
+      "source_pages": [
+        75,
+        76,
+        77
+      ]
+    },
+    {
+      "id": "SA13",
+      "question": "How are property graphs and triple-stores related?",
+      "model_answer": "Both represent entities and relationships. In triples, primitive objects correspond to properties and vertex objects correspond to edges.",
+      "source_pages": [
+        77,
+        78
+      ]
+    },
+    {
+      "id": "SA14",
+      "question": "How is a modern graph database different from CODASYL?",
+      "model_answer": "Graphs allow arbitrary links, direct ID/index access, unordered vertices/edges, and declarative queries, whereas CODASYL imposed schema-defined paths, ordered children, and imperative navigation.",
+      "source_pages": [
+        82
+      ]
+    },
+    {
+      "id": "SA15",
+      "question": "What makes Datalog powerful?",
+      "model_answer": "Complex predicates can be built incrementally from reusable and recursive rules, which is useful when data relationships and reasoning become complex.",
+      "source_pages": [
+        83,
+        84,
+        85
+      ]
+    }
+  ],
+  "active_recall_prompts": [
+    {
+      "id": "AR01",
+      "prompt": "Recite the four representation layers described at the start of the chapter.",
+      "target_points": [
+        "real world",
+        "application structures/API",
+        "general-purpose data model",
+        "bytes/storage/network",
+        "physical hardware"
+      ],
+      "source_pages": [
+        49
+      ]
+    },
+    {
+      "id": "AR02",
+      "prompt": "Explain the history from relational databases to NoSQL and polyglot persistence.",
+      "target_points": [
+        "Codd 1970",
+        "mid-1980s dominance",
+        "NoSQL 2009 hashtag",
+        "scale/open source/special queries/schema flexibility",
+        "coexistence"
+      ],
+      "source_pages": [
+        50,
+        51
+      ]
+    },
+    {
+      "id": "AR03",
+      "prompt": "Reconstruct the LinkedIn résumé example in relational and document form.",
+      "target_points": [
+        "users",
+        "positions",
+        "education",
+        "contact",
+        "foreign keys",
+        "JSON tree",
+        "locality"
+      ],
+      "source_pages": [
+        52,
+        53,
+        54
+      ]
+    },
+    {
+      "id": "AR04",
+      "prompt": "Explain normalization using region_id and industry_id.",
+      "target_points": [
+        "stable IDs",
+        "consistent spelling",
+        "updates",
+        "localization",
+        "search",
+        "avoid duplication"
+      ],
+      "source_pages": [
+        55
+      ]
+    },
+    {
+      "id": "AR05",
+      "prompt": "Explain hierarchical vs CODASYL vs relational models.",
+      "target_points": [
+        "one parent",
+        "multiple parents",
+        "access paths",
+        "imperative cursor",
+        "optimizer",
+        "declarative queries"
+      ],
+      "source_pages": [
+        58,
+        59,
+        60
+      ]
+    },
+    {
+      "id": "AR06",
+      "prompt": "Compare document and relational models today.",
+      "target_points": [
+        "tree/locality/schema flexibility",
+        "joins",
+        "many-to-many",
+        "denormalization",
+        "application complexity"
+      ],
+      "source_pages": [
+        60,
+        61
+      ]
+    },
+    {
+      "id": "AR07",
+      "prompt": "Explain schema-on-read vs schema-on-write and the name migration example.",
+      "target_points": [
+        "implicit",
+        "explicit",
+        "dynamic analogy",
+        "static analogy",
+        "new fields",
+        "ALTER/UPDATE/read fallback"
+      ],
+      "source_pages": [
+        61,
+        62,
+        63
+      ]
+    },
+    {
+      "id": "AR08",
+      "prompt": "Explain declarative vs imperative querying.",
+      "target_points": [
+        "what vs how",
+        "optimizer",
+        "index/join selection",
+        "implementation independence",
+        "parallelism"
+      ],
+      "source_pages": [
+        64,
+        65
+      ]
+    },
+    {
+      "id": "AR09",
+      "prompt": "Explain the CSS/XPath analogy.",
+      "target_points": [
+        "selector pattern",
+        "automatic state update",
+        "imperative DOM complexity",
+        "implementation optimization"
+      ],
+      "source_pages": [
+        66,
+        67,
+        68
+      ]
+    },
+    {
+      "id": "AR10",
+      "prompt": "Reconstruct the MapReduce shark example.",
+      "target_points": [
+        "filter sharks",
+        "map per document",
+        "emit month/value",
+        "group by key",
+        "reduce sum",
+        "pure functions"
+      ],
+      "source_pages": [
+        68,
+        69,
+        70
+      ]
+    },
+    {
+      "id": "AR11",
+      "prompt": "Define property graphs fully.",
+      "target_points": [
+        "vertex ID",
+        "properties",
+        "incoming/outgoing edges",
+        "edge ID",
+        "tail/head",
+        "label",
+        "properties"
+      ],
+      "source_pages": [
+        72,
+        73
+      ]
+    },
+    {
+      "id": "AR12",
+      "prompt": "Explain the US-to-Europe Cypher traversal.",
+      "target_points": [
+        "BORN_IN",
+        "LIVES_IN",
+        "WITHIN*0..",
+        "pattern matching",
+        "optimizer"
+      ],
+      "source_pages": [
+        74,
+        75,
+        76
+      ]
+    },
+    {
+      "id": "AR13",
+      "prompt": "Compare Cypher and recursive SQL.",
+      "target_points": [
+        "variable-length traversal",
+        "WITH RECURSIVE",
+        "verbosity",
+        "data-model fit"
+      ],
+      "source_pages": [
+        75,
+        76,
+        77
+      ]
+    },
+    {
+      "id": "AR14",
+      "prompt": "Explain triple-stores, RDF, and SPARQL.",
+      "target_points": [
+        "subject/predicate/object",
+        "primitive property",
+        "vertex edge",
+        "Turtle",
+        "URI namespace",
+        "SPARQL"
+      ],
+      "source_pages": [
+        77,
+        78,
+        79,
+        80,
+        81
+      ]
+    },
+    {
+      "id": "AR15",
+      "prompt": "Explain Datalog facts and rules.",
+      "target_points": [
+        "predicate(subject,object)",
+        "facts",
+        "rules",
+        "right side matches",
+        "derived left side",
+        "recursion",
+        "reuse"
+      ],
+      "source_pages": [
+        82,
+        83,
+        84,
+        85
+      ]
+    }
+  ],
+  "diagram_reconstruction_drills": [
+    {
+      "id": "DR01",
+      "name": "LinkedIn relational résumé",
+      "task": "Redraw Figure 2-1 with users, regions, industries, positions, education, and contact_info and show foreign-key relationships.",
+      "source_pages": [
+        53
+      ]
+    },
+    {
+      "id": "DR02",
+      "name": "Document résumé tree",
+      "task": "Redraw Figure 2-2 showing one user branching to positions, education, and contact fields as a tree.",
+      "source_pages": [
+        54
+      ]
+    },
+    {
+      "id": "DR03",
+      "name": "Many-to-many résumé extension",
+      "task": "Redraw Figure 2-4 with users, positions, organizations, schools, education, and recommendations creating cross-document references.",
+      "source_pages": [
+        57
+      ]
+    },
+    {
+      "id": "DR04",
+      "name": "Property graph",
+      "task": "Draw a property graph with people and locations connected by BORN_IN, LIVES_IN, and WITHIN edges; label tail/head and properties.",
+      "source_pages": [
+        71,
+        72,
+        73
+      ]
+    },
+    {
+      "id": "DR05",
+      "name": "Cypher recursive location path",
+      "task": "Draw person -> BORN_IN -> location -> WITHIN* -> United States and person -> LIVES_IN -> location -> WITHIN* -> Europe.",
+      "source_pages": [
+        74,
+        75,
+        76
+      ]
+    },
+    {
+      "id": "DR06",
+      "name": "Triple-store equivalence",
+      "task": "Take one property and one edge from a property graph and redraw them as subject-predicate-object triples.",
+      "source_pages": [
+        77,
+        78
+      ]
+    },
+    {
+      "id": "DR07",
+      "name": "Datalog recursive derivation",
+      "task": "Redraw the logic of Figure 2-6: Idaho within USA, USA within North America, and recursive rules deriving Idaho within North America.",
+      "source_pages": [
+        83,
+        84
+      ]
+    }
+  ],
+  "interview_style_questions": [
+    {
+      "id": "INT01",
+      "question": "When would you choose a document database over a relational database?",
+      "strong_answer_outline": [
+        "self-contained tree",
+        "one-to-many",
+        "whole-document reads",
+        "schema flexibility",
+        "few joins"
+      ],
+      "source_pages": [
+        54,
+        60,
+        61,
+        63
+      ]
+    },
+    {
+      "id": "INT02",
+      "question": "When would you favor relational modeling?",
+      "strong_answer_outline": [
+        "many-to-one",
+        "many-to-many",
+        "normalization",
+        "joins",
+        "highly structured records"
+      ],
+      "source_pages": [
+        55,
+        56,
+        60,
+        61
+      ]
+    },
+    {
+      "id": "INT03",
+      "question": "When would you choose a graph database?",
+      "strong_answer_outline": [
+        "high connectivity",
+        "complex many-to-many",
+        "variable-length paths",
+        "heterogeneous entities",
+        "evolvability"
+      ],
+      "source_pages": [
+        71,
+        73,
+        74
+      ]
+    },
+    {
+      "id": "INT04",
+      "question": "Explain schema-on-read vs schema-on-write.",
+      "strong_answer_outline": [
+        "implicit vs explicit",
+        "dynamic vs static analogy",
+        "heterogeneous data",
+        "validation",
+        "migration tradeoffs"
+      ],
+      "source_pages": [
+        61,
+        62,
+        63
+      ]
+    },
+    {
+      "id": "INT05",
+      "question": "Why are declarative query languages important?",
+      "strong_answer_outline": [
+        "what not how",
+        "optimizer",
+        "index/join freedom",
+        "storage changes without query rewrite",
+        "parallelism"
+      ],
+      "source_pages": [
+        64,
+        65
+      ]
+    },
+    {
+      "id": "INT06",
+      "question": "Why did the relational model beat CODASYL for many applications?",
+      "strong_answer_outline": [
+        "no application-managed access paths",
+        "query optimizer",
+        "easier new query patterns",
+        "less fragile application code"
+      ],
+      "source_pages": [
+        59,
+        60
+      ]
+    },
+    {
+      "id": "INT07",
+      "question": "What are the tradeoffs of document locality?",
+      "strong_answer_outline": [
+        "whole-document reads",
+        "fewer lookups",
+        "partial-read waste",
+        "whole-document rewrites",
+        "small document recommendation"
+      ],
+      "source_pages": [
+        63
+      ]
+    },
+    {
+      "id": "INT08",
+      "question": "How does MapReduce support distributed fault tolerance?",
+      "strong_answer_outline": [
+        "pure map/reduce functions",
+        "no side effects",
+        "run anywhere",
+        "any order",
+        "retry after failure"
+      ],
+      "source_pages": [
+        68,
+        69,
+        70
+      ]
+    },
+    {
+      "id": "INT09",
+      "question": "How would you model recursive geographic containment?",
+      "strong_answer_outline": [
+        "graph model",
+        "Cypher variable-length path",
+        "SPARQL path",
+        "SQL recursive CTE",
+        "Datalog recursive rule"
+      ],
+      "source_pages": [
+        75,
+        76,
+        77,
+        81,
+        83,
+        84
+      ]
+    },
+    {
+      "id": "INT10",
+      "question": "What is the chapter's overall lesson about data models?",
+      "strong_answer_outline": [
+        "no universal best model",
+        "relationship shape matters",
+        "document/relational/graph domains",
+        "emulation possible but awkward",
+        "choose for application"
+      ],
+      "source_pages": [
+        85,
+        86
+      ]
+    }
+  ],
+  "common_confusions": [
+    {
+      "confusion": "NoSQL means 'never use SQL.'",
+      "correction": "The term was a meetup hashtag and was later reinterpreted as 'Not Only SQL'; the chapter expects relational and nonrelational systems to coexist.",
+      "source_pages": [
+        51
+      ]
+    },
+    {
+      "confusion": "Schemaless means the data has no structure.",
+      "correction": "Application code still assumes structure; the schema is implicit and interpreted on read rather than enforced by the database on write.",
+      "source_pages": [
+        61,
+        62
+      ]
+    },
+    {
+      "confusion": "Document databases eliminate all joins forever.",
+      "correction": "As data becomes interconnected, references and many-to-many relationships appear; joins may be emulated in application code or supported by the database.",
+      "source_pages": [
+        56,
+        57,
+        61
+      ]
+    },
+    {
+      "confusion": "Normalization is only about saving storage.",
+      "correction": "It reduces duplicated human-meaningful information, simplifies updates, and reduces inconsistency risk.",
+      "source_pages": [
+        55
+      ]
+    },
+    {
+      "confusion": "Document locality always improves performance.",
+      "correction": "It helps whole-document reads but can waste I/O on partial reads and force larger rewrites.",
+      "source_pages": [
+        63
+      ]
+    },
+    {
+      "confusion": "Relational databases cannot store JSON-like data.",
+      "correction": "The chapter notes significant XML/JSON support in relational systems and predicts increasing convergence.",
+      "source_pages": [
+        63,
+        64
+      ]
+    },
+    {
+      "confusion": "Declarative SQL is less powerful because it hides execution details.",
+      "correction": "Hiding execution details gives the optimizer freedom to improve plans and parallel execution without query changes.",
+      "source_pages": [
+        65
+      ]
+    },
+    {
+      "confusion": "MapReduce and SQL are opposites where SQL cannot be distributed.",
+      "correction": "SQL can run on distributed systems; MapReduce does not have a monopoly on distributed query execution.",
+      "source_pages": [
+        70
+      ]
+    },
+    {
+      "confusion": "A graph database is just CODASYL with a modern name.",
+      "correction": "Graph DBs allow arbitrary edges, direct vertex lookup, unordered relationships, and declarative query languages.",
+      "source_pages": [
+        82
+      ]
+    },
+    {
+      "confusion": "RDF requires buying into the semantic web vision.",
+      "correction": "Triple/RDF models can be useful internally even if the semantic web never becomes an internet-wide database.",
+      "source_pages": [
+        79,
+        81
+      ]
+    }
+  ],
+  "practice_problems": [
+    {
+      "id": "P01",
+      "type": "model_choice",
+      "prompt": "You are building a CMS where each article contains nested sections and comments, and articles rarely reference one another. Which model is a natural starting point?",
+      "solution": "Document model, because data is largely self-contained and tree-shaped.",
+      "based_on_source_pages": [
+        60,
+        61,
+        85
+      ]
+    },
+    {
+      "id": "P02",
+      "type": "model_choice",
+      "prompt": "You are building a professional network with companies, schools, people, recommendations, memberships, and many cross-links. Which models become more attractive?",
+      "solution": "Relational for structured joins, or graph when relationships become deeply interconnected.",
+      "based_on_source_pages": [
+        56,
+        57,
+        61,
+        71
+      ]
+    },
+    {
+      "id": "P03",
+      "type": "normalization",
+      "prompt": "10 million profiles duplicate the same industry name. The industry is renamed. What modeling choice reduces update risk?",
+      "solution": "Store one industry entity keyed by a stable ID and reference that ID from profiles.",
+      "based_on_source_pages": [
+        55
+      ]
+    },
+    {
+      "id": "P04",
+      "type": "schema",
+      "prompt": "Old user documents contain name while new documents contain first_name. What schema-on-read pattern can handle both?",
+      "solution": "At read time, if first_name is absent but name exists, derive first_name from the old field.",
+      "based_on_source_pages": [
+        62
+      ]
+    },
+    {
+      "id": "P05",
+      "type": "locality",
+      "prompt": "An application always renders a whole product document in one request. What document-model advantage matters?",
+      "solution": "Data locality: the related content can be fetched together without multiple index lookups/joins.",
+      "based_on_source_pages": [
+        63
+      ]
+    },
+    {
+      "id": "P06",
+      "type": "query_language",
+      "prompt": "Why can changing a database index speed up SQL without changing the query?",
+      "solution": "SQL is declarative; the optimizer can choose a new access path/index while preserving the same logical query.",
+      "based_on_source_pages": [
+        59,
+        60,
+        65
+      ]
+    },
+    {
+      "id": "P07",
+      "type": "mapreduce",
+      "prompt": "Map emits ('2026-08', 2), ('2026-08', 5), ('2026-08', 4). If reduce sums values, what is the result?",
+      "solution": "('2026-08', 11).",
+      "based_on_source_pages": [
+        69,
+        70
+      ]
+    },
+    {
+      "id": "P08",
+      "type": "graph",
+      "prompt": "You need to follow an unknown number of 'manager-of' or 'within' relationships. Why is a graph query language attractive?",
+      "solution": "Variable-length path expressions represent recursive traversal directly, instead of manually fixing a join depth.",
+      "based_on_source_pages": [
+        75,
+        76
+      ]
+    },
+    {
+      "id": "P09",
+      "type": "triple",
+      "prompt": "Convert vertex property Lucy.age=33 into triple form.",
+      "solution": "(lucy, age, 33).",
+      "based_on_source_pages": [
+        78
+      ]
+    },
+    {
+      "id": "P10",
+      "type": "datalog",
+      "prompt": "If within(idaho, usa) and within(usa, namerica), what kind of Datalog mechanism can derive that Idaho is within North America?",
+      "solution": "A recursive containment rule such as within_recursive.",
+      "based_on_source_pages": [
+        83,
+        84
+      ]
+    }
+  ],
+  "mastery_check": {
+    "beginner": [
+      "Can distinguish relational, document, and graph models.",
+      "Can define normalization, schema-on-read, and schema-on-write.",
+      "Can define imperative versus declarative querying.",
+      "Can define vertex, edge, and triple."
+    ],
+    "intermediate": [
+      "Can explain the LinkedIn résumé example and why relationships change model fit.",
+      "Can compare hierarchical, CODASYL, and relational models.",
+      "Can explain document locality and schema migration tradeoffs.",
+      "Can explain MapReduce and pure-function restrictions.",
+      "Can read basic Cypher/SPARQL/Datalog concepts."
+    ],
+    "advanced": [
+      "Can choose a data model based on relationship shape and access patterns rather than fashion.",
+      "Can explain how declarative languages create optimization freedom.",
+      "Can express recursive relationship reasoning using graph patterns, recursive CTEs, or Datalog.",
+      "Can explain why model emulation is possible but often awkward.",
+      "Can discuss convergence between relational and document databases."
+    ]
+  },
+  "final_review": {
+    "must_memorize": [
+      "Data models shape both code and thought.",
+      "Layers: real world -> application structures -> documents/tables/graphs -> bytes -> hardware.",
+      "Relational model: Codd 1970; tables are unordered collections of rows.",
+      "NoSQL drivers: scale, open source, specialized queries, schema flexibility.",
+      "Polyglot persistence = multiple database paradigms coexist.",
+      "Object-relational impedance mismatch persists even with ORMs.",
+      "Document model fits self-contained one-to-many trees and offers locality.",
+      "Normalization uses stable IDs to avoid duplicated human-readable facts.",
+      "Many-to-one/many-to-many relationships favor joins/references.",
+      "IMS = hierarchical one-parent tree.",
+      "CODASYL = multiple parents + pointer-like application-managed access paths.",
+      "Relational optimizer chooses access paths, indexes, join order.",
+      "Document strengths: schema flexibility/locality/tree mapping.",
+      "Relational strengths: joins and connected structured relationships.",
+      "Schema-on-read = implicit/read-time; schema-on-write = explicit/write-time.",
+      "Document locality helps whole-document reads but hurts large partial reads/rewrites.",
+      "Relational and document databases are converging.",
+      "Imperative = how; declarative = what.",
+      "Declarative queries create optimizer and parallelization freedom.",
+      "MapReduce: map emits key-values; reduce combines by key; functions must be pure.",
+      "Graph = vertices + edges; ideal for dense many-to-many relationships.",
+      "Property graph edges have tail, head, label, properties.",
+      "Cypher supports variable-length paths such as *0...",
+      "SQL recursive CTEs can perform graph traversal but are verbose.",
+      "Triple-store = subject-predicate-object.",
+      "RDF uses URI namespaces; SPARQL queries RDF graphs.",
+      "Modern graph DBs are not CODASYL.",
+      "Datalog = facts + reusable/recursive rules.",
+      "No one model is universally best."
+    ],
+    "memory_chain": "LAYERS -> RELATIONAL -> NOSQL -> OBJECT/RELATIONAL MISMATCH -> JSON TREE -> NORMALIZATION -> MANY-TO-MANY -> IMS/CODASYL -> QUERY OPTIMIZER -> DOCUMENT vs RELATIONAL -> SCHEMA-ON-READ/WRITE -> LOCALITY -> DECLARATIVE SQL -> CSS/XPATH -> MAPREDUCE -> GRAPH -> PROPERTY GRAPH -> CYPHER -> RECURSIVE SQL -> TRIPLES/RDF -> SPARQL -> DATALOG",
+    "one_sentence_takeaway": "Choose a data model based on the shape of relationships and access patterns: documents excel at self-contained trees, relations at structured joins, and graphs at dense connectivity, while declarative query languages give the system freedom to optimize how those models are traversed."
+  }
+}

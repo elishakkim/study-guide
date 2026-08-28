@@ -1,0 +1,3531 @@
+{
+  "chapter": {
+    "number": 6,
+    "title": "Design a Key-Value Store",
+    "source": "System Design Interview: An Insider's Guide by Alex Xu",
+    "pdf_pages": {
+      "chapter_start": 87,
+      "chapter_end": 108,
+      "references_page": 109
+    },
+    "primary_goal": "Design a distributed key-value store that supports put(key, value) and get(key) while handling big data, high availability, high scalability, automatic scaling, tunable consistency, low latency, replication, conflicts, and failures."
+  },
+  "chapter_summary": {
+    "overview": "Chapter 6 begins with the basic key-value data model and the put/get API. It establishes a target system with small key-value objects, large total data volume, high availability, high scalability, automatic scaling, tunable consistency, and low latency. A single-server design is introduced first, but capacity constraints force the move to a distributed key-value store. The chapter then uses CAP to frame the consistency-versus-availability tradeoff during network partitions. The distributed design is built from consistent hashing for partitioning, replication across configurable N replicas, quorum consensus using N/W/R, eventual consistency, vector-clock-based versioning and conflict resolution, gossip-based failure detection, sloppy quorum and hinted handoff for temporary failures, Merkle trees and anti-entropy for permanent failures, cross-data-center replication, and Cassandra-like write/read paths using commit logs, memory cache, SSTables, and Bloom filters.",
+    "core_api": [
+      "put(key, value): insert the value associated with a key.",
+      "get(key): retrieve the value associated with a key."
+    ],
+    "main_design_tradeoffs": [
+      "Read performance versus write performance versus memory use.",
+      "Consistency versus availability during network partitions.",
+      "Latency versus consistency through quorum sizes.",
+      "Availability versus strict quorum behavior during temporary failures.",
+      "Conflict-detection accuracy versus vector-clock metadata growth."
+    ],
+    "source_pages": [
+      87,
+      88,
+      89,
+      90,
+      91,
+      92,
+      93,
+      94,
+      95,
+      96,
+      97,
+      98,
+      99,
+      100,
+      101,
+      102,
+      103,
+      104,
+      105,
+      106,
+      107,
+      108
+    ]
+  },
+  "learning_objectives": [
+    {
+      "id": "LO1",
+      "objective": "Define a key-value store, key-value pair, key constraints, values, and the put/get interface.",
+      "source_pages": [
+        87
+      ]
+    },
+    {
+      "id": "LO2",
+      "objective": "Explain the target requirements and tradeoffs for the chapter's key-value store.",
+      "source_pages": [
+        88
+      ]
+    },
+    {
+      "id": "LO3",
+      "objective": "Explain the limits of a single-server in-memory hash-table design and the two optimizations proposed.",
+      "source_pages": [
+        89
+      ]
+    },
+    {
+      "id": "LO4",
+      "objective": "Define CAP consistency, availability, and partition tolerance and distinguish CP, AP, and CA.",
+      "source_pages": [
+        90,
+        91,
+        92
+      ]
+    },
+    {
+      "id": "LO5",
+      "objective": "Explain why a real distributed system must tolerate network partitions and therefore chooses between consistency and availability during a partition.",
+      "source_pages": [
+        91,
+        92
+      ]
+    },
+    {
+      "id": "LO6",
+      "objective": "Explain how consistent hashing partitions data and supports automatic scaling and heterogeneous server capacity.",
+      "source_pages": [
+        93,
+        94
+      ]
+    },
+    {
+      "id": "LO7",
+      "objective": "Explain asynchronous replication across configurable N unique physical servers and cross-data-center placement.",
+      "source_pages": [
+        94
+      ]
+    },
+    {
+      "id": "LO8",
+      "objective": "Define N, W, and R and reason about latency/consistency tradeoffs in quorum consensus.",
+      "source_pages": [
+        95,
+        96
+      ]
+    },
+    {
+      "id": "LO9",
+      "objective": "Distinguish strong, weak, and eventual consistency.",
+      "source_pages": [
+        96
+      ]
+    },
+    {
+      "id": "LO10",
+      "objective": "Explain versioning, concurrent-write conflicts, and vector clocks.",
+      "source_pages": [
+        97,
+        98,
+        99
+      ]
+    },
+    {
+      "id": "LO11",
+      "objective": "Determine ancestor versus sibling/conflicting versions from vector clocks.",
+      "source_pages": [
+        99
+      ]
+    },
+    {
+      "id": "LO12",
+      "objective": "Explain the two downsides of vector clocks mentioned by the chapter.",
+      "source_pages": [
+        99
+      ]
+    },
+    {
+      "id": "LO13",
+      "objective": "Explain gossip-protocol failure detection using membership lists and heartbeat counters.",
+      "source_pages": [
+        99,
+        100,
+        101
+      ]
+    },
+    {
+      "id": "LO14",
+      "objective": "Explain sloppy quorum and hinted handoff for temporary failures.",
+      "source_pages": [
+        101
+      ]
+    },
+    {
+      "id": "LO15",
+      "objective": "Explain anti-entropy and Merkle trees for permanent failure and replica repair.",
+      "source_pages": [
+        102,
+        103
+      ]
+    },
+    {
+      "id": "LO16",
+      "objective": "Explain why cross-data-center replication is needed for data-center outages.",
+      "source_pages": [
+        103
+      ]
+    },
+    {
+      "id": "LO17",
+      "objective": "Describe the decentralized system architecture and the coordinator role.",
+      "source_pages": [
+        104,
+        105
+      ]
+    },
+    {
+      "id": "LO18",
+      "objective": "Describe the Cassandra-like write path: commit log, memory cache, then SSTable.",
+      "source_pages": [
+        105,
+        106
+      ]
+    },
+    {
+      "id": "LO19",
+      "objective": "Describe the read path, including memory cache, Bloom filter, SSTables, and returning the result.",
+      "source_pages": [
+        106,
+        107
+      ]
+    },
+    {
+      "id": "LO20",
+      "objective": "Map the chapter's key-value-store goals/problems to the techniques summarized in Table 6-2.",
+      "source_pages": [
+        108
+      ]
+    }
+  ],
+  "key_value_basics": {
+    "definition": "A key-value store, also called a key-value database, is a non-relational database that stores each unique key with an associated value.",
+    "key_requirements": [
+      "The key must be unique.",
+      "The associated value is accessed through the key.",
+      "Keys may be plain text or hashed values.",
+      "Short keys are preferable for performance."
+    ],
+    "key_examples": [
+      "Plain text: last_logged_in_at",
+      "Hashed: 253DDEC4"
+    ],
+    "value_examples": [
+      "Strings",
+      "Lists",
+      "Objects"
+    ],
+    "value_treatment": "The value is usually treated as an opaque object.",
+    "systems_named": [
+      "Amazon Dynamo",
+      "Memcached",
+      "Redis"
+    ],
+    "operations": {
+      "put": "put(key, value)",
+      "get": "get(key)"
+    },
+    "source_pages": [
+      87
+    ]
+  },
+  "requirements": [
+    {
+      "requirement": "Small key-value pair size",
+      "detail": "Less than 10 KB.",
+      "source_pages": [
+        88
+      ]
+    },
+    {
+      "requirement": "Store big data",
+      "source_pages": [
+        88
+      ]
+    },
+    {
+      "requirement": "High availability",
+      "detail": "Respond quickly even during failures.",
+      "source_pages": [
+        88
+      ]
+    },
+    {
+      "requirement": "High scalability",
+      "detail": "Scale to support a large data set.",
+      "source_pages": [
+        88
+      ]
+    },
+    {
+      "requirement": "Automatic scaling",
+      "detail": "Automatically add/delete servers based on traffic.",
+      "source_pages": [
+        88
+      ]
+    },
+    {
+      "requirement": "Tunable consistency",
+      "source_pages": [
+        88
+      ]
+    },
+    {
+      "requirement": "Low latency",
+      "source_pages": [
+        88
+      ]
+    }
+  ],
+  "single_server_design": {
+    "basic_approach": "Store key-value pairs in an in-memory hash table.",
+    "benefit": "Memory access is fast.",
+    "limitation": "The complete data set may not fit in memory; a single server reaches capacity quickly.",
+    "optimizations": [
+      "Compress data.",
+      "Keep frequently used data in memory and store the rest on disk."
+    ],
+    "conclusion": "A distributed key-value store is required to support big data.",
+    "source_pages": [
+      89
+    ]
+  },
+  "cap_theorem": {
+    "consistency": "All clients see the same data at the same time regardless of which node they connect to.",
+    "availability": "Every client requesting data receives a response even if some nodes are down.",
+    "partition_tolerance": "The system continues operating despite a communication break between nodes.",
+    "chapter_statement": "A distributed system cannot simultaneously provide more than two of consistency, availability, and partition tolerance.",
+    "system_types": {
+      "CP": "Consistency + partition tolerance, sacrificing availability.",
+      "AP": "Availability + partition tolerance, sacrificing consistency.",
+      "CA": "Consistency + availability, sacrificing partition tolerance."
+    },
+    "real_world_note": "The chapter says CA cannot exist for real-world distributed applications because network failures are unavoidable and partition tolerance is required.",
+    "source_pages": [
+      90,
+      91
+    ]
+  },
+  "cap_partition_example": {
+    "replicas": [
+      "n1",
+      "n2",
+      "n3"
+    ],
+    "ideal_world": "Writes replicate among n1, n2, and n3, so consistency and availability are both achieved when there is no network partition.",
+    "partition_scenario": "n3 cannot communicate with n1 and n2.",
+    "CP_choice": {
+      "behavior": "Block writes to n1 and n2 to prevent inconsistency.",
+      "cost": "The system becomes unavailable for those operations.",
+      "example_use_case": "Bank systems that require the most up-to-date balance information."
+    },
+    "AP_choice": {
+      "behavior": "Continue accepting reads and writes.",
+      "cost": "Reads may return stale data.",
+      "recovery": "Synchronize n3 after the partition is resolved."
+    },
+    "source_pages": [
+      91,
+      92
+    ]
+  },
+  "system_components": [
+    "Data partition",
+    "Data replication",
+    "Consistency",
+    "Inconsistency resolution",
+    "Handling failures",
+    "System architecture diagram",
+    "Write path",
+    "Read path"
+  ],
+  "data_partition": {
+    "challenges": [
+      "Distribute data evenly across multiple servers.",
+      "Minimize data movement when nodes are added or removed."
+    ],
+    "technique": "Consistent hashing.",
+    "high_level_steps": [
+      "Place servers on a hash ring.",
+      "Hash a key onto the same ring.",
+      "Store the key on the first server encountered moving clockwise."
+    ],
+    "example": "key0 is stored on s1.",
+    "advantages": {
+      "automatic_scaling": "Servers can be added or removed automatically according to load.",
+      "heterogeneity": "Assign more virtual nodes to higher-capacity servers and fewer to lower-capacity servers."
+    },
+    "source_pages": [
+      93,
+      94
+    ]
+  },
+  "data_replication": {
+    "goal": "High availability and reliability.",
+    "replication_factor": "N, a configurable number of replicas.",
+    "selection_rule": [
+      "Hash the key onto the ring.",
+      "Walk clockwise.",
+      "Choose the first N unique physical servers."
+    ],
+    "example": {
+      "N": 3,
+      "key": "key0",
+      "replicas": [
+        "s1",
+        "s2",
+        "s3"
+      ]
+    },
+    "virtual_node_caveat": "Multiple virtual nodes may belong to the same physical server, so select unique physical servers rather than simply the first N virtual nodes.",
+    "data_center_strategy": "Place replicas in distinct data centers because an entire data center can fail from power, network, or natural-disaster events.",
+    "replication_style": "Asynchronous replication over N servers.",
+    "source_pages": [
+      94
+    ]
+  },
+  "quorum_consensus": {
+    "definitions": {
+      "N": "Number of replicas.",
+      "W": "Write quorum size; a successful write must be acknowledged by W replicas.",
+      "R": "Read quorum size; a successful read waits for responses from at least R replicas."
+    },
+    "coordinator": "A node that acts as a proxy between the client and replica nodes.",
+    "important_note": "W = 1 does not mean only one replica receives the data; it means the coordinator needs only one acknowledgement before declaring the write successful.",
+    "tradeoffs": [
+      "W = 1 or R = 1 returns quickly because the coordinator can stop after one replica response.",
+      "Larger W or R improves consistency but increases latency because more replica responses must be awaited.",
+      "If W + R > N, strong consistency is guaranteed because the read and write quorums overlap.",
+      "If W + R <= N, strong consistency is not guaranteed."
+    ],
+    "configurations": [
+      {
+        "configuration": "R = 1, W = N",
+        "optimization": "Fast read"
+      },
+      {
+        "configuration": "W = 1, R = N",
+        "optimization": "Fast write"
+      },
+      {
+        "configuration": "N = 3, W = 2, R = 2",
+        "property": "Strong consistency because W + R > N"
+      }
+    ],
+    "source_pages": [
+      95,
+      96
+    ]
+  },
+  "consistency_models": [
+    {
+      "model": "Strong consistency",
+      "definition": "Every read returns the value corresponding to the most recent write; clients never see stale data.",
+      "availability_tradeoff": "Often requires replicas to block new reads/writes until replicas agree on the current write, which is not ideal for highly available systems.",
+      "source_pages": [
+        96
+      ]
+    },
+    {
+      "model": "Weak consistency",
+      "definition": "Subsequent reads may not see the most recent value.",
+      "source_pages": [
+        96
+      ]
+    },
+    {
+      "model": "Eventual consistency",
+      "definition": "A specific form of weak consistency in which, given enough time, all updates propagate and replicas become consistent.",
+      "chapter_choice": "Recommended for the chapter's key-value store; Dynamo and Cassandra are cited as adopting eventual consistency.",
+      "conflict_implication": "Concurrent writes can create inconsistent values, which later require reconciliation.",
+      "source_pages": [
+        96
+      ]
+    }
+  ],
+  "versioning_and_vector_clocks": {
+    "versioning": "Treat every data modification as a new immutable version.",
+    "conflict_example": {
+      "starting_state": "n1 and n2 contain the same original value for name.",
+      "concurrent_updates": [
+        "Server1 changes the value to johnSanFrancisco.",
+        "Server2 changes the value to johnNewYork."
+      ],
+      "result": "Two conflicting versions, v1 and v2."
+    },
+    "vector_clock_definition": "A [server, version] pair associated with a data item that can determine whether one version precedes, succeeds, or conflicts with another.",
+    "representation": "D([S1, v1], [S2, v2], ..., [Sn, vn])",
+    "write_rule": [
+      "If [Si, vi] exists, increment vi.",
+      "Otherwise add [Si, 1]."
+    ],
+    "figure_6_9_sequence": [
+      "D1 written by Sx -> D1[(Sx, 1)].",
+      "D1 updated by Sx -> D2([Sx, 2]).",
+      "D2 updated by Sy -> D3([Sx, 2], [Sy, 1]).",
+      "D2 independently updated by Sz -> D4([Sx, 2], [Sz, 1]).",
+      "D3 and D4 conflict; client reconciles and writes D5 through Sx -> D5([Sx, 3], [Sy, 1], [Sz, 1])."
+    ],
+    "ancestor_rule": {
+      "meaning": "No conflict.",
+      "rule": "X is an ancestor of Y if Y's counters for each participant are greater than or equal to X's corresponding counters.",
+      "example": "D([s0,1],[s1,1]) is an ancestor of D([s0,1],[s1,2])."
+    },
+    "sibling_rule": {
+      "meaning": "Conflict exists.",
+      "example": "D([s0,1],[s1,2]) conflicts with D([s0,2],[s1,1])."
+    },
+    "downsides": [
+      "Adds client complexity because the client must perform conflict-resolution logic.",
+      "The number of [server, version] pairs can grow quickly."
+    ],
+    "metadata_growth_mitigation": "Set a vector-clock length threshold and remove the oldest pairs after the limit is exceeded.",
+    "mitigation_tradeoff": "Removing old pairs can make descendant relationships impossible to determine accurately, causing reconciliation inefficiency.",
+    "source_note": "Page 97 initially says 'vector locks' but the chapter immediately defines and consistently uses vector clocks; this guide preserves the chapter's actual mechanism as vector clocks.",
+    "source_pages": [
+      97,
+      98,
+      99
+    ]
+  },
+  "failure_detection": {
+    "principle": "One server's accusation alone is insufficient; usually at least two independent sources are required to mark a server down.",
+    "all_to_all_multicasting": {
+      "assessment": "Straightforward but inefficient when many servers exist."
+    },
+    "gossip_protocol": {
+      "purpose": "Decentralized failure detection.",
+      "steps": [
+        "Each node maintains a membership list containing member IDs and heartbeat counters.",
+        "Each node periodically increments its own heartbeat counter.",
+        "Each node periodically sends heartbeats to random nodes.",
+        "Those nodes propagate heartbeat information to other nodes.",
+        "Membership lists are updated when heartbeat information is received.",
+        "If a member's heartbeat has not increased for a predefined period, the member is considered offline."
+      ],
+      "example": "s0 observes that s2's heartbeat does not increase; after other nodes confirm the stale heartbeat, s2 is marked down and the information propagates.",
+      "source_pages": [
+        99,
+        100,
+        101
+      ]
+    }
+  },
+  "temporary_failures": {
+    "strict_quorum_issue": "Strict quorum can block reads/writes after failures.",
+    "sloppy_quorum": {
+      "goal": "Improve availability.",
+      "behavior": "Choose the first W healthy servers for writes and first R healthy servers for reads on the ring; ignore offline servers."
+    },
+    "hinted_handoff": {
+      "behavior": "A healthy server temporarily handles operations for an unavailable replica and later hands the changed data back when the failed replica returns.",
+      "example": "s3 temporarily handles reads/writes for unavailable s2, then returns the data to s2 after recovery."
+    },
+    "source_pages": [
+      101
+    ]
+  },
+  "permanent_failures": {
+    "anti_entropy": "Compare replica data and update replicas to the newest versions.",
+    "merkle_tree": {
+      "purpose": "Detect inconsistencies while minimizing transferred data.",
+      "definition_summary": "A tree where non-leaf hashes are derived from child hashes; it enables efficient verification of large data structures.",
+      "construction_steps": [
+        "Divide the key space into buckets.",
+        "Hash each key within a bucket.",
+        "Create one hash node per bucket.",
+        "Build upward to the root by hashing child nodes."
+      ],
+      "comparison": [
+        "Compare root hashes first.",
+        "If roots match, the replicas contain the same data.",
+        "If roots differ, recursively compare child hashes.",
+        "Identify only unsynchronized buckets.",
+        "Synchronize those buckets only."
+      ],
+      "efficiency": "Data synchronization volume is proportional to the differences between replicas rather than the total data size.",
+      "scale_example": "One possible real-world configuration is 1 million buckets for 1 billion keys, about 1,000 keys per bucket."
+    },
+    "source_pages": [
+      102,
+      103
+    ]
+  },
+  "data_center_outage": {
+    "causes": [
+      "Power outage",
+      "Network outage",
+      "Natural disaster"
+    ],
+    "solution": "Replicate data across multiple data centers so users can still access data when one entire data center is offline.",
+    "source_pages": [
+      103
+    ]
+  },
+  "system_architecture": {
+    "features": [
+      "Clients communicate through get(key) and put(key, value).",
+      "A coordinator proxies between the client and the key-value store.",
+      "Nodes are placed on a consistent-hashing ring.",
+      "The design is completely decentralized so node additions/moves can be automatic.",
+      "Data is replicated across multiple nodes.",
+      "There is no single point of failure because every node has the same set of responsibilities."
+    ],
+    "node_responsibilities_shown": [
+      "Client API",
+      "Conflict resolution",
+      "Replication",
+      "Failure detection",
+      "Failure repair mechanism",
+      "Storage engine",
+      "Other distributed-store responsibilities"
+    ],
+    "source_pages": [
+      104,
+      105
+    ]
+  },
+  "write_path": {
+    "architecture_basis": "The chapter says the write/read paths are primarily based on Cassandra architecture.",
+    "steps": [
+      "Persist the write request to a commit log file.",
+      "Save the data in the memory cache.",
+      "When memory cache is full or reaches a configured threshold, flush data to an SSTable on disk."
+    ],
+    "sstable_definition": "A sorted-string table is a sorted list of <key, value> pairs.",
+    "source_pages": [
+      105,
+      106
+    ]
+  },
+  "read_path": {
+    "memory_hit": "Check memory cache first; if data exists there, return it to the client.",
+    "memory_miss_steps": [
+      "Check memory cache.",
+      "If absent, check the Bloom filter.",
+      "Use the Bloom filter to determine which SSTables might contain the key.",
+      "Retrieve the result from SSTables.",
+      "Return the result to the client."
+    ],
+    "bloom_filter_role": "Efficiently identify which SSTables may contain the requested key.",
+    "source_pages": [
+      106,
+      107
+    ]
+  },
+  "summary_table": [
+    {
+      "goal_or_problem": "Ability to store big data",
+      "technique": "Use consistent hashing to spread the load across servers."
+    },
+    {
+      "goal_or_problem": "High availability reads",
+      "technique": "Data replication and multi-data-center setup."
+    },
+    {
+      "goal_or_problem": "Highly available writes",
+      "technique": "Versioning and conflict resolution with vector clocks."
+    },
+    {
+      "goal_or_problem": "Dataset partition",
+      "technique": "Consistent hashing."
+    },
+    {
+      "goal_or_problem": "Incremental scalability",
+      "technique": "Consistent hashing."
+    },
+    {
+      "goal_or_problem": "Heterogeneity",
+      "technique": "Consistent hashing."
+    },
+    {
+      "goal_or_problem": "Tunable consistency",
+      "technique": "Quorum consensus."
+    },
+    {
+      "goal_or_problem": "Handling temporary failures",
+      "technique": "Sloppy quorum and hinted handoff."
+    },
+    {
+      "goal_or_problem": "Handling permanent failures",
+      "technique": "Merkle tree."
+    },
+    {
+      "goal_or_problem": "Handling data-center outage",
+      "technique": "Cross-data-center replication."
+    }
+  ],
+  "key_concepts": [
+    {
+      "term": "Key-Value Store",
+      "definition": "A non-relational database storing unique keys and associated values.",
+      "source_pages": [
+        87
+      ]
+    },
+    {
+      "term": "Opaque Value",
+      "definition": "A value whose internal structure is generally not interpreted by the key-value store.",
+      "source_pages": [
+        87
+      ]
+    },
+    {
+      "term": "Distributed Hash Table",
+      "definition": "Another term used by the chapter for a distributed key-value store.",
+      "source_pages": [
+        90
+      ]
+    },
+    {
+      "term": "CAP Theorem",
+      "definition": "The chapter's framework that a distributed system cannot simultaneously provide all three of consistency, availability, and partition tolerance.",
+      "source_pages": [
+        90
+      ]
+    },
+    {
+      "term": "CP",
+      "definition": "Consistency and partition tolerance while sacrificing availability.",
+      "source_pages": [
+        90
+      ]
+    },
+    {
+      "term": "AP",
+      "definition": "Availability and partition tolerance while sacrificing consistency.",
+      "source_pages": [
+        90
+      ]
+    },
+    {
+      "term": "Consistent Hashing",
+      "definition": "Used to partition data evenly and minimize movement when nodes change.",
+      "source_pages": [
+        93
+      ]
+    },
+    {
+      "term": "Replication Factor N",
+      "definition": "Number of replicas used to store copies of the data.",
+      "source_pages": [
+        94,
+        95
+      ]
+    },
+    {
+      "term": "Write Quorum W",
+      "definition": "Number of replica acknowledgements required for a write to be considered successful.",
+      "source_pages": [
+        95
+      ]
+    },
+    {
+      "term": "Read Quorum R",
+      "definition": "Number of replica responses required for a read to be considered successful.",
+      "source_pages": [
+        95
+      ]
+    },
+    {
+      "term": "Coordinator",
+      "definition": "A node acting as a proxy between the client and the key-value-store nodes.",
+      "source_pages": [
+        95,
+        104
+      ]
+    },
+    {
+      "term": "Eventual Consistency",
+      "definition": "A weak consistency model in which replicas converge after updates have had enough time to propagate.",
+      "source_pages": [
+        96
+      ]
+    },
+    {
+      "term": "Versioning",
+      "definition": "Treating each data modification as a new immutable version.",
+      "source_pages": [
+        97
+      ]
+    },
+    {
+      "term": "Vector Clock",
+      "definition": "A collection of [server, version] pairs associated with a data item for reasoning about ancestry and conflicts.",
+      "source_pages": [
+        98,
+        99
+      ]
+    },
+    {
+      "term": "Gossip Protocol",
+      "definition": "A decentralized failure-detection protocol using membership lists and propagated heartbeats.",
+      "source_pages": [
+        100,
+        101
+      ]
+    },
+    {
+      "term": "Sloppy Quorum",
+      "definition": "Uses the first W/R healthy servers rather than enforcing the strict intended replica set during failures.",
+      "source_pages": [
+        101
+      ]
+    },
+    {
+      "term": "Hinted Handoff",
+      "definition": "A temporary healthy node stores/serves data for an unavailable replica and hands the data back after recovery.",
+      "source_pages": [
+        101
+      ]
+    },
+    {
+      "term": "Anti-Entropy",
+      "definition": "Replica repair by comparing data and updating replicas to the newest version.",
+      "source_pages": [
+        102
+      ]
+    },
+    {
+      "term": "Merkle Tree",
+      "definition": "A hash tree used to identify inconsistent regions efficiently and minimize replica synchronization traffic.",
+      "source_pages": [
+        102,
+        103
+      ]
+    },
+    {
+      "term": "Commit Log",
+      "definition": "The durable log to which a write is persisted before the in-memory write path continues.",
+      "source_pages": [
+        105
+      ]
+    },
+    {
+      "term": "SSTable",
+      "definition": "A sorted list of <key, value> pairs stored on disk.",
+      "source_pages": [
+        106
+      ]
+    },
+    {
+      "term": "Bloom Filter",
+      "definition": "Used in the read path to identify which SSTables might contain a key.",
+      "source_pages": [
+        106,
+        107
+      ]
+    }
+  ],
+  "flashcards": [
+    {
+      "id": "FC01",
+      "front": "What is a key-value store?",
+      "back": "A non-relational database that stores each unique key with an associated value.",
+      "source_pages": [
+        87
+      ]
+    },
+    {
+      "id": "FC02",
+      "front": "What constraint applies to a key?",
+      "back": "The key must be unique.",
+      "source_pages": [
+        87
+      ]
+    },
+    {
+      "id": "FC03",
+      "front": "Why are short keys preferred?",
+      "back": "For performance reasons.",
+      "source_pages": [
+        87
+      ]
+    },
+    {
+      "id": "FC04",
+      "front": "What two APIs must the designed store support?",
+      "back": "put(key, value) and get(key).",
+      "source_pages": [
+        87
+      ]
+    },
+    {
+      "id": "FC05",
+      "front": "What is the maximum key-value pair size in the requirements?",
+      "back": "Less than 10 KB.",
+      "source_pages": [
+        88
+      ]
+    },
+    {
+      "id": "FC06",
+      "front": "Name the seven main design characteristics.",
+      "back": "<10 KB pair size, big-data storage, high availability, high scalability, automatic scaling, tunable consistency, low latency.",
+      "source_pages": [
+        88
+      ]
+    },
+    {
+      "id": "FC07",
+      "front": "What is the simplest single-server implementation?",
+      "back": "An in-memory hash table.",
+      "source_pages": [
+        89
+      ]
+    },
+    {
+      "id": "FC08",
+      "front": "What two single-server optimizations are proposed?",
+      "back": "Data compression and keeping only frequently used data in memory while storing the rest on disk.",
+      "source_pages": [
+        89
+      ]
+    },
+    {
+      "id": "FC09",
+      "front": "Why is a distributed store eventually required?",
+      "back": "A single server reaches capacity quickly and cannot hold the required big data.",
+      "source_pages": [
+        89
+      ]
+    },
+    {
+      "id": "FC10",
+      "front": "What is another name for a distributed key-value store?",
+      "back": "Distributed hash table.",
+      "source_pages": [
+        90
+      ]
+    },
+    {
+      "id": "FC11",
+      "front": "Define CAP consistency.",
+      "back": "All clients see the same data at the same time regardless of which node they connect to.",
+      "source_pages": [
+        90
+      ]
+    },
+    {
+      "id": "FC12",
+      "front": "Define CAP availability.",
+      "back": "A client requesting data gets a response even when some nodes are down.",
+      "source_pages": [
+        90
+      ]
+    },
+    {
+      "id": "FC13",
+      "front": "Define partition tolerance.",
+      "back": "The system continues to operate despite a communication break between nodes.",
+      "source_pages": [
+        90
+      ]
+    },
+    {
+      "id": "FC14",
+      "front": "What is a CP system?",
+      "back": "Consistency + partition tolerance, sacrificing availability.",
+      "source_pages": [
+        90
+      ]
+    },
+    {
+      "id": "FC15",
+      "front": "What is an AP system?",
+      "back": "Availability + partition tolerance, sacrificing consistency.",
+      "source_pages": [
+        90
+      ]
+    },
+    {
+      "id": "FC16",
+      "front": "Why does the chapter say CA is not realistic for distributed applications?",
+      "back": "Network failures are unavoidable, so partition tolerance is required.",
+      "source_pages": [
+        91
+      ]
+    },
+    {
+      "id": "FC17",
+      "front": "During a network partition, what must a distributed system choose between?",
+      "back": "Consistency and availability.",
+      "source_pages": [
+        91,
+        92
+      ]
+    },
+    {
+      "id": "FC18",
+      "front": "What does the CP example do when n3 is partitioned?",
+      "back": "Blocks writes to n1 and n2 to avoid inconsistency, sacrificing availability.",
+      "source_pages": [
+        92
+      ]
+    },
+    {
+      "id": "FC19",
+      "front": "What does the AP example do?",
+      "back": "Keeps accepting reads and writes, may serve stale data, and syncs later after the partition resolves.",
+      "source_pages": [
+        92
+      ]
+    },
+    {
+      "id": "FC20",
+      "front": "Which technique partitions the key-value data?",
+      "back": "Consistent hashing.",
+      "source_pages": [
+        93
+      ]
+    },
+    {
+      "id": "FC21",
+      "front": "What are the two partitioning challenges?",
+      "back": "Even distribution and minimizing movement when nodes are added/removed.",
+      "source_pages": [
+        93
+      ]
+    },
+    {
+      "id": "FC22",
+      "front": "How does consistent hashing support heterogeneity?",
+      "back": "Higher-capacity servers receive more virtual nodes.",
+      "source_pages": [
+        94
+      ]
+    },
+    {
+      "id": "FC23",
+      "front": "What does N mean in data replication?",
+      "back": "The configurable number of replicas.",
+      "source_pages": [
+        94,
+        95
+      ]
+    },
+    {
+      "id": "FC24",
+      "front": "How are N replicas chosen?",
+      "back": "Walk clockwise from the key position and choose the first N unique physical servers.",
+      "source_pages": [
+        94
+      ]
+    },
+    {
+      "id": "FC25",
+      "front": "Why must replica selection consider unique physical servers?",
+      "back": "Several virtual nodes may belong to the same physical server.",
+      "source_pages": [
+        94
+      ]
+    },
+    {
+      "id": "FC26",
+      "front": "Why place replicas in different data centers?",
+      "back": "Nodes in one data center can fail together from power, network, or disaster events.",
+      "source_pages": [
+        94
+      ]
+    },
+    {
+      "id": "FC27",
+      "front": "What is W?",
+      "back": "The write quorum size: the number of replica acknowledgements required before a write succeeds.",
+      "source_pages": [
+        95
+      ]
+    },
+    {
+      "id": "FC28",
+      "front": "What is R?",
+      "back": "The read quorum size: the minimum number of replica responses required before a read succeeds.",
+      "source_pages": [
+        95
+      ]
+    },
+    {
+      "id": "FC29",
+      "front": "Does W=1 mean the system writes to only one replica?",
+      "back": "No. Data can still be replicated to all N; the coordinator simply needs one acknowledgement to return success.",
+      "source_pages": [
+        95
+      ]
+    },
+    {
+      "id": "FC30",
+      "front": "What does the coordinator do?",
+      "back": "Acts as a proxy between the client and replica nodes.",
+      "source_pages": [
+        95,
+        104
+      ]
+    },
+    {
+      "id": "FC31",
+      "front": "What is the quorum latency/consistency tradeoff?",
+      "back": "Small W/R gives faster responses; larger W/R generally improves consistency but requires waiting for more replicas.",
+      "source_pages": [
+        95
+      ]
+    },
+    {
+      "id": "FC32",
+      "front": "What condition guarantees strong consistency in the chapter?",
+      "back": "W + R > N.",
+      "source_pages": [
+        95,
+        96
+      ]
+    },
+    {
+      "id": "FC33",
+      "front": "What configuration is optimized for fast reads?",
+      "back": "R = 1 and W = N.",
+      "source_pages": [
+        96
+      ]
+    },
+    {
+      "id": "FC34",
+      "front": "What configuration is optimized for fast writes?",
+      "back": "W = 1 and R = N.",
+      "source_pages": [
+        96
+      ]
+    },
+    {
+      "id": "FC35",
+      "front": "What common strongly consistent configuration is given?",
+      "back": "N=3, W=2, R=2.",
+      "source_pages": [
+        96
+      ]
+    },
+    {
+      "id": "FC36",
+      "front": "Define strong consistency.",
+      "back": "Reads always return the most recently written value; clients do not see stale data.",
+      "source_pages": [
+        96
+      ]
+    },
+    {
+      "id": "FC37",
+      "front": "Define weak consistency.",
+      "back": "A later read may not see the newest value.",
+      "source_pages": [
+        96
+      ]
+    },
+    {
+      "id": "FC38",
+      "front": "Define eventual consistency.",
+      "back": "A weak consistency model in which, given enough time, all updates propagate and replicas converge.",
+      "source_pages": [
+        96
+      ]
+    },
+    {
+      "id": "FC39",
+      "front": "Which consistency model is recommended for this design?",
+      "back": "Eventual consistency.",
+      "source_pages": [
+        96
+      ]
+    },
+    {
+      "id": "FC40",
+      "front": "What is versioning?",
+      "back": "Treating each data modification as a new immutable version.",
+      "source_pages": [
+        97
+      ]
+    },
+    {
+      "id": "FC41",
+      "front": "Why are versions needed?",
+      "back": "Concurrent writes to replicas can produce conflicting values that must be detected and reconciled.",
+      "source_pages": [
+        97
+      ]
+    },
+    {
+      "id": "FC42",
+      "front": "What is a vector clock?",
+      "back": "A collection of [server, version] pairs associated with a data item.",
+      "source_pages": [
+        98
+      ]
+    },
+    {
+      "id": "FC43",
+      "front": "What happens when a server already has an entry in the vector clock and writes the item?",
+      "back": "Increment that server's version counter.",
+      "source_pages": [
+        98
+      ]
+    },
+    {
+      "id": "FC44",
+      "front": "What happens if the writing server has no vector-clock entry?",
+      "back": "Create a new [server, 1] entry.",
+      "source_pages": [
+        98
+      ]
+    },
+    {
+      "id": "FC45",
+      "front": "What is D2's vector clock in the example?",
+      "back": "D2([Sx,2]).",
+      "source_pages": [
+        98
+      ]
+    },
+    {
+      "id": "FC46",
+      "front": "What are the conflicting descendants of D2?",
+      "back": "D3([Sx,2],[Sy,1]) and D4([Sx,2],[Sz,1]).",
+      "source_pages": [
+        98,
+        99
+      ]
+    },
+    {
+      "id": "FC47",
+      "front": "What is D5 after reconciliation?",
+      "back": "D5([Sx,3],[Sy,1],[Sz,1]).",
+      "source_pages": [
+        99
+      ]
+    },
+    {
+      "id": "FC48",
+      "front": "When is X an ancestor of Y?",
+      "back": "When Y's corresponding vector-clock counters are all greater than or equal to X's.",
+      "source_pages": [
+        99
+      ]
+    },
+    {
+      "id": "FC49",
+      "front": "What do sibling versions indicate?",
+      "back": "A conflict.",
+      "source_pages": [
+        99
+      ]
+    },
+    {
+      "id": "FC50",
+      "front": "What are two vector-clock downsides?",
+      "back": "Client conflict-resolution complexity and rapid growth of [server,version] pairs.",
+      "source_pages": [
+        99
+      ]
+    },
+    {
+      "id": "FC51",
+      "front": "How is vector-clock growth bounded?",
+      "back": "Set a maximum length and remove the oldest pairs when it is exceeded.",
+      "source_pages": [
+        99
+      ]
+    },
+    {
+      "id": "FC52",
+      "front": "Why is one node's accusation not enough to mark another node down?",
+      "back": "The chapter says failure should usually be confirmed by at least two independent information sources.",
+      "source_pages": [
+        99
+      ]
+    },
+    {
+      "id": "FC53",
+      "front": "Why is all-to-all multicasting unattractive?",
+      "back": "It is inefficient when there are many servers.",
+      "source_pages": [
+        99,
+        100
+      ]
+    },
+    {
+      "id": "FC54",
+      "front": "What does each node maintain for gossip failure detection?",
+      "back": "A membership list with member IDs and heartbeat counters.",
+      "source_pages": [
+        100
+      ]
+    },
+    {
+      "id": "FC55",
+      "front": "What marks a node as offline in gossip?",
+      "back": "Its heartbeat has not increased for longer than a predefined period and other nodes confirm the stale information.",
+      "source_pages": [
+        100,
+        101
+      ]
+    },
+    {
+      "id": "FC56",
+      "front": "What is sloppy quorum?",
+      "back": "Use the first W healthy servers for writes and first R healthy servers for reads while ignoring offline servers.",
+      "source_pages": [
+        101
+      ]
+    },
+    {
+      "id": "FC57",
+      "front": "What is hinted handoff?",
+      "back": "A healthy server temporarily handles data for a failed replica and returns the data when the replica recovers.",
+      "source_pages": [
+        101
+      ]
+    },
+    {
+      "id": "FC58",
+      "front": "Which failure type is hinted handoff for?",
+      "back": "Temporary failures.",
+      "source_pages": [
+        101,
+        102
+      ]
+    },
+    {
+      "id": "FC59",
+      "front": "What handles permanent replica inconsistencies?",
+      "back": "Anti-entropy with Merkle trees.",
+      "source_pages": [
+        102
+      ]
+    },
+    {
+      "id": "FC60",
+      "front": "What is the main purpose of a Merkle tree here?",
+      "back": "Detect inconsistent portions of replicas and minimize the amount of data transferred during synchronization.",
+      "source_pages": [
+        102,
+        103
+      ]
+    },
+    {
+      "id": "FC61",
+      "front": "What are the four Merkle-tree construction steps?",
+      "back": "Bucketize key space, hash keys, make one hash per bucket, then build the tree upward by hashing children.",
+      "source_pages": [
+        102
+      ]
+    },
+    {
+      "id": "FC62",
+      "front": "How are two Merkle trees compared?",
+      "back": "Compare root hashes, then recursively descend only into differing child hashes/buckets.",
+      "source_pages": [
+        103
+      ]
+    },
+    {
+      "id": "FC63",
+      "front": "What determines Merkle-tree synchronization volume?",
+      "back": "The differences between replicas, not the total amount of stored data.",
+      "source_pages": [
+        103
+      ]
+    },
+    {
+      "id": "FC64",
+      "front": "How do you survive a complete data-center outage?",
+      "back": "Replicate data across multiple data centers.",
+      "source_pages": [
+        103
+      ]
+    },
+    {
+      "id": "FC65",
+      "front": "What are the architectural roles of the coordinator and ring?",
+      "back": "The coordinator proxies client requests; nodes are distributed on a consistent-hashing ring.",
+      "source_pages": [
+        104
+      ]
+    },
+    {
+      "id": "FC66",
+      "front": "Why is there no single point of failure in the architecture?",
+      "back": "The design is decentralized and every node has the same set of responsibilities.",
+      "source_pages": [
+        104
+      ]
+    },
+    {
+      "id": "FC67",
+      "front": "What is the first step of the write path?",
+      "back": "Persist the write to the commit log.",
+      "source_pages": [
+        105
+      ]
+    },
+    {
+      "id": "FC68",
+      "front": "What is the second step of the write path?",
+      "back": "Save the data in the memory cache.",
+      "source_pages": [
+        105
+      ]
+    },
+    {
+      "id": "FC69",
+      "front": "When is memory data flushed to disk?",
+      "back": "When the memory cache is full or reaches a predefined threshold.",
+      "source_pages": [
+        106
+      ]
+    },
+    {
+      "id": "FC70",
+      "front": "What is an SSTable?",
+      "back": "A sorted list of <key,value> pairs.",
+      "source_pages": [
+        106
+      ]
+    },
+    {
+      "id": "FC71",
+      "front": "What is checked first on the read path?",
+      "back": "The memory cache.",
+      "source_pages": [
+        106
+      ]
+    },
+    {
+      "id": "FC72",
+      "front": "What is the Bloom filter used for?",
+      "back": "To identify which SSTables might contain the key.",
+      "source_pages": [
+        106,
+        107
+      ]
+    },
+    {
+      "id": "FC73",
+      "front": "What techniques provide highly available reads in Table 6-2?",
+      "back": "Data replication and multi-data-center setup.",
+      "source_pages": [
+        108
+      ]
+    },
+    {
+      "id": "FC74",
+      "front": "What techniques provide highly available writes in Table 6-2?",
+      "back": "Versioning and conflict resolution with vector clocks.",
+      "source_pages": [
+        108
+      ]
+    },
+    {
+      "id": "FC75",
+      "front": "What technique provides tunable consistency?",
+      "back": "Quorum consensus.",
+      "source_pages": [
+        108
+      ]
+    }
+  ],
+  "multiple_choice_questions": [
+    {
+      "id": "MCQ01",
+      "difficulty": "easy",
+      "question": "A key-value store is what kind of database?",
+      "choices": {
+        "A": "Relational",
+        "B": "Non-relational",
+        "C": "Graph-only",
+        "D": "Time-series only"
+      },
+      "answer": "B",
+      "source_pages": [
+        87
+      ]
+    },
+    {
+      "id": "MCQ02",
+      "difficulty": "easy",
+      "question": "Which operation retrieves the value associated with a key?",
+      "choices": {
+        "A": "put(key,value)",
+        "B": "get(key)",
+        "C": "hash(key)",
+        "D": "deleteNode()"
+      },
+      "answer": "B",
+      "source_pages": [
+        87
+      ]
+    },
+    {
+      "id": "MCQ03",
+      "difficulty": "medium",
+      "question": "What key-value pair size does the design target?",
+      "choices": {
+        "A": "<10 KB",
+        "B": "<10 MB",
+        "C": "<1 GB",
+        "D": "Unlimited"
+      },
+      "answer": "A",
+      "source_pages": [
+        88
+      ]
+    },
+    {
+      "id": "MCQ04",
+      "difficulty": "medium",
+      "question": "Which is NOT one of the stated requirements?",
+      "choices": {
+        "A": "Tunable consistency",
+        "B": "Automatic scaling",
+        "C": "Low latency",
+        "D": "Mandatory SQL joins"
+      },
+      "answer": "D",
+      "source_pages": [
+        88
+      ]
+    },
+    {
+      "id": "MCQ05",
+      "difficulty": "medium",
+      "question": "What is the intuitive single-server implementation?",
+      "choices": {
+        "A": "In-memory hash table",
+        "B": "Merkle tree only",
+        "C": "Bloom filter only",
+        "D": "Message queue"
+      },
+      "answer": "A",
+      "source_pages": [
+        89
+      ]
+    },
+    {
+      "id": "MCQ06",
+      "difficulty": "medium",
+      "question": "Which two optimizations are suggested for a single server?",
+      "choices": {
+        "A": "Compression and hot-data-in-memory/cold-data-on-disk",
+        "B": "Replication and quorum",
+        "C": "Gossip and Merkle trees",
+        "D": "DNS and CDN"
+      },
+      "answer": "A",
+      "source_pages": [
+        89
+      ]
+    },
+    {
+      "id": "MCQ07",
+      "difficulty": "easy",
+      "question": "What does CAP's C mean?",
+      "choices": {
+        "A": "Caching",
+        "B": "Consistency",
+        "C": "Concurrency",
+        "D": "Compression"
+      },
+      "answer": "B",
+      "source_pages": [
+        90
+      ]
+    },
+    {
+      "id": "MCQ08",
+      "difficulty": "easy",
+      "question": "What does CAP's A mean?",
+      "choices": {
+        "A": "Availability",
+        "B": "Atomicity",
+        "C": "Authentication",
+        "D": "Allocation"
+      },
+      "answer": "A",
+      "source_pages": [
+        90
+      ]
+    },
+    {
+      "id": "MCQ09",
+      "difficulty": "easy",
+      "question": "What does CAP's P mean?",
+      "choices": {
+        "A": "Persistence",
+        "B": "Partition tolerance",
+        "C": "Performance",
+        "D": "Proxy"
+      },
+      "answer": "B",
+      "source_pages": [
+        90
+      ]
+    },
+    {
+      "id": "MCQ10",
+      "difficulty": "medium",
+      "question": "A CP store sacrifices which property during a partition?",
+      "choices": {
+        "A": "Consistency",
+        "B": "Availability",
+        "C": "Partition tolerance",
+        "D": "Replication"
+      },
+      "answer": "B",
+      "source_pages": [
+        90
+      ]
+    },
+    {
+      "id": "MCQ11",
+      "difficulty": "medium",
+      "question": "An AP store sacrifices which property?",
+      "choices": {
+        "A": "Consistency",
+        "B": "Availability",
+        "C": "Partition tolerance",
+        "D": "Scalability"
+      },
+      "answer": "A",
+      "source_pages": [
+        90
+      ]
+    },
+    {
+      "id": "MCQ12",
+      "difficulty": "hard",
+      "question": "Why does the chapter say a CA distributed system cannot exist in real-world applications?",
+      "choices": {
+        "A": "Keys are too large",
+        "B": "Network partition cannot be ignored",
+        "C": "Quorum is impossible",
+        "D": "Hash rings require replicas"
+      },
+      "answer": "B",
+      "source_pages": [
+        91
+      ]
+    },
+    {
+      "id": "MCQ13",
+      "difficulty": "hard",
+      "question": "During a partition, what does the CP bank-style example do?",
+      "choices": {
+        "A": "Accept every write",
+        "B": "Block writes to avoid inconsistency",
+        "C": "Return random data",
+        "D": "Disable replication forever"
+      },
+      "answer": "B",
+      "source_pages": [
+        92
+      ]
+    },
+    {
+      "id": "MCQ14",
+      "difficulty": "hard",
+      "question": "What does the AP example permit?",
+      "choices": {
+        "A": "Reads/writes continue even if some data may be stale",
+        "B": "No responses",
+        "C": "Only local-memory reads",
+        "D": "No later synchronization"
+      },
+      "answer": "A",
+      "source_pages": [
+        92
+      ]
+    },
+    {
+      "id": "MCQ15",
+      "difficulty": "medium",
+      "question": "Which technique solves the chapter's two partitioning challenges?",
+      "choices": {
+        "A": "Consistent hashing",
+        "B": "All-to-all multicast",
+        "C": "Commit log",
+        "D": "Vector clock"
+      },
+      "answer": "A",
+      "source_pages": [
+        93
+      ]
+    },
+    {
+      "id": "MCQ16",
+      "difficulty": "hard",
+      "question": "How does the design account for heterogeneous server capacity?",
+      "choices": {
+        "A": "Give higher-capacity servers more virtual nodes",
+        "B": "Give every server zero virtual nodes",
+        "C": "Store more on the coordinator",
+        "D": "Increase W only"
+      },
+      "answer": "A",
+      "source_pages": [
+        94
+      ]
+    },
+    {
+      "id": "MCQ17",
+      "difficulty": "medium",
+      "question": "With N=3 in Figure 6-5, where is key0 replicated?",
+      "choices": {
+        "A": "s1,s2,s3",
+        "B": "s0,s4,s7",
+        "C": "s1 only",
+        "D": "All eight servers"
+      },
+      "answer": "A",
+      "source_pages": [
+        94
+      ]
+    },
+    {
+      "id": "MCQ18",
+      "difficulty": "hard",
+      "question": "Why choose unique physical servers when walking virtual nodes?",
+      "choices": {
+        "A": "Several virtual nodes may belong to the same physical server",
+        "B": "Physical servers cannot hash keys",
+        "C": "Virtual nodes are always offline",
+        "D": "To disable redundancy"
+      },
+      "answer": "A",
+      "source_pages": [
+        94
+      ]
+    },
+    {
+      "id": "MCQ19",
+      "difficulty": "medium",
+      "question": "What is W?",
+      "choices": {
+        "A": "Write quorum size",
+        "B": "Number of workers",
+        "C": "Window size",
+        "D": "Number of data centers"
+      },
+      "answer": "A",
+      "source_pages": [
+        95
+      ]
+    },
+    {
+      "id": "MCQ20",
+      "difficulty": "medium",
+      "question": "What is R?",
+      "choices": {
+        "A": "Replication factor",
+        "B": "Read quorum size",
+        "C": "Retry count",
+        "D": "Ring size"
+      },
+      "answer": "B",
+      "source_pages": [
+        95
+      ]
+    },
+    {
+      "id": "MCQ21",
+      "difficulty": "hard",
+      "question": "What does W=1 mean?",
+      "choices": {
+        "A": "Only one replica stores data",
+        "B": "One acknowledgement is enough for write success",
+        "C": "N must equal 1",
+        "D": "No replication occurs"
+      },
+      "answer": "B",
+      "source_pages": [
+        95
+      ]
+    },
+    {
+      "id": "MCQ22",
+      "difficulty": "hard",
+      "question": "Which condition guarantees strong consistency in the chapter?",
+      "choices": {
+        "A": "W+R>N",
+        "B": "W+R<N",
+        "C": "W=0",
+        "D": "R=0"
+      },
+      "answer": "A",
+      "source_pages": [
+        95,
+        96
+      ]
+    },
+    {
+      "id": "MCQ23",
+      "difficulty": "medium",
+      "question": "Which configuration is optimized for fast reads?",
+      "choices": {
+        "A": "R=1,W=N",
+        "B": "R=N,W=1",
+        "C": "R=N,W=N",
+        "D": "R=0,W=0"
+      },
+      "answer": "A",
+      "source_pages": [
+        96
+      ]
+    },
+    {
+      "id": "MCQ24",
+      "difficulty": "medium",
+      "question": "Which configuration is optimized for fast writes?",
+      "choices": {
+        "A": "W=1,R=N",
+        "B": "W=N,R=1",
+        "C": "W=N,R=N",
+        "D": "W=0,R=0"
+      },
+      "answer": "A",
+      "source_pages": [
+        96
+      ]
+    },
+    {
+      "id": "MCQ25",
+      "difficulty": "medium",
+      "question": "Which consistency model does the chapter recommend?",
+      "choices": {
+        "A": "Eventual consistency",
+        "B": "Strong consistency only",
+        "C": "No consistency",
+        "D": "CA consistency"
+      },
+      "answer": "A",
+      "source_pages": [
+        96
+      ]
+    },
+    {
+      "id": "MCQ26",
+      "difficulty": "hard",
+      "question": "What problem does versioning address?",
+      "choices": {
+        "A": "Concurrent conflicting writes",
+        "B": "DNS lookup",
+        "C": "Key compression",
+        "D": "Server naming"
+      },
+      "answer": "A",
+      "source_pages": [
+        97
+      ]
+    },
+    {
+      "id": "MCQ27",
+      "difficulty": "medium",
+      "question": "What is a vector clock composed of?",
+      "choices": {
+        "A": "[server,version] pairs",
+        "B": "[key,value] only",
+        "C": "[server,IP] only",
+        "D": "[timestamp,TTL] only"
+      },
+      "answer": "A",
+      "source_pages": [
+        98
+      ]
+    },
+    {
+      "id": "MCQ28",
+      "difficulty": "hard",
+      "question": "Which two versions conflict in Figure 6-9?",
+      "choices": {
+        "A": "D1 and D2",
+        "B": "D2 and D3",
+        "C": "D3 and D4",
+        "D": "D4 and D5 only"
+      },
+      "answer": "C",
+      "source_pages": [
+        98,
+        99
+      ]
+    },
+    {
+      "id": "MCQ29",
+      "difficulty": "hard",
+      "question": "Which condition indicates an ancestor/no-conflict relationship?",
+      "choices": {
+        "A": "Y's corresponding counters are all >= X's",
+        "B": "Every Y counter is smaller",
+        "C": "Servers are identical strings",
+        "D": "Vector clocks have equal lengths only"
+      },
+      "answer": "A",
+      "source_pages": [
+        99
+      ]
+    },
+    {
+      "id": "MCQ30",
+      "difficulty": "hard",
+      "question": "What is one downside of bounding vector-clock length by removing oldest entries?",
+      "choices": {
+        "A": "Ancestor relationships may become impossible to determine accurately",
+        "B": "All conflicts disappear",
+        "C": "Every node becomes a coordinator",
+        "D": "No writes can happen"
+      },
+      "answer": "A",
+      "source_pages": [
+        99
+      ]
+    },
+    {
+      "id": "MCQ31",
+      "difficulty": "medium",
+      "question": "What failure-detection approach scales better than all-to-all multicasting?",
+      "choices": {
+        "A": "Gossip protocol",
+        "B": "Strict quorum",
+        "C": "SSTable",
+        "D": "Bloom filter"
+      },
+      "answer": "A",
+      "source_pages": [
+        100
+      ]
+    },
+    {
+      "id": "MCQ32",
+      "difficulty": "medium",
+      "question": "What does a gossip membership list contain?",
+      "choices": {
+        "A": "Member IDs and heartbeat counters",
+        "B": "Only keys",
+        "C": "Only values",
+        "D": "Only quorum sizes"
+      },
+      "answer": "A",
+      "source_pages": [
+        100
+      ]
+    },
+    {
+      "id": "MCQ33",
+      "difficulty": "hard",
+      "question": "What is sloppy quorum designed to improve?",
+      "choices": {
+        "A": "Availability during failures",
+        "B": "Key length",
+        "C": "Compression",
+        "D": "Disk sorting"
+      },
+      "answer": "A",
+      "source_pages": [
+        101
+      ]
+    },
+    {
+      "id": "MCQ34",
+      "difficulty": "hard",
+      "question": "What is hinted handoff?",
+      "choices": {
+        "A": "A healthy node temporarily stores/serves data for an unavailable replica and returns it later",
+        "B": "A new hash function",
+        "C": "A strong-consistency quorum formula",
+        "D": "A cache eviction method"
+      },
+      "answer": "A",
+      "source_pages": [
+        101
+      ]
+    },
+    {
+      "id": "MCQ35",
+      "difficulty": "medium",
+      "question": "What technique is used for permanent-failure replica synchronization?",
+      "choices": {
+        "A": "Merkle tree / anti-entropy",
+        "B": "Sticky sessions",
+        "C": "Rate limiting",
+        "D": "DNS"
+      },
+      "answer": "A",
+      "source_pages": [
+        102
+      ]
+    },
+    {
+      "id": "MCQ36",
+      "difficulty": "hard",
+      "question": "Why are Merkle trees efficient for replica repair?",
+      "choices": {
+        "A": "They allow synchronization proportional to differing regions rather than total data size",
+        "B": "They eliminate hashing",
+        "C": "They store only one key",
+        "D": "They avoid replication"
+      },
+      "answer": "A",
+      "source_pages": [
+        103
+      ]
+    },
+    {
+      "id": "MCQ37",
+      "difficulty": "medium",
+      "question": "How does the design handle data-center outage?",
+      "choices": {
+        "A": "Cross-data-center replication",
+        "B": "One data center only",
+        "C": "Disable replicas",
+        "D": "Store everything in client cache"
+      },
+      "answer": "A",
+      "source_pages": [
+        103
+      ]
+    },
+    {
+      "id": "MCQ38",
+      "difficulty": "medium",
+      "question": "What does the coordinator do in the architecture?",
+      "choices": {
+        "A": "Acts as a proxy between client and store nodes",
+        "B": "Stores all data alone",
+        "C": "Replaces every node",
+        "D": "Only detects failures"
+      },
+      "answer": "A",
+      "source_pages": [
+        104
+      ]
+    },
+    {
+      "id": "MCQ39",
+      "difficulty": "medium",
+      "question": "What is the first step of the write path?",
+      "choices": {
+        "A": "Persist to commit log",
+        "B": "Query Bloom filter",
+        "C": "Delete SSTable",
+        "D": "Read quorum"
+      },
+      "answer": "A",
+      "source_pages": [
+        105
+      ]
+    },
+    {
+      "id": "MCQ40",
+      "difficulty": "medium",
+      "question": "When is data flushed from memory cache to SSTable?",
+      "choices": {
+        "A": "When cache is full or reaches threshold",
+        "B": "Before every write",
+        "C": "Never",
+        "D": "Only after a data-center outage"
+      },
+      "answer": "A",
+      "source_pages": [
+        106
+      ]
+    },
+    {
+      "id": "MCQ41",
+      "difficulty": "medium",
+      "question": "What does the read path check first?",
+      "choices": {
+        "A": "Memory cache",
+        "B": "Merkle root",
+        "C": "Gossip membership",
+        "D": "Commit-log tail"
+      },
+      "answer": "A",
+      "source_pages": [
+        106
+      ]
+    },
+    {
+      "id": "MCQ42",
+      "difficulty": "medium",
+      "question": "What does the Bloom filter help determine?",
+      "choices": {
+        "A": "Which SSTables might contain the key",
+        "B": "Which data center is CP",
+        "C": "Which node should gossip",
+        "D": "Which server owns the vector clock"
+      },
+      "answer": "A",
+      "source_pages": [
+        106,
+        107
+      ]
+    }
+  ],
+  "mix_and_match": [
+    {
+      "id": "MM01",
+      "title": "CAP Concepts",
+      "left": {
+        "A": "Consistency",
+        "B": "Availability",
+        "C": "Partition tolerance",
+        "D": "CP",
+        "E": "AP"
+      },
+      "right": {
+        "1": "Continue operating through network breaks",
+        "2": "Every request receives a response even when nodes fail",
+        "3": "All clients see the same data at the same time",
+        "4": "Sacrifice availability during a partition",
+        "5": "Sacrifice consistency during a partition"
+      },
+      "answer_key": {
+        "A": "3",
+        "B": "2",
+        "C": "1",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        90,
+        91,
+        92
+      ]
+    },
+    {
+      "id": "MM02",
+      "title": "Goal to Technique",
+      "left": {
+        "A": "Dataset partition",
+        "B": "Tunable consistency",
+        "C": "Temporary failures",
+        "D": "Permanent failures",
+        "E": "Data-center outage",
+        "F": "Highly available writes"
+      },
+      "right": {
+        "1": "Merkle tree",
+        "2": "Quorum consensus",
+        "3": "Cross-data-center replication",
+        "4": "Consistent hashing",
+        "5": "Versioning + vector clocks",
+        "6": "Sloppy quorum + hinted handoff"
+      },
+      "answer_key": {
+        "A": "4",
+        "B": "2",
+        "C": "6",
+        "D": "1",
+        "E": "3",
+        "F": "5"
+      },
+      "source_pages": [
+        108
+      ]
+    },
+    {
+      "id": "MM03",
+      "title": "Distributed Mechanism to Purpose",
+      "left": {
+        "A": "Consistent hashing",
+        "B": "Gossip protocol",
+        "C": "Vector clock",
+        "D": "Merkle tree",
+        "E": "Bloom filter",
+        "F": "Commit log"
+      },
+      "right": {
+        "1": "Failure detection",
+        "2": "Conflict ancestry detection",
+        "3": "Data partitioning",
+        "4": "Efficient replica comparison",
+        "5": "Durable first step in write path",
+        "6": "Identify SSTables that may contain a key"
+      },
+      "answer_key": {
+        "A": "3",
+        "B": "1",
+        "C": "2",
+        "D": "4",
+        "E": "6",
+        "F": "5"
+      },
+      "source_pages": [
+        93,
+        98,
+        100,
+        102,
+        105,
+        106
+      ]
+    },
+    {
+      "id": "MM04",
+      "title": "Quorum Variable",
+      "left": {
+        "A": "N",
+        "B": "W",
+        "C": "R",
+        "D": "W+R>N"
+      },
+      "right": {
+        "1": "Read quorum",
+        "2": "Strong consistency condition in the chapter",
+        "3": "Number of replicas",
+        "4": "Write quorum"
+      },
+      "answer_key": {
+        "A": "3",
+        "B": "4",
+        "C": "1",
+        "D": "2"
+      },
+      "source_pages": [
+        95,
+        96
+      ]
+    },
+    {
+      "id": "MM05",
+      "title": "Storage Path Components",
+      "left": {
+        "A": "Commit log",
+        "B": "Memory cache",
+        "C": "SSTable",
+        "D": "Bloom filter"
+      },
+      "right": {
+        "1": "Sorted on-disk <key,value> storage",
+        "2": "Durable write log",
+        "3": "Fast first read location / temporary write storage",
+        "4": "Determine likely SSTables for a key"
+      },
+      "answer_key": {
+        "A": "2",
+        "B": "3",
+        "C": "1",
+        "D": "4"
+      },
+      "source_pages": [
+        105,
+        106,
+        107
+      ]
+    }
+  ],
+  "true_false": [
+    {
+      "id": "TF01",
+      "statement": "A key in the key-value store must be unique.",
+      "answer": true,
+      "source_pages": [
+        87
+      ]
+    },
+    {
+      "id": "TF02",
+      "statement": "The chapter requires every value to be a string.",
+      "answer": false,
+      "explanation": "Values may be strings, lists, objects, and are generally treated as opaque.",
+      "source_pages": [
+        87
+      ]
+    },
+    {
+      "id": "TF03",
+      "statement": "The target key-value pair size is less than 10 KB.",
+      "answer": true,
+      "source_pages": [
+        88
+      ]
+    },
+    {
+      "id": "TF04",
+      "statement": "A single server can indefinitely support the chapter's big-data requirement.",
+      "answer": false,
+      "source_pages": [
+        89
+      ]
+    },
+    {
+      "id": "TF05",
+      "statement": "A distributed key-value store is also called a distributed hash table.",
+      "answer": true,
+      "source_pages": [
+        90
+      ]
+    },
+    {
+      "id": "TF06",
+      "statement": "CP sacrifices availability during a partition.",
+      "answer": true,
+      "source_pages": [
+        90
+      ]
+    },
+    {
+      "id": "TF07",
+      "statement": "AP sacrifices partition tolerance.",
+      "answer": false,
+      "explanation": "AP preserves availability and partition tolerance, sacrificing consistency.",
+      "source_pages": [
+        90
+      ]
+    },
+    {
+      "id": "TF08",
+      "statement": "The chapter says network partitions can be ignored in real distributed applications.",
+      "answer": false,
+      "source_pages": [
+        91
+      ]
+    },
+    {
+      "id": "TF09",
+      "statement": "Consistent hashing is used for data partitioning.",
+      "answer": true,
+      "source_pages": [
+        93
+      ]
+    },
+    {
+      "id": "TF10",
+      "statement": "Higher-capacity servers may be assigned more virtual nodes.",
+      "answer": true,
+      "source_pages": [
+        94
+      ]
+    },
+    {
+      "id": "TF11",
+      "statement": "N represents the replication factor.",
+      "answer": true,
+      "source_pages": [
+        94,
+        95
+      ]
+    },
+    {
+      "id": "TF12",
+      "statement": "W=1 means only one replica stores the write.",
+      "answer": false,
+      "source_pages": [
+        95
+      ]
+    },
+    {
+      "id": "TF13",
+      "statement": "W+R>N guarantees strong consistency in the chapter's quorum model.",
+      "answer": true,
+      "source_pages": [
+        95,
+        96
+      ]
+    },
+    {
+      "id": "TF14",
+      "statement": "R=1,W=N is optimized for fast reads.",
+      "answer": true,
+      "source_pages": [
+        96
+      ]
+    },
+    {
+      "id": "TF15",
+      "statement": "Eventual consistency guarantees every immediate read sees the latest write.",
+      "answer": false,
+      "source_pages": [
+        96
+      ]
+    },
+    {
+      "id": "TF16",
+      "statement": "Versioning treats modifications as new immutable versions.",
+      "answer": true,
+      "source_pages": [
+        97
+      ]
+    },
+    {
+      "id": "TF17",
+      "statement": "D3 and D4 in Figure 6-9 are conflicting siblings.",
+      "answer": true,
+      "source_pages": [
+        98,
+        99
+      ]
+    },
+    {
+      "id": "TF18",
+      "statement": "Vector clocks have no metadata-growth problem.",
+      "answer": false,
+      "source_pages": [
+        99
+      ]
+    },
+    {
+      "id": "TF19",
+      "statement": "All-to-all multicasting is efficient for very large clusters.",
+      "answer": false,
+      "source_pages": [
+        99,
+        100
+      ]
+    },
+    {
+      "id": "TF20",
+      "statement": "Gossip uses heartbeat counters.",
+      "answer": true,
+      "source_pages": [
+        100
+      ]
+    },
+    {
+      "id": "TF21",
+      "statement": "Sloppy quorum ignores failed servers and uses healthy ones.",
+      "answer": true,
+      "source_pages": [
+        101
+      ]
+    },
+    {
+      "id": "TF22",
+      "statement": "Hinted handoff is intended for temporary failures.",
+      "answer": true,
+      "source_pages": [
+        101,
+        102
+      ]
+    },
+    {
+      "id": "TF23",
+      "statement": "Merkle trees help minimize data transferred during anti-entropy repair.",
+      "answer": true,
+      "source_pages": [
+        102,
+        103
+      ]
+    },
+    {
+      "id": "TF24",
+      "statement": "Cross-data-center replication helps survive a complete data-center outage.",
+      "answer": true,
+      "source_pages": [
+        103
+      ]
+    },
+    {
+      "id": "TF25",
+      "statement": "The architecture has a single permanent master that is a single point of failure.",
+      "answer": false,
+      "source_pages": [
+        104
+      ]
+    },
+    {
+      "id": "TF26",
+      "statement": "The write path persists to a commit log before flushing to SSTables.",
+      "answer": true,
+      "source_pages": [
+        105,
+        106
+      ]
+    },
+    {
+      "id": "TF27",
+      "statement": "The read path checks the Bloom filter before checking memory cache.",
+      "answer": false,
+      "source_pages": [
+        106
+      ]
+    },
+    {
+      "id": "TF28",
+      "statement": "An SSTable is a sorted list of key-value pairs.",
+      "answer": true,
+      "source_pages": [
+        106
+      ]
+    }
+  ],
+  "fill_in_the_blank": [
+    {
+      "id": "FIB01",
+      "prompt": "The two main APIs are put(key,value) and ______(key).",
+      "answer": "get",
+      "source_pages": [
+        87
+      ]
+    },
+    {
+      "id": "FIB02",
+      "prompt": "The target key-value pair size is less than ______ KB.",
+      "answer": "10",
+      "source_pages": [
+        88
+      ]
+    },
+    {
+      "id": "FIB03",
+      "prompt": "A distributed key-value store is also called a distributed ______ table.",
+      "answer": "hash",
+      "source_pages": [
+        90
+      ]
+    },
+    {
+      "id": "FIB04",
+      "prompt": "CAP stands for consistency, availability, and partition ______.",
+      "answer": "tolerance",
+      "source_pages": [
+        90
+      ]
+    },
+    {
+      "id": "FIB05",
+      "prompt": "The data-partitioning technique used is consistent ______.",
+      "answer": "hashing",
+      "source_pages": [
+        93
+      ]
+    },
+    {
+      "id": "FIB06",
+      "prompt": "The number of replicas is represented by ______.",
+      "answer": "N",
+      "source_pages": [
+        94,
+        95
+      ]
+    },
+    {
+      "id": "FIB07",
+      "prompt": "The write quorum is represented by ______.",
+      "answer": "W",
+      "source_pages": [
+        95
+      ]
+    },
+    {
+      "id": "FIB08",
+      "prompt": "The read quorum is represented by ______.",
+      "answer": "R",
+      "source_pages": [
+        95
+      ]
+    },
+    {
+      "id": "FIB09",
+      "prompt": "If W + R is greater than N, ______ consistency is guaranteed in the chapter.",
+      "answer": "strong",
+      "source_pages": [
+        95,
+        96
+      ]
+    },
+    {
+      "id": "FIB10",
+      "prompt": "The recommended consistency model is ______ consistency.",
+      "answer": "eventual",
+      "source_pages": [
+        96
+      ]
+    },
+    {
+      "id": "FIB11",
+      "prompt": "A collection of [server,version] pairs is a vector ______.",
+      "answer": "clock",
+      "source_pages": [
+        98
+      ]
+    },
+    {
+      "id": "FIB12",
+      "prompt": "Decentralized failure detection uses the ______ protocol.",
+      "answer": "gossip",
+      "source_pages": [
+        100
+      ]
+    },
+    {
+      "id": "FIB13",
+      "prompt": "Temporary failure hand-back is called hinted ______.",
+      "answer": "handoff",
+      "source_pages": [
+        101
+      ]
+    },
+    {
+      "id": "FIB14",
+      "prompt": "Permanent replica repair uses a ______ tree.",
+      "answer": "Merkle",
+      "source_pages": [
+        102
+      ]
+    },
+    {
+      "id": "FIB15",
+      "prompt": "The write path first persists data to a commit ______.",
+      "answer": "log",
+      "source_pages": [
+        105
+      ]
+    },
+    {
+      "id": "FIB16",
+      "prompt": "On-disk sorted key-value files are called ______.",
+      "answer": "SSTables",
+      "source_pages": [
+        106
+      ]
+    },
+    {
+      "id": "FIB17",
+      "prompt": "The read path uses a ______ filter to find SSTables that might contain a key.",
+      "answer": "Bloom",
+      "source_pages": [
+        106,
+        107
+      ]
+    }
+  ],
+  "ordering_exercises": [
+    {
+      "id": "ORD01",
+      "title": "Write Path",
+      "items_scrambled": [
+        "Flush to SSTable",
+        "Persist commit log",
+        "Store in memory cache"
+      ],
+      "correct_order": [
+        "Persist commit log",
+        "Store in memory cache",
+        "Flush to SSTable when threshold is reached"
+      ],
+      "source_pages": [
+        105,
+        106
+      ]
+    },
+    {
+      "id": "ORD02",
+      "title": "Read Path on Memory Miss",
+      "items_scrambled": [
+        "Return result",
+        "Check Bloom filter",
+        "Check memory cache",
+        "Query candidate SSTables"
+      ],
+      "correct_order": [
+        "Check memory cache",
+        "Check Bloom filter",
+        "Query candidate SSTables",
+        "Return result"
+      ],
+      "source_pages": [
+        106,
+        107
+      ]
+    },
+    {
+      "id": "ORD03",
+      "title": "Merkle Tree Construction",
+      "items_scrambled": [
+        "Build hashes upward to root",
+        "Hash keys inside each bucket",
+        "Create one hash node per bucket",
+        "Divide key space into buckets"
+      ],
+      "correct_order": [
+        "Divide key space into buckets",
+        "Hash keys inside each bucket",
+        "Create one hash node per bucket",
+        "Build hashes upward to root"
+      ],
+      "source_pages": [
+        102
+      ]
+    },
+    {
+      "id": "ORD04",
+      "title": "Gossip Failure Detection",
+      "items_scrambled": [
+        "Membership list updated",
+        "Heartbeat fails to advance",
+        "Node increments heartbeat",
+        "Heartbeat sent to random nodes",
+        "Member marked offline"
+      ],
+      "correct_order": [
+        "Node increments heartbeat",
+        "Heartbeat sent to random nodes",
+        "Membership list updated",
+        "Heartbeat fails to advance for predefined period",
+        "Member marked offline"
+      ],
+      "source_pages": [
+        100,
+        101
+      ]
+    },
+    {
+      "id": "ORD05",
+      "title": "Vector Clock Conflict Example",
+      "items_scrambled": [
+        "D3 and D4 conflict",
+        "D2 created on Sx",
+        "D1 created on Sx",
+        "D5 reconciled",
+        "D3 on Sy and D4 on Sz branch from D2"
+      ],
+      "correct_order": [
+        "D1 created on Sx",
+        "D2 created on Sx",
+        "D3 on Sy and D4 on Sz branch from D2",
+        "D3 and D4 conflict",
+        "D5 reconciled"
+      ],
+      "source_pages": [
+        98,
+        99
+      ]
+    }
+  ],
+  "scenario_questions": [
+    {
+      "id": "SC01",
+      "difficulty": "medium",
+      "scenario": "The entire data set is too large for one machine, even after compression and keeping only hot data in memory.",
+      "question": "What architectural move does the chapter recommend?",
+      "expected_answer": "Use a distributed key-value store.",
+      "source_pages": [
+        89
+      ]
+    },
+    {
+      "id": "SC02",
+      "difficulty": "hard",
+      "scenario": "A banking service experiences a network partition and refuses writes until replicas agree.",
+      "question": "Which CAP preference does this resemble?",
+      "expected_answer": "CP: consistency and partition tolerance at the expense of availability.",
+      "source_pages": [
+        92
+      ]
+    },
+    {
+      "id": "SC03",
+      "difficulty": "hard",
+      "scenario": "A social service keeps serving reads during a partition even though some values may be stale, and synchronizes later.",
+      "question": "Which CAP preference is this?",
+      "expected_answer": "AP: availability and partition tolerance while sacrificing immediate consistency.",
+      "source_pages": [
+        92
+      ]
+    },
+    {
+      "id": "SC04",
+      "difficulty": "medium",
+      "scenario": "One server has twice the capacity of another.",
+      "question": "How does the chapter's partitioning design account for this?",
+      "expected_answer": "Assign the higher-capacity server more virtual nodes on the consistent-hashing ring.",
+      "source_pages": [
+        94
+      ]
+    },
+    {
+      "id": "SC05",
+      "difficulty": "hard",
+      "scenario": "N=3, W=2, R=2.",
+      "question": "What consistency conclusion does the chapter draw?",
+      "expected_answer": "Strong consistency is guaranteed because W+R=4>N=3.",
+      "source_pages": [
+        96
+      ]
+    },
+    {
+      "id": "SC06",
+      "difficulty": "hard",
+      "scenario": "You want writes to return quickly and are willing to make reads wait for all replicas.",
+      "question": "Which chapter configuration fits?",
+      "expected_answer": "W=1, R=N.",
+      "source_pages": [
+        96
+      ]
+    },
+    {
+      "id": "SC07",
+      "difficulty": "hard",
+      "scenario": "Two clients read the same version and independently write different updates on different replicas.",
+      "question": "What mechanism is used to detect and reconcile the conflict?",
+      "expected_answer": "Versioning with vector clocks; conflicting sibling versions are later reconciled by the client.",
+      "source_pages": [
+        97,
+        98,
+        99
+      ]
+    },
+    {
+      "id": "SC08",
+      "difficulty": "hard",
+      "scenario": "A cluster has thousands of nodes, making all-to-all failure messages too expensive.",
+      "question": "What failure-detection technique does the chapter recommend?",
+      "expected_answer": "Gossip protocol.",
+      "source_pages": [
+        99,
+        100
+      ]
+    },
+    {
+      "id": "SC09",
+      "difficulty": "hard",
+      "scenario": "One replica is temporarily unreachable, but the system wants to keep accepting reads/writes.",
+      "question": "Which two techniques are used?",
+      "expected_answer": "Sloppy quorum and hinted handoff.",
+      "source_pages": [
+        101
+      ]
+    },
+    {
+      "id": "SC10",
+      "difficulty": "hard",
+      "scenario": "A replica has been offline long enough that many parts of its data may differ from another replica.",
+      "question": "How does the chapter repair it efficiently?",
+      "expected_answer": "Use anti-entropy with Merkle trees to locate differing buckets and synchronize only those regions.",
+      "source_pages": [
+        102,
+        103
+      ]
+    },
+    {
+      "id": "SC11",
+      "difficulty": "medium",
+      "scenario": "A complete data center loses power.",
+      "question": "What architecture feature preserves access?",
+      "expected_answer": "Cross-data-center replication.",
+      "source_pages": [
+        103
+      ]
+    },
+    {
+      "id": "SC12",
+      "difficulty": "medium",
+      "scenario": "A client write reaches a storage node.",
+      "question": "What are the three local write-path stages?",
+      "expected_answer": "Persist to commit log, save to memory cache, then flush to SSTable when the memory threshold is reached.",
+      "source_pages": [
+        105,
+        106
+      ]
+    },
+    {
+      "id": "SC13",
+      "difficulty": "medium",
+      "scenario": "A requested key is absent from memory cache.",
+      "question": "What happens next?",
+      "expected_answer": "Check the Bloom filter to identify candidate SSTables, retrieve the data from SSTables, then return it to the client.",
+      "source_pages": [
+        106,
+        107
+      ]
+    }
+  ],
+  "short_answer_questions": [
+    {
+      "id": "SA01",
+      "question": "Why does the chapter move from a single server to a distributed key-value store?",
+      "model_answer": "An in-memory hash table is fast, and compression plus hot/cold separation can extend capacity, but a single machine still reaches its space limit quickly. Supporting big data therefore requires partitioning the data across many servers.",
+      "source_pages": [
+        89
+      ]
+    },
+    {
+      "id": "SA02",
+      "question": "Explain CAP in the context of a network partition.",
+      "model_answer": "Partition tolerance is required because network failures are unavoidable. When nodes cannot communicate, the system must choose whether to preserve consistency by rejecting/blocking some operations or preserve availability by continuing to serve operations even if replicas temporarily diverge.",
+      "source_pages": [
+        90,
+        91,
+        92
+      ]
+    },
+    {
+      "id": "SA03",
+      "question": "How does consistent hashing solve data-partitioning requirements?",
+      "model_answer": "It distributes keys around a ring so they are assigned to servers by clockwise lookup, helping spread data evenly and minimizing movement when nodes are added or removed. Virtual-node counts can also reflect heterogeneous server capacity.",
+      "source_pages": [
+        93,
+        94
+      ]
+    },
+    {
+      "id": "SA04",
+      "question": "Explain N, W, and R.",
+      "model_answer": "N is the number of replicas. W is the number of acknowledgements required for a successful write. R is the number of replica responses required for a successful read. Their values tune latency and consistency.",
+      "source_pages": [
+        95,
+        96
+      ]
+    },
+    {
+      "id": "SA05",
+      "question": "Why does W+R>N provide strong consistency in this model?",
+      "model_answer": "The read and write quorums must overlap on at least one replica, so a read quorum includes a node that has the latest write.",
+      "source_pages": [
+        95,
+        96
+      ]
+    },
+    {
+      "id": "SA06",
+      "question": "Why does the chapter prefer eventual consistency?",
+      "model_answer": "Strong consistency can block operations until replicas agree, which hurts high availability. Eventual consistency allows temporary divergence and later convergence, with conflicts handled through versioning and reconciliation.",
+      "source_pages": [
+        96,
+        97
+      ]
+    },
+    {
+      "id": "SA07",
+      "question": "How does a vector clock detect conflict?",
+      "model_answer": "Each version carries per-server counters. If one vector is entirely less than or equal to another, it is an ancestor and there is no conflict. If the vectors contain incomparable progress—one has a higher counter for one participant and a lower counter for another—they are siblings and conflict.",
+      "source_pages": [
+        98,
+        99
+      ]
+    },
+    {
+      "id": "SA08",
+      "question": "How does gossip protocol detect failure?",
+      "model_answer": "Nodes maintain membership lists and heartbeat counters, increment and propagate heartbeats to random peers, update membership from received data, and mark a member offline when its heartbeat fails to advance for a predefined period and the stale state is corroborated.",
+      "source_pages": [
+        100,
+        101
+      ]
+    },
+    {
+      "id": "SA09",
+      "question": "Compare hinted handoff and Merkle-tree repair.",
+      "model_answer": "Hinted handoff is for temporary failures: a healthy node serves/stores on behalf of the failed replica and hands data back after recovery. Merkle trees support anti-entropy for more durable inconsistencies by identifying only differing replica regions for synchronization.",
+      "source_pages": [
+        101,
+        102,
+        103
+      ]
+    },
+    {
+      "id": "SA10",
+      "question": "Explain the local write path.",
+      "model_answer": "The node first persists the write to a commit log, then writes it to memory cache. Once the memory cache reaches a threshold, the data is flushed to an on-disk SSTable.",
+      "source_pages": [
+        105,
+        106
+      ]
+    },
+    {
+      "id": "SA11",
+      "question": "Explain the local read path on a cache miss.",
+      "model_answer": "After memory cache misses, the node checks a Bloom filter to determine which SSTables may contain the key, retrieves the result from the relevant SSTables, and returns the value to the client.",
+      "source_pages": [
+        106,
+        107
+      ]
+    }
+  ],
+  "active_recall_prompts": [
+    {
+      "id": "AR01",
+      "prompt": "Recite the seven target characteristics of the key-value store.",
+      "target_points": [
+        "<10KB pair",
+        "Big data",
+        "High availability",
+        "High scalability",
+        "Automatic scaling",
+        "Tunable consistency",
+        "Low latency"
+      ],
+      "source_pages": [
+        88
+      ]
+    },
+    {
+      "id": "AR02",
+      "prompt": "Explain CP versus AP using the n1/n2/n3 partition example.",
+      "target_points": [
+        "n3 isolated",
+        "CP blocks writes",
+        "AP keeps serving",
+        "AP may be stale",
+        "Sync after recovery"
+      ],
+      "source_pages": [
+        91,
+        92
+      ]
+    },
+    {
+      "id": "AR03",
+      "prompt": "Explain partitioning and replication on the hash ring.",
+      "target_points": [
+        "Consistent hashing",
+        "Clockwise owner",
+        "N replicas",
+        "Unique physical servers",
+        "Distinct data centers"
+      ],
+      "source_pages": [
+        93,
+        94
+      ]
+    },
+    {
+      "id": "AR04",
+      "prompt": "Recite N, W, R and all four quorum rules from page 96.",
+      "target_points": [
+        "N replicas",
+        "W write acknowledgements",
+        "R read responses",
+        "R=1,W=N fast read",
+        "W=1,R=N fast write",
+        "W+R>N strong",
+        "W+R<=N not guaranteed"
+      ],
+      "source_pages": [
+        95,
+        96
+      ]
+    },
+    {
+      "id": "AR05",
+      "prompt": "Distinguish strong, weak, and eventual consistency.",
+      "target_points": [
+        "Strong latest value",
+        "Weak may be stale",
+        "Eventual converges with time"
+      ],
+      "source_pages": [
+        96
+      ]
+    },
+    {
+      "id": "AR06",
+      "prompt": "Reconstruct the D1→D5 vector-clock example.",
+      "target_points": [
+        "D1 Sx1",
+        "D2 Sx2",
+        "D3 adds Sy1",
+        "D4 adds Sz1",
+        "Conflict",
+        "D5 Sx3 Sy1 Sz1"
+      ],
+      "source_pages": [
+        98,
+        99
+      ]
+    },
+    {
+      "id": "AR07",
+      "prompt": "State the vector-clock ancestor and sibling rules.",
+      "target_points": [
+        "Ancestor counters dominated by descendant",
+        "Sibling vectors incomparable",
+        "Sibling means conflict"
+      ],
+      "source_pages": [
+        99
+      ]
+    },
+    {
+      "id": "AR08",
+      "prompt": "Explain gossip protocol step by step.",
+      "target_points": [
+        "Membership list",
+        "Heartbeat counters",
+        "Periodic increment",
+        "Random propagation",
+        "Update membership",
+        "Timeout means offline"
+      ],
+      "source_pages": [
+        100,
+        101
+      ]
+    },
+    {
+      "id": "AR09",
+      "prompt": "Explain sloppy quorum and hinted handoff.",
+      "target_points": [
+        "Use healthy W/R servers",
+        "Ignore offline",
+        "Temporary substitute",
+        "Hand data back after recovery"
+      ],
+      "source_pages": [
+        101
+      ]
+    },
+    {
+      "id": "AR10",
+      "prompt": "Explain how a Merkle tree is built and compared.",
+      "target_points": [
+        "Buckets",
+        "Hash keys",
+        "Bucket hash",
+        "Build upward",
+        "Compare roots",
+        "Descend only differing branches",
+        "Sync only differing buckets"
+      ],
+      "source_pages": [
+        102,
+        103
+      ]
+    },
+    {
+      "id": "AR11",
+      "prompt": "Reconstruct the architecture features.",
+      "target_points": [
+        "get/put API",
+        "Coordinator",
+        "Consistent hash ring",
+        "Decentralized",
+        "Replication",
+        "No SPOF"
+      ],
+      "source_pages": [
+        104
+      ]
+    },
+    {
+      "id": "AR12",
+      "prompt": "Recite the write and read paths.",
+      "target_points": [
+        "Write: commit log→memory→SSTable",
+        "Read: memory→Bloom→SSTables→client"
+      ],
+      "source_pages": [
+        105,
+        106,
+        107
+      ]
+    }
+  ],
+  "diagram_reconstruction_drills": [
+    {
+      "id": "DR01",
+      "name": "Figure 6-1 CAP",
+      "task": "Draw the three overlapping circles for consistency, availability, and partition tolerance and label CA, CP, and AP.",
+      "source_pages": [
+        90
+      ]
+    },
+    {
+      "id": "DR02",
+      "name": "Figure 6-3 Partition",
+      "task": "Draw replicas n1, n2, n3 with n3 partitioned from n1/n2, then explain CP and AP behavior.",
+      "source_pages": [
+        91,
+        92
+      ]
+    },
+    {
+      "id": "DR03",
+      "name": "Figure 6-4 Data Partition",
+      "task": "Draw eight servers on a hash ring and a key between s0 and s1, showing key0 assigned clockwise to s1.",
+      "source_pages": [
+        93
+      ]
+    },
+    {
+      "id": "DR04",
+      "name": "Figure 6-5 Replication",
+      "task": "With N=3, draw key0 replicated to s1, s2, and s3.",
+      "source_pages": [
+        94
+      ]
+    },
+    {
+      "id": "DR05",
+      "name": "Figure 6-6 Quorum",
+      "task": "Draw coordinator plus three replicas and label W acknowledgement behavior.",
+      "source_pages": [
+        95
+      ]
+    },
+    {
+      "id": "DR06",
+      "name": "Figure 6-9 Vector Clock",
+      "task": "Draw D1→D2 branching into D3 and D4, then reconciling into D5 with vector-clock labels.",
+      "required_labels": [
+        "D1[(Sx,1)]",
+        "D2([Sx,2])",
+        "D3([Sx,2],[Sy,1])",
+        "D4([Sx,2],[Sz,1])",
+        "D5([Sx,3],[Sy,1],[Sz,1])"
+      ],
+      "source_pages": [
+        98,
+        99
+      ]
+    },
+    {
+      "id": "DR07",
+      "name": "Figure 6-11 Gossip",
+      "task": "Draw a node membership list with heartbeat counters and random heartbeat propagation that detects s2 as down.",
+      "source_pages": [
+        100,
+        101
+      ]
+    },
+    {
+      "id": "DR08",
+      "name": "Figure 6-12 Hinted Handoff",
+      "task": "Draw s2 unavailable and s3 temporarily receiving traffic/data on its behalf.",
+      "source_pages": [
+        101
+      ]
+    },
+    {
+      "id": "DR09",
+      "name": "Figure 6-16 Merkle Tree Comparison",
+      "task": "Draw two Merkle roots and descend only through differing hashes until the inconsistent buckets are found.",
+      "source_pages": [
+        102,
+        103
+      ]
+    },
+    {
+      "id": "DR10",
+      "name": "Figure 6-17 Architecture",
+      "task": "Draw client→coordinator→consistent-hash ring nodes with replicated communication.",
+      "source_pages": [
+        104
+      ]
+    },
+    {
+      "id": "DR11",
+      "name": "Figure 6-19 Write Path",
+      "task": "Draw write→commit log and write→memory cache→flush→SSTables.",
+      "source_pages": [
+        105,
+        106
+      ]
+    },
+    {
+      "id": "DR12",
+      "name": "Figure 6-21 Read Path",
+      "task": "Draw read→memory cache; on miss→Bloom filter→SSTables→result→client.",
+      "source_pages": [
+        106,
+        107
+      ]
+    }
+  ],
+  "interview_style_questions": [
+    {
+      "id": "INT01",
+      "question": "Design a distributed key-value store. What requirements would you clarify?",
+      "strong_answer_outline": [
+        "Key/value size",
+        "Total data volume",
+        "Availability",
+        "Scalability",
+        "Automatic scaling",
+        "Consistency model",
+        "Latency",
+        "put/get operations"
+      ],
+      "source_pages": [
+        87,
+        88
+      ]
+    },
+    {
+      "id": "INT02",
+      "question": "How would CAP affect your design?",
+      "strong_answer_outline": [
+        "Partitions unavoidable",
+        "Choose CP or AP behavior during partition",
+        "CP blocks some operations for consistency",
+        "AP keeps serving with possible stale data",
+        "Use case determines choice"
+      ],
+      "source_pages": [
+        90,
+        91,
+        92
+      ]
+    },
+    {
+      "id": "INT03",
+      "question": "How do you partition and replicate data?",
+      "strong_answer_outline": [
+        "Consistent hashing",
+        "Virtual nodes",
+        "Automatic scaling",
+        "Heterogeneous capacity",
+        "N replicas",
+        "First N unique physical servers clockwise",
+        "Distinct data centers"
+      ],
+      "source_pages": [
+        93,
+        94
+      ]
+    },
+    {
+      "id": "INT04",
+      "question": "How do you make consistency tunable?",
+      "strong_answer_outline": [
+        "N replicas",
+        "W write quorum",
+        "R read quorum",
+        "W/R latency tradeoff",
+        "W+R>N strong consistency",
+        "Examples R=1,W=N and W=1,R=N"
+      ],
+      "source_pages": [
+        95,
+        96
+      ]
+    },
+    {
+      "id": "INT05",
+      "question": "How do you resolve concurrent writes under eventual consistency?",
+      "strong_answer_outline": [
+        "Immutable versions",
+        "Vector clocks",
+        "Ancestor/no-conflict",
+        "Sibling/conflict",
+        "Client reconciliation",
+        "Vector clock growth tradeoff"
+      ],
+      "source_pages": [
+        97,
+        98,
+        99
+      ]
+    },
+    {
+      "id": "INT06",
+      "question": "How do you handle failures?",
+      "strong_answer_outline": [
+        "Gossip detection",
+        "Sloppy quorum",
+        "Hinted handoff",
+        "Anti-entropy",
+        "Merkle tree",
+        "Cross-data-center replication"
+      ],
+      "source_pages": [
+        99,
+        100,
+        101,
+        102,
+        103
+      ]
+    },
+    {
+      "id": "INT07",
+      "question": "What are the write and read paths?",
+      "strong_answer_outline": [
+        "Write: commit log→memory cache→SSTable",
+        "Read: memory cache first",
+        "Bloom filter on miss",
+        "Candidate SSTables",
+        "Return result"
+      ],
+      "source_pages": [
+        105,
+        106,
+        107
+      ]
+    }
+  ],
+  "common_confusions": [
+    {
+      "confusion": "W=1 means only one copy of the data is written.",
+      "correction": "W=1 means only one acknowledgement is required before the write is considered successful; replication can still occur across N replicas.",
+      "source_pages": [
+        95
+      ]
+    },
+    {
+      "confusion": "CA is a practical distributed-system choice during real network failures.",
+      "correction": "The chapter says partition tolerance is required because network failures are unavoidable, so real distributed designs choose between CP and AP behavior.",
+      "source_pages": [
+        91
+      ]
+    },
+    {
+      "confusion": "Strong consistency is always best.",
+      "correction": "Strong consistency can block operations and reduce availability; the chapter recommends eventual consistency for this design.",
+      "source_pages": [
+        96
+      ]
+    },
+    {
+      "confusion": "Vector clocks automatically merge application values.",
+      "correction": "Vector clocks detect ancestry/conflicts, but the chapter says the client still needs conflict-resolution logic.",
+      "source_pages": [
+        99
+      ]
+    },
+    {
+      "confusion": "A single server can declare another server failed.",
+      "correction": "The chapter says at least two independent sources are usually needed before marking a node down.",
+      "source_pages": [
+        99
+      ]
+    },
+    {
+      "confusion": "Sloppy quorum and hinted handoff are for permanent data divergence.",
+      "correction": "They are used for temporary failures; anti-entropy and Merkle trees are used for persistent replica repair.",
+      "source_pages": [
+        101,
+        102
+      ]
+    },
+    {
+      "confusion": "Merkle-tree repair compares and transfers the complete database every time.",
+      "correction": "The tree narrows comparison to differing branches/buckets so synchronization volume is proportional to the differences.",
+      "source_pages": [
+        103
+      ]
+    },
+    {
+      "confusion": "The read path checks all SSTables first.",
+      "correction": "It checks memory first; on a miss, the Bloom filter identifies which SSTables might contain the key.",
+      "source_pages": [
+        106,
+        107
+      ]
+    }
+  ],
+  "practice_problems": [
+    {
+      "id": "PRACTICE01",
+      "type": "quorum",
+      "prompt": "N=5, W=3, R=3. Does the chapter's strong-consistency condition hold?",
+      "answer": "Yes. W+R=6>N=5.",
+      "note": "New practice question based on the chapter's quorum rule.",
+      "based_on_source_pages": [
+        95,
+        96
+      ]
+    },
+    {
+      "id": "PRACTICE02",
+      "type": "quorum",
+      "prompt": "N=5, W=2, R=2. Is strong consistency guaranteed by the chapter's rule?",
+      "answer": "No. W+R=4<=N=5.",
+      "note": "New practice question based on the chapter's quorum rule.",
+      "based_on_source_pages": [
+        96
+      ]
+    },
+    {
+      "id": "PRACTICE03",
+      "type": "vector_clock",
+      "prompt": "Compare X=[s0:2,s1:1] and Y=[s0:2,s1:3]. Conflict or ancestor relationship?",
+      "answer": "X is an ancestor of Y; no conflict because every Y counter is >= X's corresponding counter.",
+      "note": "New practice question based on the chapter's ancestor rule.",
+      "based_on_source_pages": [
+        99
+      ]
+    },
+    {
+      "id": "PRACTICE04",
+      "type": "vector_clock",
+      "prompt": "Compare X=[s0:3,s1:1] and Y=[s0:2,s1:2].",
+      "answer": "They are siblings/conflicting because neither vector dominates the other.",
+      "note": "New practice question based on the chapter's sibling/conflict example.",
+      "based_on_source_pages": [
+        99
+      ]
+    },
+    {
+      "id": "PRACTICE05",
+      "type": "failure_handling",
+      "prompt": "A replica is unavailable for five minutes but later returns. Which mechanism should restore its missed updates?",
+      "answer": "Hinted handoff, after a healthy node temporarily handles the unavailable replica's operations.",
+      "note": "New practice question based on the temporary-failure section.",
+      "based_on_source_pages": [
+        101
+      ]
+    },
+    {
+      "id": "PRACTICE06",
+      "type": "storage_path",
+      "prompt": "A key is absent from memory. Put these next steps in order: SSTable lookup, Bloom filter, return result.",
+      "answer": "Bloom filter → candidate SSTable lookup → return result.",
+      "note": "New practice question based on the read path.",
+      "based_on_source_pages": [
+        106,
+        107
+      ]
+    }
+  ],
+  "mastery_check": {
+    "beginner": [
+      "Can define a key-value store and its put/get APIs.",
+      "Can state the seven requirements.",
+      "Can define CAP's three properties.",
+      "Can define N, W, and R.",
+      "Can distinguish strong, weak, and eventual consistency."
+    ],
+    "intermediate": [
+      "Can explain CP versus AP during a network partition.",
+      "Can explain consistent-hashing partitioning and cross-data-center replication.",
+      "Can calculate whether W+R>N.",
+      "Can explain versioning and vector clocks.",
+      "Can explain gossip, sloppy quorum, and hinted handoff."
+    ],
+    "advanced": [
+      "Can reason about quorum latency versus consistency for a target workload.",
+      "Can determine ancestor/sibling relationships from vector clocks.",
+      "Can explain failure handling for temporary, permanent, and data-center-wide failures.",
+      "Can explain why Merkle trees reduce repair traffic.",
+      "Can reconstruct the decentralized architecture.",
+      "Can describe the full write and read paths from memory.",
+      "Can map every Table 6-2 goal/problem to the correct technique."
+    ]
+  },
+  "chapter_six_final_review": {
+    "must_memorize": [
+      "Key-value store: unique key -> opaque value.",
+      "APIs: put(key,value), get(key).",
+      "Requirements: <10KB pairs, big data, high availability/scalability, automatic scaling, tunable consistency, low latency.",
+      "Single-server optimizations: compression and hot-in-memory/cold-on-disk.",
+      "CAP: consistency, availability, partition tolerance.",
+      "Real distributed systems must tolerate partitions, so partition-time tradeoff is CP versus AP.",
+      "Partition with consistent hashing; higher-capacity servers can receive more virtual nodes.",
+      "Replication factor N; choose first N unique physical servers clockwise.",
+      "Replicate across data centers for reliability.",
+      "W = write quorum, R = read quorum.",
+      "W+R>N gives strong consistency in the chapter's model.",
+      "R=1,W=N optimizes reads; W=1,R=N optimizes writes.",
+      "Recommended model: eventual consistency.",
+      "Conflicts: immutable versions + vector clocks.",
+      "Vector clocks detect ancestor versus sibling/conflict relationships.",
+      "Gossip protocol detects failures using heartbeat counters.",
+      "Temporary failures: sloppy quorum + hinted handoff.",
+      "Permanent failures: anti-entropy + Merkle tree.",
+      "Data-center outage: cross-data-center replication.",
+      "Architecture is decentralized; coordinator proxies client operations.",
+      "Write path: commit log -> memory cache -> SSTable.",
+      "Read path: memory cache -> Bloom filter -> SSTables -> client."
+    ],
+    "memory_chain": "PUT/GET -> REQUIREMENTS -> SINGLE SERVER LIMIT -> CAP -> CONSISTENT-HASH PARTITION -> N-W-R QUORUM -> EVENTUAL CONSISTENCY -> VECTOR CLOCKS -> GOSSIP -> SLOPPY QUORUM/HINTED HANDOFF -> MERKLE TREE -> MULTI-DC -> COMMIT LOG/MEMORY/SSTABLE/BLOOM FILTER",
+    "one_sentence_takeaway": "A scalable key-value store combines consistent-hash partitioning, replicated and tunably consistent data, conflict versioning, decentralized failure detection and repair, cross-data-center resilience, and efficient log/memory/SSTable storage paths."
+  }
+}

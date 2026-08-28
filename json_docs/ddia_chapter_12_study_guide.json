@@ -1,0 +1,6381 @@
+{
+  "chapter": {
+    "number": 12,
+    "title": "The Future of Data Systems",
+    "book": "Designing Data-Intensive Applications",
+    "author": "Martin Kleppmann",
+    "pdf_pages": {
+      "chapter_start": 511,
+      "summary_end": 566
+    },
+    "book_pages": {
+      "chapter_start": 489,
+      "summary_end": 544
+    },
+    "primary_goal": "Synthesize the book's ideas into a forward-looking approach to data integration, unbundled databases, dataflow-oriented applications, end-to-end correctness, coordination avoidance, auditability, and ethical responsibility in data-intensive systems."
+  },
+  "summary": {
+    "overview": "The final chapter shifts from describing current systems to discussing how data systems might be designed better in the future. It begins from the premise that no single tool is ideal for every workload. Instead, applications should combine specialized systems while making the flow of data between them explicit. Systems of record provide authoritative input, and indexes, caches, search systems, analytical models, materialized views, and other representations are derived from that data. Batch and stream processors are presented as the machinery for maintaining these derived views. The chapter contrasts this asynchronous, log-based integration model with heterogeneous distributed transactions, arguing that deterministic derivation, idempotence, replay, and loose coupling often produce better operational properties. It also examines limits of total ordering and the difficulty of preserving causality across partitions, datacenters, microservices, and offline clients. Batch and stream processing are increasingly unified, enabling both historical reprocessing and low-latency updates in one processing model.\n\nThe chapter then develops the idea of 'unbundling databases': many features traditionally internal to a database—secondary indexes, materialized views, replication logs, search indexes—can be understood as derived datasets maintained by dataflow. Federated databases unify reads, while unbundled architectures aim to unify writes by reliably propagating changes across heterogeneous systems. This leads to the 'database inside-out' model, where application code is treated as a derivation function and state changes flow through durable event streams. Stream processors can replace some synchronous service calls with local state maintained from subscriptions, shifting work from the read path to the write path. The same idea can extend to offline-capable clients and user interfaces that subscribe to changes.\n\nFor correctness, the chapter emphasizes the end-to-end argument. Lower-level guarantees such as TCP duplicate suppression or serializable transactions do not by themselves guarantee application correctness across the full request path. End-to-end operation identifiers can suppress duplicate requests across retries and network boundaries. The chapter separates timeliness from integrity: stale data is a temporary timeliness problem, while lost, duplicated, contradictory, or corrupted data is an integrity problem requiring explicit repair. Asynchronous dataflow systems can sacrifice timeliness while preserving strong integrity through immutable messages, deterministic derivations, idempotence, request IDs, replay, and auditing. Strict constraints still require coordination, but many real business processes can tolerate temporary violations and compensate later, allowing coordination-avoiding designs with stronger availability and scalability.\n\nFinally, the chapter argues for 'trust, but verify': hardware, storage, databases, and application code can all fail in ways that violate their usual assumptions, so systems should be auditable and self-validating. Event-based dataflow improves provenance and supports replay-based verification. The chapter closes by moving from technical correctness to human consequences. Predictive analytics can reinforce bias, create opaque decisions and feedback loops, and harm individuals. Large-scale tracking raises questions of meaningful consent, privacy, surveillance, power, data retention, and accountability. Engineers therefore have a duty not merely to make systems reliable and scalable, but to consider whether those systems respect human dignity, agency, and the kind of society we want to create.",
+    "major_sections": [
+      "Data Integration",
+      "Combining Specialized Tools by Deriving Data",
+      "Reasoning About Dataflows",
+      "Derived Data versus Distributed Transactions",
+      "Limits of Total Ordering",
+      "Ordering Events to Capture Causality",
+      "Batch and Stream Processing",
+      "Maintaining Derived State",
+      "Reprocessing Data for Application Evolution",
+      "Lambda Architecture",
+      "Unifying Batch and Stream Processing",
+      "Unbundling Databases",
+      "Composing Data Storage Technologies",
+      "Federated Databases: Unifying Reads",
+      "Unbundled Databases: Unifying Writes",
+      "Designing Applications Around Dataflow",
+      "Application Code as a Derivation Function",
+      "Separation of Application Code and State",
+      "Dataflow: State Changes and Application Code",
+      "Stream Processors and Services",
+      "Observing Derived State",
+      "Write Path and Read Path",
+      "Stateful Offline-Capable Clients",
+      "End-to-End Event Streams",
+      "Reads Are Events Too",
+      "Multi-Partition Data Processing",
+      "Aiming for Correctness",
+      "The End-to-End Argument for Databases",
+      "Exactly-Once Execution and Duplicate Suppression",
+      "Operation Identifiers",
+      "Enforcing Constraints",
+      "Uniqueness in Log-Based Messaging",
+      "Multi-Partition Request Processing",
+      "Timeliness and Integrity",
+      "Loosely Interpreted Constraints",
+      "Coordination-Avoiding Data Systems",
+      "Trust, but Verify",
+      "Auditing and Verification",
+      "Doing the Right Thing",
+      "Predictive Analytics",
+      "Bias and Discrimination",
+      "Responsibility and Accountability",
+      "Feedback Loops",
+      "Privacy and Tracking",
+      "Surveillance",
+      "Consent and Freedom of Choice",
+      "Privacy and Use of Data",
+      "Data as Assets and Power",
+      "Legislation and Self-Regulation"
+    ],
+    "source_pages": [
+      511,
+      512,
+      513,
+      514,
+      515,
+      516,
+      517,
+      518,
+      519,
+      520,
+      521,
+      522,
+      523,
+      524,
+      525,
+      526,
+      527,
+      528,
+      529,
+      530,
+      531,
+      532,
+      533,
+      534,
+      535,
+      536,
+      537,
+      538,
+      539,
+      540,
+      541,
+      542,
+      543,
+      544,
+      545,
+      546,
+      547,
+      548,
+      549,
+      550,
+      551,
+      552,
+      553,
+      554,
+      555,
+      556,
+      557,
+      558,
+      559,
+      560,
+      561,
+      562,
+      563,
+      564,
+      565,
+      566
+    ]
+  },
+  "learning_objectives": [
+    {
+      "id": "LO01",
+      "objective": "Explain why complex applications inevitably combine specialized data systems.",
+      "source_pages": [
+        512,
+        513
+      ]
+    },
+    {
+      "id": "LO02",
+      "objective": "Identify systems of record and derived datasets in a dataflow architecture.",
+      "source_pages": [
+        513,
+        514
+      ]
+    },
+    {
+      "id": "LO03",
+      "objective": "Compare log-based derivation with heterogeneous distributed transactions.",
+      "source_pages": [
+        514
+      ]
+    },
+    {
+      "id": "LO04",
+      "objective": "Explain why total ordering becomes difficult across partitions, datacenters, services, and offline clients.",
+      "source_pages": [
+        515
+      ]
+    },
+    {
+      "id": "LO05",
+      "objective": "Explain how causal dependencies can be lost between separately stored event types.",
+      "source_pages": [
+        516
+      ]
+    },
+    {
+      "id": "LO06",
+      "objective": "Explain the complementary roles of batch reprocessing and stream updates.",
+      "source_pages": [
+        517,
+        518
+      ]
+    },
+    {
+      "id": "LO07",
+      "objective": "Evaluate the lambda architecture and its practical drawbacks.",
+      "source_pages": [
+        519,
+        520
+      ]
+    },
+    {
+      "id": "LO08",
+      "objective": "Explain how unified batch/stream systems reduce lambda-architecture duplication.",
+      "source_pages": [
+        520
+      ]
+    },
+    {
+      "id": "LO09",
+      "objective": "Explain the idea of unbundling database features into independent derived systems.",
+      "source_pages": [
+        521,
+        522,
+        523
+      ]
+    },
+    {
+      "id": "LO10",
+      "objective": "Distinguish federated databases from unbundled databases.",
+      "source_pages": [
+        523,
+        524
+      ]
+    },
+    {
+      "id": "LO11",
+      "objective": "Explain why asynchronous logs and idempotent writes provide loose coupling.",
+      "source_pages": [
+        524
+      ]
+    },
+    {
+      "id": "LO12",
+      "objective": "Recognize when an integrated database is preferable to composition.",
+      "source_pages": [
+        525
+      ]
+    },
+    {
+      "id": "LO13",
+      "objective": "Explain the 'database inside-out' / dataflow application model.",
+      "source_pages": [
+        526,
+        527,
+        528,
+        529,
+        530
+      ]
+    },
+    {
+      "id": "LO14",
+      "objective": "Treat application logic as a deterministic derivation function.",
+      "source_pages": [
+        527
+      ]
+    },
+    {
+      "id": "LO15",
+      "objective": "Explain separation of durable state from application execution environments.",
+      "source_pages": [
+        528
+      ]
+    },
+    {
+      "id": "LO16",
+      "objective": "Compare synchronous service calls with locally maintained state from event streams.",
+      "source_pages": [
+        530,
+        531
+      ]
+    },
+    {
+      "id": "LO17",
+      "objective": "Explain write-path versus read-path computation and how indexes/caches shift the boundary.",
+      "source_pages": [
+        531,
+        532,
+        533
+      ]
+    },
+    {
+      "id": "LO18",
+      "objective": "Explain how offline-capable clients extend the write path to end-user devices.",
+      "source_pages": [
+        533,
+        534,
+        535
+      ]
+    },
+    {
+      "id": "LO19",
+      "objective": "Explain reads as events and their connection to joins, causality, and provenance.",
+      "source_pages": [
+        535,
+        536
+      ]
+    },
+    {
+      "id": "LO20",
+      "objective": "Explain how stream infrastructure can support multi-partition queries.",
+      "source_pages": [
+        536,
+        537
+      ]
+    },
+    {
+      "id": "LO21",
+      "objective": "Explain the end-to-end argument for application correctness.",
+      "source_pages": [
+        538,
+        539,
+        540,
+        541,
+        542
+      ]
+    },
+    {
+      "id": "LO22",
+      "objective": "Explain duplicate suppression with end-to-end operation IDs.",
+      "source_pages": [
+        539,
+        540,
+        541
+      ]
+    },
+    {
+      "id": "LO23",
+      "objective": "Explain why uniqueness constraints require coordination/consensus.",
+      "source_pages": [
+        543
+      ]
+    },
+    {
+      "id": "LO24",
+      "objective": "Explain uniqueness enforcement through partitioned logs and sequential stream processing.",
+      "source_pages": [
+        544
+      ]
+    },
+    {
+      "id": "LO25",
+      "objective": "Explain multi-partition processing without a distributed atomic commit by deriving operations from one durable request event.",
+      "source_pages": [
+        544,
+        545,
+        546
+      ]
+    },
+    {
+      "id": "LO26",
+      "objective": "Distinguish timeliness from integrity.",
+      "source_pages": [
+        546,
+        547
+      ]
+    },
+    {
+      "id": "LO27",
+      "objective": "Explain how asynchronous dataflow can preserve integrity without linearizable timeliness.",
+      "source_pages": [
+        547,
+        548
+      ]
+    },
+    {
+      "id": "LO28",
+      "objective": "Recognize when compensating transactions can replace strict synchronous constraints.",
+      "source_pages": [
+        548,
+        549
+      ]
+    },
+    {
+      "id": "LO29",
+      "objective": "Explain coordination-avoiding systems and their scalability/availability advantages.",
+      "source_pages": [
+        549,
+        550
+      ]
+    },
+    {
+      "id": "LO30",
+      "objective": "Explain the importance of auditing instead of blindly trusting hardware/software guarantees.",
+      "source_pages": [
+        550,
+        551,
+        552
+      ]
+    },
+    {
+      "id": "LO31",
+      "objective": "Explain how event-based dataflow improves provenance and auditability.",
+      "source_pages": [
+        553,
+        554
+      ]
+    },
+    {
+      "id": "LO32",
+      "objective": "Explain the role of cryptographic integrity tools such as Merkle trees.",
+      "source_pages": [
+        554,
+        555
+      ]
+    },
+    {
+      "id": "LO33",
+      "objective": "Analyze risks of predictive analytics, bias, opaque scoring, and accountability.",
+      "source_pages": [
+        555,
+        556,
+        557,
+        558
+      ]
+    },
+    {
+      "id": "LO34",
+      "objective": "Explain self-reinforcing feedback loops in algorithmic systems.",
+      "source_pages": [
+        558
+      ]
+    },
+    {
+      "id": "LO35",
+      "objective": "Analyze privacy, tracking, surveillance, consent, and power as data-system concerns.",
+      "source_pages": [
+        558,
+        559,
+        560,
+        561,
+        562,
+        563
+      ]
+    },
+    {
+      "id": "LO36",
+      "objective": "Explain why data retention and misuse should be treated as engineering and societal risks.",
+      "source_pages": [
+        563,
+        564,
+        565
+      ]
+    },
+    {
+      "id": "LO37",
+      "objective": "Summarize the chapter's call for technical and ethical responsibility.",
+      "source_pages": [
+        565,
+        566
+      ]
+    }
+  ],
+  "core_concepts": {
+    "specialized_tools": {
+      "principle": "No single storage or processing tool is optimal for every access pattern and workload.",
+      "consequence": "Complex applications compose multiple specialized systems.",
+      "source_pages": [
+        512,
+        513
+      ]
+    },
+    "system_of_record_and_derived_data": {
+      "system_of_record": "The authoritative system where new input is first accepted.",
+      "derived_systems": [
+        "Search index",
+        "Cache",
+        "Materialized view",
+        "Data warehouse",
+        "ML model",
+        "Recommendation system",
+        "Metrics"
+      ],
+      "design_rule": "Make the direction of derivation explicit so derived systems are not independently authoritative.",
+      "source_pages": [
+        513,
+        514
+      ]
+    },
+    "dataflow_ordering": {
+      "principle": "If all changes enter through one authoritative ordered log, derived systems can apply them in the same order.",
+      "avoid": "Direct application writes to several systems because they can disagree on write order.",
+      "source_pages": [
+        513,
+        514
+      ]
+    },
+    "derived_data_vs_distributed_transactions": {
+      "distributed_transactions": "Use synchronous coordination, locks, and atomic commit; commonly provide strong timing/linearizability guarantees.",
+      "derived_data": "Use logs for ordering, deterministic processing, retry, replay, and idempotence; usually asynchronous.",
+      "tradeoff": "Derived systems have weaker default timeliness but better loose coupling and often better operational fault isolation.",
+      "source_pages": [
+        514
+      ]
+    },
+    "limits_of_total_order": {
+      "single_node_bottleneck": "A globally ordered log usually requires a sequencer/leader.",
+      "partitioning": "Independent partitions lose a single global order.",
+      "geo_distribution": "Multiple datacenter leaders avoid synchronous WAN coordination but create ambiguous cross-region order.",
+      "microservices": "Independent services have no built-in total order across state changes.",
+      "offline_clients": "Clients and servers may observe events in different orders.",
+      "source_pages": [
+        515
+      ]
+    },
+    "causality_across_services": {
+      "example": "Unfriend event causally precedes a later message, but separate systems may process the message first and incorrectly notify the former friend.",
+      "possible_tools": [
+        "Logical timestamps",
+        "Explicit causal references to earlier event IDs",
+        "Conflict-resolution algorithms"
+      ],
+      "limitation": "External side effects cannot simply be resolved after the fact.",
+      "source_pages": [
+        516
+      ]
+    },
+    "batch_stream_complement": {
+      "stream": "Low-delay updates to derived views.",
+      "batch": "Large-scale historical reprocessing for new views, recovery, and application evolution.",
+      "source_pages": [
+        517,
+        518
+      ]
+    },
+    "reprocessing_for_evolution": {
+      "idea": "Old and new derived schemas/views can coexist and users can be gradually migrated.",
+      "benefit": "Reversible migration with lower risk.",
+      "railway_analogy": "Dual-gauge railway track supports old and new standards during gradual conversion.",
+      "source_pages": [
+        518,
+        519
+      ]
+    },
+    "lambda_architecture": {
+      "write_model": "Immutable append-only event history.",
+      "speed_layer": "Stream processor produces low-latency approximate/current view.",
+      "batch_layer": "Batch processor recomputes corrected authoritative view.",
+      "problems": [
+        "Duplicate logic",
+        "Operational complexity",
+        "Merging batch/stream outputs",
+        "Historical full reprocessing is expensive",
+        "Incremental batches reintroduce stream-like complexity"
+      ],
+      "source_pages": [
+        519,
+        520
+      ]
+    },
+    "unified_batch_stream": {
+      "requirements": [
+        "Replay historical events in the streaming engine",
+        "Exactly-once/effectively-once processing",
+        "Event-time windowing"
+      ],
+      "examples": "Apache Beam APIs can run on Flink or Google Cloud Dataflow.",
+      "source_pages": [
+        520
+      ]
+    },
+    "unbundling_databases": {
+      "observation": "Secondary indexes, materialized views, replication, and search indexes are all forms of derived state.",
+      "idea": "Move such derivations outside one monolithic database into independently operated tools connected by dataflow.",
+      "source_pages": [
+        521,
+        522,
+        523
+      ]
+    },
+    "create_index_as_dataflow": {
+      "steps": [
+        "Scan a consistent snapshot",
+        "Build/sort index",
+        "Catch up on writes since snapshot",
+        "Maintain future updates"
+      ],
+      "analogy": "Closely resembles adding a replica and bootstrapping CDC.",
+      "source_pages": [
+        522
+      ]
+    },
+    "federation_vs_unbundling": {
+      "federation": "Unifies reads/querying across heterogeneous stores through one query interface.",
+      "unbundling": "Unifies writes/updates by propagating authoritative changes across heterogeneous stores.",
+      "source_pages": [
+        523,
+        524
+      ]
+    },
+    "loose_coupling": {
+      "system_level": "Slow/failing consumers can lag and later catch up while producers and other consumers continue.",
+      "human_level": "Independent teams can develop and operate specialized components behind well-defined event interfaces.",
+      "source_pages": [
+        524
+      ]
+    },
+    "when_to_integrate": {
+      "rule": "If one technology satisfies all requirements, use it instead of rebuilding it from lower-level pieces.",
+      "composition_value": "Unbundling matters when no single product satisfies all access patterns.",
+      "source_pages": [
+        525
+      ]
+    },
+    "missing_shell_for_data_systems": {
+      "idea": "The ecosystem lacks a simple declarative equivalent of Unix shell pipes for composing storage systems.",
+      "vision": "A declaration analogous to mysql | elasticsearch would create and continually maintain a search index from database changes.",
+      "source_pages": [
+        525,
+        526
+      ]
+    },
+    "database_inside_out": {
+      "definition": "Design pattern where durable state changes flow through event streams and application logic derives downstream state.",
+      "influences": [
+        "Dataflow languages",
+        "Functional reactive programming",
+        "Logic programming",
+        "Spreadsheets"
+      ],
+      "source_pages": [
+        526
+      ]
+    },
+    "derivation_functions": {
+      "examples": {
+        "secondary_index": "Extract indexed fields and sort/index them.",
+        "search_index": "Language processing plus inverted-index construction.",
+        "machine_learning": "Feature extraction/statistical learning from training data.",
+        "cache": "Application/UI-specific aggregation or projection."
+      },
+      "custom_code": "Many useful derivations require application-specific logic outside built-in database functions.",
+      "source_pages": [
+        527
+      ]
+    },
+    "separation_code_state": {
+      "state": "Durable databases specialize in persistence/concurrency/fault tolerance.",
+      "code": "Deployment systems such as Mesos, YARN, Docker, and Kubernetes specialize in running application logic.",
+      "principle": "Keep durable state management and application execution independent but connected.",
+      "source_pages": [
+        528
+      ]
+    },
+    "dataflow_reactivity": {
+      "model": "Application code observes state-change streams and emits new state-change streams.",
+      "derived_data_requirement": "Ordering and reliability matter because missing/reordered changes can permanently desynchronize derived views.",
+      "source_pages": [
+        529,
+        530
+      ]
+    },
+    "dataflow_vs_services": {
+      "service_model": "Synchronous request/response to remote service/state.",
+      "dataflow_model": "Subscribe to changes ahead of time and keep needed reference state locally.",
+      "benefits": [
+        "Avoid network request on critical path",
+        "Lower latency",
+        "Better resilience to another service being unavailable"
+      ],
+      "example": "Purchase processing joins purchase event against locally maintained exchange-rate state.",
+      "source_pages": [
+        530,
+        531
+      ]
+    },
+    "write_path_read_path": {
+      "write_path": "Eager work performed when data enters the system to update derived datasets.",
+      "read_path": "Lazy work performed only when a query/user request arrives.",
+      "boundary": "Indexes, caches, and materialized views shift work from the read path to the write path.",
+      "source_pages": [
+        531,
+        532,
+        533
+      ]
+    },
+    "offline_first_clients": {
+      "idea": "Treat device state as a local replica/cache of remote state.",
+      "push": "Server-sent events/WebSockets can extend the write path to clients.",
+      "reconnect": "Log-consumer offset ideas can help devices catch up after being offline.",
+      "source_pages": [
+        533,
+        534,
+        535
+      ]
+    },
+    "end_to_end_event_streams": {
+      "vision": "State changes can flow from one user's interaction through logs/processors/derived systems to another user's UI.",
+      "challenge": "Request/response assumptions are deeply embedded in frameworks and databases.",
+      "source_pages": [
+        535
+      ]
+    },
+    "reads_as_events": {
+      "idea": "Read requests can also be represented as events and routed through stream processors.",
+      "join_view": "A read is a stream-table join; a subscription is a persistent join against future updates.",
+      "benefit": "Durably logging reads can improve provenance and causal analysis.",
+      "cost": "Additional storage and I/O.",
+      "source_pages": [
+        535,
+        536
+      ]
+    },
+    "multi_partition_queries": {
+      "idea": "Stream-processing infrastructure for routing/partitioning/joining can also execute complex queries across partitions.",
+      "examples": [
+        "Twitter URL audience union",
+        "Fraud checks joining several partitioned reputation datasets"
+      ],
+      "caveat": "Use a database if it already provides the needed multi-partition query capability.",
+      "source_pages": [
+        536,
+        537
+      ]
+    },
+    "end_to_end_argument": {
+      "principle": "A correctness property may require knowledge at application endpoints and cannot be completely guaranteed by lower layers alone.",
+      "examples": [
+        "Duplicate suppression",
+        "Checksums",
+        "Encryption/authentication"
+      ],
+      "source_pages": [
+        541,
+        542
+      ]
+    },
+    "duplicate_suppression": {
+      "problem": "TCP can deduplicate packets within one connection but cannot suppress a repeated user request across reconnect/retry.",
+      "solution": "Generate a unique operation/request ID at the client and propagate it through every layer to a uniqueness check.",
+      "source_pages": [
+        539,
+        540,
+        541
+      ]
+    },
+    "operation_id_pattern": {
+      "request_id": "Client-generated unique identifier or hash of request content.",
+      "database_rule": "UNIQUE constraint on request ID.",
+      "effect": "Repeated requests abort/skip rather than applying a business operation twice.",
+      "source_pages": [
+        540,
+        541
+      ]
+    },
+    "uniqueness_consensus": {
+      "fact": "Strict distributed uniqueness requires consensus/coordination.",
+      "partitioning": "Scale by routing all operations for the same unique key to the same partition.",
+      "multi_master": "Asynchronous multi-master replication cannot immediately enforce strict uniqueness.",
+      "source_pages": [
+        543
+      ]
+    },
+    "uniqueness_via_log": {
+      "algorithm": [
+        "Partition requests by the value that must be unique.",
+        "Sequentially process each partition.",
+        "Maintain local taken/free state.",
+        "Emit success or rejection."
+      ],
+      "principle": "All conflicting operations must meet in one ordered partition.",
+      "source_pages": [
+        544
+      ]
+    },
+    "multi_partition_without_atomic_commit": {
+      "pattern": [
+        "Atomically append one request event with end-to-end ID.",
+        "Deterministically derive per-partition debit/credit/instruction events.",
+        "Consumers deduplicate those events using the original request ID."
+      ],
+      "benefit": "Preserves integrity across partitions without one heterogeneous distributed atomic commit.",
+      "source_pages": [
+        544,
+        545,
+        546
+      ]
+    },
+    "timeliness_vs_integrity": {
+      "timeliness": "Users observe sufficiently up-to-date state; stale reads are temporary.",
+      "integrity": "No lost, contradictory, duplicated, false, or corrupted data; violations persist until repaired.",
+      "slogan": "Timeliness violations resemble eventual consistency; integrity violations are perpetual inconsistency.",
+      "priority": "The chapter argues integrity is usually more important.",
+      "source_pages": [
+        546,
+        547
+      ]
+    },
+    "integrity_in_dataflow": {
+      "mechanisms": [
+        "One atomic input message",
+        "Deterministic derivation",
+        "End-to-end request IDs",
+        "Idempotence",
+        "Immutable messages",
+        "Replay/reprocessing"
+      ],
+      "source_pages": [
+        547,
+        548
+      ]
+    },
+    "compensating_transactions": {
+      "definition": "Repair a temporary constraint violation with a later corrective action.",
+      "examples": [
+        "Username/seat apology",
+        "Restock/delay/discount",
+        "Airline/hotel overbooking compensation",
+        "Overdraft fees"
+      ],
+      "lesson": "Some businesses can tolerate delayed constraint enforcement.",
+      "source_pages": [
+        548,
+        549
+      ]
+    },
+    "coordination_avoidance": {
+      "idea": "Preserve integrity without synchronously coordinating every operation.",
+      "benefits": [
+        "Higher performance",
+        "Higher availability",
+        "Independent multi-datacenter operation"
+      ],
+      "cost": "Weaker timeliness/linearizability.",
+      "use_coordination_selectively": "Introduce synchronization only for irreversible operations or strict constraints.",
+      "source_pages": [
+        549,
+        550
+      ]
+    },
+    "trust_but_verify": {
+      "system_models": "Fault models make assumptions about what can and cannot fail.",
+      "reality": "Rare disk, network, memory, hardware, database, and application bugs do occur at scale.",
+      "response": "Audit and verify rather than treating guarantees as absolute.",
+      "source_pages": [
+        550,
+        551,
+        552
+      ]
+    },
+    "auditing": {
+      "definition": "Checking whether stored/derived data still satisfies expected integrity.",
+      "examples": [
+        "Background replica scrubbing",
+        "Backup restore tests",
+        "Recomputing derived views",
+        "Independent redundant derivation"
+      ],
+      "source_pages": [
+        552,
+        553,
+        554
+      ]
+    },
+    "event_based_auditability": {
+      "benefit": "Immutable input events plus deterministic derivation improve provenance and reproducibility.",
+      "technique": "Hash event logs and rerun derivation to compare results.",
+      "debugging": "Supports time-travel-style diagnosis of how state arose.",
+      "source_pages": [
+        553
+      ]
+    },
+    "cryptographic_integrity": {
+      "tools": [
+        "Merkle trees",
+        "Signed logs",
+        "Certificate-transparency-style proofs",
+        "Distributed ledger ideas"
+      ],
+      "purpose": "Efficiently prove presence/integrity of records and detect tampering/corruption.",
+      "source_pages": [
+        554,
+        555
+      ]
+    },
+    "engineering_ethics": {
+      "principle": "Engineers must consider intended and unintended consequences, not only technical performance.",
+      "humanity": "Many datasets describe people; dignity and agency are first-class concerns.",
+      "source_pages": [
+        555
+      ]
+    },
+    "predictive_analytics_risk": {
+      "high_stakes_examples": [
+        "Credit",
+        "Insurance",
+        "Employment",
+        "Criminal justice",
+        "Travel/security"
+      ],
+      "risk": "Probabilistic labels can systematically exclude individuals from important opportunities.",
+      "source_pages": [
+        555,
+        556
+      ]
+    },
+    "bias_discrimination": {
+      "problem": "Models trained on biased historical data can learn and amplify discrimination.",
+      "proxy_features": "Location/IP/postal code may correlate with protected traits.",
+      "lesson": "Data-driven does not automatically mean fair.",
+      "source_pages": [
+        556,
+        557
+      ]
+    },
+    "accountability": {
+      "questions": [
+        "Who is responsible for an algorithmic mistake?",
+        "Can affected people appeal?",
+        "Can the system explain the decision?"
+      ],
+      "probabilistic_warning": "A model may be statistically accurate overall while wrong for an individual.",
+      "source_pages": [
+        557
+      ]
+    },
+    "feedback_loops": {
+      "definition": "Predictions affect the world, producing future data that reinforces the original prediction.",
+      "examples": [
+        "Echo chambers",
+        "Credit score -> job rejection -> worsening finances -> worse score"
+      ],
+      "tool": "Systems thinking considers both technical components and human responses.",
+      "source_pages": [
+        558
+      ]
+    },
+    "privacy_tracking": {
+      "beneficial_tracking": [
+        "Search ranking",
+        "Recommendations",
+        "A/B tests",
+        "UI improvement"
+      ],
+      "conflict": "Tracking may increasingly serve advertisers or organizational goals rather than the user's goals.",
+      "source_pages": [
+        558,
+        559
+      ]
+    },
+    "surveillance": {
+      "framing": "Large-scale behavioral tracking should sometimes be examined as surveillance rather than neutral 'data collection'.",
+      "risk": "Collected data can influence insurance, employment, and other important aspects of life.",
+      "source_pages": [
+        559,
+        560
+      ]
+    },
+    "consent": {
+      "problem": "Meaningful consent is difficult when users do not understand collection, retention, derivation, or secondary uses.",
+      "power_asymmetry": "The service defines terms and may become socially difficult to avoid.",
+      "source_pages": [
+        560,
+        561
+      ]
+    },
+    "privacy_definition": {
+      "definition": "Freedom to choose what to reveal, to whom, and in which context.",
+      "not_secrecy": "Privacy does not mean keeping everything secret.",
+      "source_pages": [
+        561
+      ]
+    },
+    "data_power": {
+      "idea": "Personal behavioral data is an economically valuable asset and therefore a source of organizational power.",
+      "risk": [
+        "Government access",
+        "Data brokers",
+        "Bankruptcy sale",
+        "Insider misuse",
+        "Security breaches",
+        "Future hostile regimes"
+      ],
+      "source_pages": [
+        562,
+        563
+      ]
+    },
+    "industrial_revolution_analogy": {
+      "comparison": "Information-age data practices may require safeguards analogous to pollution, workplace, and safety regulation that followed industrialization.",
+      "source_pages": [
+        563,
+        564
+      ]
+    },
+    "legislation_self_regulation": {
+      "tension": "Data protection can reduce harm but over-regulation can also prevent beneficial research and services.",
+      "chapter_position": "A cultural shift is needed: respect users, minimize retention, educate them, preserve agency, and improve technical access control.",
+      "source_pages": [
+        564,
+        565
+      ]
+    },
+    "chapter_conclusion": {
+      "technical": "Compose systems through asynchronous transformations, preserve integrity with idempotence and auditing, and coordinate only where necessary.",
+      "human": "Engineers are responsible for building systems that treat people with humanity and respect.",
+      "source_pages": [
+        565,
+        566
+      ]
+    }
+  },
+  "flashcards": [
+    {
+      "id": "FC001",
+      "front": "What is Chapter 12's title?",
+      "back": "The Future of Data Systems.",
+      "source_pages": [
+        511
+      ]
+    },
+    {
+      "id": "FC002",
+      "front": "What changes in Chapter 12's perspective?",
+      "back": "It moves from describing current systems toward ideas about how systems should be designed.",
+      "source_pages": [
+        511
+      ]
+    },
+    {
+      "id": "FC003",
+      "front": "What three recurring goals from Chapter 1 are revisited?",
+      "back": "Reliability, scalability, and maintainability.",
+      "source_pages": [
+        511
+      ]
+    },
+    {
+      "id": "FC004",
+      "front": "Why is there no universal best database/tool?",
+      "back": "Different workloads have different access patterns, constraints, and tradeoffs.",
+      "source_pages": [
+        512
+      ]
+    },
+    {
+      "id": "FC005",
+      "front": "Why do complex applications use several data systems?",
+      "back": "One tool is unlikely to be optimal for every way the data must be stored, queried, searched, analyzed, or derived.",
+      "source_pages": [
+        512,
+        513
+      ]
+    },
+    {
+      "id": "FC006",
+      "front": "What is a system of record?",
+      "back": "The authoritative source where primary input is accepted.",
+      "source_pages": [
+        513
+      ]
+    },
+    {
+      "id": "FC007",
+      "front": "What is derived data?",
+      "back": "A representation computed from authoritative source data, such as an index, cache, model, or materialized view.",
+      "source_pages": [
+        513
+      ]
+    },
+    {
+      "id": "FC008",
+      "front": "Why should dataflow direction be explicit?",
+      "back": "So it is clear which system is authoritative and which representations are derived.",
+      "source_pages": [
+        513
+      ]
+    },
+    {
+      "id": "FC009",
+      "front": "What problem do direct writes to both DB and search index cause?",
+      "back": "They can observe concurrent updates in different orders and diverge.",
+      "source_pages": [
+        513
+      ]
+    },
+    {
+      "id": "FC010",
+      "front": "What principle makes one ordered source helpful?",
+      "back": "State-machine-replication-style derivation: process writes in the same order everywhere.",
+      "source_pages": [
+        513
+      ]
+    },
+    {
+      "id": "FC011",
+      "front": "What two ordering mechanisms does the chapter say matter less than the principle of total order?",
+      "back": "CDC or event sourcing.",
+      "source_pages": [
+        513
+      ]
+    },
+    {
+      "id": "FC012",
+      "front": "How do distributed transactions order writes?",
+      "back": "Through synchronous coordination such as locks and atomic commit.",
+      "source_pages": [
+        514
+      ]
+    },
+    {
+      "id": "FC013",
+      "front": "How do log-based systems commonly achieve exactly-once-like behavior?",
+      "back": "Deterministic retry plus idempotence.",
+      "source_pages": [
+        514
+      ]
+    },
+    {
+      "id": "FC014",
+      "front": "What stronger guarantee do transaction systems commonly provide that async derived systems do not by default?",
+      "back": "Linearizability/timeliness such as read-your-own-writes.",
+      "source_pages": [
+        514
+      ]
+    },
+    {
+      "id": "FC015",
+      "front": "What integration approach does the author call most promising absent a good widely supported transaction protocol?",
+      "back": "Log-based derived data.",
+      "source_pages": [
+        514
+      ]
+    },
+    {
+      "id": "FC016",
+      "front": "Why does total ordering hit a scalability limit?",
+      "back": "A total order typically requires a single sequencing leader and eventually exceeds one node's throughput.",
+      "source_pages": [
+        515
+      ]
+    },
+    {
+      "id": "FC017",
+      "front": "What happens to total order after log partitioning?",
+      "back": "Events in different partitions no longer have a defined global order.",
+      "source_pages": [
+        515
+      ]
+    },
+    {
+      "id": "FC018",
+      "front": "Why does geo-distribution weaken total ordering?",
+      "back": "Separate datacenter leaders avoid WAN coordination but create ambiguous cross-region ordering.",
+      "source_pages": [
+        515
+      ]
+    },
+    {
+      "id": "FC019",
+      "front": "Why do microservices complicate total ordering?",
+      "back": "Independent services and durable states have no shared global event sequence.",
+      "source_pages": [
+        515
+      ]
+    },
+    {
+      "id": "FC020",
+      "front": "Why do offline clients complicate ordering?",
+      "back": "Client and server may observe and generate events in different orders.",
+      "source_pages": [
+        515
+      ]
+    },
+    {
+      "id": "FC021",
+      "front": "What formal problem is total ordering equivalent to?",
+      "back": "Consensus/total order broadcast.",
+      "source_pages": [
+        515
+      ]
+    },
+    {
+      "id": "FC022",
+      "front": "What social-network example demonstrates lost causality?",
+      "back": "Unfriend first, then send a message; if ordering is lost, an ex-partner may still receive a notification.",
+      "source_pages": [
+        516
+      ]
+    },
+    {
+      "id": "FC023",
+      "front": "What can logical timestamps help preserve?",
+      "back": "An ordering compatible with causality without a single total-order broadcaster.",
+      "source_pages": [
+        516
+      ]
+    },
+    {
+      "id": "FC024",
+      "front": "How can explicit event IDs capture causality?",
+      "back": "A later event can reference the identifier of an earlier event that influenced it.",
+      "source_pages": [
+        516
+      ]
+    },
+    {
+      "id": "FC025",
+      "front": "Why don't conflict-resolution algorithms solve all causal problems?",
+      "back": "They can repair state but cannot undo external side effects such as a sent notification.",
+      "source_pages": [
+        516
+      ]
+    },
+    {
+      "id": "FC026",
+      "front": "What is the goal of data integration?",
+      "back": "Get data into the right form in all the right places.",
+      "source_pages": [
+        516,
+        517
+      ]
+    },
+    {
+      "id": "FC027",
+      "front": "Main difference between batch and stream?",
+      "back": "Batch uses bounded inputs; streams process unbounded data.",
+      "source_pages": [
+        517
+      ]
+    },
+    {
+      "id": "FC028",
+      "front": "How can stream processing emulate batch?",
+      "back": "Process historical/replayed events in the same engine.",
+      "source_pages": [
+        517,
+        520
+      ]
+    },
+    {
+      "id": "FC029",
+      "front": "How can batch emulate streaming?",
+      "back": "Use microbatches such as Spark Streaming.",
+      "source_pages": [
+        517
+      ]
+    },
+    {
+      "id": "FC030",
+      "front": "What style does batch processing encourage?",
+      "back": "Deterministic, side-effect-controlled transformations over immutable inputs.",
+      "source_pages": [
+        517
+      ]
+    },
+    {
+      "id": "FC031",
+      "front": "What does stream processing add to that functional model?",
+      "back": "Managed fault-tolerant state.",
+      "source_pages": [
+        517
+      ]
+    },
+    {
+      "id": "FC032",
+      "front": "Why is asynchrony operationally robust?",
+      "back": "A fault in one derived consumer can remain local instead of blocking or aborting all participants.",
+      "source_pages": [
+        517
+      ]
+    },
+    {
+      "id": "FC033",
+      "front": "What does stream processing provide for derived views?",
+      "back": "Low-delay updates.",
+      "source_pages": [
+        518
+      ]
+    },
+    {
+      "id": "FC034",
+      "front": "What does batch reprocessing provide?",
+      "back": "Ability to rebuild or restructure historical data into new views.",
+      "source_pages": [
+        518
+      ]
+    },
+    {
+      "id": "FC035",
+      "front": "Why are side-by-side old/new views useful?",
+      "back": "They enable gradual and reversible migration.",
+      "source_pages": [
+        519
+      ]
+    },
+    {
+      "id": "FC036",
+      "front": "What railway concept is used as a schema-migration analogy?",
+      "back": "Dual/mixed gauge.",
+      "source_pages": [
+        518
+      ]
+    },
+    {
+      "id": "FC037",
+      "front": "What is lambda architecture's data foundation?",
+      "back": "An immutable append-only event history.",
+      "source_pages": [
+        519
+      ]
+    },
+    {
+      "id": "FC038",
+      "front": "What are lambda architecture's two processing layers?",
+      "back": "Batch layer and stream/speed layer.",
+      "source_pages": [
+        519
+      ]
+    },
+    {
+      "id": "FC039",
+      "front": "What does the speed layer do?",
+      "back": "Produce low-latency current/approximate updates.",
+      "source_pages": [
+        519
+      ]
+    },
+    {
+      "id": "FC040",
+      "front": "What does the batch layer do?",
+      "back": "Recompute a corrected view from historical events.",
+      "source_pages": [
+        519
+      ]
+    },
+    {
+      "id": "FC041",
+      "front": "Primary problem with lambda architecture?",
+      "back": "Duplicated logic and operational complexity across two processing stacks.",
+      "source_pages": [
+        519,
+        520
+      ]
+    },
+    {
+      "id": "FC042",
+      "front": "Another lambda problem?",
+      "back": "Batch and stream outputs must be merged.",
+      "source_pages": [
+        520
+      ]
+    },
+    {
+      "id": "FC043",
+      "front": "Why can frequent full batch recomputation be impractical?",
+      "back": "Historical datasets may be too large and expensive to reprocess frequently.",
+      "source_pages": [
+        520
+      ]
+    },
+    {
+      "id": "FC044",
+      "front": "What does unified batch/stream processing require?",
+      "back": "Replay, exactly-once/effectively-once semantics, and event-time windowing.",
+      "source_pages": [
+        520
+      ]
+    },
+    {
+      "id": "FC045",
+      "front": "What high-level API is cited for unified data processing?",
+      "back": "Apache Beam.",
+      "source_pages": [
+        520
+      ]
+    },
+    {
+      "id": "FC046",
+      "front": "What does 'unbundling databases' mean?",
+      "back": "Treating database features as separate composable storage/processing systems connected by dataflow.",
+      "source_pages": [
+        521,
+        522,
+        523
+      ]
+    },
+    {
+      "id": "FC047",
+      "front": "What database features resemble derived dataflows?",
+      "back": "Secondary indexes, materialized views, replication logs, full-text indexes.",
+      "source_pages": [
+        521,
+        522
+      ]
+    },
+    {
+      "id": "FC048",
+      "front": "How is CREATE INDEX like CDC bootstrapping?",
+      "back": "Build from a consistent snapshot, catch up on changes, then continuously maintain updates.",
+      "source_pages": [
+        522
+      ]
+    },
+    {
+      "id": "FC049",
+      "front": "What is the 'meta-database of everything' idea?",
+      "back": "Organization-wide batch/stream dataflows collectively behave like one huge database maintaining many indexes/views.",
+      "source_pages": [
+        522,
+        523
+      ]
+    },
+    {
+      "id": "FC050",
+      "front": "What is a federated database/polystore?",
+      "back": "A unified query interface across different underlying storage engines.",
+      "source_pages": [
+        523
+      ]
+    },
+    {
+      "id": "FC051",
+      "front": "What does federation mainly unify?",
+      "back": "Reads.",
+      "source_pages": [
+        523
+      ]
+    },
+    {
+      "id": "FC052",
+      "front": "What does unbundling mainly try to unify?",
+      "back": "Writes/propagation of changes.",
+      "source_pages": [
+        523
+      ]
+    },
+    {
+      "id": "FC053",
+      "front": "What tradition does federation resemble?",
+      "back": "Relational high-level integrated querying.",
+      "source_pages": [
+        523
+      ]
+    },
+    {
+      "id": "FC054",
+      "front": "What tradition does unbundling resemble?",
+      "back": "Unix composition of small tools through a uniform low-level interface.",
+      "source_pages": [
+        523
+      ]
+    },
+    {
+      "id": "FC055",
+      "front": "Why does the author favor async logs across heterogeneous tools?",
+      "back": "They are simpler, more robust, and easier to implement than standardized cross-technology transactions.",
+      "source_pages": [
+        524
+      ]
+    },
+    {
+      "id": "FC056",
+      "front": "System-level benefit of loose coupling?",
+      "back": "A slow/failing consumer can catch up later without stopping producers or other consumers.",
+      "source_pages": [
+        524
+      ]
+    },
+    {
+      "id": "FC057",
+      "front": "Human-level benefit of loose coupling?",
+      "back": "Independent teams can build and maintain specialized components.",
+      "source_pages": [
+        524
+      ]
+    },
+    {
+      "id": "FC058",
+      "front": "Should unbundling replace a single product that already meets all needs?",
+      "back": "No.",
+      "source_pages": [
+        525
+      ]
+    },
+    {
+      "id": "FC059",
+      "front": "What is the goal of unbundling?",
+      "back": "Breadth across diverse workloads, not beating specialized databases at their strongest workload.",
+      "source_pages": [
+        525
+      ]
+    },
+    {
+      "id": "FC060",
+      "front": "What missing abstraction does the author want?",
+      "back": "A declarative 'Unix shell' for composing storage/processing systems.",
+      "source_pages": [
+        525
+      ]
+    },
+    {
+      "id": "FC061",
+      "front": "What does mysql | elasticsearch symbolize?",
+      "back": "Declaratively create and continuously maintain a search index from database changes.",
+      "source_pages": [
+        525
+      ]
+    },
+    {
+      "id": "FC062",
+      "front": "What is 'database inside-out'?",
+      "back": "A dataflow design pattern where changes stream through application derivations into downstream state.",
+      "source_pages": [
+        526
+      ]
+    },
+    {
+      "id": "FC063",
+      "front": "What existing paradigm resembles this model?",
+      "back": "Spreadsheets, where dependent formulas automatically recompute when inputs change.",
+      "source_pages": [
+        526
+      ]
+    },
+    {
+      "id": "FC064",
+      "front": "What is a derivation function?",
+      "back": "A transformation from one dataset/state to another.",
+      "source_pages": [
+        527
+      ]
+    },
+    {
+      "id": "FC065",
+      "front": "How is a secondary index derived?",
+      "back": "Extract indexed fields and build a sorted/indexed structure.",
+      "source_pages": [
+        527
+      ]
+    },
+    {
+      "id": "FC066",
+      "front": "How is an ML model derived?",
+      "back": "Apply feature extraction and statistical learning to training data.",
+      "source_pages": [
+        527
+      ]
+    },
+    {
+      "id": "FC067",
+      "front": "Why is custom application code important in derivations?",
+      "back": "Many useful transformations are domain-specific and not built into databases.",
+      "source_pages": [
+        527
+      ]
+    },
+    {
+      "id": "FC068",
+      "front": "Why aren't databases ideal general-purpose application runtimes?",
+      "back": "They lack many modern deployment/versioning/dependency/monitoring/network-integration features.",
+      "source_pages": [
+        528
+      ]
+    },
+    {
+      "id": "FC069",
+      "front": "What tools specialize in running application code?",
+      "back": "Mesos, YARN, Docker, Kubernetes, and similar deployment/cluster managers.",
+      "source_pages": [
+        528
+      ]
+    },
+    {
+      "id": "FC070",
+      "front": "What is the 'separation of Church and state' joke referring to?",
+      "back": "Separating stateless application logic from persistent mutable state.",
+      "source_pages": [
+        528
+      ]
+    },
+    {
+      "id": "FC071",
+      "front": "How do traditional web apps treat a database?",
+      "back": "As a remotely accessible mutable shared variable.",
+      "source_pages": [
+        528
+      ]
+    },
+    {
+      "id": "FC072",
+      "front": "What dataflow alternative does the chapter propose?",
+      "back": "Subscribe to state changes and react with derived state changes.",
+      "source_pages": [
+        529
+      ]
+    },
+    {
+      "id": "FC073",
+      "front": "Why does ordering matter for derived views?",
+      "back": "Views processing changes in different orders can become inconsistent.",
+      "source_pages": [
+        529
+      ]
+    },
+    {
+      "id": "FC074",
+      "front": "Why does reliability matter for derived views?",
+      "back": "Missing one change can permanently desynchronize a derived dataset.",
+      "source_pages": [
+        529
+      ]
+    },
+    {
+      "id": "FC075",
+      "front": "How are stream operators like Unix tools?",
+      "back": "They consume streams of state changes and emit new streams that can be composed.",
+      "source_pages": [
+        530
+      ]
+    },
+    {
+      "id": "FC076",
+      "front": "Main communication difference between microservices and dataflow?",
+      "back": "Microservices often use synchronous request/response; dataflow uses one-way asynchronous streams.",
+      "source_pages": [
+        530
+      ]
+    },
+    {
+      "id": "FC077",
+      "front": "Exchange-rate microservice approach?",
+      "back": "Purchase service synchronously calls rate service/database.",
+      "source_pages": [
+        530
+      ]
+    },
+    {
+      "id": "FC078",
+      "front": "Exchange-rate dataflow approach?",
+      "back": "Subscribe to exchange-rate updates and keep the latest rate locally.",
+      "source_pages": [
+        530,
+        531
+      ]
+    },
+    {
+      "id": "FC079",
+      "front": "Why can local subscribed state be faster?",
+      "back": "It removes a network request from the request path.",
+      "source_pages": [
+        530,
+        531
+      ]
+    },
+    {
+      "id": "FC080",
+      "front": "Why can it be more robust?",
+      "back": "Purchase processing can continue even when the remote exchange-rate service is temporarily unavailable.",
+      "source_pages": [
+        531
+      ]
+    },
+    {
+      "id": "FC081",
+      "front": "What is the write path?",
+      "back": "Eager computation/propagation triggered when data is written.",
+      "source_pages": [
+        531,
+        532
+      ]
+    },
+    {
+      "id": "FC082",
+      "front": "What is the read path?",
+      "back": "Work done lazily when someone asks for data.",
+      "source_pages": [
+        532
+      ]
+    },
+    {
+      "id": "FC083",
+      "front": "What is the meeting point between write and read paths?",
+      "back": "A derived dataset such as an index/cache/materialized view.",
+      "source_pages": [
+        532
+      ]
+    },
+    {
+      "id": "FC084",
+      "front": "How does an index shift work?",
+      "back": "More work at write time to reduce query-time scanning.",
+      "source_pages": [
+        532,
+        533
+      ]
+    },
+    {
+      "id": "FC085",
+      "front": "What does caching do to the boundary?",
+      "back": "Moves even more work to the write/precomputation side for faster reads.",
+      "source_pages": [
+        533
+      ]
+    },
+    {
+      "id": "FC086",
+      "front": "What is an offline-first client?",
+      "back": "A client that primarily uses local state and syncs with servers in the background.",
+      "source_pages": [
+        533
+      ]
+    },
+    {
+      "id": "FC087",
+      "front": "How can client-side state be viewed?",
+      "back": "As a local replica/cache/materialized view of server-side state.",
+      "source_pages": [
+        534
+      ]
+    },
+    {
+      "id": "FC088",
+      "front": "What browser technologies can push changes?",
+      "back": "Server-sent events and WebSockets.",
+      "source_pages": [
+        534
+      ]
+    },
+    {
+      "id": "FC089",
+      "front": "How does pushing state to clients change the write path?",
+      "back": "It extends the write path all the way to end-user devices.",
+      "source_pages": [
+        534
+      ]
+    },
+    {
+      "id": "FC090",
+      "front": "How can an offline client catch up?",
+      "back": "Use retained event streams and offset-like replay on reconnect.",
+      "source_pages": [
+        534
+      ]
+    },
+    {
+      "id": "FC091",
+      "front": "What is an end-to-end event stream?",
+      "back": "A chain of state changes from one user's action through backend processing to another user's UI.",
+      "source_pages": [
+        535
+      ]
+    },
+    {
+      "id": "FC092",
+      "front": "What fundamental architecture shift is suggested?",
+      "back": "From request/response toward publish/subscribe dataflow.",
+      "source_pages": [
+        535
+      ]
+    },
+    {
+      "id": "FC093",
+      "front": "What does 'reads are events too' propose?",
+      "back": "Represent read requests as events routed through stream processors.",
+      "source_pages": [
+        535,
+        536
+      ]
+    },
+    {
+      "id": "FC094",
+      "front": "How can a read be interpreted as a join?",
+      "back": "Read-event stream joined against stored table/state.",
+      "source_pages": [
+        536
+      ]
+    },
+    {
+      "id": "FC095",
+      "front": "What is a subscription in join terms?",
+      "back": "A persistent join with past and future updates.",
+      "source_pages": [
+        536
+      ]
+    },
+    {
+      "id": "FC096",
+      "front": "Why log read events?",
+      "back": "To capture what a user saw, enabling causal/provenance analysis.",
+      "source_pages": [
+        536
+      ]
+    },
+    {
+      "id": "FC097",
+      "front": "What cost comes with durable read logs?",
+      "back": "Additional storage and I/O.",
+      "source_pages": [
+        536
+      ]
+    },
+    {
+      "id": "FC098",
+      "front": "What can stream processors provide for multi-partition queries?",
+      "back": "Routing, partitioning, and joining infrastructure.",
+      "source_pages": [
+        536,
+        537
+      ]
+    },
+    {
+      "id": "FC099",
+      "front": "What is Chapter 12's correctness concern with stateful systems?",
+      "back": "Errors can persist indefinitely because state remembers them.",
+      "source_pages": [
+        537
+      ]
+    },
+    {
+      "id": "FC100",
+      "front": "Why aren't serializable transactions enough for all correctness?",
+      "back": "Application bugs can still write wrong or destructive data.",
+      "source_pages": [
+        538
+      ]
+    },
+    {
+      "id": "FC101",
+      "front": "What is the end-to-end argument?",
+      "back": "Some correctness properties can only be fully guaranteed with application endpoint participation.",
+      "source_pages": [
+        541,
+        542
+      ]
+    },
+    {
+      "id": "FC102",
+      "front": "What exactly-once problem is used as an example?",
+      "back": "Retry after uncertainty can execute a non-idempotent business operation twice.",
+      "source_pages": [
+        538,
+        539
+      ]
+    },
+    {
+      "id": "FC103",
+      "front": "Why is a simple transfer transaction not end-to-end safe?",
+      "back": "A client may retry after an ambiguous commit result and transfer twice.",
+      "source_pages": [
+        539
+      ]
+    },
+    {
+      "id": "FC104",
+      "front": "Why can't TCP solve the whole duplicate problem?",
+      "back": "TCP suppresses duplicates only within one connection.",
+      "source_pages": [
+        539
+      ]
+    },
+    {
+      "id": "FC105",
+      "front": "Why can't a DB transaction alone solve retries from a browser?",
+      "back": "A repeated POST may look like an entirely new transaction.",
+      "source_pages": [
+        540
+      ]
+    },
+    {
+      "id": "FC106",
+      "front": "What is the end-to-end duplicate-suppression solution?",
+      "back": "Generate a unique operation ID at the client and propagate it to the final database uniqueness check.",
+      "source_pages": [
+        540,
+        541
+      ]
+    },
+    {
+      "id": "FC107",
+      "front": "How does a UNIQUE(request_id) constraint help?",
+      "back": "A retry with the same ID fails/skips instead of applying the operation twice.",
+      "source_pages": [
+        541
+      ]
+    },
+    {
+      "id": "FC108",
+      "front": "What other areas does the end-to-end argument apply to?",
+      "back": "Checksums/integrity and encryption/authentication.",
+      "source_pages": [
+        541,
+        542
+      ]
+    },
+    {
+      "id": "FC109",
+      "front": "Why are low-level protections still useful?",
+      "back": "They reduce common failure probability even though they cannot guarantee end-to-end correctness.",
+      "source_pages": [
+        542
+      ]
+    },
+    {
+      "id": "FC110",
+      "front": "Why are transactions still valuable?",
+      "back": "They collapse many failure modes into commit or abort.",
+      "source_pages": [
+        542
+      ]
+    },
+    {
+      "id": "FC111",
+      "front": "What is a strict uniqueness constraint?",
+      "back": "At most one concurrent operation for a unique value is accepted.",
+      "source_pages": [
+        543
+      ]
+    },
+    {
+      "id": "FC112",
+      "front": "Why does distributed uniqueness require consensus?",
+      "back": "Concurrent conflicting requests need one shared decision about the winner.",
+      "source_pages": [
+        543
+      ]
+    },
+    {
+      "id": "FC113",
+      "front": "How can uniqueness scale across partitions?",
+      "back": "Partition by the value whose uniqueness must be enforced.",
+      "source_pages": [
+        543
+      ]
+    },
+    {
+      "id": "FC114",
+      "front": "Why can't async multi-master immediately enforce uniqueness?",
+      "back": "Two leaders can concurrently accept conflicting values.",
+      "source_pages": [
+        543
+      ]
+    },
+    {
+      "id": "FC115",
+      "front": "How does log-based uniqueness work?",
+      "back": "Route same unique key to one log partition and sequentially accept the first request, reject later conflicts.",
+      "source_pages": [
+        544
+      ]
+    },
+    {
+      "id": "FC116",
+      "front": "Why does the log-based uniqueness algorithm scale?",
+      "back": "Different unique-key partitions can process independently.",
+      "source_pages": [
+        544
+      ]
+    },
+    {
+      "id": "FC117",
+      "front": "General rule for conflicts?",
+      "back": "Route operations that may conflict to the same partition and process sequentially.",
+      "source_pages": [
+        544
+      ]
+    },
+    {
+      "id": "FC118",
+      "front": "What is the key multi-partition request pattern?",
+      "back": "Write one atomic request event, then deterministically derive downstream partition-specific operations.",
+      "source_pages": [
+        545
+      ]
+    },
+    {
+      "id": "FC119",
+      "front": "Why include the request ID in debit and credit events?",
+      "back": "Downstream consumers can deduplicate retries end to end.",
+      "source_pages": [
+        545
+      ]
+    },
+    {
+      "id": "FC120",
+      "front": "Why can one durable request event avoid a distributed atomic commit?",
+      "back": "The initial single-object append is atomic; downstream effects are deterministic and idempotent.",
+      "source_pages": [
+        545,
+        546
+      ]
+    },
+    {
+      "id": "FC121",
+      "front": "What is timeliness?",
+      "back": "Users observe sufficiently up-to-date state.",
+      "source_pages": [
+        546
+      ]
+    },
+    {
+      "id": "FC122",
+      "front": "What is integrity?",
+      "back": "Absence of lost, contradictory, false, duplicated, or corrupted data.",
+      "source_pages": [
+        546
+      ]
+    },
+    {
+      "id": "FC123",
+      "front": "Which is temporary: timeliness or integrity violation?",
+      "back": "Timeliness violation.",
+      "source_pages": [
+        546,
+        547
+      ]
+    },
+    {
+      "id": "FC124",
+      "front": "Which usually requires explicit repair?",
+      "back": "Integrity violation.",
+      "source_pages": [
+        547
+      ]
+    },
+    {
+      "id": "FC125",
+      "front": "Which does the author usually consider more important?",
+      "back": "Integrity.",
+      "source_pages": [
+        547
+      ]
+    },
+    {
+      "id": "FC126",
+      "front": "Credit-card pending transaction illustrates what?",
+      "back": "Timeliness lag may be acceptable.",
+      "source_pages": [
+        547
+      ]
+    },
+    {
+      "id": "FC127",
+      "front": "Missing/duplicated money illustrates what?",
+      "back": "Integrity violation and potentially catastrophic corruption.",
+      "source_pages": [
+        547
+      ]
+    },
+    {
+      "id": "FC128",
+      "front": "How can async dataflow preserve integrity?",
+      "back": "Reliable delivery, duplicate suppression, deterministic derivation, immutable inputs, and replay.",
+      "source_pages": [
+        547,
+        548
+      ]
+    },
+    {
+      "id": "FC129",
+      "front": "What is a compensating transaction?",
+      "back": "A later action that repairs or makes amends for a temporary constraint violation.",
+      "source_pages": [
+        548
+      ]
+    },
+    {
+      "id": "FC130",
+      "front": "Why might a strict inventory constraint be unnecessary?",
+      "back": "Business processes may already support restocking, delays, discounts, or apologies.",
+      "source_pages": [
+        548,
+        549
+      ]
+    },
+    {
+      "id": "FC131",
+      "front": "What does overbooking illustrate?",
+      "back": "Businesses intentionally violate strict resource constraints and rely on compensation.",
+      "source_pages": [
+        548,
+        549
+      ]
+    },
+    {
+      "id": "FC132",
+      "front": "What determines whether loose constraints are acceptable?",
+      "back": "The business cost of compensation/apology.",
+      "source_pages": [
+        549
+      ]
+    },
+    {
+      "id": "FC133",
+      "front": "What do coordination-avoiding systems preserve?",
+      "back": "Strong integrity without synchronously coordinating every operation.",
+      "source_pages": [
+        549,
+        550
+      ]
+    },
+    {
+      "id": "FC134",
+      "front": "What do they weaken?",
+      "back": "Timeliness/linearizability.",
+      "source_pages": [
+        550
+      ]
+    },
+    {
+      "id": "FC135",
+      "front": "Why are they attractive across datacenters?",
+      "back": "Regions can operate independently without synchronous WAN coordination.",
+      "source_pages": [
+        550
+      ]
+    },
+    {
+      "id": "FC136",
+      "front": "Should all coordination be eliminated?",
+      "back": "No; use it selectively for strict/irreversible constraints.",
+      "source_pages": [
+        550
+      ]
+    },
+    {
+      "id": "FC137",
+      "front": "What is the 'apology' tradeoff?",
+      "back": "Coordination reduces inconsistency apologies but may increase outage/latency apologies.",
+      "source_pages": [
+        550
+      ]
+    },
+    {
+      "id": "FC138",
+      "front": "What is a system model?",
+      "back": "Assumptions about which faults can occur and which guarantees components provide.",
+      "source_pages": [
+        550
+      ]
+    },
+    {
+      "id": "FC139",
+      "front": "Why 'trust, but verify'?",
+      "back": "Rare hardware/software violations occur at scale despite strong normal guarantees.",
+      "source_pages": [
+        550,
+        551,
+        552
+      ]
+    },
+    {
+      "id": "FC140",
+      "front": "What hardware fault example is discussed?",
+      "back": "Random memory bit flips, including rowhammer-like effects.",
+      "source_pages": [
+        551
+      ]
+    },
+    {
+      "id": "FC141",
+      "front": "Can mature database systems still contain correctness bugs?",
+      "back": "Yes.",
+      "source_pages": [
+        551
+      ]
+    },
+    {
+      "id": "FC142",
+      "front": "What is auditing?",
+      "back": "Checking the integrity of data to detect corruption.",
+      "source_pages": [
+        552
+      ]
+    },
+    {
+      "id": "FC143",
+      "front": "Why restore backups periodically?",
+      "back": "To verify they actually work before a real disaster.",
+      "source_pages": [
+        552
+      ]
+    },
+    {
+      "id": "FC144",
+      "front": "What do systems such as HDFS/S3 do to guard against silent corruption?",
+      "back": "Background scrubbing/read-back/comparison of replicas.",
+      "source_pages": [
+        552
+      ]
+    },
+    {
+      "id": "FC145",
+      "front": "Why is event sourcing good for auditability?",
+      "back": "One immutable input event plus deterministic derivation makes provenance reproducible.",
+      "source_pages": [
+        553
+      ]
+    },
+    {
+      "id": "FC146",
+      "front": "How can derived state be audited?",
+      "back": "Rerun the derivation and compare results or run redundant derivations.",
+      "source_pages": [
+        553
+      ]
+    },
+    {
+      "id": "FC147",
+      "front": "What is time-travel debugging?",
+      "back": "Reproducing the exact event history and code path that led to an unexpected state.",
+      "source_pages": [
+        553
+      ]
+    },
+    {
+      "id": "FC148",
+      "front": "What is end-to-end integrity checking?",
+      "back": "Verify the correctness of the whole pipeline, implicitly covering all intermediate components.",
+      "source_pages": [
+        553,
+        554
+      ]
+    },
+    {
+      "id": "FC149",
+      "front": "Why can auditing increase development velocity?",
+      "back": "Fast detection reduces risk of making changes.",
+      "source_pages": [
+        554
+      ]
+    },
+    {
+      "id": "FC150",
+      "front": "What cryptographic structure is highlighted for integrity proofs?",
+      "back": "Merkle trees.",
+      "source_pages": [
+        554
+      ]
+    },
+    {
+      "id": "FC151",
+      "front": "What does a Merkle tree help prove?",
+      "back": "That a record belongs to a dataset and that data has not been altered unexpectedly.",
+      "source_pages": [
+        554
+      ]
+    },
+    {
+      "id": "FC152",
+      "front": "What non-currency technology is cited as a practical Merkle-tree use?",
+      "back": "Certificate transparency.",
+      "source_pages": [
+        554
+      ]
+    },
+    {
+      "id": "FC153",
+      "front": "What is the final broad section of the book?",
+      "back": "Doing the Right Thing.",
+      "source_pages": [
+        555
+      ]
+    },
+    {
+      "id": "FC154",
+      "front": "What responsibility does the author assign engineers?",
+      "back": "Consider intended and unintended human consequences of systems.",
+      "source_pages": [
+        555
+      ]
+    },
+    {
+      "id": "FC155",
+      "front": "Why is predictive analytics ethically different when applied to people?",
+      "back": "Predictions can directly affect access to jobs, loans, insurance, travel, and freedom.",
+      "source_pages": [
+        555,
+        556
+      ]
+    },
+    {
+      "id": "FC156",
+      "front": "What is an 'algorithmic prison'?",
+      "back": "Systematic exclusion from important opportunities due to algorithmic risk labels.",
+      "source_pages": [
+        556
+      ]
+    },
+    {
+      "id": "FC157",
+      "front": "Does data-driven decision-making automatically remove bias?",
+      "back": "No.",
+      "source_pages": [
+        556
+      ]
+    },
+    {
+      "id": "FC158",
+      "front": "What happens when training data contains systematic bias?",
+      "back": "Models can learn and amplify it.",
+      "source_pages": [
+        556
+      ]
+    },
+    {
+      "id": "FC159",
+      "front": "Why are proxy features risky?",
+      "back": "Features such as postal code can correlate with protected characteristics.",
+      "source_pages": [
+        556
+      ]
+    },
+    {
+      "id": "FC160",
+      "front": "What is the chapter's critique of purely historical prediction?",
+      "back": "It extrapolates the past and can codify past discrimination.",
+      "source_pages": [
+        556,
+        557
+      ]
+    },
+    {
+      "id": "FC161",
+      "front": "What accountability question arises with automated decisions?",
+      "back": "Who is responsible, how can decisions be explained, and how can people appeal?",
+      "source_pages": [
+        557
+      ]
+    },
+    {
+      "id": "FC162",
+      "front": "Why can an accurate model still be wrong for one person?",
+      "back": "Statistical predictions describe distributions, not certainties about individuals.",
+      "source_pages": [
+        557
+      ]
+    },
+    {
+      "id": "FC163",
+      "front": "What is a feedback loop in predictive systems?",
+      "back": "A decision changes the subject's future behavior/data in a way that reinforces the original prediction.",
+      "source_pages": [
+        558
+      ]
+    },
+    {
+      "id": "FC164",
+      "front": "Example feedback loop?",
+      "back": "Poor credit -> harder to get job -> worse finances -> poorer credit.",
+      "source_pages": [
+        558
+      ]
+    },
+    {
+      "id": "FC165",
+      "front": "What is systems thinking?",
+      "back": "Analyze the whole sociotechnical system, including human reactions and second-order effects.",
+      "source_pages": [
+        558
+      ]
+    },
+    {
+      "id": "FC166",
+      "front": "What useful purposes can behavioral tracking serve?",
+      "back": "Ranking, recommendations, A/B tests, UI improvements.",
+      "source_pages": [
+        559
+      ]
+    },
+    {
+      "id": "FC167",
+      "front": "When does tracking become more ethically problematic?",
+      "back": "When collection increasingly serves advertisers/organizational interests rather than users.",
+      "source_pages": [
+        559
+      ]
+    },
+    {
+      "id": "FC168",
+      "front": "What term does the author use for intrusive large-scale tracking?",
+      "back": "Surveillance.",
+      "source_pages": [
+        559
+      ]
+    },
+    {
+      "id": "FC169",
+      "front": "Why can surveillance become coercive?",
+      "back": "Collected data can affect insurance, employment, finance, and other important life outcomes.",
+      "source_pages": [
+        560
+      ]
+    },
+    {
+      "id": "FC170",
+      "front": "Why is a privacy policy not necessarily meaningful consent?",
+      "back": "Users often cannot understand the scope, retention, combination, and downstream uses of data.",
+      "source_pages": [
+        560
+      ]
+    },
+    {
+      "id": "FC171",
+      "front": "Why can opting out be unrealistic?",
+      "back": "Network effects and social/professional dependence make some services effectively mandatory.",
+      "source_pages": [
+        561
+      ]
+    },
+    {
+      "id": "FC172",
+      "front": "What is privacy according to the chapter?",
+      "back": "The freedom to choose what to reveal, to whom, and in what context.",
+      "source_pages": [
+        561
+      ]
+    },
+    {
+      "id": "FC173",
+      "front": "Is privacy equivalent to secrecy?",
+      "back": "No.",
+      "source_pages": [
+        561
+      ]
+    },
+    {
+      "id": "FC174",
+      "front": "How can surveillance transfer privacy power?",
+      "back": "The data collector gains control over what is inferred/revealed about a person.",
+      "source_pages": [
+        561,
+        562
+      ]
+    },
+    {
+      "id": "FC175",
+      "front": "Why is personal data described as power?",
+      "back": "Organizations controlling detailed information can influence people while avoiding equivalent scrutiny.",
+      "source_pages": [
+        562,
+        563
+      ]
+    },
+    {
+      "id": "FC176",
+      "front": "Why is data called a potentially toxic asset?",
+      "back": "It is valuable but creates breach, misuse, coercion, and future-governance risks.",
+      "source_pages": [
+        563
+      ]
+    },
+    {
+      "id": "FC177",
+      "front": "What political horizon should data collectors consider?",
+      "back": "Not just current government but potentially hostile future regimes.",
+      "source_pages": [
+        563
+      ]
+    },
+    {
+      "id": "FC178",
+      "front": "What historical analogy does the chapter make?",
+      "back": "Information-age data misuse is compared with industrial pollution and labor harms.",
+      "source_pages": [
+        563,
+        564
+      ]
+    },
+    {
+      "id": "FC179",
+      "front": "What safeguards followed the Industrial Revolution?",
+      "back": "Environmental regulation, workplace safety, child-labor restrictions, food/health inspections.",
+      "source_pages": [
+        564
+      ]
+    },
+    {
+      "id": "FC180",
+      "front": "What data-protection principle is cited?",
+      "back": "Collect data for specified legitimate purposes and avoid excessive collection.",
+      "source_pages": [
+        564
+      ]
+    },
+    {
+      "id": "FC181",
+      "front": "Why can regulation be difficult?",
+      "back": "It must balance privacy risk against possible beneficial research and services.",
+      "source_pages": [
+        565
+      ]
+    },
+    {
+      "id": "FC182",
+      "front": "What culture shift does the author advocate?",
+      "back": "Treat users as humans deserving respect, dignity, agency, and transparency.",
+      "source_pages": [
+        565
+      ]
+    },
+    {
+      "id": "FC183",
+      "front": "What retention practice does the author recommend?",
+      "back": "Do not retain data forever; purge it when no longer needed.",
+      "source_pages": [
+        565
+      ]
+    },
+    {
+      "id": "FC184",
+      "front": "What technical direction for access control is suggested?",
+      "back": "Cryptographic protocols rather than policy alone.",
+      "source_pages": [
+        565
+      ]
+    },
+    {
+      "id": "FC185",
+      "front": "What is the chapter's final ethical message?",
+      "back": "Engineers share responsibility for building a world that treats people with humanity and respect.",
+      "source_pages": [
+        566
+      ]
+    }
+  ],
+  "multiple_choice_questions": [
+    {
+      "id": "MCQ001",
+      "difficulty": "medium",
+      "question": "Why must complex applications often combine several systems?",
+      "choices": {
+        "A": "No single tool fits all access patterns",
+        "B": "Databases cannot store data",
+        "C": "All software must be microservices",
+        "D": "Consensus forbids one system"
+      },
+      "answer": "A",
+      "source_pages": [
+        512,
+        513
+      ]
+    },
+    {
+      "id": "MCQ002",
+      "difficulty": "medium",
+      "question": "A system of record is?",
+      "choices": {
+        "A": "Authoritative source of primary input",
+        "B": "Any cache",
+        "C": "Any search index",
+        "D": "A temporary materialized view"
+      },
+      "answer": "A",
+      "source_pages": [
+        513
+      ]
+    },
+    {
+      "id": "MCQ003",
+      "difficulty": "medium",
+      "question": "A search index maintained from CDC is?",
+      "choices": {
+        "A": "Derived data",
+        "B": "System of record necessarily",
+        "C": "A consensus protocol",
+        "D": "A transaction coordinator"
+      },
+      "answer": "A",
+      "source_pages": [
+        513
+      ]
+    },
+    {
+      "id": "MCQ004",
+      "difficulty": "medium",
+      "question": "Direct writes to DB and search index risk?",
+      "choices": {
+        "A": "Different write orders and divergence",
+        "B": "Guaranteed total order",
+        "C": "Perfect atomicity",
+        "D": "No race conditions"
+      },
+      "answer": "A",
+      "source_pages": [
+        513
+      ]
+    },
+    {
+      "id": "MCQ005",
+      "difficulty": "medium",
+      "question": "Log-based derived integration commonly uses?",
+      "choices": {
+        "A": "Deterministic retry and idempotence",
+        "B": "Only 2PC",
+        "C": "Only locks",
+        "D": "Only polling"
+      },
+      "answer": "A",
+      "source_pages": [
+        514
+      ]
+    },
+    {
+      "id": "MCQ006",
+      "difficulty": "medium",
+      "question": "Compared with async derived systems, transactions usually provide stronger?",
+      "choices": {
+        "A": "Timeliness/linearizability",
+        "B": "Compression",
+        "C": "Index size",
+        "D": "Schema flexibility only"
+      },
+      "answer": "A",
+      "source_pages": [
+        514
+      ]
+    },
+    {
+      "id": "MCQ007",
+      "difficulty": "medium",
+      "question": "Why does global total ordering struggle at scale?",
+      "choices": {
+        "A": "Single sequencer becomes bottleneck",
+        "B": "Logs cannot be partitioned",
+        "C": "Events have no IDs",
+        "D": "Databases cannot replicate"
+      },
+      "answer": "A",
+      "source_pages": [
+        515
+      ]
+    },
+    {
+      "id": "MCQ008",
+      "difficulty": "medium",
+      "question": "Cross-datacenter independent leaders imply?",
+      "choices": {
+        "A": "Ambiguous global order",
+        "B": "Perfect total order",
+        "C": "No latency",
+        "D": "No causality"
+      },
+      "answer": "A",
+      "source_pages": [
+        515
+      ]
+    },
+    {
+      "id": "MCQ009",
+      "difficulty": "medium",
+      "question": "The unfriend/message example is about?",
+      "choices": {
+        "A": "Lost causal dependency",
+        "B": "Only storage size",
+        "C": "Window aggregation",
+        "D": "Index rebuilding"
+      },
+      "answer": "A",
+      "source_pages": [
+        516
+      ]
+    },
+    {
+      "id": "MCQ010",
+      "difficulty": "medium",
+      "question": "Conflict resolution cannot undo?",
+      "choices": {
+        "A": "External side effects",
+        "B": "Mutable state",
+        "C": "Local caches",
+        "D": "Log offsets"
+      },
+      "answer": "A",
+      "source_pages": [
+        516
+      ]
+    },
+    {
+      "id": "MCQ011",
+      "difficulty": "medium",
+      "question": "Stream processing is best for?",
+      "choices": {
+        "A": "Low-delay derived updates",
+        "B": "Only historical recomputation",
+        "C": "Only bounded input",
+        "D": "Only batch files"
+      },
+      "answer": "A",
+      "source_pages": [
+        518
+      ]
+    },
+    {
+      "id": "MCQ012",
+      "difficulty": "medium",
+      "question": "Batch processing is best for?",
+      "choices": {
+        "A": "Large historical reprocessing",
+        "B": "Only subsecond alerts",
+        "C": "Only unbounded input",
+        "D": "Only RPC"
+      },
+      "answer": "A",
+      "source_pages": [
+        518
+      ]
+    },
+    {
+      "id": "MCQ013",
+      "difficulty": "medium",
+      "question": "Lambda architecture runs?",
+      "choices": {
+        "A": "Batch and stream paths in parallel",
+        "B": "Only one stream layer",
+        "C": "Only SQL",
+        "D": "Only consensus"
+      },
+      "answer": "A",
+      "source_pages": [
+        519
+      ]
+    },
+    {
+      "id": "MCQ014",
+      "difficulty": "medium",
+      "question": "A main lambda architecture problem is?",
+      "choices": {
+        "A": "Duplicate logic and operational complexity",
+        "B": "No immutable log",
+        "C": "No low-latency output",
+        "D": "No historical processing"
+      },
+      "answer": "A",
+      "source_pages": [
+        519,
+        520
+      ]
+    },
+    {
+      "id": "MCQ015",
+      "difficulty": "medium",
+      "question": "Unified batch/stream systems require?",
+      "choices": {
+        "A": "Replay, exactly-once behavior, event-time windows",
+        "B": "Only processing-time windows",
+        "C": "No replay",
+        "D": "Only 2PC"
+      },
+      "answer": "A",
+      "source_pages": [
+        520
+      ]
+    },
+    {
+      "id": "MCQ016",
+      "difficulty": "medium",
+      "question": "Unbundling databases means?",
+      "choices": {
+        "A": "Compose database-like capabilities from specialized systems",
+        "B": "Delete all databases",
+        "C": "Use one universal DB",
+        "D": "Avoid dataflow"
+      },
+      "answer": "A",
+      "source_pages": [
+        521,
+        522,
+        523
+      ]
+    },
+    {
+      "id": "MCQ017",
+      "difficulty": "medium",
+      "question": "CREATE INDEX resembles?",
+      "choices": {
+        "A": "Snapshot + catch-up + continuous maintenance",
+        "B": "Only a read query",
+        "C": "Only a transaction abort",
+        "D": "Only a cache miss"
+      },
+      "answer": "A",
+      "source_pages": [
+        522
+      ]
+    },
+    {
+      "id": "MCQ018",
+      "difficulty": "medium",
+      "question": "Federated databases mainly unify?",
+      "choices": {
+        "A": "Reads",
+        "B": "Writes",
+        "C": "Consensus",
+        "D": "Replication only"
+      },
+      "answer": "A",
+      "source_pages": [
+        523
+      ]
+    },
+    {
+      "id": "MCQ019",
+      "difficulty": "medium",
+      "question": "Unbundled databases mainly try to unify?",
+      "choices": {
+        "A": "Writes/propagated changes",
+        "B": "Only read SQL",
+        "C": "Only files",
+        "D": "Only schemas"
+      },
+      "answer": "A",
+      "source_pages": [
+        523,
+        524
+      ]
+    },
+    {
+      "id": "MCQ020",
+      "difficulty": "medium",
+      "question": "Why does async log integration improve fault isolation?",
+      "choices": {
+        "A": "A slow consumer can lag without stopping others",
+        "B": "Every consumer must commit synchronously",
+        "C": "It removes all disks",
+        "D": "It eliminates failures"
+      },
+      "answer": "A",
+      "source_pages": [
+        524
+      ]
+    },
+    {
+      "id": "MCQ021",
+      "difficulty": "medium",
+      "question": "If one database product meets all needs, recommended approach?",
+      "choices": {
+        "A": "Use it",
+        "B": "Always unbundle",
+        "C": "Always use Kafka",
+        "D": "Always use XA"
+      },
+      "answer": "A",
+      "source_pages": [
+        525
+      ]
+    },
+    {
+      "id": "MCQ022",
+      "difficulty": "medium",
+      "question": "mysql | elasticsearch represents?",
+      "choices": {
+        "A": "Declarative continuous derivation between systems",
+        "B": "SQL join only",
+        "C": "Distributed transaction",
+        "D": "Replication election"
+      },
+      "answer": "A",
+      "source_pages": [
+        525
+      ]
+    },
+    {
+      "id": "MCQ023",
+      "difficulty": "medium",
+      "question": "Database inside-out centers architecture around?",
+      "choices": {
+        "A": "Dataflow of state changes",
+        "B": "Synchronous RPC only",
+        "C": "Global locks",
+        "D": "Batch-only processing"
+      },
+      "answer": "A",
+      "source_pages": [
+        526
+      ]
+    },
+    {
+      "id": "MCQ024",
+      "difficulty": "medium",
+      "question": "A derivation function maps?",
+      "choices": {
+        "A": "One dataset/state to another",
+        "B": "One TCP packet to another",
+        "C": "One lock to another",
+        "D": "One leader to another"
+      },
+      "answer": "A",
+      "source_pages": [
+        527
+      ]
+    },
+    {
+      "id": "MCQ025",
+      "difficulty": "medium",
+      "question": "Why separate application code from durable state?",
+      "choices": {
+        "A": "Different systems specialize in execution vs persistence",
+        "B": "Databases cannot persist",
+        "C": "Containers provide ACID",
+        "D": "State cannot be networked"
+      },
+      "answer": "A",
+      "source_pages": [
+        528
+      ]
+    },
+    {
+      "id": "MCQ026",
+      "difficulty": "medium",
+      "question": "Derived data maintenance requires strong?",
+      "choices": {
+        "A": "Ordering and reliable processing",
+        "B": "Random delivery",
+        "C": "Best-effort loss",
+        "D": "No persistence"
+      },
+      "answer": "A",
+      "source_pages": [
+        529
+      ]
+    },
+    {
+      "id": "MCQ027",
+      "difficulty": "medium",
+      "question": "Dataflow communication compared with microservices is more?",
+      "choices": {
+        "A": "Asynchronous and stream-oriented",
+        "B": "Synchronous only",
+        "C": "Global-transaction-only",
+        "D": "File-only"
+      },
+      "answer": "A",
+      "source_pages": [
+        530
+      ]
+    },
+    {
+      "id": "MCQ028",
+      "difficulty": "medium",
+      "question": "Local exchange-rate state replaces?",
+      "choices": {
+        "A": "Synchronous remote request",
+        "B": "Event stream",
+        "C": "Local database",
+        "D": "Join"
+      },
+      "answer": "A",
+      "source_pages": [
+        530,
+        531
+      ]
+    },
+    {
+      "id": "MCQ029",
+      "difficulty": "medium",
+      "question": "Write path means?",
+      "choices": {
+        "A": "Eager work on incoming data",
+        "B": "Query-time-only work",
+        "C": "A read replica",
+        "D": "Only client writes"
+      },
+      "answer": "A",
+      "source_pages": [
+        531,
+        532
+      ]
+    },
+    {
+      "id": "MCQ030",
+      "difficulty": "medium",
+      "question": "Read path means?",
+      "choices": {
+        "A": "Lazy work when data is requested",
+        "B": "All indexing work",
+        "C": "CDC processing",
+        "D": "Only replication"
+      },
+      "answer": "A",
+      "source_pages": [
+        532
+      ]
+    },
+    {
+      "id": "MCQ031",
+      "difficulty": "medium",
+      "question": "Indexes/caches shift work toward?",
+      "choices": {
+        "A": "Write path",
+        "B": "Network partition",
+        "C": "Consensus election",
+        "D": "Transaction coordinator"
+      },
+      "answer": "A",
+      "source_pages": [
+        532,
+        533
+      ]
+    },
+    {
+      "id": "MCQ032",
+      "difficulty": "medium",
+      "question": "Offline-first apps primarily rely on?",
+      "choices": {
+        "A": "Local state with background sync",
+        "B": "Always-on RPC",
+        "C": "No local storage",
+        "D": "Global transaction per click"
+      },
+      "answer": "A",
+      "source_pages": [
+        533,
+        534
+      ]
+    },
+    {
+      "id": "MCQ033",
+      "difficulty": "medium",
+      "question": "Server-sent events and WebSockets enable?",
+      "choices": {
+        "A": "Push changes to clients",
+        "B": "Global consensus",
+        "C": "B-tree indexing",
+        "D": "Batch joins"
+      },
+      "answer": "A",
+      "source_pages": [
+        534
+      ]
+    },
+    {
+      "id": "MCQ034",
+      "difficulty": "medium",
+      "question": "Representing reads as events makes a read resemble?",
+      "choices": {
+        "A": "Stream-table join",
+        "B": "2PC",
+        "C": "Snapshot backup",
+        "D": "Leader election"
+      },
+      "answer": "A",
+      "source_pages": [
+        536
+      ]
+    },
+    {
+      "id": "MCQ035",
+      "difficulty": "medium",
+      "question": "Why log reads?",
+      "choices": {
+        "A": "Capture what user saw for provenance/causality",
+        "B": "Reduce storage to zero",
+        "C": "Avoid all queries",
+        "D": "Guarantee total order globally"
+      },
+      "answer": "A",
+      "source_pages": [
+        536
+      ]
+    },
+    {
+      "id": "MCQ036",
+      "difficulty": "medium",
+      "question": "The end-to-end argument says?",
+      "choices": {
+        "A": "Some guarantees require endpoint/application participation",
+        "B": "Lower layers always suffice",
+        "C": "TCP guarantees business correctness",
+        "D": "Serializability prevents all application bugs"
+      },
+      "answer": "A",
+      "source_pages": [
+        541,
+        542
+      ]
+    },
+    {
+      "id": "MCQ037",
+      "difficulty": "medium",
+      "question": "TCP duplicate suppression is limited to?",
+      "choices": {
+        "A": "One connection",
+        "B": "All user retries",
+        "C": "All HTTP requests forever",
+        "D": "All databases"
+      },
+      "answer": "A",
+      "source_pages": [
+        539
+      ]
+    },
+    {
+      "id": "MCQ038",
+      "difficulty": "medium",
+      "question": "End-to-end duplicate suppression should use?",
+      "choices": {
+        "A": "Operation/request ID",
+        "B": "Only TCP sequence number",
+        "C": "Only wall-clock timestamp",
+        "D": "Only retry count"
+      },
+      "answer": "A",
+      "source_pages": [
+        540,
+        541
+      ]
+    },
+    {
+      "id": "MCQ039",
+      "difficulty": "medium",
+      "question": "A UNIQUE request_id constraint prevents?",
+      "choices": {
+        "A": "Applying same identified operation twice",
+        "B": "All network delays",
+        "C": "All stale reads",
+        "D": "All disk corruption"
+      },
+      "answer": "A",
+      "source_pages": [
+        541
+      ]
+    },
+    {
+      "id": "MCQ040",
+      "difficulty": "medium",
+      "question": "Strict distributed uniqueness requires?",
+      "choices": {
+        "A": "Consensus/coordination",
+        "B": "Only async multi-master",
+        "C": "Only hashing",
+        "D": "Only eventual consistency"
+      },
+      "answer": "A",
+      "source_pages": [
+        543
+      ]
+    },
+    {
+      "id": "MCQ041",
+      "difficulty": "medium",
+      "question": "How can strict uniqueness scale?",
+      "choices": {
+        "A": "Partition by unique value",
+        "B": "Use unrelated partitions for same value",
+        "C": "Disable ordering",
+        "D": "Use random leaders"
+      },
+      "answer": "A",
+      "source_pages": [
+        543,
+        544
+      ]
+    },
+    {
+      "id": "MCQ042",
+      "difficulty": "medium",
+      "question": "Log-based uniqueness decides conflicts by?",
+      "choices": {
+        "A": "Sequential processing in same partition",
+        "B": "Last random arrival everywhere",
+        "C": "Dual writes",
+        "D": "Unordered fan-out"
+      },
+      "answer": "A",
+      "source_pages": [
+        544
+      ]
+    },
+    {
+      "id": "MCQ043",
+      "difficulty": "medium",
+      "question": "Multi-partition request pattern begins with?",
+      "choices": {
+        "A": "One durable atomic request event",
+        "B": "Simultaneous independent writes",
+        "C": "Global XA transaction always",
+        "D": "No request ID"
+      },
+      "answer": "A",
+      "source_pages": [
+        545
+      ]
+    },
+    {
+      "id": "MCQ044",
+      "difficulty": "medium",
+      "question": "Why pass request ID downstream?",
+      "choices": {
+        "A": "Deduplicate derived effects",
+        "B": "Sort by time only",
+        "C": "Choose datacenter",
+        "D": "Create cache"
+      },
+      "answer": "A",
+      "source_pages": [
+        545
+      ]
+    },
+    {
+      "id": "MCQ045",
+      "difficulty": "medium",
+      "question": "Timeliness refers to?",
+      "choices": {
+        "A": "Freshness/up-to-date observations",
+        "B": "Absence of corruption",
+        "C": "Only durability",
+        "D": "Only uniqueness"
+      },
+      "answer": "A",
+      "source_pages": [
+        546
+      ]
+    },
+    {
+      "id": "MCQ046",
+      "difficulty": "hard",
+      "question": "Integrity refers to?",
+      "choices": {
+        "A": "Absence of loss/contradiction/corruption",
+        "B": "Low latency",
+        "C": "Fresh reads",
+        "D": "WAN performance"
+      },
+      "answer": "A",
+      "source_pages": [
+        546,
+        547
+      ]
+    },
+    {
+      "id": "MCQ047",
+      "difficulty": "hard",
+      "question": "Which is usually temporary?",
+      "choices": {
+        "A": "Timeliness violation",
+        "B": "Integrity corruption",
+        "C": "Lost money",
+        "D": "Broken index"
+      },
+      "answer": "A",
+      "source_pages": [
+        546,
+        547
+      ]
+    },
+    {
+      "id": "MCQ048",
+      "difficulty": "hard",
+      "question": "Which usually needs explicit repair?",
+      "choices": {
+        "A": "Integrity violation",
+        "B": "Temporary staleness",
+        "C": "Read lag",
+        "D": "Slow client"
+      },
+      "answer": "A",
+      "source_pages": [
+        547
+      ]
+    },
+    {
+      "id": "MCQ049",
+      "difficulty": "hard",
+      "question": "Dataflow integrity can use?",
+      "choices": {
+        "A": "Atomic event + deterministic derivation + IDs + replay",
+        "B": "Only linearizability",
+        "C": "Only global locks",
+        "D": "Only sync WAN RPC"
+      },
+      "answer": "A",
+      "source_pages": [
+        548
+      ]
+    },
+    {
+      "id": "MCQ050",
+      "difficulty": "hard",
+      "question": "A compensating transaction does what?",
+      "choices": {
+        "A": "Repairs a prior undesirable outcome later",
+        "B": "Prevents all conflicts synchronously",
+        "C": "Rolls back TCP",
+        "D": "Creates global order"
+      },
+      "answer": "A",
+      "source_pages": [
+        548,
+        549
+      ]
+    },
+    {
+      "id": "MCQ051",
+      "difficulty": "hard",
+      "question": "Overbooking illustrates?",
+      "choices": {
+        "A": "Some constraints can be intentionally loose",
+        "B": "All constraints must be linearizable",
+        "C": "No business compensation exists",
+        "D": "No integrity needed"
+      },
+      "answer": "A",
+      "source_pages": [
+        548,
+        549
+      ]
+    },
+    {
+      "id": "MCQ052",
+      "difficulty": "hard",
+      "question": "Coordination-avoiding systems typically trade?",
+      "choices": {
+        "A": "Timeliness for availability/scalability while preserving integrity",
+        "B": "Integrity for total order",
+        "C": "Durability for cache",
+        "D": "Storage for CPU only"
+      },
+      "answer": "A",
+      "source_pages": [
+        549,
+        550
+      ]
+    },
+    {
+      "id": "MCQ053",
+      "difficulty": "hard",
+      "question": "When should coordination still be used?",
+      "choices": {
+        "A": "Where strict/irreversible constraints require it",
+        "B": "Never",
+        "C": "For every read",
+        "D": "Only for logs"
+      },
+      "answer": "A",
+      "source_pages": [
+        550
+      ]
+    },
+    {
+      "id": "MCQ054",
+      "difficulty": "hard",
+      "question": "'Trust, but verify' means?",
+      "choices": {
+        "A": "Assume components usually work but actively audit integrity",
+        "B": "Assume hardware is perfect",
+        "C": "Disable checksums",
+        "D": "Never use transactions"
+      },
+      "answer": "A",
+      "source_pages": [
+        550,
+        551,
+        552
+      ]
+    },
+    {
+      "id": "MCQ055",
+      "difficulty": "hard",
+      "question": "What is auditing?",
+      "choices": {
+        "A": "Checking data integrity",
+        "B": "Compressing logs",
+        "C": "Electing leaders",
+        "D": "Windowing streams"
+      },
+      "answer": "A",
+      "source_pages": [
+        552
+      ]
+    },
+    {
+      "id": "MCQ056",
+      "difficulty": "hard",
+      "question": "Why test backup restoration?",
+      "choices": {
+        "A": "A backup is only useful if restoration actually works",
+        "B": "It improves indexes",
+        "C": "It provides total order",
+        "D": "It eliminates network faults"
+      },
+      "answer": "A",
+      "source_pages": [
+        552
+      ]
+    },
+    {
+      "id": "MCQ057",
+      "difficulty": "hard",
+      "question": "Event-based auditability improves?",
+      "choices": {
+        "A": "Provenance and reproducibility",
+        "B": "Randomness",
+        "C": "Data deletion only",
+        "D": "RPC latency only"
+      },
+      "answer": "A",
+      "source_pages": [
+        553
+      ]
+    },
+    {
+      "id": "MCQ058",
+      "difficulty": "hard",
+      "question": "Merkle trees are useful for?",
+      "choices": {
+        "A": "Cryptographic integrity proofs",
+        "B": "Only SQL joins",
+        "C": "Only message queues",
+        "D": "Only data compression"
+      },
+      "answer": "A",
+      "source_pages": [
+        554
+      ]
+    },
+    {
+      "id": "MCQ059",
+      "difficulty": "hard",
+      "question": "Certificate transparency is cited as?",
+      "choices": {
+        "A": "Merkle-tree-based integrity/audit technology",
+        "B": "A stream join",
+        "C": "A database isolation level",
+        "D": "A cache"
+      },
+      "answer": "A",
+      "source_pages": [
+        554
+      ]
+    },
+    {
+      "id": "MCQ060",
+      "difficulty": "hard",
+      "question": "Chapter's ethical premise?",
+      "choices": {
+        "A": "Engineers must consider human consequences",
+        "B": "Technology is ethically neutral in all uses",
+        "C": "Only managers own responsibility",
+        "D": "Scale matters more than dignity"
+      },
+      "answer": "A",
+      "source_pages": [
+        555
+      ]
+    },
+    {
+      "id": "MCQ061",
+      "difficulty": "hard",
+      "question": "Biased training data may cause models to?",
+      "choices": {
+        "A": "Learn and amplify bias",
+        "B": "Automatically remove bias",
+        "C": "Become deterministic fairness engines",
+        "D": "Ignore proxies"
+      },
+      "answer": "A",
+      "source_pages": [
+        556
+      ]
+    },
+    {
+      "id": "MCQ062",
+      "difficulty": "hard",
+      "question": "Postal code can be dangerous in fairness analysis because?",
+      "choices": {
+        "A": "It may proxy protected traits",
+        "B": "It is always inaccurate",
+        "C": "It prevents ML",
+        "D": "It is a primary key"
+      },
+      "answer": "A",
+      "source_pages": [
+        556
+      ]
+    },
+    {
+      "id": "MCQ063",
+      "difficulty": "hard",
+      "question": "Algorithmic accountability requires?",
+      "choices": {
+        "A": "Appeal, explanation, responsibility",
+        "B": "No human review",
+        "C": "Permanent secrecy",
+        "D": "Only higher accuracy"
+      },
+      "answer": "A",
+      "source_pages": [
+        557
+      ]
+    },
+    {
+      "id": "MCQ064",
+      "difficulty": "hard",
+      "question": "A statistically accurate model can still?",
+      "choices": {
+        "A": "Be wrong for an individual",
+        "B": "Guarantee every decision",
+        "C": "Remove uncertainty",
+        "D": "Provide causal truth"
+      },
+      "answer": "A",
+      "source_pages": [
+        557
+      ]
+    },
+    {
+      "id": "MCQ065",
+      "difficulty": "hard",
+      "question": "A feedback loop means?",
+      "choices": {
+        "A": "Predictions affect future data and reinforce themselves",
+        "B": "Only model retraining",
+        "C": "A cache eviction",
+        "D": "A retry queue"
+      },
+      "answer": "A",
+      "source_pages": [
+        558
+      ]
+    },
+    {
+      "id": "MCQ066",
+      "difficulty": "hard",
+      "question": "Systems thinking includes?",
+      "choices": {
+        "A": "Human behavior and wider consequences",
+        "B": "Only code paths",
+        "C": "Only CPU utilization",
+        "D": "Only schema design"
+      },
+      "answer": "A",
+      "source_pages": [
+        558
+      ]
+    },
+    {
+      "id": "MCQ067",
+      "difficulty": "hard",
+      "question": "Tracking that primarily serves advertisers may be framed as?",
+      "choices": {
+        "A": "Surveillance",
+        "B": "Only caching",
+        "C": "Only observability",
+        "D": "Only analytics"
+      },
+      "answer": "A",
+      "source_pages": [
+        559
+      ]
+    },
+    {
+      "id": "MCQ068",
+      "difficulty": "hard",
+      "question": "Meaningful consent is hard because?",
+      "choices": {
+        "A": "Users may not understand collection and downstream use",
+        "B": "Policies are always simple",
+        "C": "Data is never combined",
+        "D": "Users always negotiate terms"
+      },
+      "answer": "A",
+      "source_pages": [
+        560,
+        561
+      ]
+    },
+    {
+      "id": "MCQ069",
+      "difficulty": "hard",
+      "question": "Privacy is defined as?",
+      "choices": {
+        "A": "Control over what to reveal to whom",
+        "B": "Keeping everything secret",
+        "C": "No internet use",
+        "D": "Anonymity only"
+      },
+      "answer": "A",
+      "source_pages": [
+        561
+      ]
+    },
+    {
+      "id": "MCQ070",
+      "difficulty": "hard",
+      "question": "Why can collected data be a toxic asset?",
+      "choices": {
+        "A": "It creates breach, misuse, coercion, and future-governance risk",
+        "B": "It has no value",
+        "C": "It cannot be copied",
+        "D": "It is always public"
+      },
+      "answer": "A",
+      "source_pages": [
+        563
+      ]
+    },
+    {
+      "id": "MCQ071",
+      "difficulty": "hard",
+      "question": "Industrial-Revolution analogy emphasizes need for?",
+      "choices": {
+        "A": "Safeguards against harms created by new technology",
+        "B": "No regulation",
+        "C": "More pollution",
+        "D": "Less accountability"
+      },
+      "answer": "A",
+      "source_pages": [
+        564
+      ]
+    },
+    {
+      "id": "MCQ072",
+      "difficulty": "hard",
+      "question": "Recommended data-retention stance?",
+      "choices": {
+        "A": "Purge data when no longer needed",
+        "B": "Keep all data forever",
+        "C": "Never delete any log",
+        "D": "Always duplicate"
+      },
+      "answer": "A",
+      "source_pages": [
+        565
+      ]
+    },
+    {
+      "id": "MCQ073",
+      "difficulty": "hard",
+      "question": "Final chapter message to engineers?",
+      "choices": {
+        "A": "Build systems that respect humanity, dignity, and agency",
+        "B": "Optimize only throughput",
+        "C": "Avoid ethics discussions",
+        "D": "Assume users are metrics"
+      },
+      "answer": "A",
+      "source_pages": [
+        565,
+        566
+      ]
+    }
+  ],
+  "mix_and_match": [
+    {
+      "id": "MM01",
+      "title": "Data integration concept",
+      "left": {
+        "A": "System of record",
+        "B": "Derived data",
+        "C": "Federation",
+        "D": "Unbundling",
+        "E": "CDC"
+      },
+      "right": {
+        "1": "Authoritative source",
+        "2": "Computed representation",
+        "3": "Unified reads",
+        "4": "Composed write propagation",
+        "5": "Database changes as stream"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        513,
+        523,
+        524
+      ]
+    },
+    {
+      "id": "MM02",
+      "title": "Dataflow evolution",
+      "left": {
+        "A": "Batch",
+        "B": "Stream",
+        "C": "Lambda architecture",
+        "D": "Unified batch/stream",
+        "E": "Replay"
+      },
+      "right": {
+        "1": "Historical reprocessing",
+        "2": "Low-latency updates",
+        "3": "Two parallel processing stacks",
+        "4": "One engine handles both histories and live events",
+        "5": "Rerun retained events"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        517,
+        518,
+        519,
+        520
+      ]
+    },
+    {
+      "id": "MM03",
+      "title": "Correctness mechanism",
+      "left": {
+        "A": "Request ID",
+        "B": "Idempotence",
+        "C": "Uniqueness constraint",
+        "D": "Compensation",
+        "E": "Audit"
+      },
+      "right": {
+        "1": "End-to-end dedupe identity",
+        "2": "Retry-safe effect",
+        "3": "One winner among conflicting values",
+        "4": "Repair after temporary violation",
+        "5": "Detect integrity corruption"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        540,
+        541,
+        543,
+        548,
+        549,
+        552
+      ]
+    },
+    {
+      "id": "MM04",
+      "title": "Path and state concept",
+      "left": {
+        "A": "Write path",
+        "B": "Read path",
+        "C": "Cache",
+        "D": "Offline-first",
+        "E": "Read event"
+      },
+      "right": {
+        "1": "Eager derivation work",
+        "2": "Lazy query-time work",
+        "3": "Precomputed result shifting work earlier",
+        "4": "Local device state plus background sync",
+        "5": "Query represented as stream input"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        531,
+        532,
+        533,
+        534,
+        536
+      ]
+    },
+    {
+      "id": "MM05",
+      "title": "Correctness dimensions",
+      "left": {
+        "A": "Timeliness",
+        "B": "Integrity",
+        "C": "Linearizability",
+        "D": "Effectively-once",
+        "E": "Coordination avoidance"
+      },
+      "right": {
+        "1": "Fresh observations",
+        "2": "No corruption/loss/contradictions",
+        "3": "Strong timeliness model",
+        "4": "Visible result as if once",
+        "5": "Preserve integrity without synchronizing everything"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        546,
+        547,
+        549,
+        550
+      ]
+    },
+    {
+      "id": "MM06",
+      "title": "Ethical concern",
+      "left": {
+        "A": "Bias",
+        "B": "Feedback loop",
+        "C": "Surveillance",
+        "D": "Consent",
+        "E": "Privacy"
+      },
+      "right": {
+        "1": "Historical patterns amplified by models",
+        "2": "Decision changes future data and reinforces itself",
+        "3": "Intrusive behavioral monitoring",
+        "4": "Meaningful informed agreement",
+        "5": "Control over disclosure"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        556,
+        558,
+        559,
+        560,
+        561
+      ]
+    }
+  ],
+  "true_false": [
+    {
+      "id": "TF001",
+      "statement": "One data system is optimal for every workload.",
+      "answer": false,
+      "source_pages": [
+        512
+      ]
+    },
+    {
+      "id": "TF002",
+      "statement": "Complex applications commonly require specialized systems.",
+      "answer": true,
+      "source_pages": [
+        512,
+        513
+      ]
+    },
+    {
+      "id": "TF003",
+      "statement": "Derived data should ideally have an explicit authoritative source.",
+      "answer": true,
+      "source_pages": [
+        513
+      ]
+    },
+    {
+      "id": "TF004",
+      "statement": "Direct dual writes always preserve ordering.",
+      "answer": false,
+      "source_pages": [
+        513
+      ]
+    },
+    {
+      "id": "TF005",
+      "statement": "Log-based derivation often relies on deterministic retry and idempotence.",
+      "answer": true,
+      "source_pages": [
+        514
+      ]
+    },
+    {
+      "id": "TF006",
+      "statement": "Async derived systems automatically provide linearizability.",
+      "answer": false,
+      "source_pages": [
+        514
+      ]
+    },
+    {
+      "id": "TF007",
+      "statement": "A global total order is trivial after partitioning.",
+      "answer": false,
+      "source_pages": [
+        515
+      ]
+    },
+    {
+      "id": "TF008",
+      "statement": "Separate datacenter leaders can leave cross-region event order undefined.",
+      "answer": true,
+      "source_pages": [
+        515
+      ]
+    },
+    {
+      "id": "TF009",
+      "statement": "Microservices automatically create one shared total event order.",
+      "answer": false,
+      "source_pages": [
+        515
+      ]
+    },
+    {
+      "id": "TF010",
+      "statement": "Causal dependencies can span separate services.",
+      "answer": true,
+      "source_pages": [
+        516
+      ]
+    },
+    {
+      "id": "TF011",
+      "statement": "Conflict resolution can unsend an already-delivered notification.",
+      "answer": false,
+      "source_pages": [
+        516
+      ]
+    },
+    {
+      "id": "TF012",
+      "statement": "Stream processing is useful for low-latency derived updates.",
+      "answer": true,
+      "source_pages": [
+        518
+      ]
+    },
+    {
+      "id": "TF013",
+      "statement": "Batch processing is useful for historical reprocessing.",
+      "answer": true,
+      "source_pages": [
+        518
+      ]
+    },
+    {
+      "id": "TF014",
+      "statement": "Derived views can support gradual reversible migrations.",
+      "answer": true,
+      "source_pages": [
+        519
+      ]
+    },
+    {
+      "id": "TF015",
+      "statement": "Lambda architecture has only one processing implementation.",
+      "answer": false,
+      "source_pages": [
+        519
+      ]
+    },
+    {
+      "id": "TF016",
+      "statement": "Lambda architecture can require duplicated batch/stream logic.",
+      "answer": true,
+      "source_pages": [
+        519,
+        520
+      ]
+    },
+    {
+      "id": "TF017",
+      "statement": "Unified processing benefits from replay and event-time semantics.",
+      "answer": true,
+      "source_pages": [
+        520
+      ]
+    },
+    {
+      "id": "TF018",
+      "statement": "Secondary indexes and materialized views can be viewed as derived datasets.",
+      "answer": true,
+      "source_pages": [
+        521,
+        522
+      ]
+    },
+    {
+      "id": "TF019",
+      "statement": "Federated databases primarily address write synchronization.",
+      "answer": false,
+      "source_pages": [
+        523
+      ]
+    },
+    {
+      "id": "TF020",
+      "statement": "Unbundling primarily focuses on reliable write propagation across tools.",
+      "answer": true,
+      "source_pages": [
+        523,
+        524
+      ]
+    },
+    {
+      "id": "TF021",
+      "statement": "Asynchronous event logs can isolate a slow consumer's failure.",
+      "answer": true,
+      "source_pages": [
+        524
+      ]
+    },
+    {
+      "id": "TF022",
+      "statement": "If one database meets all requirements, unbundling is always better.",
+      "answer": false,
+      "source_pages": [
+        525
+      ]
+    },
+    {
+      "id": "TF023",
+      "statement": "The chapter imagines a declarative shell-like language for data systems.",
+      "answer": true,
+      "source_pages": [
+        525
+      ]
+    },
+    {
+      "id": "TF024",
+      "statement": "Database inside-out is presented as a design pattern.",
+      "answer": true,
+      "source_pages": [
+        526
+      ]
+    },
+    {
+      "id": "TF025",
+      "statement": "Spreadsheets are cited as an example of reactive dataflow.",
+      "answer": true,
+      "source_pages": [
+        526
+      ]
+    },
+    {
+      "id": "TF026",
+      "statement": "All derivation functions can be handled by built-in SQL indexes.",
+      "answer": false,
+      "source_pages": [
+        527
+      ]
+    },
+    {
+      "id": "TF027",
+      "statement": "Container/orchestration systems are specialized for running application code.",
+      "answer": true,
+      "source_pages": [
+        528
+      ]
+    },
+    {
+      "id": "TF028",
+      "statement": "Traditional web applications often separate stateless code from persistent DB state.",
+      "answer": true,
+      "source_pages": [
+        528
+      ]
+    },
+    {
+      "id": "TF029",
+      "statement": "Derived-data maintenance can tolerate arbitrary message loss.",
+      "answer": false,
+      "source_pages": [
+        529
+      ]
+    },
+    {
+      "id": "TF030",
+      "statement": "Ordering can matter for keeping several derived views consistent.",
+      "answer": true,
+      "source_pages": [
+        529
+      ]
+    },
+    {
+      "id": "TF031",
+      "statement": "Dataflow always requires synchronous request/response RPC.",
+      "answer": false,
+      "source_pages": [
+        530
+      ]
+    },
+    {
+      "id": "TF032",
+      "statement": "Locally subscribed state can remove remote calls from the request path.",
+      "answer": true,
+      "source_pages": [
+        530,
+        531
+      ]
+    },
+    {
+      "id": "TF033",
+      "statement": "Write path means work performed only after a read query.",
+      "answer": false,
+      "source_pages": [
+        531,
+        532
+      ]
+    },
+    {
+      "id": "TF034",
+      "statement": "Caches shift some computation from read time to write/precompute time.",
+      "answer": true,
+      "source_pages": [
+        533
+      ]
+    },
+    {
+      "id": "TF035",
+      "statement": "Offline-first clients require constant internet connectivity.",
+      "answer": false,
+      "source_pages": [
+        533,
+        534
+      ]
+    },
+    {
+      "id": "TF036",
+      "statement": "WebSockets can push server state changes to clients.",
+      "answer": true,
+      "source_pages": [
+        534
+      ]
+    },
+    {
+      "id": "TF037",
+      "statement": "Read requests can be modeled as stream events.",
+      "answer": true,
+      "source_pages": [
+        535,
+        536
+      ]
+    },
+    {
+      "id": "TF038",
+      "statement": "Logging reads can help provenance and causal analysis.",
+      "answer": true,
+      "source_pages": [
+        536
+      ]
+    },
+    {
+      "id": "TF039",
+      "statement": "Serializable transactions guarantee applications never write incorrect data.",
+      "answer": false,
+      "source_pages": [
+        538
+      ]
+    },
+    {
+      "id": "TF040",
+      "statement": "TCP duplicate suppression works across all reconnects and retries.",
+      "answer": false,
+      "source_pages": [
+        539
+      ]
+    },
+    {
+      "id": "TF041",
+      "statement": "A client-generated request ID can support end-to-end deduplication.",
+      "answer": true,
+      "source_pages": [
+        540,
+        541
+      ]
+    },
+    {
+      "id": "TF042",
+      "statement": "A uniqueness constraint on request_id can reject duplicate operation attempts.",
+      "answer": true,
+      "source_pages": [
+        541
+      ]
+    },
+    {
+      "id": "TF043",
+      "statement": "The end-to-end argument says lower-level mechanisms are useless.",
+      "answer": false,
+      "source_pages": [
+        541,
+        542
+      ]
+    },
+    {
+      "id": "TF044",
+      "statement": "Strict distributed uniqueness requires consensus.",
+      "answer": true,
+      "source_pages": [
+        543
+      ]
+    },
+    {
+      "id": "TF045",
+      "statement": "Async multi-master replication can always immediately enforce uniqueness.",
+      "answer": false,
+      "source_pages": [
+        543
+      ]
+    },
+    {
+      "id": "TF046",
+      "statement": "Partitioning uniqueness checks by the unique value can scale them out.",
+      "answer": true,
+      "source_pages": [
+        543,
+        544
+      ]
+    },
+    {
+      "id": "TF047",
+      "statement": "A log partition can serialize conflicting uniqueness requests.",
+      "answer": true,
+      "source_pages": [
+        544
+      ]
+    },
+    {
+      "id": "TF048",
+      "statement": "A multi-partition business operation can sometimes be decomposed from one durable request event.",
+      "answer": true,
+      "source_pages": [
+        545
+      ]
+    },
+    {
+      "id": "TF049",
+      "statement": "End-to-end request IDs can deduplicate derived debit/credit operations.",
+      "answer": true,
+      "source_pages": [
+        545
+      ]
+    },
+    {
+      "id": "TF050",
+      "statement": "Timeliness and integrity are the same property.",
+      "answer": false,
+      "source_pages": [
+        546,
+        547
+      ]
+    },
+    {
+      "id": "TF051",
+      "statement": "Stale data is primarily a timeliness problem.",
+      "answer": true,
+      "source_pages": [
+        546
+      ]
+    },
+    {
+      "id": "TF052",
+      "statement": "Lost or contradictory data is an integrity problem.",
+      "answer": true,
+      "source_pages": [
+        546,
+        547
+      ]
+    },
+    {
+      "id": "TF053",
+      "statement": "Waiting generally fixes permanent corruption.",
+      "answer": false,
+      "source_pages": [
+        547
+      ]
+    },
+    {
+      "id": "TF054",
+      "statement": "The author generally prioritizes integrity over timeliness.",
+      "answer": true,
+      "source_pages": [
+        547
+      ]
+    },
+    {
+      "id": "TF055",
+      "statement": "Reliable delivery and duplicate suppression help preserve integrity.",
+      "answer": true,
+      "source_pages": [
+        547,
+        548
+      ]
+    },
+    {
+      "id": "TF056",
+      "statement": "All business constraints must be enforced synchronously before any write.",
+      "answer": false,
+      "source_pages": [
+        548,
+        549
+      ]
+    },
+    {
+      "id": "TF057",
+      "statement": "Compensating transactions repair a problem after it occurs.",
+      "answer": true,
+      "source_pages": [
+        548,
+        549
+      ]
+    },
+    {
+      "id": "TF058",
+      "statement": "Airlines and hotels deliberately overbook in some cases.",
+      "answer": true,
+      "source_pages": [
+        548,
+        549
+      ]
+    },
+    {
+      "id": "TF059",
+      "statement": "Coordination avoidance can improve multi-datacenter availability.",
+      "answer": true,
+      "source_pages": [
+        550
+      ]
+    },
+    {
+      "id": "TF060",
+      "statement": "Coordination-avoiding systems can be linearizable without coordination.",
+      "answer": false,
+      "source_pages": [
+        550
+      ]
+    },
+    {
+      "id": "TF061",
+      "statement": "Selective coordination may still be needed for irreversible operations.",
+      "answer": true,
+      "source_pages": [
+        550
+      ]
+    },
+    {
+      "id": "TF062",
+      "statement": "System models are perfect descriptions of reality.",
+      "answer": false,
+      "source_pages": [
+        550,
+        551
+      ]
+    },
+    {
+      "id": "TF063",
+      "statement": "Rare memory/disk/database correctness faults can occur in practice.",
+      "answer": true,
+      "source_pages": [
+        551
+      ]
+    },
+    {
+      "id": "TF064",
+      "statement": "Auditing means checking data integrity.",
+      "answer": true,
+      "source_pages": [
+        552
+      ]
+    },
+    {
+      "id": "TF065",
+      "statement": "A backup should be trusted without ever testing restoration.",
+      "answer": false,
+      "source_pages": [
+        552
+      ]
+    },
+    {
+      "id": "TF066",
+      "statement": "Event sourcing can make provenance easier to reconstruct.",
+      "answer": true,
+      "source_pages": [
+        553
+      ]
+    },
+    {
+      "id": "TF067",
+      "statement": "Deterministic derivation allows recomputation-based auditing.",
+      "answer": true,
+      "source_pages": [
+        553
+      ]
+    },
+    {
+      "id": "TF068",
+      "statement": "End-to-end checks can cover many intermediate failure points at once.",
+      "answer": true,
+      "source_pages": [
+        553,
+        554
+      ]
+    },
+    {
+      "id": "TF069",
+      "statement": "Merkle trees can support integrity proofs.",
+      "answer": true,
+      "source_pages": [
+        554
+      ]
+    },
+    {
+      "id": "TF070",
+      "statement": "The final section says engineers should ignore social consequences.",
+      "answer": false,
+      "source_pages": [
+        555
+      ]
+    },
+    {
+      "id": "TF071",
+      "statement": "Data-driven decisions are automatically unbiased.",
+      "answer": false,
+      "source_pages": [
+        556
+      ]
+    },
+    {
+      "id": "TF072",
+      "statement": "Biased historical data can produce biased model output.",
+      "answer": true,
+      "source_pages": [
+        556
+      ]
+    },
+    {
+      "id": "TF073",
+      "statement": "Proxy variables may correlate with protected traits.",
+      "answer": true,
+      "source_pages": [
+        556
+      ]
+    },
+    {
+      "id": "TF074",
+      "statement": "Statistical models may be correct in aggregate and wrong for an individual.",
+      "answer": true,
+      "source_pages": [
+        557
+      ]
+    },
+    {
+      "id": "TF075",
+      "statement": "Algorithmic systems raise accountability and appeal questions.",
+      "answer": true,
+      "source_pages": [
+        557
+      ]
+    },
+    {
+      "id": "TF076",
+      "statement": "Feedback loops can amplify existing social disadvantage.",
+      "answer": true,
+      "source_pages": [
+        558
+      ]
+    },
+    {
+      "id": "TF077",
+      "statement": "Systems thinking includes people affected by the system.",
+      "answer": true,
+      "source_pages": [
+        558
+      ]
+    },
+    {
+      "id": "TF078",
+      "statement": "Behavior tracking can provide useful product features.",
+      "answer": true,
+      "source_pages": [
+        559
+      ]
+    },
+    {
+      "id": "TF079",
+      "statement": "All tracking is necessarily benign.",
+      "answer": false,
+      "source_pages": [
+        559,
+        560
+      ]
+    },
+    {
+      "id": "TF080",
+      "statement": "Meaningful consent requires understanding how data is used.",
+      "answer": true,
+      "source_pages": [
+        560
+      ]
+    },
+    {
+      "id": "TF081",
+      "statement": "Opting out is always a cost-free realistic choice.",
+      "answer": false,
+      "source_pages": [
+        561
+      ]
+    },
+    {
+      "id": "TF082",
+      "statement": "Privacy means keeping everything secret.",
+      "answer": false,
+      "source_pages": [
+        561
+      ]
+    },
+    {
+      "id": "TF083",
+      "statement": "Privacy includes control over disclosure.",
+      "answer": true,
+      "source_pages": [
+        561
+      ]
+    },
+    {
+      "id": "TF084",
+      "statement": "Personal data can create power asymmetries.",
+      "answer": true,
+      "source_pages": [
+        562,
+        563
+      ]
+    },
+    {
+      "id": "TF085",
+      "statement": "Data breaches are one reason personal data may be a hazardous asset.",
+      "answer": true,
+      "source_pages": [
+        563
+      ]
+    },
+    {
+      "id": "TF086",
+      "statement": "The Industrial Revolution analogy is used to argue that safeguards may be needed for information-age harms.",
+      "answer": true,
+      "source_pages": [
+        564
+      ]
+    },
+    {
+      "id": "TF087",
+      "statement": "The chapter recommends retaining every piece of personal data forever.",
+      "answer": false,
+      "source_pages": [
+        565
+      ]
+    },
+    {
+      "id": "TF088",
+      "statement": "The chapter advocates greater respect, dignity, and agency for users.",
+      "answer": true,
+      "source_pages": [
+        565,
+        566
+      ]
+    }
+  ],
+  "fill_in_the_blank": [
+    {
+      "id": "FIB001",
+      "prompt": "The authoritative source of primary input is the system of ______.",
+      "answer": "record",
+      "source_pages": [
+        513
+      ]
+    },
+    {
+      "id": "FIB002",
+      "prompt": "Data computed from authoritative input is ______ data.",
+      "answer": "derived",
+      "source_pages": [
+        513
+      ]
+    },
+    {
+      "id": "FIB003",
+      "prompt": "A globally ordered event log implements total order ______.",
+      "answer": "broadcast",
+      "source_pages": [
+        515
+      ]
+    },
+    {
+      "id": "FIB004",
+      "prompt": "The architecture with separate batch and stream layers is the ______ architecture.",
+      "answer": "lambda",
+      "source_pages": [
+        519
+      ]
+    },
+    {
+      "id": "FIB005",
+      "prompt": "A unified read interface across heterogeneous stores is a federated database or ______.",
+      "answer": "polystore",
+      "source_pages": [
+        523
+      ]
+    },
+    {
+      "id": "FIB006",
+      "prompt": "The dataflow design pattern is sometimes called database ______-out.",
+      "answer": "inside",
+      "source_pages": [
+        526
+      ]
+    },
+    {
+      "id": "FIB007",
+      "prompt": "The eager side of computation is the ______ path.",
+      "answer": "write",
+      "source_pages": [
+        531,
+        532
+      ]
+    },
+    {
+      "id": "FIB008",
+      "prompt": "The lazy query-time side is the ______ path.",
+      "answer": "read",
+      "source_pages": [
+        532
+      ]
+    },
+    {
+      "id": "FIB009",
+      "prompt": "A client-generated operation identifier can suppress ______ requests.",
+      "answer": "duplicate",
+      "source_pages": [
+        540,
+        541
+      ]
+    },
+    {
+      "id": "FIB010",
+      "prompt": "Strict distributed uniqueness requires ______.",
+      "answer": "consensus",
+      "source_pages": [
+        543
+      ]
+    },
+    {
+      "id": "FIB011",
+      "prompt": "Freshness of observed state is ______.",
+      "answer": "timeliness",
+      "source_pages": [
+        546
+      ]
+    },
+    {
+      "id": "FIB012",
+      "prompt": "Absence of corruption is ______.",
+      "answer": "integrity",
+      "source_pages": [
+        546
+      ]
+    },
+    {
+      "id": "FIB013",
+      "prompt": "Repairing a temporary violation later is a ______ transaction.",
+      "answer": "compensating",
+      "source_pages": [
+        548
+      ]
+    },
+    {
+      "id": "FIB014",
+      "prompt": "Avoiding unnecessary synchronous agreement is coordination ______.",
+      "answer": "avoidance",
+      "source_pages": [
+        549,
+        550
+      ]
+    },
+    {
+      "id": "FIB015",
+      "prompt": "Checking stored data for corruption is ______.",
+      "answer": "auditing",
+      "source_pages": [
+        552
+      ]
+    },
+    {
+      "id": "FIB016",
+      "prompt": "A tree of cryptographic hashes used for integrity proofs is a ______ tree.",
+      "answer": "Merkle",
+      "source_pages": [
+        554
+      ]
+    },
+    {
+      "id": "FIB017",
+      "prompt": "A model reinforcing its own predictions through its effects creates a feedback ______.",
+      "answer": "loop",
+      "source_pages": [
+        558
+      ]
+    },
+    {
+      "id": "FIB018",
+      "prompt": "Intrusive large-scale behavioral tracking is discussed as ______.",
+      "answer": "surveillance",
+      "source_pages": [
+        559
+      ]
+    },
+    {
+      "id": "FIB019",
+      "prompt": "Privacy is the freedom to control ______.",
+      "answer": "disclosure",
+      "source_pages": [
+        561
+      ]
+    },
+    {
+      "id": "FIB020",
+      "prompt": "The chapter recommends purging personal data when it is no longer ______.",
+      "answer": "needed",
+      "source_pages": [
+        565
+      ]
+    }
+  ],
+  "ordering_exercises": [
+    {
+      "id": "ORD01",
+      "title": "Derived-system update",
+      "items_scrambled": [
+        "Derived consumer applies change",
+        "User writes system of record",
+        "CDC captures ordered change",
+        "Search/cache becomes updated"
+      ],
+      "correct_order": [
+        "User writes system of record",
+        "CDC captures ordered change",
+        "Derived consumer applies change",
+        "Search/cache becomes updated"
+      ],
+      "source_pages": [
+        513,
+        514
+      ]
+    },
+    {
+      "id": "ORD02",
+      "title": "Gradual view migration",
+      "items_scrambled": [
+        "Drop old view",
+        "Build new derived view alongside old",
+        "Shift small percentage of users",
+        "Increase traffic to new view"
+      ],
+      "correct_order": [
+        "Build new derived view alongside old",
+        "Shift small percentage of users",
+        "Increase traffic to new view",
+        "Drop old view"
+      ],
+      "source_pages": [
+        519
+      ]
+    },
+    {
+      "id": "ORD03",
+      "title": "End-to-end deduplication",
+      "items_scrambled": [
+        "DB uniqueness check",
+        "Client creates request ID",
+        "Request retries",
+        "ID propagated through services"
+      ],
+      "correct_order": [
+        "Client creates request ID",
+        "ID propagated through services",
+        "Request retries",
+        "DB uniqueness check"
+      ],
+      "source_pages": [
+        540,
+        541
+      ]
+    },
+    {
+      "id": "ORD04",
+      "title": "Log-based uniqueness",
+      "items_scrambled": [
+        "Client receives success/rejection",
+        "Request appended to partition",
+        "Processor checks local unique state",
+        "Partition chosen from unique key"
+      ],
+      "correct_order": [
+        "Partition chosen from unique key",
+        "Request appended to partition",
+        "Processor checks local unique state",
+        "Client receives success/rejection"
+      ],
+      "source_pages": [
+        544
+      ]
+    },
+    {
+      "id": "ORD05",
+      "title": "Multi-partition transfer without XA",
+      "items_scrambled": [
+        "Debit/credit consumers dedupe and apply",
+        "Client appends one request event",
+        "Processor emits debit/credit instructions",
+        "Request ID travels with instructions"
+      ],
+      "correct_order": [
+        "Client appends one request event",
+        "Processor emits debit/credit instructions",
+        "Request ID travels with instructions",
+        "Debit/credit consumers dedupe and apply"
+      ],
+      "source_pages": [
+        545
+      ]
+    },
+    {
+      "id": "ORD06",
+      "title": "Audit derived state",
+      "items_scrambled": [
+        "Compare derived outputs",
+        "Replay immutable event log",
+        "Detect corruption",
+        "Run deterministic derivation"
+      ],
+      "correct_order": [
+        "Replay immutable event log",
+        "Run deterministic derivation",
+        "Compare derived outputs",
+        "Detect corruption"
+      ],
+      "source_pages": [
+        553,
+        554
+      ]
+    }
+  ],
+  "scenario_questions": [
+    {
+      "id": "SC001",
+      "difficulty": "medium",
+      "scenario": "An app writes product updates independently to PostgreSQL and Elasticsearch.",
+      "question": "What architectural risk exists?",
+      "expected_answer": "Concurrent writes or partial failures can leave the two systems permanently inconsistent because neither defines one authoritative order.",
+      "source_pages": [
+        513,
+        514
+      ]
+    },
+    {
+      "id": "SC002",
+      "difficulty": "medium",
+      "scenario": "One search-index consumer is down for 30 minutes while the system of record continues receiving writes.",
+      "question": "Why is an event log helpful?",
+      "expected_answer": "The log buffers the changes so the failed consumer can catch up later without blocking other systems.",
+      "source_pages": [
+        524
+      ]
+    },
+    {
+      "id": "SC003",
+      "difficulty": "medium",
+      "scenario": "Your team can solve every current workload with one mature database.",
+      "question": "Should you unbundle anyway?",
+      "expected_answer": "No. The chapter recommends using the single product if it already meets your needs.",
+      "source_pages": [
+        525
+      ]
+    },
+    {
+      "id": "SC004",
+      "difficulty": "medium",
+      "scenario": "You are migrating an old cache schema to a completely different new one.",
+      "question": "Safer migration strategy?",
+      "expected_answer": "Maintain both as derived views, gradually shift traffic, and retain the ability to revert.",
+      "source_pages": [
+        519
+      ]
+    },
+    {
+      "id": "SC005",
+      "difficulty": "medium",
+      "scenario": "You maintain equivalent business logic in Hadoop and Storm.",
+      "question": "Which architectural pain is this?",
+      "expected_answer": "Lambda-architecture duplication and operational complexity.",
+      "source_pages": [
+        519,
+        520
+      ]
+    },
+    {
+      "id": "SC006",
+      "difficulty": "medium",
+      "scenario": "A purchase service calls a remote exchange-rate service on every transaction.",
+      "question": "What dataflow alternative exists?",
+      "expected_answer": "Subscribe to exchange-rate updates, maintain current state locally, and join purchases against local state.",
+      "source_pages": [
+        530,
+        531
+      ]
+    },
+    {
+      "id": "SC007",
+      "difficulty": "medium",
+      "scenario": "A web app needs to work during flaky cellular connectivity.",
+      "question": "Which design direction?",
+      "expected_answer": "Offline-first local state with background synchronization and replay/catch-up after reconnect.",
+      "source_pages": [
+        533,
+        534
+      ]
+    },
+    {
+      "id": "SC008",
+      "difficulty": "medium",
+      "scenario": "You want to understand why a customer bought an item after seeing an inventory estimate.",
+      "question": "What could improve causal provenance?",
+      "expected_answer": "Log the read/query result as an event so you can reconstruct what the customer saw before deciding.",
+      "source_pages": [
+        535,
+        536
+      ]
+    },
+    {
+      "id": "SC009",
+      "difficulty": "medium",
+      "scenario": "A browser submits a payment POST, times out, and the user retries.",
+      "question": "Why can serializable DB transactions still double-charge?",
+      "expected_answer": "The retry is a separate request/transaction unless the business operation has an end-to-end stable ID.",
+      "source_pages": [
+        539,
+        540
+      ]
+    },
+    {
+      "id": "SC010",
+      "difficulty": "medium",
+      "scenario": "You add a UUID request_id generated in the browser and a UNIQUE constraint in the DB.",
+      "question": "What property does this provide?",
+      "expected_answer": "End-to-end duplicate suppression for retries carrying the same operation ID.",
+      "source_pages": [
+        540,
+        541
+      ]
+    },
+    {
+      "id": "SC011",
+      "difficulty": "hard",
+      "scenario": "Two users concurrently request the same username.",
+      "question": "What is fundamentally required for strict immediate uniqueness?",
+      "expected_answer": "Coordination/consensus so the system chooses one winner.",
+      "source_pages": [
+        543
+      ]
+    },
+    {
+      "id": "SC012",
+      "difficulty": "hard",
+      "scenario": "Usernames are partitioned by hash and each partition has one sequential stream processor.",
+      "question": "Why can this enforce uniqueness?",
+      "expected_answer": "Every conflicting claim for the same username reaches the same ordered partition and is processed serially.",
+      "source_pages": [
+        544
+      ]
+    },
+    {
+      "id": "SC013",
+      "difficulty": "hard",
+      "scenario": "A transfer touches request-ID, payer, and payee partitions.",
+      "question": "How can you avoid one three-way atomic commit?",
+      "expected_answer": "Atomically log one request event, deterministically derive debit/credit events, and deduplicate downstream using the original request ID.",
+      "source_pages": [
+        545,
+        546
+      ]
+    },
+    {
+      "id": "SC014",
+      "difficulty": "hard",
+      "scenario": "A customer's recent card payment is missing for 15 minutes but later appears.",
+      "question": "What kind of issue?",
+      "expected_answer": "Timeliness/staleness.",
+      "source_pages": [
+        546,
+        547
+      ]
+    },
+    {
+      "id": "SC015",
+      "difficulty": "hard",
+      "scenario": "A payment is debited from the payer but never credited to the merchant.",
+      "question": "What kind of issue?",
+      "expected_answer": "Integrity corruption, not merely timeliness.",
+      "source_pages": [
+        547
+      ]
+    },
+    {
+      "id": "SC016",
+      "difficulty": "hard",
+      "scenario": "An airline overbooks and later offers compensation to displaced passengers.",
+      "question": "What correctness style does this illustrate?",
+      "expected_answer": "Loose constraint enforcement plus compensating transactions.",
+      "source_pages": [
+        548,
+        549
+      ]
+    },
+    {
+      "id": "SC017",
+      "difficulty": "hard",
+      "scenario": "Your cross-region service must remain writable during WAN partitions and strict uniqueness is needed for only 1% of operations.",
+      "question": "Design implication?",
+      "expected_answer": "Avoid coordination for most operations, preserving integrity asynchronously, and coordinate selectively for the strict 1%.",
+      "source_pages": [
+        550
+      ]
+    },
+    {
+      "id": "SC018",
+      "difficulty": "hard",
+      "scenario": "A storage system claims 11 nines durability.",
+      "question": "What does 'trust, but verify' recommend?",
+      "expected_answer": "Continuously audit/scrub data and test restoration instead of treating the claim as absolute.",
+      "source_pages": [
+        551,
+        552
+      ]
+    },
+    {
+      "id": "SC019",
+      "difficulty": "hard",
+      "scenario": "A derived search index is suspected of corruption.",
+      "question": "How can deterministic dataflow help?",
+      "expected_answer": "Replay the authoritative immutable input and compare rebuilt output against the current index.",
+      "source_pages": [
+        553
+      ]
+    },
+    {
+      "id": "SC020",
+      "difficulty": "hard",
+      "scenario": "A system signs its audit log but application bugs wrote the wrong events into it.",
+      "question": "Is the signature enough?",
+      "expected_answer": "No. Tamper evidence does not prove the correct business events were recorded; end-to-end integrity still matters.",
+      "source_pages": [
+        554
+      ]
+    },
+    {
+      "id": "SC021",
+      "difficulty": "hard",
+      "scenario": "A hiring model trained on historical decisions rejects applicants from certain postal codes.",
+      "question": "What risk should you investigate?",
+      "expected_answer": "Postal code may proxy protected traits and reproduce historical discrimination.",
+      "source_pages": [
+        556
+      ]
+    },
+    {
+      "id": "SC022",
+      "difficulty": "hard",
+      "scenario": "A model is 95% accurate overall but incorrectly denies one person a loan.",
+      "question": "What conceptual mistake is it to assume accuracy guarantees the individual decision?",
+      "expected_answer": "Population-level probability does not guarantee correctness for any particular individual.",
+      "source_pages": [
+        557
+      ]
+    },
+    {
+      "id": "SC023",
+      "difficulty": "hard",
+      "scenario": "A low credit score makes employment harder, unemployment worsens finances, and the score falls further.",
+      "question": "What phenomenon?",
+      "expected_answer": "A self-reinforcing feedback loop.",
+      "source_pages": [
+        558
+      ]
+    },
+    {
+      "id": "SC024",
+      "difficulty": "hard",
+      "scenario": "A recommendation algorithm increasingly shows only content a user already agrees with.",
+      "question": "What wider consequence can emerge?",
+      "expected_answer": "Echo chambers/polarization through feedback loops.",
+      "source_pages": [
+        558
+      ]
+    },
+    {
+      "id": "SC025",
+      "difficulty": "hard",
+      "scenario": "A free service collects behavioral data mainly to improve ad targeting.",
+      "question": "How does the chapter ask you to reframe this?",
+      "expected_answer": "Consider whether the relationship is surveillance serving advertisers rather than purely a service to the user.",
+      "source_pages": [
+        559
+      ]
+    },
+    {
+      "id": "SC026",
+      "difficulty": "hard",
+      "scenario": "A privacy policy technically discloses complex secondary uses that almost nobody reads or understands.",
+      "question": "Does the chapter consider this obviously meaningful consent?",
+      "expected_answer": "No; meaningful consent requires understanding and genuine choice.",
+      "source_pages": [
+        560,
+        561
+      ]
+    },
+    {
+      "id": "SC027",
+      "difficulty": "hard",
+      "scenario": "A user cannot realistically avoid a dominant communication platform without losing social/professional participation.",
+      "question": "What problem does this create for consent?",
+      "expected_answer": "The opt-out is not a genuinely free choice, weakening the claim of voluntary consent.",
+      "source_pages": [
+        561
+      ]
+    },
+    {
+      "id": "SC028",
+      "difficulty": "hard",
+      "scenario": "A company stores sensitive user data 'just in case' indefinitely.",
+      "question": "What risk framing does the chapter suggest?",
+      "expected_answer": "The data is a valuable but hazardous/toxic asset whose breach or future misuse must be considered.",
+      "source_pages": [
+        563
+      ]
+    },
+    {
+      "id": "SC029",
+      "difficulty": "hard",
+      "scenario": "An engineer says, 'Ethics is product management's job; I only build infrastructure.'",
+      "question": "How does the chapter respond?",
+      "expected_answer": "Engineers also bear responsibility for the consequences of systems they build.",
+      "source_pages": [
+        555,
+        566
+      ]
+    },
+    {
+      "id": "SC030",
+      "difficulty": "hard",
+      "scenario": "A team wants to keep all historical personal events because immutability simplifies debugging.",
+      "question": "What competing concern must be considered?",
+      "expected_answer": "Privacy/legal/security needs may justify deletion and shorter retention despite technical benefits of immutable history.",
+      "source_pages": [
+        565
+      ]
+    }
+  ],
+  "short_answer_questions": [
+    {
+      "id": "SA001",
+      "question": "Why does the chapter favor explicit dataflow?",
+      "model_answer": "It clarifies authoritative inputs and derived outputs, making synchronization, recovery, evolution, and reasoning about correctness easier.",
+      "source_pages": [
+        513,
+        514
+      ]
+    },
+    {
+      "id": "SA002",
+      "question": "Derived data vs distributed transactions?",
+      "model_answer": "Distributed transactions synchronize writes with locks/atomic commit and strong timeliness; derived data uses ordered logs, asynchronous consumers, deterministic retry, replay, and idempotence.",
+      "source_pages": [
+        514
+      ]
+    },
+    {
+      "id": "SA003",
+      "question": "Why is global total order not a universal answer?",
+      "model_answer": "Partitioning, multiple datacenters, independent microservices, and offline clients all create event streams with no cheap single global ordering point.",
+      "source_pages": [
+        515
+      ]
+    },
+    {
+      "id": "SA004",
+      "question": "How can causality survive without global total order?",
+      "model_answer": "Use logical timestamps, explicit references to causally prior events, partitioning related updates together, and conflict-resolution logic—while recognizing external side effects remain difficult.",
+      "source_pages": [
+        516
+      ]
+    },
+    {
+      "id": "SA005",
+      "question": "Batch vs stream in application evolution?",
+      "model_answer": "Streams keep current views updated with low latency; batch reprocessing rebuilds history into new forms and supports reversible migrations.",
+      "source_pages": [
+        517,
+        518,
+        519
+      ]
+    },
+    {
+      "id": "SA006",
+      "question": "Why is lambda architecture often criticized?",
+      "model_answer": "It duplicates logic and operational systems, requires merging two outputs, and full recomputation becomes expensive enough that the supposedly simple batch layer becomes incremental and stream-like.",
+      "source_pages": [
+        519,
+        520
+      ]
+    },
+    {
+      "id": "SA007",
+      "question": "What is unbundling databases?",
+      "model_answer": "Treat indexes, materialized views, replication, search, and other capabilities as independent derived systems composed around authoritative dataflows.",
+      "source_pages": [
+        521,
+        522,
+        523
+      ]
+    },
+    {
+      "id": "SA008",
+      "question": "Federation vs unbundling?",
+      "model_answer": "Federation gives one read/query interface across stores; unbundling focuses on reliably propagating writes/changes across stores.",
+      "source_pages": [
+        523,
+        524
+      ]
+    },
+    {
+      "id": "SA009",
+      "question": "Why is loose coupling valuable?",
+      "model_answer": "A slow/failing component can lag and catch up instead of taking the whole system down, and teams can independently develop specialized components.",
+      "source_pages": [
+        524
+      ]
+    },
+    {
+      "id": "SA010",
+      "question": "What is database inside-out?",
+      "model_answer": "A design pattern in which durable event streams and application derivation functions become the connective tissue between separate state stores and processing systems.",
+      "source_pages": [
+        526,
+        527,
+        529,
+        530
+      ]
+    },
+    {
+      "id": "SA011",
+      "question": "Why treat application code as a derivation function?",
+      "model_answer": "It makes inputs/outputs explicit, enables replay, allows deterministic rebuilding, and generalizes secondary-index maintenance to arbitrary application-specific logic.",
+      "source_pages": [
+        527
+      ]
+    },
+    {
+      "id": "SA012",
+      "question": "Write path vs read path?",
+      "model_answer": "The write path eagerly precomputes derived state when inputs change; the read path does remaining work when users query. Caches/indexes move the boundary toward writes.",
+      "source_pages": [
+        531,
+        532,
+        533
+      ]
+    },
+    {
+      "id": "SA013",
+      "question": "Why can dataflow outperform synchronous microservices?",
+      "model_answer": "Frequently needed remote state can be maintained locally from change streams, removing network calls from the critical request path.",
+      "source_pages": [
+        530,
+        531
+      ]
+    },
+    {
+      "id": "SA014",
+      "question": "Why model reads as events?",
+      "model_answer": "It unifies requests with stream joins and can preserve provenance about what users saw before later actions.",
+      "source_pages": [
+        535,
+        536
+      ]
+    },
+    {
+      "id": "SA015",
+      "question": "Explain the end-to-end argument for duplicate suppression.",
+      "model_answer": "TCP or a DB transaction only protects one layer. A stable operation ID generated at the user endpoint must propagate through retries/services to the final data write to prevent duplicate business effects.",
+      "source_pages": [
+        539,
+        540,
+        541,
+        542
+      ]
+    },
+    {
+      "id": "SA016",
+      "question": "Why does strict uniqueness require consensus?",
+      "model_answer": "Concurrent requests for the same unique resource must be reduced to one accepted operation and rejected alternatives, requiring a common ordering/decision.",
+      "source_pages": [
+        543
+      ]
+    },
+    {
+      "id": "SA017",
+      "question": "How does a partitioned log enforce uniqueness?",
+      "model_answer": "Hash the unique value to one partition, process requests sequentially, keep local claimed-state, and emit success/rejection.",
+      "source_pages": [
+        544
+      ]
+    },
+    {
+      "id": "SA018",
+      "question": "How can multi-partition operations avoid XA?",
+      "model_answer": "Record one atomic request event, derive partition-specific commands deterministically, and use the same end-to-end ID for deduplication in every downstream partition.",
+      "source_pages": [
+        545,
+        546
+      ]
+    },
+    {
+      "id": "SA019",
+      "question": "Timeliness vs integrity?",
+      "model_answer": "Timeliness is freshness and can recover by waiting; integrity is correctness/no corruption and generally requires explicit repair if violated.",
+      "source_pages": [
+        546,
+        547
+      ]
+    },
+    {
+      "id": "SA020",
+      "question": "Why can dataflow preserve integrity without linearizability?",
+      "model_answer": "Immutable events, reliable delivery, deterministic derivation, request IDs, idempotence, and replay can prevent loss/duplication even while updates propagate asynchronously.",
+      "source_pages": [
+        547,
+        548
+      ]
+    },
+    {
+      "id": "SA021",
+      "question": "When are compensating transactions appropriate?",
+      "model_answer": "When temporary constraint violations have acceptable business cost and can be repaired later, avoiding synchronous coordination on the critical path.",
+      "source_pages": [
+        548,
+        549
+      ]
+    },
+    {
+      "id": "SA022",
+      "question": "What is coordination avoidance?",
+      "model_answer": "Use asynchronous partitioned processing for most operations and introduce consensus/synchronization only where a strict invariant truly requires it.",
+      "source_pages": [
+        549,
+        550
+      ]
+    },
+    {
+      "id": "SA023",
+      "question": "What does 'trust, but verify' mean for data systems?",
+      "model_answer": "Assume components work well enough to operate, but continuously check data integrity because rare hardware/software corruption will eventually occur at scale.",
+      "source_pages": [
+        550,
+        551,
+        552
+      ]
+    },
+    {
+      "id": "SA024",
+      "question": "How does event sourcing improve auditing?",
+      "model_answer": "The input event is immutable and explicit, derivations can be deterministic, and the same history can be replayed to verify or reproduce state.",
+      "source_pages": [
+        553
+      ]
+    },
+    {
+      "id": "SA025",
+      "question": "Why is end-to-end auditing stronger than component-level checks?",
+      "model_answer": "It detects corruption introduced anywhere along the entire pipeline rather than only within a disk, connection, or service.",
+      "source_pages": [
+        553,
+        554
+      ]
+    },
+    {
+      "id": "SA026",
+      "question": "Why doesn't higher predictive accuracy resolve ethical concerns?",
+      "model_answer": "High aggregate accuracy does not eliminate individual errors, opaque reasoning, discriminatory correlations, or inability to appeal.",
+      "source_pages": [
+        556,
+        557
+      ]
+    },
+    {
+      "id": "SA027",
+      "question": "How do feedback loops make predictive systems dangerous?",
+      "model_answer": "Predictions influence opportunities and behavior, creating new data that can strengthen the original label and magnify inequality.",
+      "source_pages": [
+        558
+      ]
+    },
+    {
+      "id": "SA028",
+      "question": "What is the chapter's definition of privacy?",
+      "model_answer": "Agency over disclosure: deciding what to reveal, to whom, and under what circumstances.",
+      "source_pages": [
+        561
+      ]
+    },
+    {
+      "id": "SA029",
+      "question": "Why can personal data become a source of power?",
+      "model_answer": "Whoever controls detailed information can classify, target, exclude, or influence people while the subjects may have little visibility or recourse.",
+      "source_pages": [
+        562,
+        563
+      ]
+    },
+    {
+      "id": "SA030",
+      "question": "What final responsibility does the book assign engineers?",
+      "model_answer": "Technical systems should be designed not only for reliability/scalability/maintainability but also with respect for human dignity, agency, and consequences.",
+      "source_pages": [
+        565,
+        566
+      ]
+    }
+  ],
+  "active_recall_prompts": [
+    {
+      "id": "AR001",
+      "prompt": "Explain the whole system-of-record -> derived-data model.",
+      "target_points": [
+        "authoritative input",
+        "event log/CDC",
+        "deterministic transformations",
+        "indexes/caches/models",
+        "replay"
+      ],
+      "source_pages": [
+        513,
+        514
+      ]
+    },
+    {
+      "id": "AR002",
+      "prompt": "Compare distributed transactions with log-based derived systems.",
+      "target_points": [
+        "locks",
+        "atomic commit",
+        "linearizability",
+        "async log",
+        "idempotence",
+        "fault isolation"
+      ],
+      "source_pages": [
+        514
+      ]
+    },
+    {
+      "id": "AR003",
+      "prompt": "List why total ordering becomes difficult.",
+      "target_points": [
+        "throughput",
+        "partitioning",
+        "datacenters",
+        "microservices",
+        "offline clients"
+      ],
+      "source_pages": [
+        515
+      ]
+    },
+    {
+      "id": "AR004",
+      "prompt": "Explain the unfriend/message causality example.",
+      "target_points": [
+        "friendship change",
+        "message event",
+        "separate systems",
+        "wrong notification",
+        "causal metadata"
+      ],
+      "source_pages": [
+        516
+      ]
+    },
+    {
+      "id": "AR005",
+      "prompt": "Compare batch, stream, lambda, and unified processing.",
+      "target_points": [
+        "history",
+        "low latency",
+        "duplicate stacks",
+        "replay",
+        "event time"
+      ],
+      "source_pages": [
+        517,
+        518,
+        519,
+        520
+      ]
+    },
+    {
+      "id": "AR006",
+      "prompt": "Explain unbundling databases.",
+      "target_points": [
+        "indexes",
+        "materialized views",
+        "replication",
+        "search",
+        "federated reads",
+        "unbundled writes"
+      ],
+      "source_pages": [
+        521,
+        522,
+        523,
+        524
+      ]
+    },
+    {
+      "id": "AR007",
+      "prompt": "Explain database inside-out.",
+      "target_points": [
+        "durable events",
+        "derivation functions",
+        "application code",
+        "state stores",
+        "reactive propagation"
+      ],
+      "source_pages": [
+        526,
+        527,
+        528,
+        529,
+        530
+      ]
+    },
+    {
+      "id": "AR008",
+      "prompt": "Explain write path vs read path.",
+      "target_points": [
+        "eager work",
+        "lazy work",
+        "index",
+        "cache",
+        "materialized view"
+      ],
+      "source_pages": [
+        531,
+        532,
+        533
+      ]
+    },
+    {
+      "id": "AR009",
+      "prompt": "Explain offline-first event delivery.",
+      "target_points": [
+        "local state",
+        "push updates",
+        "offline",
+        "reconnect",
+        "offset/replay"
+      ],
+      "source_pages": [
+        533,
+        534,
+        535
+      ]
+    },
+    {
+      "id": "AR010",
+      "prompt": "Explain reads-as-events.",
+      "target_points": [
+        "read stream",
+        "stream-table join",
+        "subscription",
+        "provenance",
+        "causality"
+      ],
+      "source_pages": [
+        535,
+        536
+      ]
+    },
+    {
+      "id": "AR011",
+      "prompt": "Explain end-to-end duplicate suppression.",
+      "target_points": [
+        "ambiguous retry",
+        "TCP scope",
+        "operation ID",
+        "propagation",
+        "UNIQUE constraint"
+      ],
+      "source_pages": [
+        539,
+        540,
+        541,
+        542
+      ]
+    },
+    {
+      "id": "AR012",
+      "prompt": "Explain strict uniqueness through a log.",
+      "target_points": [
+        "partition by value",
+        "sequential consumer",
+        "local claimed state",
+        "success/reject",
+        "consensus"
+      ],
+      "source_pages": [
+        543,
+        544
+      ]
+    },
+    {
+      "id": "AR013",
+      "prompt": "Explain multi-partition transfer without distributed atomic commit.",
+      "target_points": [
+        "one request event",
+        "derive debit/credit",
+        "request ID",
+        "dedupe",
+        "determinism"
+      ],
+      "source_pages": [
+        545,
+        546
+      ]
+    },
+    {
+      "id": "AR014",
+      "prompt": "Contrast timeliness and integrity.",
+      "target_points": [
+        "freshness",
+        "temporary staleness",
+        "corruption",
+        "permanent",
+        "repair",
+        "priority"
+      ],
+      "source_pages": [
+        546,
+        547
+      ]
+    },
+    {
+      "id": "AR015",
+      "prompt": "Explain coordination avoidance.",
+      "target_points": [
+        "loose constraints",
+        "compensation",
+        "integrity",
+        "availability",
+        "selective synchronization"
+      ],
+      "source_pages": [
+        548,
+        549,
+        550
+      ]
+    },
+    {
+      "id": "AR016",
+      "prompt": "Explain trust-but-verify.",
+      "target_points": [
+        "system model",
+        "rare faults",
+        "scrubbing",
+        "restore tests",
+        "audit"
+      ],
+      "source_pages": [
+        550,
+        551,
+        552
+      ]
+    },
+    {
+      "id": "AR017",
+      "prompt": "Explain event-based auditability.",
+      "target_points": [
+        "immutable events",
+        "deterministic derivation",
+        "replay",
+        "hashes",
+        "provenance",
+        "time travel"
+      ],
+      "source_pages": [
+        553,
+        554
+      ]
+    },
+    {
+      "id": "AR018",
+      "prompt": "Explain the predictive-analytics ethics section.",
+      "target_points": [
+        "bias",
+        "proxy traits",
+        "probabilistic errors",
+        "accountability",
+        "appeal",
+        "feedback loops"
+      ],
+      "source_pages": [
+        555,
+        556,
+        557,
+        558
+      ]
+    },
+    {
+      "id": "AR019",
+      "prompt": "Explain privacy as agency.",
+      "target_points": [
+        "not secrecy",
+        "choice of disclosure",
+        "consent",
+        "power imbalance",
+        "surveillance"
+      ],
+      "source_pages": [
+        559,
+        560,
+        561,
+        562
+      ]
+    },
+    {
+      "id": "AR020",
+      "prompt": "Explain the final cultural recommendations.",
+      "target_points": [
+        "human dignity",
+        "data minimization",
+        "purge",
+        "education",
+        "cryptographic controls",
+        "responsibility"
+      ],
+      "source_pages": [
+        564,
+        565,
+        566
+      ]
+    }
+  ],
+  "diagram_reconstruction_drills": [
+    {
+      "id": "DR01",
+      "name": "System of record and derived views",
+      "task": "Draw one authoritative DB/event log feeding cache, search, analytics, and ML-derived systems.",
+      "source_pages": [
+        513,
+        514
+      ]
+    },
+    {
+      "id": "DR02",
+      "name": "Total-order limits",
+      "task": "Draw separate log partitions, two datacenters, independent services, and offline clients with only partial/causal ordering.",
+      "source_pages": [
+        515,
+        516
+      ]
+    },
+    {
+      "id": "DR03",
+      "name": "Lambda architecture",
+      "task": "Draw immutable event source feeding a speed/stream layer and batch layer whose results merge into a read view.",
+      "source_pages": [
+        519,
+        520
+      ]
+    },
+    {
+      "id": "DR04",
+      "name": "Federated vs unbundled",
+      "task": "Draw federation as a unified read/query layer and unbundling as an event-driven write propagation layer.",
+      "source_pages": [
+        523,
+        524
+      ]
+    },
+    {
+      "id": "DR05",
+      "name": "Database inside-out",
+      "task": "Draw state-change stream -> application derivation -> downstream state stores -> further change streams.",
+      "source_pages": [
+        526,
+        529,
+        530
+      ]
+    },
+    {
+      "id": "DR06",
+      "name": "Write/read path boundary",
+      "task": "Draw document update -> linguistic analysis -> search index -> search query -> ranking, marking write path and read path.",
+      "source_pages": [
+        531,
+        532,
+        533
+      ]
+    },
+    {
+      "id": "DR07",
+      "name": "Offline-first client",
+      "task": "Draw server log -> pushed client changes -> local replica -> offline operation -> reconnect/replay.",
+      "source_pages": [
+        533,
+        534,
+        535
+      ]
+    },
+    {
+      "id": "DR08",
+      "name": "End-to-end request ID",
+      "task": "Draw browser -> service -> DB while preserving one operation ID across retries and enforcing a UNIQUE constraint.",
+      "source_pages": [
+        540,
+        541
+      ]
+    },
+    {
+      "id": "DR09",
+      "name": "Log-based uniqueness",
+      "task": "Draw username hash -> log partition -> single-threaded validator -> success/rejection output stream.",
+      "source_pages": [
+        544
+      ]
+    },
+    {
+      "id": "DR10",
+      "name": "Multi-partition transfer",
+      "task": "Draw one request event -> debit and credit streams -> partitioned processors -> dedupe by request ID.",
+      "source_pages": [
+        545,
+        546
+      ]
+    },
+    {
+      "id": "DR11",
+      "name": "Timeliness vs integrity",
+      "task": "Create two timelines: stale-but-eventually-fresh state versus permanently corrupted/lost/duplicated state.",
+      "source_pages": [
+        546,
+        547
+      ]
+    },
+    {
+      "id": "DR12",
+      "name": "Audit pipeline",
+      "task": "Draw immutable event log -> deterministic derivation -> current state -> independent recomputation/comparison with hashes.",
+      "source_pages": [
+        553,
+        554
+      ]
+    },
+    {
+      "id": "DR13",
+      "name": "Algorithmic feedback loop",
+      "task": "Draw prediction -> decision -> changed opportunity/behavior -> new data -> reinforced future prediction.",
+      "source_pages": [
+        558
+      ]
+    },
+    {
+      "id": "DR14",
+      "name": "Privacy/power flow",
+      "task": "Draw user activity -> collected behavioral data -> derived profiles -> advertisers/decisions, annotating loss of user control.",
+      "source_pages": [
+        559,
+        560,
+        561,
+        562,
+        563
+      ]
+    }
+  ],
+  "interview_style_questions": [
+    {
+      "id": "INT01",
+      "question": "How would you integrate a primary database with search, cache, and analytics without dual-write races?",
+      "strong_answer_outline": [
+        "system of record",
+        "CDC/event log",
+        "ordered changes",
+        "derived consumers",
+        "idempotence",
+        "replay"
+      ],
+      "source_pages": [
+        513,
+        514
+      ]
+    },
+    {
+      "id": "INT02",
+      "question": "Distributed transactions vs event-driven derivation?",
+      "strong_answer_outline": [
+        "sync locks/atomic commit",
+        "linearizability",
+        "async logs",
+        "idempotence",
+        "fault isolation",
+        "timeliness tradeoff"
+      ],
+      "source_pages": [
+        514
+      ]
+    },
+    {
+      "id": "INT03",
+      "question": "Why can't we just put every event in one global order?",
+      "strong_answer_outline": [
+        "single leader throughput",
+        "partitions",
+        "WAN",
+        "microservices",
+        "offline clients",
+        "consensus limits"
+      ],
+      "source_pages": [
+        515
+      ]
+    },
+    {
+      "id": "INT04",
+      "question": "What are the strengths and weaknesses of lambda architecture?",
+      "strong_answer_outline": [
+        "immutable history",
+        "speed layer",
+        "batch correction",
+        "duplicate code",
+        "merge complexity",
+        "reprocessing cost"
+      ],
+      "source_pages": [
+        519,
+        520
+      ]
+    },
+    {
+      "id": "INT05",
+      "question": "What does it mean to 'unbundle' a database?",
+      "strong_answer_outline": [
+        "indexes/views/logs as derived state",
+        "specialized systems",
+        "federated reads",
+        "unbundled writes",
+        "event log"
+      ],
+      "source_pages": [
+        521,
+        522,
+        523,
+        524
+      ]
+    },
+    {
+      "id": "INT06",
+      "question": "Explain write path vs read path and how caching shifts the boundary.",
+      "strong_answer_outline": [
+        "eager vs lazy",
+        "index",
+        "materialized view",
+        "precompute",
+        "query latency"
+      ],
+      "source_pages": [
+        531,
+        532,
+        533
+      ]
+    },
+    {
+      "id": "INT07",
+      "question": "Why might a stream subscription be better than RPC for reference data?",
+      "strong_answer_outline": [
+        "local replica",
+        "remove network request",
+        "fault isolation",
+        "time-dependent join"
+      ],
+      "source_pages": [
+        530,
+        531
+      ]
+    },
+    {
+      "id": "INT08",
+      "question": "How would you make a payment API safe from duplicate retries end to end?",
+      "strong_answer_outline": [
+        "client-generated operation ID",
+        "propagate across hops",
+        "UNIQUE constraint",
+        "idempotence",
+        "ambiguous timeout"
+      ],
+      "source_pages": [
+        539,
+        540,
+        541
+      ]
+    },
+    {
+      "id": "INT09",
+      "question": "How can a Kafka-like log enforce username uniqueness?",
+      "strong_answer_outline": [
+        "partition by username",
+        "same conflicts colocated",
+        "single-threaded validator",
+        "local state",
+        "success/reject"
+      ],
+      "source_pages": [
+        543,
+        544
+      ]
+    },
+    {
+      "id": "INT10",
+      "question": "How can you handle a multi-partition transfer without XA?",
+      "strong_answer_outline": [
+        "one atomic request event",
+        "derive commands",
+        "partition debit/credit",
+        "request ID",
+        "dedupe",
+        "deterministic retry"
+      ],
+      "source_pages": [
+        545,
+        546
+      ]
+    },
+    {
+      "id": "INT11",
+      "question": "What is the difference between timeliness and integrity?",
+      "strong_answer_outline": [
+        "freshness",
+        "stale read temporary",
+        "corruption permanent",
+        "repair",
+        "dataflow decoupling"
+      ],
+      "source_pages": [
+        546,
+        547
+      ]
+    },
+    {
+      "id": "INT12",
+      "question": "What does coordination avoidance mean?",
+      "strong_answer_outline": [
+        "preserve integrity",
+        "weaker timeliness",
+        "compensation",
+        "multi-region availability",
+        "selective consensus"
+      ],
+      "source_pages": [
+        548,
+        549,
+        550
+      ]
+    },
+    {
+      "id": "INT13",
+      "question": "How would you design a self-auditing data pipeline?",
+      "strong_answer_outline": [
+        "immutable event source",
+        "deterministic derivation",
+        "hashes",
+        "replay",
+        "comparison",
+        "backup restore tests"
+      ],
+      "source_pages": [
+        552,
+        553,
+        554
+      ]
+    },
+    {
+      "id": "INT14",
+      "question": "What systems lessons can you take from the chapter's ethics section?",
+      "strong_answer_outline": [
+        "bias",
+        "proxy features",
+        "accountability",
+        "feedback loops",
+        "privacy as agency",
+        "data minimization",
+        "human consequences"
+      ],
+      "source_pages": [
+        555,
+        556,
+        557,
+        558,
+        559,
+        560,
+        561,
+        562,
+        563,
+        564,
+        565
+      ]
+    }
+  ],
+  "practice_problems": [
+    {
+      "id": "P01",
+      "type": "data_integration",
+      "prompt": "A product DB and search index are both independently writable. Two clients update the same product concurrently. What is the architectural flaw?",
+      "solution": "There is no single authoritative ordering. Use one system of record and derive the search index from its ordered changes.",
+      "based_on_source_pages": [
+        513,
+        514
+      ]
+    },
+    {
+      "id": "P02",
+      "type": "migration",
+      "prompt": "You need to redesign a materialized view without a big-bang migration. What chapter strategy should you use?",
+      "solution": "Build old and new views side by side from the same authoritative input, canary traffic onto the new view, gradually increase usage, then retire the old one.",
+      "based_on_source_pages": [
+        519
+      ]
+    },
+    {
+      "id": "P03",
+      "type": "rpc_vs_dataflow",
+      "prompt": "A checkout service calls a remote exchange-rate service 20,000 times/sec. What alternative can reduce network dependency?",
+      "solution": "Subscribe to exchange-rate changes and maintain current rates in local state, turning the request-time dependency into a stream-table join.",
+      "based_on_source_pages": [
+        530,
+        531
+      ]
+    },
+    {
+      "id": "P04",
+      "type": "deduplication",
+      "prompt": "A client retries a timed-out $50 payment POST. How can you prevent a second charge?",
+      "solution": "Generate one stable operation ID at the client, propagate it through retries, and enforce uniqueness/idempotence at the final write.",
+      "based_on_source_pages": [
+        539,
+        540,
+        541
+      ]
+    },
+    {
+      "id": "P05",
+      "type": "uniqueness",
+      "prompt": "You need globally unique usernames at 1M requests/sec. What partition key is natural?",
+      "solution": "Partition by hash of username so all conflicting requests for a given username reach the same ordered validator partition.",
+      "based_on_source_pages": [
+        543,
+        544
+      ]
+    },
+    {
+      "id": "P06",
+      "type": "multi_partition",
+      "prompt": "A transfer affects request-id, payer, and payee partitions. Outline a non-XA design.",
+      "solution": "Atomically log one transfer request; derive debit and credit messages carrying the same request ID; downstream partition processors dedupe and apply.",
+      "based_on_source_pages": [
+        545,
+        546
+      ]
+    },
+    {
+      "id": "P07",
+      "type": "correctness",
+      "prompt": "A user reads a stale recommendation for 30 seconds, then it catches up. Timeliness or integrity?",
+      "solution": "Timeliness.",
+      "based_on_source_pages": [
+        546,
+        547
+      ]
+    },
+    {
+      "id": "P08",
+      "type": "correctness",
+      "prompt": "A derived index permanently omits 2% of records until manually rebuilt. Timeliness or integrity?",
+      "solution": "Integrity, because waiting alone does not repair it.",
+      "based_on_source_pages": [
+        546,
+        547
+      ]
+    },
+    {
+      "id": "P09",
+      "type": "coordination",
+      "prompt": "A hotel can compensate rare overbooking cheaply. Must room assignment be globally linearizable at all times?",
+      "solution": "Not necessarily; the chapter argues some constraints can be checked loosely/asynchronously if compensation is acceptable and integrity is preserved.",
+      "based_on_source_pages": [
+        548,
+        549
+      ]
+    },
+    {
+      "id": "P10",
+      "type": "audit",
+      "prompt": "How can you verify a materialized view wasn't silently corrupted?",
+      "solution": "Replay the immutable source history through the deterministic derivation and compare the rebuilt state, ideally with hashes/checks.",
+      "based_on_source_pages": [
+        553,
+        554
+      ]
+    },
+    {
+      "id": "P11",
+      "type": "ethics",
+      "prompt": "A fraud model uses ZIP code and rejects many applicants from one racialized neighborhood. What system-design concern arises?",
+      "solution": "ZIP code may proxy race and reproduce discriminatory historical patterns; assess fairness, explainability, accountability, and recourse.",
+      "based_on_source_pages": [
+        556,
+        557
+      ]
+    },
+    {
+      "id": "P12",
+      "type": "privacy",
+      "prompt": "Your product stores all behavioral events forever because storage is cheap. What chapter recommendation challenges this?",
+      "solution": "Treat personal data as a risk-bearing asset; minimize collection/retention and purge it when no longer needed.",
+      "based_on_source_pages": [
+        563,
+        565
+      ]
+    }
+  ],
+  "common_confusions": [
+    {
+      "confusion": "Derived data means less important data.",
+      "correction": "Derived data may be business-critical; 'derived' means reproducible from an authoritative source, not unimportant.",
+      "source_pages": [
+        513,
+        514
+      ]
+    },
+    {
+      "confusion": "Asynchronous means inconsistent/corrupt.",
+      "correction": "Asynchronous processing weakens timeliness, but integrity can still be strong with reliable delivery, idempotence, and deterministic processing.",
+      "source_pages": [
+        546,
+        547,
+        548
+      ]
+    },
+    {
+      "confusion": "Total ordering should be global by default.",
+      "correction": "Global ordering creates throughput and geographic bottlenecks; many systems need only partition-local order plus causal reasoning.",
+      "source_pages": [
+        515,
+        516
+      ]
+    },
+    {
+      "confusion": "Lambda architecture is simply best of batch and stream.",
+      "correction": "It gains both capabilities but duplicates logic/infrastructure and creates merge/reprocessing complexity.",
+      "source_pages": [
+        519,
+        520
+      ]
+    },
+    {
+      "confusion": "Unbundling means microservices everywhere.",
+      "correction": "It specifically frames data-system capabilities as independently maintained derived state connected by logs/dataflow; use an integrated product when sufficient.",
+      "source_pages": [
+        523,
+        524,
+        525
+      ]
+    },
+    {
+      "confusion": "Exactly-once at the message broker means the business action cannot happen twice.",
+      "correction": "End-to-end retries across browser/service/database boundaries still require application-level operation identity.",
+      "source_pages": [
+        539,
+        540,
+        541,
+        542
+      ]
+    },
+    {
+      "confusion": "Stale and corrupt are both just 'eventual consistency'.",
+      "correction": "The chapter separates temporary timeliness violations from persistent integrity violations.",
+      "source_pages": [
+        546,
+        547
+      ]
+    },
+    {
+      "confusion": "Every constraint requires synchronous global coordination.",
+      "correction": "Strict uniqueness does, but many business constraints can be validated later and repaired through compensation.",
+      "source_pages": [
+        543,
+        548,
+        549
+      ]
+    },
+    {
+      "confusion": "Strong databases eliminate the need for auditing.",
+      "correction": "Hardware, database, and application bugs still occur; integrity should be verified end to end.",
+      "source_pages": [
+        551,
+        552,
+        553,
+        554
+      ]
+    },
+    {
+      "confusion": "Data-driven decisions are objective by definition.",
+      "correction": "Models can inherit and amplify biased historical data and proxy variables.",
+      "source_pages": [
+        556,
+        557
+      ]
+    },
+    {
+      "confusion": "Privacy means secrecy.",
+      "correction": "The chapter defines privacy as agency over what information is revealed, to whom, and when.",
+      "source_pages": [
+        561
+      ]
+    },
+    {
+      "confusion": "More retained data is always better for future analytics.",
+      "correction": "Retention creates privacy, breach, coercion, and future-misuse risk; the chapter recommends deleting data when no longer needed.",
+      "source_pages": [
+        563,
+        565
+      ]
+    }
+  ],
+  "mastery_check": {
+    "beginner": [
+      "Can explain system of record vs derived data.",
+      "Can distinguish batch and stream roles.",
+      "Can define federation, unbundling, write path, read path, timeliness, integrity, idempotence, and auditing."
+    ],
+    "intermediate": [
+      "Can compare distributed transactions with log-based integration.",
+      "Can explain lambda architecture and unified processing.",
+      "Can design end-to-end duplicate suppression with request IDs.",
+      "Can explain strict log-based uniqueness and compensating transactions."
+    ],
+    "advanced": [
+      "Can design a multi-partition operation without heterogeneous atomic commit.",
+      "Can reason about where coordination is actually necessary.",
+      "Can design replayable/self-auditing derived dataflows.",
+      "Can evaluate a system in terms of both technical correctness and human consequences."
+    ]
+  },
+  "final_review": {
+    "must_memorize": [
+      "No single tool is optimal for every workload; compose specialized systems.",
+      "Make one system authoritative and derive other representations from its ordered changes.",
+      "Avoid uncontrolled dual writes across independent systems.",
+      "Log-based integration trades strong default timeliness for loose coupling, retry, replay, and fault isolation.",
+      "Global total order becomes difficult with partitioning, geodistribution, microservices, and offline clients.",
+      "Batch = historical reprocessing; stream = low-latency updates.",
+      "Lambda architecture duplicates batch/stream logic and operational systems.",
+      "Unified engines need replay, effectively-once processing, and event-time semantics.",
+      "Unbundling views indexes/materialized views/replication/search as independent derived systems.",
+      "Federation unifies reads; unbundling focuses on writes/change propagation.",
+      "If one integrated product satisfies requirements, use it.",
+      "Database inside-out = application state organized around event-driven derivations.",
+      "Application code can be viewed as a derivation function.",
+      "Dataflow can replace synchronous remote reads with local state maintained from subscriptions.",
+      "Write path = eager/precomputed work; read path = lazy/query-time work.",
+      "Indexes, caches, and materialized views shift work from read path to write path.",
+      "Offline-first clients extend derived-state/dataflow ideas to end-user devices.",
+      "Reads can be modeled as events and joins.",
+      "Exactly-once business effects require end-to-end thinking, not just transport/database guarantees.",
+      "Use stable client-generated operation IDs for duplicate suppression.",
+      "Strict distributed uniqueness requires consensus.",
+      "Partition conflicting uniqueness requests by the constrained key.",
+      "Multi-partition operations can be decomposed from one durable request event plus deterministic idempotent derivations.",
+      "Timeliness = freshness; integrity = no corruption/loss/contradiction.",
+      "Temporary staleness is not the same as permanent integrity corruption.",
+      "Dataflow can preserve integrity without global linearizable timeliness.",
+      "Compensating transactions let some applications relax synchronous constraints.",
+      "Coordination avoidance improves performance/availability; synchronize only where truly needed.",
+      "Trust, but verify: rare hardware/software corruption happens at scale.",
+      "Audit systems by replay, comparison, checksums/hashes, and restore tests.",
+      "Immutable events + deterministic derivation improve provenance and auditability.",
+      "Merkle trees support cryptographic integrity proofs.",
+      "Predictive systems can reproduce bias and create opaque high-stakes decisions.",
+      "Population-level accuracy does not guarantee fairness/correctness for individuals.",
+      "Feedback loops can reinforce inequality and polarization.",
+      "Privacy is agency over disclosure, not secrecy.",
+      "Personal data creates power and long-lived breach/misuse risk.",
+      "Data minimization and deletion are important engineering choices.",
+      "Engineers are responsible for human consequences, not just system performance."
+    ],
+    "memory_chain": "SPECIALIZED TOOLS -> SYSTEM OF RECORD -> DERIVED DATA -> ORDERED LOG -> BATCH + STREAM -> REPROCESS -> LAMBDA -> UNIFIED PROCESSING -> UNBUNDLE DATABASE -> FEDERATED READS / UNBUNDLED WRITES -> DATAFLOW -> WRITE PATH / READ PATH -> OFFLINE CLIENTS -> READS AS EVENTS -> END-TO-END IDs -> UNIQUENESS -> MULTI-PARTITION DERIVATION -> TIMELINESS VS INTEGRITY -> COMPENSATION -> COORDINATION AVOIDANCE -> AUDIT -> MERKLE/VERIFICATION -> ETHICS -> BIAS -> FEEDBACK LOOPS -> PRIVACY -> DATA POWER -> RESPONSIBILITY",
+    "one_sentence_takeaway": "The future-facing architecture in this chapter is a loosely coupled, replayable, auditable dataflow of authoritative events and derived state that coordinates only where necessary—and is judged not just by technical correctness, but by how responsibly it affects people."
+  }
+}

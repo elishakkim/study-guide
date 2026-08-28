@@ -1,0 +1,4888 @@
+{
+  "chapter": {
+    "number": 6,
+    "title": "Partitioning",
+    "book": "Designing Data-Intensive Applications",
+    "author": "Martin Kleppmann",
+    "pdf_pages": {
+      "chapter_start": 221,
+      "chapter_summary_end": 240
+    },
+    "book_pages": {
+      "chapter_start": 199,
+      "chapter_summary_end": 217
+    },
+    "primary_goal": "Understand how large datasets and workloads are split across machines, how partitioning interacts with indexes and replication, how partitions are rebalanced as clusters change, and how requests are routed to the correct partition."
+  },
+  "chapter_summary": {
+    "overview": "Chapter 6 studies partitioning, also called sharding: dividing a dataset into smaller subsets so storage and query load can be distributed across many machines. Ideally each record belongs to one partition, while replication may create multiple physical copies of that partition for fault tolerance. The primary goal is to distribute data and request load evenly and avoid skew and hot spots. The chapter compares key-range partitioning, which preserves sorted order and supports efficient range scans but can create hot spots for clustered access patterns, with hash partitioning, which spreads keys more evenly but destroys key ordering and therefore makes range queries inefficient. Cassandra-style compound keys combine the two ideas by hashing the first key component while sorting by the remaining components. The chapter then examines secondary indexes. Document-partitioned/local indexes make writes local to one partition but require scatter/gather reads across partitions, while term-partitioned/global indexes make reads more targeted but require writes to update multiple index partitions and are often maintained asynchronously. Rebalancing is required as datasets grow, query throughput rises, nodes are added or removed, or machines fail. The chapter rejects hash(key) mod N because changing N remaps most keys, and presents fixed partition counts, dynamic partition splitting/merging, and partition counts proportional to node count. Rebalancing may be automatic or manual, with automation carrying a cascading-failure risk under overload. Finally, the chapter explains request routing through any-node forwarding, a partition-aware routing tier, or partition-aware clients, with cluster metadata maintained using coordination systems such as ZooKeeper or gossip protocols. Analytical MPP systems extend the same ideas to parallel execution of complex joins, filters, groups, and aggregations across many partitions.",
+    "major_sections": [
+      "Partitioning and Replication",
+      "Partitioning of Key-Value Data",
+      "Partitioning by Key Range",
+      "Partitioning by Hash of Key",
+      "Skewed Workloads and Relieving Hot Spots",
+      "Partitioning and Secondary Indexes",
+      "Partitioning Secondary Indexes by Document",
+      "Partitioning Secondary Indexes by Term",
+      "Rebalancing Partitions",
+      "Fixed Number of Partitions",
+      "Dynamic Partitioning",
+      "Partitioning Proportionally to Nodes",
+      "Automatic or Manual Rebalancing",
+      "Request Routing",
+      "Parallel Query Execution"
+    ],
+    "source_pages": [
+      221,
+      222,
+      223,
+      224,
+      225,
+      226,
+      227,
+      228,
+      229,
+      230,
+      231,
+      232,
+      233,
+      234,
+      235,
+      236,
+      237,
+      238,
+      239,
+      240
+    ]
+  },
+  "learning_objectives": [
+    {
+      "id": "LO01",
+      "objective": "Define partitioning/sharding and distinguish it from network partitions.",
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "LO02",
+      "objective": "Explain why partitioning is needed beyond replication.",
+      "source_pages": [
+        221,
+        222
+      ]
+    },
+    {
+      "id": "LO03",
+      "objective": "Explain how partitioning and replication can be combined independently.",
+      "source_pages": [
+        222,
+        223
+      ]
+    },
+    {
+      "id": "LO04",
+      "objective": "Define skew and hot spots and explain why they undermine scaling.",
+      "source_pages": [
+        223
+      ]
+    },
+    {
+      "id": "LO05",
+      "objective": "Explain key-range partitioning and its range-query advantage.",
+      "source_pages": [
+        224
+      ]
+    },
+    {
+      "id": "LO06",
+      "objective": "Explain why monotonically increasing/timestamp keys create write hot spots.",
+      "source_pages": [
+        225
+      ]
+    },
+    {
+      "id": "LO07",
+      "objective": "Explain hash partitioning and the requirements of the hash function.",
+      "source_pages": [
+        225,
+        226
+      ]
+    },
+    {
+      "id": "LO08",
+      "objective": "Explain why application-language hash functions may be unsafe for distributed partitioning.",
+      "source_pages": [
+        225
+      ]
+    },
+    {
+      "id": "LO09",
+      "objective": "Explain the chapter's warning about the term consistent hashing.",
+      "source_pages": [
+        226
+      ]
+    },
+    {
+      "id": "LO10",
+      "objective": "Compare the range-query behavior of key-range and hash partitioning.",
+      "source_pages": [
+        224,
+        226
+      ]
+    },
+    {
+      "id": "LO11",
+      "objective": "Explain Cassandra's compound-key compromise between hashing and sorted clustering.",
+      "source_pages": [
+        226,
+        227
+      ]
+    },
+    {
+      "id": "LO12",
+      "objective": "Explain why hashing cannot eliminate a hot key.",
+      "source_pages": [
+        227
+      ]
+    },
+    {
+      "id": "LO13",
+      "objective": "Explain manual hot-key splitting/salting and its read/bookkeeping cost.",
+      "source_pages": [
+        227
+      ]
+    },
+    {
+      "id": "LO14",
+      "objective": "Explain why secondary indexes complicate partitioning.",
+      "source_pages": [
+        228
+      ]
+    },
+    {
+      "id": "LO15",
+      "objective": "Define document-partitioned/local secondary indexes.",
+      "source_pages": [
+        228,
+        229
+      ]
+    },
+    {
+      "id": "LO16",
+      "objective": "Explain scatter/gather and tail-latency amplification.",
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "LO17",
+      "objective": "Define term-partitioned/global secondary indexes.",
+      "source_pages": [
+        230
+      ]
+    },
+    {
+      "id": "LO18",
+      "objective": "Compare write and read tradeoffs of local vs global indexes.",
+      "source_pages": [
+        229,
+        230,
+        231
+      ]
+    },
+    {
+      "id": "LO19",
+      "objective": "Explain why global secondary index updates are often asynchronous.",
+      "source_pages": [
+        231
+      ]
+    },
+    {
+      "id": "LO20",
+      "objective": "Define rebalancing and its minimum operational goals.",
+      "source_pages": [
+        231
+      ]
+    },
+    {
+      "id": "LO21",
+      "objective": "Explain why hash(key) mod N causes excessive movement when N changes.",
+      "source_pages": [
+        232
+      ]
+    },
+    {
+      "id": "LO22",
+      "objective": "Explain fixed-number-of-partitions rebalancing.",
+      "source_pages": [
+        232,
+        233
+      ]
+    },
+    {
+      "id": "LO23",
+      "objective": "Explain the partition-count sizing tradeoff in fixed-partition systems.",
+      "source_pages": [
+        233
+      ]
+    },
+    {
+      "id": "LO24",
+      "objective": "Explain dynamic partition splitting and merging.",
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "LO25",
+      "objective": "Explain the initial single-partition problem and pre-splitting.",
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "LO26",
+      "objective": "Explain partitioning proportionally to node count.",
+      "source_pages": [
+        234,
+        235
+      ]
+    },
+    {
+      "id": "LO27",
+      "objective": "Explain Cassandra's random partition splitting approach and why many partitions smooth imbalance.",
+      "source_pages": [
+        235
+      ]
+    },
+    {
+      "id": "LO28",
+      "objective": "Compare automatic and manual rebalancing.",
+      "source_pages": [
+        235,
+        236
+      ]
+    },
+    {
+      "id": "LO29",
+      "objective": "Explain how automatic failure detection plus automatic rebalancing can cause cascading failure.",
+      "source_pages": [
+        236
+      ]
+    },
+    {
+      "id": "LO30",
+      "objective": "Explain the three request-routing architectures.",
+      "source_pages": [
+        236,
+        237
+      ]
+    },
+    {
+      "id": "LO31",
+      "objective": "Explain why partition assignment is a service-discovery/coordination problem.",
+      "source_pages": [
+        236,
+        237
+      ]
+    },
+    {
+      "id": "LO32",
+      "objective": "Explain ZooKeeper-based routing metadata.",
+      "source_pages": [
+        237,
+        238
+      ]
+    },
+    {
+      "id": "LO33",
+      "objective": "Explain gossip-based routing in Cassandra and Riak.",
+      "source_pages": [
+        238
+      ]
+    },
+    {
+      "id": "LO34",
+      "objective": "Explain where DNS can fit into routing.",
+      "source_pages": [
+        238
+      ]
+    },
+    {
+      "id": "LO35",
+      "objective": "Explain parallel query execution in MPP analytical databases.",
+      "source_pages": [
+        238
+      ]
+    },
+    {
+      "id": "LO36",
+      "objective": "Summarize the local/global index and range/hash partitioning tradeoffs.",
+      "source_pages": [
+        238,
+        239
+      ]
+    },
+    {
+      "id": "LO37",
+      "objective": "Recognize why operations spanning several partitions are harder to reason about.",
+      "source_pages": [
+        239,
+        240
+      ]
+    }
+  ],
+  "core_concepts": {
+    "partitioning_basics": {
+      "definition": "Breaking a large database into smaller partitions/shards.",
+      "not_network_partition": "Database partitioning is intentional data division; it is unrelated to a network partition/netsplit fault.",
+      "terminology": {
+        "MongoDB_Elasticsearch_SolrCloud": "shard",
+        "HBase": "region",
+        "Bigtable": "tablet",
+        "Cassandra_Riak": "vnode",
+        "Couchbase": "vBucket"
+      },
+      "ownership_rule": "Normally each record belongs to exactly one logical partition.",
+      "scalability_goal": "Place different partitions on different shared-nothing nodes so storage and query load can use many disks and processors.",
+      "source_pages": [
+        221,
+        222
+      ]
+    },
+    "partitioning_and_replication": {
+      "relationship": "Partitioning and replication are largely independent choices. Each record belongs to one logical partition, while that partition can have replicas on several nodes.",
+      "leader_follower_example": "Each partition has a leader on one node and followers on other nodes; a physical node can lead some partitions and follow others.",
+      "source_pages": [
+        222,
+        223
+      ]
+    },
+    "load_balance": {
+      "goal": "Spread both data volume and query load evenly.",
+      "ideal_scaling": "Ignoring replication, 10 evenly loaded nodes could theoretically handle about 10x one node.",
+      "skew": "Uneven partition distribution of data or requests.",
+      "hot_spot": "A partition with disproportionately high load.",
+      "random_assignment_problem": "Random record-to-node placement distributes load but destroys efficient request routing because the client would not know which node owns a key.",
+      "source_pages": [
+        223
+      ]
+    },
+    "key_range_partitioning": {
+      "definition": "Assign each partition a contiguous range of sorted keys.",
+      "routing": "Given partition boundaries and node ownership, the partition for a key can be determined directly.",
+      "unequal_ranges": "Partition boundaries need not be evenly spaced; they should adapt to the underlying key distribution.",
+      "boundary_management": "Can be chosen manually or automatically.",
+      "systems": [
+        "Bigtable",
+        "HBase",
+        "RethinkDB",
+        "MongoDB before 2.4"
+      ],
+      "advantages": [
+        "Keys stay sorted within partitions.",
+        "Efficient range scans.",
+        "Can use composite/concatenated keys to group related records."
+      ],
+      "hotspot_risk": "If keys increase with time, such as timestamps, current writes all land in the newest key range.",
+      "sensor_fix": "Prefix timestamp with sensor ID so partitioning first spreads by sensor and then sorts by time.",
+      "sensor_fix_cost": "A multi-sensor time-range query must issue one range query per sensor.",
+      "source_pages": [
+        224,
+        225
+      ]
+    },
+    "hash_partitioning": {
+      "definition": "Hash each key and assign hash ranges to partitions.",
+      "goal": "Convert skewed key distributions into approximately uniform hash distributions.",
+      "hash_requirement": "Stable across processes and sufficiently uniform; cryptographic strength is unnecessary.",
+      "examples": {
+        "Cassandra_MongoDB": "MD5",
+        "Voldemort": "Fowler-Noll-Vo"
+      },
+      "unsafe_examples": "Java Object.hashCode() and Ruby Object#hash can vary between processes, making them unsuitable for deterministic distributed partitioning.",
+      "advantages": [
+        "Better evenness of key distribution",
+        "Partition boundaries can be evenly spaced or pseudorandom"
+      ],
+      "major_cost": "Destroys original key ordering, making efficient primary-key range scans unavailable.",
+      "source_pages": [
+        225,
+        226
+      ]
+    },
+    "consistent_hashing_note": {
+      "original_meaning": "Karger-style consistent hashing uses randomly chosen boundaries to distribute load in systems such as CDNs without central control/consensus.",
+      "warning": "The chapter warns that the classic algorithm does not work especially well for databases and recommends using the clearer term 'hash partitioning' rather than loosely saying 'consistent hashing'.",
+      "not_consistency_model": "The word consistent here is unrelated to replica consistency or ACID consistency.",
+      "source_pages": [
+        226
+      ]
+    },
+    "cassandra_compound_key": {
+      "idea": "Hash the first component of a compound primary key to choose the partition, then use remaining components as a concatenated sorted index within that partition.",
+      "example": "(user_id, update_timestamp)",
+      "benefit": "Efficiently retrieve one user's updates over a time interval in timestamp order.",
+      "limitation": "Cannot do an efficient range search over the first hashed key component.",
+      "source_pages": [
+        226,
+        227
+      ]
+    },
+    "hot_keys": {
+      "hash_limit": "Hashing does not help if most traffic targets one identical key.",
+      "example": "A celebrity/event ID causing a massive spike in activity.",
+      "application_mitigation": "Add a random suffix or prefix to the hot key. Two decimal digits split one logical key into up to 100 physical keys.",
+      "costs": [
+        "Reads must query all salted variants and combine results.",
+        "Application must know which logical keys are salted.",
+        "Salting low-volume keys adds unnecessary overhead."
+      ],
+      "source_pages": [
+        227
+      ]
+    },
+    "secondary_indexes": {
+      "problem": "Primary-key partitioning determines one partition directly, but a secondary-index value may match records spread across many partitions.",
+      "two_strategies": [
+        "Document-partitioned/local index",
+        "Term-partitioned/global index"
+      ],
+      "source_pages": [
+        228
+      ]
+    },
+    "document_partitioned_secondary_index": {
+      "also_called": "Local index",
+      "layout": "Each primary/document partition maintains its own secondary index covering only documents stored in that partition.",
+      "write_advantage": "Adding/updating/deleting a document only touches its owning primary partition.",
+      "read_cost": "A secondary-index query may need to be sent to every partition and all results combined.",
+      "query_pattern_name": "Scatter/gather",
+      "latency_problem": "Parallel scatter/gather amplifies tail latency because the overall query waits on many partitions.",
+      "systems": [
+        "MongoDB",
+        "Riak",
+        "Cassandra",
+        "Elasticsearch",
+        "SolrCloud",
+        "VoltDB"
+      ],
+      "source_pages": [
+        228,
+        229
+      ]
+    },
+    "term_partitioned_secondary_index": {
+      "also_called": "Global index",
+      "layout": "One logical secondary index covers documents from all primary partitions, but the index itself is separately partitioned by term or term hash.",
+      "term_example": "color:red",
+      "partition_by_term": "Preserves ordering and supports range scans over indexed values.",
+      "partition_by_hash": "Spreads index load more evenly.",
+      "read_advantage": "A query for one term can go directly to the partition responsible for that term.",
+      "write_cost": "One document write may update several secondary-index partitions, potentially on several nodes.",
+      "consistency": "Global index updates are often asynchronous because synchronously updating all affected partitions would require a distributed transaction.",
+      "source_pages": [
+        230,
+        231
+      ]
+    },
+    "local_vs_global_indexes": {
+      "local": {
+        "write": "Usually one partition.",
+        "read": "Potential scatter/gather across all partitions."
+      },
+      "global": {
+        "write": "Potentially several index partitions.",
+        "read": "Usually targeted to the partition containing the search term."
+      },
+      "core_tradeoff": "Local indexes favor write locality; global indexes favor read locality.",
+      "source_pages": [
+        229,
+        230,
+        231,
+        239
+      ]
+    },
+    "rebalancing": {
+      "definition": "Moving data/request responsibility from one cluster node to another.",
+      "triggers": [
+        "Query throughput grows",
+        "Dataset grows",
+        "Nodes are added",
+        "Nodes are removed or fail"
+      ],
+      "requirements": [
+        "Fairly distribute storage/read/write load afterward.",
+        "Continue serving reads and writes during rebalancing.",
+        "Move no more data than necessary."
+      ],
+      "source_pages": [
+        231
+      ]
+    },
+    "hash_mod_n": {
+      "formula": "hash(key) mod N",
+      "problem": "When node count N changes, most keys map to different nodes, causing excessive movement.",
+      "example": {
+        "hash": 123456,
+        "mod_10": 6,
+        "mod_11": 3,
+        "mod_12": 0
+      },
+      "lesson": "Separate logical partitions from physical node count.",
+      "source_pages": [
+        232
+      ]
+    },
+    "fixed_number_of_partitions": {
+      "idea": "Create far more logical partitions than physical nodes and assign many partitions to each node.",
+      "example": "10 nodes, 1,000 partitions -> roughly 100 partitions per node.",
+      "add_node": "New node steals whole partitions from existing nodes until balanced.",
+      "remove_node": "Reverse the process; redistribute whole partitions.",
+      "important_invariant": "Number of partitions and key-to-partition assignment stay fixed; only partition-to-node ownership changes.",
+      "in_progress_behavior": "Use old ownership while data transfer is still occurring.",
+      "heterogeneous_hardware": "More powerful nodes can own more partitions.",
+      "systems": [
+        "Riak",
+        "Elasticsearch",
+        "Couchbase",
+        "Voldemort"
+      ],
+      "partition_count_tradeoff": [
+        "Too few/large partitions make recovery/rebalancing expensive.",
+        "Too many/small partitions cause management overhead.",
+        "The initial count limits future node count in systems that never split partitions."
+      ],
+      "source_pages": [
+        232,
+        233
+      ]
+    },
+    "dynamic_partitioning": {
+      "idea": "Automatically split a partition when it grows beyond a threshold and merge adjacent partitions when they shrink.",
+      "systems": [
+        "HBase",
+        "RethinkDB",
+        "MongoDB"
+      ],
+      "hbase_example_threshold": "Default cited threshold: 10 GB.",
+      "benefit": "Number of partitions adapts to total dataset size.",
+      "startup_problem": "An empty database initially has one partition, so one node may receive all writes until the first split.",
+      "pre_splitting": "Configure initial partitions in advance to spread early writes, requiring knowledge of expected key distribution for range partitioning.",
+      "hash_support": "Dynamic splitting can also be used with hash-partitioned data.",
+      "source_pages": [
+        234
+      ]
+    },
+    "partitions_proportional_to_nodes": {
+      "idea": "Keep a fixed number of partitions per node, so total partition count grows with node count.",
+      "systems": [
+        "Cassandra",
+        "Ketama"
+      ],
+      "behavior": "When a node joins, it selects existing partitions to split and takes one half of each, leaving the other half in place.",
+      "randomization": "Individual splits may be uneven, but averaging across many partitions smooths the distribution.",
+      "cassandra_example": "The text cites 256 partitions per node by default in the version discussed.",
+      "hash_requirement": "Random partition boundaries require a hash space.",
+      "source_pages": [
+        234,
+        235
+      ]
+    },
+    "automatic_vs_manual_rebalancing": {
+      "spectrum": "Fully automatic to fully administrator-controlled.",
+      "middle_ground": "Some systems compute a proposed assignment automatically but require an administrator to approve/commit it.",
+      "examples": [
+        "Couchbase",
+        "Riak",
+        "Voldemort"
+      ],
+      "automation_benefit": "Less operational work.",
+      "automation_risk": "Moving data and rerouting requests consumes substantial network/node resources and can degrade production traffic.",
+      "cascading_failure_scenario": "An overloaded node responds slowly, is incorrectly considered dead, and triggers automatic rebalancing; the extra migration load worsens overload and can cause cascading failure.",
+      "human_in_loop": "Slower but can prevent dangerous automatic reactions.",
+      "source_pages": [
+        235,
+        236
+      ]
+    },
+    "request_routing": {
+      "problem": "Partition-to-node ownership changes during rebalancing, so some component must know current routing metadata.",
+      "three_approaches": [
+        {
+          "name": "Any-node routing",
+          "flow": "Client contacts any node; that node handles locally or forwards to the correct owner."
+        },
+        {
+          "name": "Routing tier",
+          "flow": "Client sends requests to a partition-aware load balancer that forwards to the correct node."
+        },
+        {
+          "name": "Partition-aware client",
+          "flow": "Client knows partition ownership and connects directly to the responsible node."
+        }
+      ],
+      "coordination_problem": "All routing participants must agree on partition ownership.",
+      "source_pages": [
+        236,
+        237
+      ]
+    },
+    "cluster_metadata": {
+      "zookeeper_model": "Nodes register with ZooKeeper; ZooKeeper maintains authoritative partition-to-node mappings; routers or clients subscribe for changes.",
+      "examples_using_zookeeper": [
+        "Espresso via Helix",
+        "HBase",
+        "SolrCloud",
+        "Kafka"
+      ],
+      "mongodb": "Uses config servers plus mongos as routing tier.",
+      "gossip_model": "Cassandra and Riak disseminate cluster changes among nodes via gossip. A request can go to any node and be forwarded.",
+      "couchbase": "Often uses the moxi routing tier; cluster nodes inform it about routing changes.",
+      "dns": "Often sufficient to find relatively stable router/node IP addresses even though partition assignments change more frequently.",
+      "source_pages": [
+        237,
+        238
+      ]
+    },
+    "parallel_query_execution": {
+      "simple_partitioned_queries": "Many NoSQL stores primarily support single-key and scatter/gather-style access.",
+      "mpp": "Massively parallel processing relational databases can execute sophisticated analytical queries.",
+      "query_operations": [
+        "Joins",
+        "Filtering",
+        "Grouping",
+        "Aggregation"
+      ],
+      "execution": "Optimizer breaks a complex query into stages/partitions that can execute in parallel across cluster nodes.",
+      "best_fit": "Queries scanning large portions of a dataset particularly benefit.",
+      "source_pages": [
+        238
+      ]
+    },
+    "chapter_conclusion": {
+      "main_tradeoffs": [
+        "Key range: ordered/range-friendly but hot-spot prone.",
+        "Hash: more balanced but range-unfriendly.",
+        "Local index: local writes, scatter/gather reads.",
+        "Global index: targeted reads, multi-partition writes.",
+        "Fixed partitions: operationally simple but sizing is difficult.",
+        "Dynamic partitions: adapt to data size but may need pre-splitting.",
+        "Automatic rebalancing: less manual work but higher operational surprise risk."
+      ],
+      "distributed_write_warning": "Partition independence enables scale, but operations that write several partitions are harder because one partition may succeed while another fails.",
+      "source_pages": [
+        238,
+        239,
+        240
+      ]
+    }
+  },
+  "flashcards": [
+    {
+      "id": "FC001",
+      "front": "What is partitioning?",
+      "back": "Breaking a large database into smaller subsets that can live on different machines.",
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "FC002",
+      "front": "What is another common term for partitioning?",
+      "back": "Sharding.",
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "FC003",
+      "front": "Is database partitioning the same as a network partition?",
+      "back": "No. Database partitioning is intentional data division; a network partition is a fault.",
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "FC004",
+      "front": "What does MongoDB commonly call a partition?",
+      "back": "A shard.",
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "FC005",
+      "front": "What does HBase call a partition?",
+      "back": "A region.",
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "FC006",
+      "front": "What does Bigtable call a partition?",
+      "back": "A tablet.",
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "FC007",
+      "front": "What do Cassandra and Riak call partitions in the terminology box?",
+      "back": "vnodes.",
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "FC008",
+      "front": "What does Couchbase call a partition?",
+      "back": "A vBucket.",
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "FC009",
+      "front": "Why isn't replication alone enough for very large datasets?",
+      "back": "Every replica would still need to hold/process the entire dataset.",
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "FC010",
+      "front": "What is partitioning's main purpose?",
+      "back": "Scalability.",
+      "source_pages": [
+        221,
+        222
+      ]
+    },
+    {
+      "id": "FC011",
+      "front": "How does partitioning scale storage?",
+      "back": "Different partitions use disks on different nodes.",
+      "source_pages": [
+        222
+      ]
+    },
+    {
+      "id": "FC012",
+      "front": "How does partitioning scale throughput?",
+      "back": "Independent nodes process queries for their own partitions.",
+      "source_pages": [
+        222
+      ]
+    },
+    {
+      "id": "FC013",
+      "front": "Can complex queries be parallelized across partitions?",
+      "back": "Potentially, though it is harder than single-partition queries.",
+      "source_pages": [
+        222
+      ]
+    },
+    {
+      "id": "FC014",
+      "front": "Is partitioning only for NoSQL?",
+      "back": "No. It was used in relational systems such as Teradata and Tandem NonStop SQL.",
+      "source_pages": [
+        222
+      ]
+    },
+    {
+      "id": "FC015",
+      "front": "Can partitioning be used for OLTP and analytics?",
+      "back": "Yes.",
+      "source_pages": [
+        222
+      ]
+    },
+    {
+      "id": "FC016",
+      "front": "How does partitioning combine with replication?",
+      "back": "Each logical partition can have replicas on several nodes.",
+      "source_pages": [
+        222
+      ]
+    },
+    {
+      "id": "FC017",
+      "front": "Can a node lead some partitions and follow others?",
+      "back": "Yes.",
+      "source_pages": [
+        222,
+        223
+      ]
+    },
+    {
+      "id": "FC018",
+      "front": "Is the partitioning scheme tightly coupled to the replication scheme?",
+      "back": "Mostly no; they are largely independent choices.",
+      "source_pages": [
+        222
+      ]
+    },
+    {
+      "id": "FC019",
+      "front": "What is the ideal partitioning goal?",
+      "back": "Spread data and query load evenly across nodes.",
+      "source_pages": [
+        223
+      ]
+    },
+    {
+      "id": "FC020",
+      "front": "What is skew?",
+      "back": "Uneven distribution of data or query load across partitions.",
+      "source_pages": [
+        223
+      ]
+    },
+    {
+      "id": "FC021",
+      "front": "What is a hot spot?",
+      "back": "A partition with disproportionately high load.",
+      "source_pages": [
+        223
+      ]
+    },
+    {
+      "id": "FC022",
+      "front": "Why not simply assign every record to a random node?",
+      "back": "Reads would not know which node contains a key and would need to query all nodes.",
+      "source_pages": [
+        223
+      ]
+    },
+    {
+      "id": "FC023",
+      "front": "What is key-range partitioning?",
+      "back": "Assign each partition a continuous range of sorted keys.",
+      "source_pages": [
+        224
+      ]
+    },
+    {
+      "id": "FC024",
+      "front": "Why aren't key ranges necessarily evenly sized?",
+      "back": "Underlying key frequencies/distribution may be uneven.",
+      "source_pages": [
+        224
+      ]
+    },
+    {
+      "id": "FC025",
+      "front": "What advantage does key-range partitioning have?",
+      "back": "Efficient range scans because keys remain sorted.",
+      "source_pages": [
+        224
+      ]
+    },
+    {
+      "id": "FC026",
+      "front": "How may key-range boundaries be selected?",
+      "back": "Manually or automatically.",
+      "source_pages": [
+        224
+      ]
+    },
+    {
+      "id": "FC027",
+      "front": "Name systems cited for key-range partitioning.",
+      "back": "Bigtable, HBase, RethinkDB, and older MongoDB.",
+      "source_pages": [
+        224
+      ]
+    },
+    {
+      "id": "FC028",
+      "front": "What is the timestamp-key hot-spot problem?",
+      "back": "All current writes go to the partition containing the newest timestamps.",
+      "source_pages": [
+        225
+      ]
+    },
+    {
+      "id": "FC029",
+      "front": "How can a sensor workload avoid a timestamp hot spot?",
+      "back": "Prefix timestamps with sensor ID so writes spread across sensors.",
+      "source_pages": [
+        225
+      ]
+    },
+    {
+      "id": "FC030",
+      "front": "What is the read tradeoff of sensor-ID-first keys?",
+      "back": "Multi-sensor time-range queries require separate range queries per sensor.",
+      "source_pages": [
+        225
+      ]
+    },
+    {
+      "id": "FC031",
+      "front": "Why use a hash of the key for partitioning?",
+      "back": "To transform skewed keys into a more uniform distribution.",
+      "source_pages": [
+        225
+      ]
+    },
+    {
+      "id": "FC032",
+      "front": "Does a partitioning hash need cryptographic strength?",
+      "back": "No.",
+      "source_pages": [
+        225
+      ]
+    },
+    {
+      "id": "FC033",
+      "front": "What property must a distributed partitioning hash have?",
+      "back": "Stable/deterministic across processes and reasonably uniform.",
+      "source_pages": [
+        225
+      ]
+    },
+    {
+      "id": "FC034",
+      "front": "What hash does the chapter say Cassandra and MongoDB use?",
+      "back": "MD5.",
+      "source_pages": [
+        225
+      ]
+    },
+    {
+      "id": "FC035",
+      "front": "What hash is cited for Voldemort?",
+      "back": "Fowler-Noll-Vo.",
+      "source_pages": [
+        225
+      ]
+    },
+    {
+      "id": "FC036",
+      "front": "Why can Java Object.hashCode() be unsafe for distributed partitioning?",
+      "back": "The same key may hash differently in different processes.",
+      "source_pages": [
+        225
+      ]
+    },
+    {
+      "id": "FC037",
+      "front": "How is a key placed after hashing?",
+      "back": "The hash value falls into a partition's assigned hash range.",
+      "source_pages": [
+        225,
+        226
+      ]
+    },
+    {
+      "id": "FC038",
+      "front": "Main benefit of hash partitioning?",
+      "back": "More even distribution.",
+      "source_pages": [
+        226
+      ]
+    },
+    {
+      "id": "FC039",
+      "front": "What does hash partitioning destroy?",
+      "back": "Original key ordering.",
+      "source_pages": [
+        226
+      ]
+    },
+    {
+      "id": "FC040",
+      "front": "Why are range queries inefficient with hash partitioning?",
+      "back": "Adjacent keys are scattered across partitions.",
+      "source_pages": [
+        226
+      ]
+    },
+    {
+      "id": "FC041",
+      "front": "How does MongoDB hash-based sharding handle a range query according to the chapter?",
+      "back": "It sends the range query to all partitions.",
+      "source_pages": [
+        226
+      ]
+    },
+    {
+      "id": "FC042",
+      "front": "What does the chapter recommend calling database 'consistent hashing'?",
+      "back": "Usually just hash partitioning.",
+      "source_pages": [
+        226
+      ]
+    },
+    {
+      "id": "FC043",
+      "front": "Is consistent hashing's 'consistent' related to ACID consistency?",
+      "back": "No.",
+      "source_pages": [
+        226
+      ]
+    },
+    {
+      "id": "FC044",
+      "front": "What is Cassandra's compound-key compromise?",
+      "back": "Hash the first component; sort by remaining components within the partition.",
+      "source_pages": [
+        226,
+        227
+      ]
+    },
+    {
+      "id": "FC045",
+      "front": "Example Cassandra key for user updates?",
+      "back": "(user_id, update_timestamp).",
+      "source_pages": [
+        227
+      ]
+    },
+    {
+      "id": "FC046",
+      "front": "What can that Cassandra key query efficiently?",
+      "back": "A specific user's updates over a time range in timestamp order.",
+      "source_pages": [
+        227
+      ]
+    },
+    {
+      "id": "FC047",
+      "front": "Can hashing completely prevent hot spots?",
+      "back": "No.",
+      "source_pages": [
+        227
+      ]
+    },
+    {
+      "id": "FC048",
+      "front": "Why can't hashing fix a single extremely hot key?",
+      "back": "Identical keys always hash to the same partition.",
+      "source_pages": [
+        227
+      ]
+    },
+    {
+      "id": "FC049",
+      "front": "What application technique can split a hot key?",
+      "back": "Add a random prefix/suffix ('salting').",
+      "source_pages": [
+        227
+      ]
+    },
+    {
+      "id": "FC050",
+      "front": "What does a two-digit random suffix potentially create?",
+      "back": "100 physical keys for one logical hot key.",
+      "source_pages": [
+        227
+      ]
+    },
+    {
+      "id": "FC051",
+      "front": "What is the read cost of hot-key salting?",
+      "back": "Read all variants and combine the results.",
+      "source_pages": [
+        227
+      ]
+    },
+    {
+      "id": "FC052",
+      "front": "What bookkeeping does hot-key salting require?",
+      "back": "Track which logical keys are split/salted.",
+      "source_pages": [
+        227
+      ]
+    },
+    {
+      "id": "FC053",
+      "front": "Why do secondary indexes complicate partitioning?",
+      "back": "A secondary value may refer to records spread across many primary partitions.",
+      "source_pages": [
+        228
+      ]
+    },
+    {
+      "id": "FC054",
+      "front": "What are the two secondary-index partitioning strategies?",
+      "back": "Document/local and term/global.",
+      "source_pages": [
+        228
+      ]
+    },
+    {
+      "id": "FC055",
+      "front": "What is a document-partitioned secondary index?",
+      "back": "Each primary partition keeps a local secondary index for only its own documents.",
+      "source_pages": [
+        228,
+        229
+      ]
+    },
+    {
+      "id": "FC056",
+      "front": "What is another name for a document-partitioned index?",
+      "back": "Local index.",
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "FC057",
+      "front": "Why are local-index writes simple?",
+      "back": "Only the document's owning partition must be updated.",
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "FC058",
+      "front": "Why can local-index reads be expensive?",
+      "back": "The query may need to contact every partition.",
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "FC059",
+      "front": "What is scatter/gather?",
+      "back": "Send a query to many/all partitions and combine their results.",
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "FC060",
+      "front": "What latency problem affects scatter/gather?",
+      "back": "Tail-latency amplification.",
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "FC061",
+      "front": "Name systems cited using document-partitioned secondary indexes.",
+      "back": "MongoDB, Riak, Cassandra, Elasticsearch, SolrCloud, VoltDB.",
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "FC062",
+      "front": "What is a term-partitioned index?",
+      "back": "A global secondary index separately partitioned by indexed term/value.",
+      "source_pages": [
+        230
+      ]
+    },
+    {
+      "id": "FC063",
+      "front": "What is another name for term-partitioned secondary index?",
+      "back": "Global index.",
+      "source_pages": [
+        230
+      ]
+    },
+    {
+      "id": "FC064",
+      "front": "Why can't one global index live on one node?",
+      "back": "It would become a bottleneck and defeat partitioning.",
+      "source_pages": [
+        230
+      ]
+    },
+    {
+      "id": "FC065",
+      "front": "What determines the index partition in term partitioning?",
+      "back": "The search term or a hash of the term.",
+      "source_pages": [
+        230
+      ]
+    },
+    {
+      "id": "FC066",
+      "front": "Why partition a global index directly by term?",
+      "back": "Preserve term ordering and support range scans.",
+      "source_pages": [
+        230
+      ]
+    },
+    {
+      "id": "FC067",
+      "front": "Why partition a global index by term hash?",
+      "back": "Spread load more evenly.",
+      "source_pages": [
+        230
+      ]
+    },
+    {
+      "id": "FC068",
+      "front": "Main global-index read advantage?",
+      "back": "A term query can go directly to the relevant index partition.",
+      "source_pages": [
+        230
+      ]
+    },
+    {
+      "id": "FC069",
+      "front": "Main global-index write disadvantage?",
+      "back": "One document update may modify several index partitions.",
+      "source_pages": [
+        230,
+        231
+      ]
+    },
+    {
+      "id": "FC070",
+      "front": "Why are global secondary index updates often asynchronous?",
+      "back": "Synchronous updates across all affected partitions would require distributed transactions.",
+      "source_pages": [
+        231
+      ]
+    },
+    {
+      "id": "FC071",
+      "front": "What is rebalancing?",
+      "back": "Moving data/request responsibility from one cluster node to another.",
+      "source_pages": [
+        231
+      ]
+    },
+    {
+      "id": "FC072",
+      "front": "Why might a cluster rebalance?",
+      "back": "Growth in query load or data, node addition/removal, or node failure.",
+      "source_pages": [
+        231
+      ]
+    },
+    {
+      "id": "FC073",
+      "front": "What should rebalancing achieve?",
+      "back": "Fair load, continued read/write service, and minimal data movement.",
+      "source_pages": [
+        231
+      ]
+    },
+    {
+      "id": "FC074",
+      "front": "Why is hash(key) mod N a bad rebalancing scheme?",
+      "back": "Changing N remaps most keys.",
+      "source_pages": [
+        232
+      ]
+    },
+    {
+      "id": "FC075",
+      "front": "What happens to hash 123456 under mod 10?",
+      "back": "Node/partition 6.",
+      "source_pages": [
+        232
+      ]
+    },
+    {
+      "id": "FC076",
+      "front": "What about mod 11?",
+      "back": "3.",
+      "source_pages": [
+        232
+      ]
+    },
+    {
+      "id": "FC077",
+      "front": "What about mod 12?",
+      "back": "0.",
+      "source_pages": [
+        232
+      ]
+    },
+    {
+      "id": "FC078",
+      "front": "What is the fixed-number-of-partitions strategy?",
+      "back": "Create many more partitions than nodes and assign several partitions to each node.",
+      "source_pages": [
+        232
+      ]
+    },
+    {
+      "id": "FC079",
+      "front": "What example partition count does the chapter give for 10 nodes?",
+      "back": "1,000 partitions, roughly 100 per node.",
+      "source_pages": [
+        232
+      ]
+    },
+    {
+      "id": "FC080",
+      "front": "How does a new node rebalance fixed partitions?",
+      "back": "Steal whole partitions from existing nodes.",
+      "source_pages": [
+        232
+      ]
+    },
+    {
+      "id": "FC081",
+      "front": "Does key-to-partition assignment change in fixed-partition rebalance?",
+      "back": "No.",
+      "source_pages": [
+        232
+      ]
+    },
+    {
+      "id": "FC082",
+      "front": "What changes in fixed-partition rebalance?",
+      "back": "Partition-to-node assignment.",
+      "source_pages": [
+        232
+      ]
+    },
+    {
+      "id": "FC083",
+      "front": "What routing assignment is used while a partition transfer is in progress?",
+      "back": "The old assignment.",
+      "source_pages": [
+        232
+      ]
+    },
+    {
+      "id": "FC084",
+      "front": "How can fixed partitions account for unequal hardware?",
+      "back": "Give more partitions to stronger nodes.",
+      "source_pages": [
+        233
+      ]
+    },
+    {
+      "id": "FC085",
+      "front": "Name fixed-partition systems cited.",
+      "back": "Riak, Elasticsearch, Couchbase, Voldemort.",
+      "source_pages": [
+        233
+      ]
+    },
+    {
+      "id": "FC086",
+      "front": "Why can't the initial partition count be too low?",
+      "back": "It can cap future node count and make partitions too large.",
+      "source_pages": [
+        233
+      ]
+    },
+    {
+      "id": "FC087",
+      "front": "Why can't it be too high?",
+      "back": "Every partition adds management overhead.",
+      "source_pages": [
+        233
+      ]
+    },
+    {
+      "id": "FC088",
+      "front": "What is dynamic partitioning?",
+      "back": "Split growing partitions and merge shrinking adjacent partitions.",
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "FC089",
+      "front": "What HBase split threshold is cited?",
+      "back": "10 GB by default in the text.",
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "FC090",
+      "front": "What is dynamic partitioning's key advantage?",
+      "back": "Partition count adapts to dataset volume.",
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "FC091",
+      "front": "What is the empty-database problem with dynamic partitioning?",
+      "back": "It starts with one partition, concentrating early writes on one node.",
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "FC092",
+      "front": "What is pre-splitting?",
+      "back": "Create an initial set of partitions before data growth.",
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "FC093",
+      "front": "What does range-based pre-splitting require?",
+      "back": "Knowledge of expected key distribution.",
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "FC094",
+      "front": "Can dynamic partitioning be used with hash partitioning?",
+      "back": "Yes.",
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "FC095",
+      "front": "What is partitioning proportionally to nodes?",
+      "back": "Maintain a fixed number of partitions per node.",
+      "source_pages": [
+        235
+      ]
+    },
+    {
+      "id": "FC096",
+      "front": "Which systems are cited for partitions proportional to nodes?",
+      "back": "Cassandra and Ketama.",
+      "source_pages": [
+        235
+      ]
+    },
+    {
+      "id": "FC097",
+      "front": "What does a joining node do in this approach?",
+      "back": "Splits selected existing partitions and takes one half.",
+      "source_pages": [
+        235
+      ]
+    },
+    {
+      "id": "FC098",
+      "front": "Why does randomness become acceptable with many partitions?",
+      "back": "Imbalances average out over many samples.",
+      "source_pages": [
+        235
+      ]
+    },
+    {
+      "id": "FC099",
+      "front": "How many partitions per node does the chapter cite for Cassandra?",
+      "back": "256 by default in the version discussed.",
+      "source_pages": [
+        235
+      ]
+    },
+    {
+      "id": "FC100",
+      "front": "Does rebalancing have to be fully automatic or manual?",
+      "back": "No; there is a spectrum.",
+      "source_pages": [
+        235
+      ]
+    },
+    {
+      "id": "FC101",
+      "front": "What middle-ground approach is cited?",
+      "back": "System proposes an assignment but an administrator commits it.",
+      "source_pages": [
+        235
+      ]
+    },
+    {
+      "id": "FC102",
+      "front": "What is the advantage of automatic rebalancing?",
+      "back": "Less operational work.",
+      "source_pages": [
+        235
+      ]
+    },
+    {
+      "id": "FC103",
+      "front": "Why is automatic rebalancing risky?",
+      "back": "Data movement/rerouting consumes resources and can harm live traffic.",
+      "source_pages": [
+        235,
+        236
+      ]
+    },
+    {
+      "id": "FC104",
+      "front": "How can automatic failure detection and rebalancing create cascading failure?",
+      "back": "A slow overloaded node is declared dead; moving its load adds more pressure and worsens the overload.",
+      "source_pages": [
+        236
+      ]
+    },
+    {
+      "id": "FC105",
+      "front": "Why keep a human in the rebalancing loop?",
+      "back": "To reduce dangerous automatic reactions and operational surprises.",
+      "source_pages": [
+        236
+      ]
+    },
+    {
+      "id": "FC106",
+      "front": "What is the request-routing problem?",
+      "back": "Determine which current node owns the partition for a requested key.",
+      "source_pages": [
+        236
+      ]
+    },
+    {
+      "id": "FC107",
+      "front": "Why does routing information change?",
+      "back": "Partitions move during rebalancing and nodes join/leave.",
+      "source_pages": [
+        236
+      ]
+    },
+    {
+      "id": "FC108",
+      "front": "What is routing approach 1?",
+      "back": "Client contacts any node; it forwards if necessary.",
+      "source_pages": [
+        236
+      ]
+    },
+    {
+      "id": "FC109",
+      "front": "What is routing approach 2?",
+      "back": "Use a separate partition-aware routing tier/load balancer.",
+      "source_pages": [
+        236
+      ]
+    },
+    {
+      "id": "FC110",
+      "front": "What is routing approach 3?",
+      "back": "Make the client partition-aware so it connects directly.",
+      "source_pages": [
+        236
+      ]
+    },
+    {
+      "id": "FC111",
+      "front": "What is the core routing metadata challenge?",
+      "back": "All decision-makers must agree on partition-to-node assignments.",
+      "source_pages": [
+        237
+      ]
+    },
+    {
+      "id": "FC112",
+      "front": "What coordination service is discussed?",
+      "back": "ZooKeeper.",
+      "source_pages": [
+        237
+      ]
+    },
+    {
+      "id": "FC113",
+      "front": "What does ZooKeeper maintain in this design?",
+      "back": "Authoritative partition-to-node mapping.",
+      "source_pages": [
+        237
+      ]
+    },
+    {
+      "id": "FC114",
+      "front": "What can routers/clients do with ZooKeeper metadata?",
+      "back": "Subscribe to ownership changes.",
+      "source_pages": [
+        237
+      ]
+    },
+    {
+      "id": "FC115",
+      "front": "Name systems cited as using ZooKeeper for partition assignment.",
+      "back": "HBase, SolrCloud, Kafka, and Espresso through Helix.",
+      "source_pages": [
+        237,
+        238
+      ]
+    },
+    {
+      "id": "FC116",
+      "front": "How does MongoDB route partitioned requests?",
+      "back": "Config servers maintain metadata and mongos acts as routing tier.",
+      "source_pages": [
+        238
+      ]
+    },
+    {
+      "id": "FC117",
+      "front": "How do Cassandra and Riak distribute cluster state?",
+      "back": "Gossip protocol.",
+      "source_pages": [
+        238
+      ]
+    },
+    {
+      "id": "FC118",
+      "front": "How are requests routed in Cassandra/Riak's model?",
+      "back": "Send to any node; it forwards to the correct partition owner.",
+      "source_pages": [
+        238
+      ]
+    },
+    {
+      "id": "FC119",
+      "front": "What dependency does gossip avoid?",
+      "back": "An external coordination service such as ZooKeeper.",
+      "source_pages": [
+        238
+      ]
+    },
+    {
+      "id": "FC120",
+      "front": "What routing tier is cited for Couchbase?",
+      "back": "moxi.",
+      "source_pages": [
+        238
+      ]
+    },
+    {
+      "id": "FC121",
+      "front": "Where is DNS useful in request routing?",
+      "back": "Finding relatively stable node/router IP addresses.",
+      "source_pages": [
+        238
+      ]
+    },
+    {
+      "id": "FC122",
+      "front": "What does MPP stand for?",
+      "back": "Massively parallel processing.",
+      "source_pages": [
+        238
+      ]
+    },
+    {
+      "id": "FC123",
+      "front": "What kinds of operations do MPP analytical queries contain?",
+      "back": "Joins, filters, grouping, and aggregation.",
+      "source_pages": [
+        238
+      ]
+    },
+    {
+      "id": "FC124",
+      "front": "How does an MPP optimizer execute a query?",
+      "back": "Break it into stages/partitions that run in parallel on multiple nodes.",
+      "source_pages": [
+        238
+      ]
+    },
+    {
+      "id": "FC125",
+      "front": "Which queries benefit most from parallel execution?",
+      "back": "Queries scanning large portions of the dataset.",
+      "source_pages": [
+        238
+      ]
+    },
+    {
+      "id": "FC126",
+      "front": "What is the key-range vs hash tradeoff?",
+      "back": "Key range preserves order/range scans but risks hot spots; hash balances load but destroys ordering.",
+      "source_pages": [
+        239
+      ]
+    },
+    {
+      "id": "FC127",
+      "front": "What is the local vs global secondary-index tradeoff?",
+      "back": "Local index: one-partition writes but scatter/gather reads; global index: multi-partition writes but targeted reads.",
+      "source_pages": [
+        239
+      ]
+    },
+    {
+      "id": "FC128",
+      "front": "Why are multi-partition writes harder?",
+      "back": "One partition may succeed while another fails, creating partial results that require stronger coordination.",
+      "source_pages": [
+        239,
+        240
+      ]
+    }
+  ],
+  "multiple_choice_questions": [
+    {
+      "id": "MCQ001",
+      "difficulty": "medium",
+      "question": "What is the main reason for partitioning?",
+      "choices": {
+        "A": "Scalability",
+        "B": "Encryption",
+        "C": "Schema evolution",
+        "D": "Compression"
+      },
+      "answer": "A",
+      "source_pages": [
+        221,
+        222
+      ]
+    },
+    {
+      "id": "MCQ002",
+      "difficulty": "medium",
+      "question": "What is another name for database partitioning?",
+      "choices": {
+        "A": "Sharding",
+        "B": "Failover",
+        "C": "Replication lag",
+        "D": "Quorum"
+      },
+      "answer": "A",
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "MCQ003",
+      "difficulty": "medium",
+      "question": "Database partitioning is the same as a network partition.",
+      "choices": {
+        "A": "False",
+        "B": "True",
+        "C": "Only in Cassandra",
+        "D": "Only in MongoDB"
+      },
+      "answer": "A",
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "MCQ004",
+      "difficulty": "medium",
+      "question": "What is skew?",
+      "choices": {
+        "A": "Uneven data/query load across partitions",
+        "B": "Replica lag",
+        "C": "Failed routing tier",
+        "D": "Hash collision"
+      },
+      "answer": "A",
+      "source_pages": [
+        223
+      ]
+    },
+    {
+      "id": "MCQ005",
+      "difficulty": "medium",
+      "question": "What is a hot spot?",
+      "choices": {
+        "A": "Disproportionately busy partition",
+        "B": "Missing follower",
+        "C": "Small partition only",
+        "D": "Global index"
+      },
+      "answer": "A",
+      "source_pages": [
+        223
+      ]
+    },
+    {
+      "id": "MCQ006",
+      "difficulty": "medium",
+      "question": "Why not randomly assign records directly to nodes?",
+      "choices": {
+        "A": "Reads would not know where to route",
+        "B": "Writes become impossible",
+        "C": "No load balance",
+        "D": "No replication"
+      },
+      "answer": "A",
+      "source_pages": [
+        223
+      ]
+    },
+    {
+      "id": "MCQ007",
+      "difficulty": "medium",
+      "question": "What does key-range partitioning preserve?",
+      "choices": {
+        "A": "Key ordering",
+        "B": "Uniform hashing",
+        "C": "Global index locality",
+        "D": "Node count"
+      },
+      "answer": "A",
+      "source_pages": [
+        224
+      ]
+    },
+    {
+      "id": "MCQ008",
+      "difficulty": "medium",
+      "question": "Main key-range advantage?",
+      "choices": {
+        "A": "Efficient range scans",
+        "B": "Perfect hot-spot prevention",
+        "C": "No metadata",
+        "D": "No rebalancing"
+      },
+      "answer": "A",
+      "source_pages": [
+        224
+      ]
+    },
+    {
+      "id": "MCQ009",
+      "difficulty": "medium",
+      "question": "Main timestamp-range problem?",
+      "choices": {
+        "A": "Current writes concentrate in one partition",
+        "B": "Range scans disappear",
+        "C": "Hashes collide",
+        "D": "All nodes receive writes"
+      },
+      "answer": "A",
+      "source_pages": [
+        225
+      ]
+    },
+    {
+      "id": "MCQ010",
+      "difficulty": "medium",
+      "question": "How can sensor timestamps be spread?",
+      "choices": {
+        "A": "Prefix with sensor name/ID",
+        "B": "Use timestamp alone",
+        "C": "Use mod N",
+        "D": "Disable sorting"
+      },
+      "answer": "A",
+      "source_pages": [
+        225
+      ]
+    },
+    {
+      "id": "MCQ011",
+      "difficulty": "medium",
+      "question": "What does hash partitioning primarily improve?",
+      "choices": {
+        "A": "Load distribution",
+        "B": "Range scans",
+        "C": "Global ordering",
+        "D": "Transactional atomicity"
+      },
+      "answer": "A",
+      "source_pages": [
+        225,
+        226
+      ]
+    },
+    {
+      "id": "MCQ012",
+      "difficulty": "medium",
+      "question": "Does the hash need to be cryptographically secure?",
+      "choices": {
+        "A": "No",
+        "B": "Yes always",
+        "C": "Only for reads",
+        "D": "Only for indexes"
+      },
+      "answer": "A",
+      "source_pages": [
+        225
+      ]
+    },
+    {
+      "id": "MCQ013",
+      "difficulty": "medium",
+      "question": "Why can language hash functions be unsafe?",
+      "choices": {
+        "A": "Same key may hash differently across processes",
+        "B": "They are always too slow",
+        "C": "They are cryptographic",
+        "D": "They cannot hash strings"
+      },
+      "answer": "A",
+      "source_pages": [
+        225
+      ]
+    },
+    {
+      "id": "MCQ014",
+      "difficulty": "medium",
+      "question": "What is the main hash-partitioning cost?",
+      "choices": {
+        "A": "Loss of efficient key-range queries",
+        "B": "No point queries",
+        "C": "No replication",
+        "D": "No secondary indexes"
+      },
+      "answer": "A",
+      "source_pages": [
+        226
+      ]
+    },
+    {
+      "id": "MCQ015",
+      "difficulty": "medium",
+      "question": "What does 'consistent' in consistent hashing refer to here?",
+      "choices": {
+        "A": "A rebalancing approach",
+        "B": "ACID C",
+        "C": "Replica consistency",
+        "D": "Linearizability"
+      },
+      "answer": "A",
+      "source_pages": [
+        226
+      ]
+    },
+    {
+      "id": "MCQ016",
+      "difficulty": "medium",
+      "question": "What does the chapter suggest calling it for databases?",
+      "choices": {
+        "A": "Hash partitioning",
+        "B": "ACID hashing",
+        "C": "Replica hashing",
+        "D": "Range hashing"
+      },
+      "answer": "A",
+      "source_pages": [
+        226
+      ]
+    },
+    {
+      "id": "MCQ017",
+      "difficulty": "medium",
+      "question": "Cassandra's compound key hashes which part?",
+      "choices": {
+        "A": "First component",
+        "B": "All components separately",
+        "C": "Last component only",
+        "D": "No component"
+      },
+      "answer": "A",
+      "source_pages": [
+        226,
+        227
+      ]
+    },
+    {
+      "id": "MCQ018",
+      "difficulty": "medium",
+      "question": "What are remaining Cassandra key components used for?",
+      "choices": {
+        "A": "Sorted concatenated index inside partition",
+        "B": "Global hash ring only",
+        "C": "Replication count",
+        "D": "Node discovery"
+      },
+      "answer": "A",
+      "source_pages": [
+        226,
+        227
+      ]
+    },
+    {
+      "id": "MCQ019",
+      "difficulty": "medium",
+      "question": "Can hashing fix one extremely hot key?",
+      "choices": {
+        "A": "No",
+        "B": "Yes always",
+        "C": "Only with MD5",
+        "D": "Only with replicas"
+      },
+      "answer": "A",
+      "source_pages": [
+        227
+      ]
+    },
+    {
+      "id": "MCQ020",
+      "difficulty": "medium",
+      "question": "What is hot-key salting?",
+      "choices": {
+        "A": "Add random prefix/suffix to split one key",
+        "B": "Encrypt key",
+        "C": "Remove key",
+        "D": "Use same suffix everywhere"
+      },
+      "answer": "A",
+      "source_pages": [
+        227
+      ]
+    },
+    {
+      "id": "MCQ021",
+      "difficulty": "medium",
+      "question": "Two decimal random digits can create how many physical variants?",
+      "choices": {
+        "A": "100",
+        "B": "10",
+        "C": "1,000",
+        "D": "2"
+      },
+      "answer": "A",
+      "source_pages": [
+        227
+      ]
+    },
+    {
+      "id": "MCQ022",
+      "difficulty": "medium",
+      "question": "What is salting's main read cost?",
+      "choices": {
+        "A": "Query/merge all variants",
+        "B": "No range scans only",
+        "C": "No writes",
+        "D": "No indexing"
+      },
+      "answer": "A",
+      "source_pages": [
+        227
+      ]
+    },
+    {
+      "id": "MCQ023",
+      "difficulty": "medium",
+      "question": "Why do secondary indexes complicate partitioning?",
+      "choices": {
+        "A": "One indexed value can match records in many primary partitions",
+        "B": "They remove primary keys",
+        "C": "They cannot be replicated",
+        "D": "They require one node"
+      },
+      "answer": "A",
+      "source_pages": [
+        228
+      ]
+    },
+    {
+      "id": "MCQ024",
+      "difficulty": "medium",
+      "question": "What is a document-partitioned index?",
+      "choices": {
+        "A": "Local index per primary partition",
+        "B": "One global index node",
+        "C": "Hash ring",
+        "D": "Routing table"
+      },
+      "answer": "A",
+      "source_pages": [
+        228,
+        229
+      ]
+    },
+    {
+      "id": "MCQ025",
+      "difficulty": "medium",
+      "question": "What is its write advantage?",
+      "choices": {
+        "A": "Only owning partition changes",
+        "B": "No writes needed",
+        "C": "All partitions updated",
+        "D": "No index maintenance"
+      },
+      "answer": "A",
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "MCQ026",
+      "difficulty": "medium",
+      "question": "What is scatter/gather?",
+      "choices": {
+        "A": "Query many partitions and merge results",
+        "B": "Move partitions between nodes",
+        "C": "Replicate log",
+        "D": "Split hot key"
+      },
+      "answer": "A",
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "MCQ027",
+      "difficulty": "medium",
+      "question": "Scatter/gather can amplify?",
+      "choices": {
+        "A": "Tail latency",
+        "B": "Hash entropy",
+        "C": "Replication factor",
+        "D": "Compression"
+      },
+      "answer": "A",
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "MCQ028",
+      "difficulty": "medium",
+      "question": "What is a term-partitioned index?",
+      "choices": {
+        "A": "Global index partitioned by indexed term/value",
+        "B": "Local primary index",
+        "C": "Node map",
+        "D": "Replication stream"
+      },
+      "answer": "A",
+      "source_pages": [
+        230
+      ]
+    },
+    {
+      "id": "MCQ029",
+      "difficulty": "medium",
+      "question": "Why partition global index by term itself?",
+      "choices": {
+        "A": "Support range scans",
+        "B": "Remove ordering",
+        "C": "Hash everything",
+        "D": "Avoid writes"
+      },
+      "answer": "A",
+      "source_pages": [
+        230
+      ]
+    },
+    {
+      "id": "MCQ030",
+      "difficulty": "medium",
+      "question": "Why partition global index by term hash?",
+      "choices": {
+        "A": "More even load",
+        "B": "Preserve ordering",
+        "C": "Avoid all writes",
+        "D": "Eliminate metadata"
+      },
+      "answer": "A",
+      "source_pages": [
+        230
+      ]
+    },
+    {
+      "id": "MCQ031",
+      "difficulty": "medium",
+      "question": "Global-index read advantage?",
+      "choices": {
+        "A": "Target relevant index partition",
+        "B": "Always query all partitions",
+        "C": "No routing required",
+        "D": "No index"
+      },
+      "answer": "A",
+      "source_pages": [
+        230
+      ]
+    },
+    {
+      "id": "MCQ032",
+      "difficulty": "medium",
+      "question": "Global-index write disadvantage?",
+      "choices": {
+        "A": "May update multiple index partitions",
+        "B": "No document writes",
+        "C": "No consistency concerns",
+        "D": "Cannot scale reads"
+      },
+      "answer": "A",
+      "source_pages": [
+        230,
+        231
+      ]
+    },
+    {
+      "id": "MCQ033",
+      "difficulty": "medium",
+      "question": "Why are global index updates often async?",
+      "choices": {
+        "A": "Sync would require distributed transactions",
+        "B": "Indexes cannot be synced",
+        "C": "Reads are too slow",
+        "D": "Keys are unordered"
+      },
+      "answer": "A",
+      "source_pages": [
+        231
+      ]
+    },
+    {
+      "id": "MCQ034",
+      "difficulty": "medium",
+      "question": "What is rebalancing?",
+      "choices": {
+        "A": "Moving load/data responsibilities among nodes",
+        "B": "Adding replicas only",
+        "C": "Compacting indexes",
+        "D": "Changing schemas"
+      },
+      "answer": "A",
+      "source_pages": [
+        231
+      ]
+    },
+    {
+      "id": "MCQ035",
+      "difficulty": "medium",
+      "question": "Which is a rebalancing requirement?",
+      "choices": {
+        "A": "Continue reads/writes during migration",
+        "B": "Stop cluster",
+        "C": "Move all data",
+        "D": "Change every key"
+      },
+      "answer": "A",
+      "source_pages": [
+        231
+      ]
+    },
+    {
+      "id": "MCQ036",
+      "difficulty": "medium",
+      "question": "Why is hash(key) mod N bad?",
+      "choices": {
+        "A": "Most keys move when N changes",
+        "B": "It never maps keys",
+        "C": "It creates no partitions",
+        "D": "It only supports range queries"
+      },
+      "answer": "A",
+      "source_pages": [
+        232
+      ]
+    },
+    {
+      "id": "MCQ037",
+      "difficulty": "medium",
+      "question": "What stays fixed in fixed-partition rebalancing?",
+      "choices": {
+        "A": "Key-to-partition mapping",
+        "B": "Partition-to-node mapping",
+        "C": "Node count",
+        "D": "Data size"
+      },
+      "answer": "A",
+      "source_pages": [
+        232
+      ]
+    },
+    {
+      "id": "MCQ038",
+      "difficulty": "medium",
+      "question": "10 nodes and 1,000 partitions implies about?",
+      "choices": {
+        "A": "100 partitions/node",
+        "B": "10",
+        "C": "1",
+        "D": "1,000 nodes"
+      },
+      "answer": "A",
+      "source_pages": [
+        232
+      ]
+    },
+    {
+      "id": "MCQ039",
+      "difficulty": "medium",
+      "question": "What moves when a new node joins a fixed-partition cluster?",
+      "choices": {
+        "A": "Whole partitions",
+        "B": "Individual random rows only",
+        "C": "Hash function",
+        "D": "All data"
+      },
+      "answer": "A",
+      "source_pages": [
+        232
+      ]
+    },
+    {
+      "id": "MCQ040",
+      "difficulty": "medium",
+      "question": "Too few fixed partitions causes?",
+      "choices": {
+        "A": "Large expensive partitions and limited future node count",
+        "B": "No overhead",
+        "C": "Infinite scaling",
+        "D": "No rebalance"
+      },
+      "answer": "A",
+      "source_pages": [
+        233
+      ]
+    },
+    {
+      "id": "MCQ041",
+      "difficulty": "medium",
+      "question": "Too many fixed partitions causes?",
+      "choices": {
+        "A": "Management overhead",
+        "B": "No routing",
+        "C": "No data",
+        "D": "No replication"
+      },
+      "answer": "A",
+      "source_pages": [
+        233
+      ]
+    },
+    {
+      "id": "MCQ042",
+      "difficulty": "medium",
+      "question": "What is dynamic partitioning?",
+      "choices": {
+        "A": "Split/merge partitions according to size",
+        "B": "Keep count forever fixed",
+        "C": "Use mod N",
+        "D": "One partition per database"
+      },
+      "answer": "A",
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "MCQ043",
+      "difficulty": "medium",
+      "question": "What HBase split threshold is cited?",
+      "choices": {
+        "A": "10 GB",
+        "B": "1 GB",
+        "C": "100 GB",
+        "D": "1 TB"
+      },
+      "answer": "A",
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "MCQ044",
+      "difficulty": "medium",
+      "question": "What is the dynamic startup problem?",
+      "choices": {
+        "A": "Empty DB begins with one partition",
+        "B": "Too many partitions initially",
+        "C": "No partitions",
+        "D": "No writes"
+      },
+      "answer": "A",
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "MCQ045",
+      "difficulty": "medium",
+      "question": "What is pre-splitting?",
+      "choices": {
+        "A": "Create initial partitions in advance",
+        "B": "Delete partitions",
+        "C": "Hash keys twice",
+        "D": "Replicate every shard"
+      },
+      "answer": "A",
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "MCQ046",
+      "difficulty": "medium",
+      "question": "Partitions proportional to nodes means?",
+      "choices": {
+        "A": "Fixed number of partitions per node",
+        "B": "One partition total",
+        "C": "Fixed global partition count",
+        "D": "Partitions proportional only to dataset"
+      },
+      "answer": "A",
+      "source_pages": [
+        235
+      ]
+    },
+    {
+      "id": "MCQ047",
+      "difficulty": "medium",
+      "question": "Which system is cited using this?",
+      "choices": {
+        "A": "Cassandra",
+        "B": "HBase only",
+        "C": "PostgreSQL only",
+        "D": "SQLite"
+      },
+      "answer": "A",
+      "source_pages": [
+        235
+      ]
+    },
+    {
+      "id": "MCQ048",
+      "difficulty": "medium",
+      "question": "How does a joining node get data in this model?",
+      "choices": {
+        "A": "Split selected existing partitions and take halves",
+        "B": "Rehash all keys",
+        "C": "Copy entire cluster",
+        "D": "Become routing tier"
+      },
+      "answer": "A",
+      "source_pages": [
+        235
+      ]
+    },
+    {
+      "id": "MCQ049",
+      "difficulty": "medium",
+      "question": "Why can many random partition choices work?",
+      "choices": {
+        "A": "Imbalance averages out",
+        "B": "Every split is perfect",
+        "C": "No data moves",
+        "D": "Node count never changes"
+      },
+      "answer": "A",
+      "source_pages": [
+        235
+      ]
+    },
+    {
+      "id": "MCQ050",
+      "difficulty": "medium",
+      "question": "What Cassandra partition-per-node default is cited?",
+      "choices": {
+        "A": "256",
+        "B": "16",
+        "C": "64",
+        "D": "1024"
+      },
+      "answer": "A",
+      "source_pages": [
+        235
+      ]
+    },
+    {
+      "id": "MCQ051",
+      "difficulty": "hard",
+      "question": "What is a middle ground between auto and manual rebalancing?",
+      "choices": {
+        "A": "System proposes, admin approves",
+        "B": "No rebalance",
+        "C": "Client decides each request",
+        "D": "Use DNS"
+      },
+      "answer": "A",
+      "source_pages": [
+        235
+      ]
+    },
+    {
+      "id": "MCQ052",
+      "difficulty": "hard",
+      "question": "Why can automatic rebalancing be dangerous?",
+      "choices": {
+        "A": "Data movement can overload nodes/network",
+        "B": "It prevents scaling",
+        "C": "It removes partitions",
+        "D": "It disables routing"
+      },
+      "answer": "A",
+      "source_pages": [
+        235,
+        236
+      ]
+    },
+    {
+      "id": "MCQ053",
+      "difficulty": "hard",
+      "question": "How can cascading failure begin?",
+      "choices": {
+        "A": "Slow node declared dead triggers more load-moving work",
+        "B": "Range scan succeeds",
+        "C": "Index is local",
+        "D": "DNS resolves"
+      },
+      "answer": "A",
+      "source_pages": [
+        236
+      ]
+    },
+    {
+      "id": "MCQ054",
+      "difficulty": "hard",
+      "question": "Routing approach 1?",
+      "choices": {
+        "A": "Contact any node; it forwards if necessary",
+        "B": "Client knows exact owner",
+        "C": "Always use ZooKeeper directly for query",
+        "D": "No routing"
+      },
+      "answer": "A",
+      "source_pages": [
+        236
+      ]
+    },
+    {
+      "id": "MCQ055",
+      "difficulty": "hard",
+      "question": "Routing approach 2?",
+      "choices": {
+        "A": "Use partition-aware routing tier",
+        "B": "Random node only",
+        "C": "Client direct only",
+        "D": "Use one leader for all shards"
+      },
+      "answer": "A",
+      "source_pages": [
+        236
+      ]
+    },
+    {
+      "id": "MCQ056",
+      "difficulty": "hard",
+      "question": "Routing approach 3?",
+      "choices": {
+        "A": "Partition-aware client connects directly",
+        "B": "Every node broadcasts query",
+        "C": "No metadata",
+        "D": "Only DNS"
+      },
+      "answer": "A",
+      "source_pages": [
+        236
+      ]
+    },
+    {
+      "id": "MCQ057",
+      "difficulty": "hard",
+      "question": "What general problem is request routing related to?",
+      "choices": {
+        "A": "Service discovery",
+        "B": "Serialization",
+        "C": "Replication lag",
+        "D": "Transaction isolation"
+      },
+      "answer": "A",
+      "source_pages": [
+        236
+      ]
+    },
+    {
+      "id": "MCQ058",
+      "difficulty": "hard",
+      "question": "Why is routing metadata coordination hard?",
+      "choices": {
+        "A": "Participants must agree on current ownership",
+        "B": "Keys never move",
+        "C": "Nodes have no addresses",
+        "D": "Partitions cannot fail"
+      },
+      "answer": "A",
+      "source_pages": [
+        237
+      ]
+    },
+    {
+      "id": "MCQ059",
+      "difficulty": "hard",
+      "question": "What does ZooKeeper store in the example?",
+      "choices": {
+        "A": "Authoritative partition-to-node mapping",
+        "B": "All user rows",
+        "C": "Only passwords",
+        "D": "Only SQL"
+      },
+      "answer": "A",
+      "source_pages": [
+        237
+      ]
+    },
+    {
+      "id": "MCQ060",
+      "difficulty": "hard",
+      "question": "What can routers do with ZooKeeper?",
+      "choices": {
+        "A": "Subscribe to assignment changes",
+        "B": "Store full database",
+        "C": "Run range scans",
+        "D": "Hash every value"
+      },
+      "answer": "A",
+      "source_pages": [
+        237
+      ]
+    },
+    {
+      "id": "MCQ061",
+      "difficulty": "hard",
+      "question": "What does MongoDB use for routing?",
+      "choices": {
+        "A": "Config servers and mongos",
+        "B": "ZooKeeper only",
+        "C": "moxi",
+        "D": "No routing tier"
+      },
+      "answer": "A",
+      "source_pages": [
+        238
+      ]
+    },
+    {
+      "id": "MCQ062",
+      "difficulty": "hard",
+      "question": "What do Cassandra and Riak use to disseminate cluster state?",
+      "choices": {
+        "A": "Gossip",
+        "B": "WSDL",
+        "C": "WAL shipping",
+        "D": "Base64"
+      },
+      "answer": "A",
+      "source_pages": [
+        238
+      ]
+    },
+    {
+      "id": "MCQ063",
+      "difficulty": "hard",
+      "question": "What is a benefit of gossip routing?",
+      "choices": {
+        "A": "Avoid external coordination-service dependency",
+        "B": "No node complexity",
+        "C": "Strong transactions",
+        "D": "No metadata"
+      },
+      "answer": "A",
+      "source_pages": [
+        238
+      ]
+    },
+    {
+      "id": "MCQ064",
+      "difficulty": "hard",
+      "question": "What is Couchbase's cited routing tier?",
+      "choices": {
+        "A": "moxi",
+        "B": "mongos",
+        "C": "Helix",
+        "D": "Kafka"
+      },
+      "answer": "A",
+      "source_pages": [
+        238
+      ]
+    },
+    {
+      "id": "MCQ065",
+      "difficulty": "hard",
+      "question": "What can DNS help locate?",
+      "choices": {
+        "A": "Relatively stable router/node addresses",
+        "B": "Every record directly",
+        "C": "Partition boundaries only",
+        "D": "Secondary terms"
+      },
+      "answer": "A",
+      "source_pages": [
+        238
+      ]
+    },
+    {
+      "id": "MCQ066",
+      "difficulty": "hard",
+      "question": "What does MPP mean?",
+      "choices": {
+        "A": "Massively parallel processing",
+        "B": "Multi-partition primary",
+        "C": "Manual partition placement",
+        "D": "Message processing protocol"
+      },
+      "answer": "A",
+      "source_pages": [
+        238
+      ]
+    },
+    {
+      "id": "MCQ067",
+      "difficulty": "hard",
+      "question": "What does an MPP optimizer do?",
+      "choices": {
+        "A": "Break complex query into parallel stages",
+        "B": "Route all work to one node",
+        "C": "Disable joins",
+        "D": "Only point lookup"
+      },
+      "answer": "A",
+      "source_pages": [
+        238
+      ]
+    },
+    {
+      "id": "MCQ068",
+      "difficulty": "hard",
+      "question": "Which workload benefits strongly from MPP?",
+      "choices": {
+        "A": "Large analytical scans",
+        "B": "Single cached key only",
+        "C": "One local write",
+        "D": "Schema migration only"
+      },
+      "answer": "A",
+      "source_pages": [
+        238
+      ]
+    },
+    {
+      "id": "MCQ069",
+      "difficulty": "hard",
+      "question": "Key-range partitioning is best characterized as?",
+      "choices": {
+        "A": "Ordered and range-friendly, but hotspot-prone",
+        "B": "Uniform but unordered",
+        "C": "Global-index-only",
+        "D": "Always random"
+      },
+      "answer": "A",
+      "source_pages": [
+        239
+      ]
+    },
+    {
+      "id": "MCQ070",
+      "difficulty": "hard",
+      "question": "Hash partitioning is best characterized as?",
+      "choices": {
+        "A": "More even but destroys ordering",
+        "B": "Preserves range locality",
+        "C": "No hot keys ever",
+        "D": "No routing metadata"
+      },
+      "answer": "A",
+      "source_pages": [
+        239
+      ]
+    },
+    {
+      "id": "MCQ071",
+      "difficulty": "hard",
+      "question": "Local secondary index tradeoff?",
+      "choices": {
+        "A": "Local writes, scatter/gather reads",
+        "B": "Global writes, targeted reads",
+        "C": "No writes",
+        "D": "No reads"
+      },
+      "answer": "A",
+      "source_pages": [
+        239
+      ]
+    },
+    {
+      "id": "MCQ072",
+      "difficulty": "hard",
+      "question": "Global secondary index tradeoff?",
+      "choices": {
+        "A": "Multi-partition writes, targeted reads",
+        "B": "One-partition writes, scatter reads",
+        "C": "No consistency delay",
+        "D": "No partitioning"
+      },
+      "answer": "A",
+      "source_pages": [
+        239
+      ]
+    },
+    {
+      "id": "MCQ073",
+      "difficulty": "hard",
+      "question": "Why are cross-partition writes hard?",
+      "choices": {
+        "A": "One partition may succeed while another fails",
+        "B": "Every partition is one machine",
+        "C": "Hashes are unstable",
+        "D": "Range scans are impossible"
+      },
+      "answer": "A",
+      "source_pages": [
+        239,
+        240
+      ]
+    }
+  ],
+  "mix_and_match": [
+    {
+      "id": "MM01",
+      "title": "Partitioning strategy to property",
+      "left": {
+        "A": "Key-range",
+        "B": "Hash",
+        "C": "Cassandra compound",
+        "D": "Hot-key salting",
+        "E": "Random record placement"
+      },
+      "right": {
+        "1": "Efficient range scans but hot-spot risk",
+        "2": "Even distribution but key order lost",
+        "3": "Hash first component, sort by remaining components",
+        "4": "Split one logical hot key across physical keys",
+        "5": "Balanced but impossible to route point lookup directly"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        223,
+        224,
+        225,
+        226,
+        227
+      ]
+    },
+    {
+      "id": "MM02",
+      "title": "Secondary index strategy",
+      "left": {
+        "A": "Local index",
+        "B": "Global index",
+        "C": "Scatter/gather",
+        "D": "Term hash",
+        "E": "Term range"
+      },
+      "right": {
+        "1": "Index stored with each document partition",
+        "2": "Index covers all primary partitions",
+        "3": "Query many partitions and combine results",
+        "4": "Evenly spreads global index terms",
+        "5": "Preserves ordering for global-index range scans"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        228,
+        229,
+        230
+      ]
+    },
+    {
+      "id": "MM03",
+      "title": "Rebalancing strategy",
+      "left": {
+        "A": "Hash mod N",
+        "B": "Fixed partitions",
+        "C": "Dynamic partitions",
+        "D": "Partitions per node",
+        "E": "Pre-splitting"
+      },
+      "right": {
+        "1": "Bad because changing N remaps most keys",
+        "2": "Many logical partitions; only ownership moves",
+        "3": "Split/merge based on partition size",
+        "4": "Total partition count grows with nodes",
+        "5": "Seed initial partitions before data grows"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        232,
+        233,
+        234,
+        235
+      ]
+    },
+    {
+      "id": "MM04",
+      "title": "Routing architecture",
+      "left": {
+        "A": "Any-node forwarding",
+        "B": "Routing tier",
+        "C": "Partition-aware client",
+        "D": "ZooKeeper",
+        "E": "Gossip"
+      },
+      "right": {
+        "1": "Random/any node forwards to owner",
+        "2": "Separate partition-aware load balancer",
+        "3": "Client directly connects to owner",
+        "4": "Authoritative cluster metadata/notifications",
+        "5": "Nodes disseminate cluster state among themselves"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        236,
+        237,
+        238
+      ]
+    },
+    {
+      "id": "MM05",
+      "title": "Named system to chapter behavior",
+      "left": {
+        "A": "HBase",
+        "B": "Cassandra",
+        "C": "MongoDB",
+        "D": "Couchbase",
+        "E": "Espresso"
+      },
+      "right": {
+        "1": "Dynamic key-range partitions; pre-splitting supported",
+        "2": "Compound key + gossip; partitions proportional to nodes",
+        "3": "Config servers + mongos routing",
+        "4": "moxi routing tier; fixed partitions cited",
+        "5": "Helix/ZooKeeper-based routing tier"
+      },
+      "answer_key": {
+        "A": "1",
+        "B": "2",
+        "C": "3",
+        "D": "4",
+        "E": "5"
+      },
+      "source_pages": [
+        224,
+        234,
+        235,
+        237,
+        238
+      ]
+    }
+  ],
+  "true_false": [
+    {
+      "id": "TF001",
+      "statement": "Partitioning is another word for a network netsplit.",
+      "answer": false,
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "TF002",
+      "statement": "Partitioning is primarily used for scalability.",
+      "answer": true,
+      "source_pages": [
+        221,
+        222
+      ]
+    },
+    {
+      "id": "TF003",
+      "statement": "Each logical record normally belongs to exactly one partition.",
+      "answer": true,
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "TF004",
+      "statement": "Replication and partitioning cannot be combined.",
+      "answer": false,
+      "source_pages": [
+        222
+      ]
+    },
+    {
+      "id": "TF005",
+      "statement": "A node may lead some partitions and follow others.",
+      "answer": true,
+      "source_pages": [
+        222,
+        223
+      ]
+    },
+    {
+      "id": "TF006",
+      "statement": "Skew means partitions receive unequal data/query load.",
+      "answer": true,
+      "source_pages": [
+        223
+      ]
+    },
+    {
+      "id": "TF007",
+      "statement": "A hot spot is an underutilized partition.",
+      "answer": false,
+      "source_pages": [
+        223
+      ]
+    },
+    {
+      "id": "TF008",
+      "statement": "Random record placement makes point routing easy.",
+      "answer": false,
+      "source_pages": [
+        223
+      ]
+    },
+    {
+      "id": "TF009",
+      "statement": "Key-range partitioning preserves sorted order.",
+      "answer": true,
+      "source_pages": [
+        224
+      ]
+    },
+    {
+      "id": "TF010",
+      "statement": "Key ranges must always have equal numeric widths.",
+      "answer": false,
+      "source_pages": [
+        224
+      ]
+    },
+    {
+      "id": "TF011",
+      "statement": "Key-range partitioning is good for range scans.",
+      "answer": true,
+      "source_pages": [
+        224
+      ]
+    },
+    {
+      "id": "TF012",
+      "statement": "Timestamp-only partition keys can cause a current-time write hot spot.",
+      "answer": true,
+      "source_pages": [
+        225
+      ]
+    },
+    {
+      "id": "TF013",
+      "statement": "Putting sensor ID before timestamp can spread writes.",
+      "answer": true,
+      "source_pages": [
+        225
+      ]
+    },
+    {
+      "id": "TF014",
+      "statement": "Hash partitioning preserves adjacent-key locality.",
+      "answer": false,
+      "source_pages": [
+        226
+      ]
+    },
+    {
+      "id": "TF015",
+      "statement": "A partitioning hash must be cryptographically secure.",
+      "answer": false,
+      "source_pages": [
+        225
+      ]
+    },
+    {
+      "id": "TF016",
+      "statement": "The same key must hash consistently across processes.",
+      "answer": true,
+      "source_pages": [
+        225
+      ]
+    },
+    {
+      "id": "TF017",
+      "statement": "Java Object.hashCode() is always safe for distributed partitioning.",
+      "answer": false,
+      "source_pages": [
+        225
+      ]
+    },
+    {
+      "id": "TF018",
+      "statement": "Hash partitioning generally spreads keys more evenly.",
+      "answer": true,
+      "source_pages": [
+        226
+      ]
+    },
+    {
+      "id": "TF019",
+      "statement": "Hash partitioning makes key-range scans more efficient.",
+      "answer": false,
+      "source_pages": [
+        226
+      ]
+    },
+    {
+      "id": "TF020",
+      "statement": "The chapter equates consistent hashing with ACID consistency.",
+      "answer": false,
+      "source_pages": [
+        226
+      ]
+    },
+    {
+      "id": "TF021",
+      "statement": "Cassandra can hash one compound-key component and sort on others.",
+      "answer": true,
+      "source_pages": [
+        226,
+        227
+      ]
+    },
+    {
+      "id": "TF022",
+      "statement": "Hashing completely eliminates all hot spots.",
+      "answer": false,
+      "source_pages": [
+        227
+      ]
+    },
+    {
+      "id": "TF023",
+      "statement": "One identical hot key always hashes to the same place.",
+      "answer": true,
+      "source_pages": [
+        227
+      ]
+    },
+    {
+      "id": "TF024",
+      "statement": "Salting can split one hot logical key into many physical keys.",
+      "answer": true,
+      "source_pages": [
+        227
+      ]
+    },
+    {
+      "id": "TF025",
+      "statement": "Hot-key salting makes reads simpler.",
+      "answer": false,
+      "source_pages": [
+        227
+      ]
+    },
+    {
+      "id": "TF026",
+      "statement": "Secondary indexes always map naturally to one primary-key partition.",
+      "answer": false,
+      "source_pages": [
+        228
+      ]
+    },
+    {
+      "id": "TF027",
+      "statement": "Document-partitioned secondary indexes are local indexes.",
+      "answer": true,
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "TF028",
+      "statement": "Local-index writes may touch only one partition.",
+      "answer": true,
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "TF029",
+      "statement": "Local-index reads may require scatter/gather.",
+      "answer": true,
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "TF030",
+      "statement": "Scatter/gather can amplify tail latency.",
+      "answer": true,
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "TF031",
+      "statement": "Term-partitioned secondary indexes are global indexes.",
+      "answer": true,
+      "source_pages": [
+        230
+      ]
+    },
+    {
+      "id": "TF032",
+      "statement": "A global index should simply be stored on one node.",
+      "answer": false,
+      "source_pages": [
+        230
+      ]
+    },
+    {
+      "id": "TF033",
+      "statement": "Partitioning a global index by term supports range scans.",
+      "answer": true,
+      "source_pages": [
+        230
+      ]
+    },
+    {
+      "id": "TF034",
+      "statement": "Partitioning a global index by term hash can spread load more evenly.",
+      "answer": true,
+      "source_pages": [
+        230
+      ]
+    },
+    {
+      "id": "TF035",
+      "statement": "Global indexes make all writes single-partition.",
+      "answer": false,
+      "source_pages": [
+        230,
+        231
+      ]
+    },
+    {
+      "id": "TF036",
+      "statement": "Global secondary index updates are often asynchronous.",
+      "answer": true,
+      "source_pages": [
+        231
+      ]
+    },
+    {
+      "id": "TF037",
+      "statement": "Rebalancing should stop all reads and writes.",
+      "answer": false,
+      "source_pages": [
+        231
+      ]
+    },
+    {
+      "id": "TF038",
+      "statement": "Good rebalancing moves no more data than necessary.",
+      "answer": true,
+      "source_pages": [
+        231
+      ]
+    },
+    {
+      "id": "TF039",
+      "statement": "hash(key) mod N is stable when N changes.",
+      "answer": false,
+      "source_pages": [
+        232
+      ]
+    },
+    {
+      "id": "TF040",
+      "statement": "Fixed-partition rebalancing moves whole logical partitions between nodes.",
+      "answer": true,
+      "source_pages": [
+        232
+      ]
+    },
+    {
+      "id": "TF041",
+      "statement": "Fixed-partition rebalancing changes every key's partition.",
+      "answer": false,
+      "source_pages": [
+        232
+      ]
+    },
+    {
+      "id": "TF042",
+      "statement": "More powerful nodes can be assigned more partitions.",
+      "answer": true,
+      "source_pages": [
+        233
+      ]
+    },
+    {
+      "id": "TF043",
+      "statement": "A fixed partition count can be difficult to size for future growth.",
+      "answer": true,
+      "source_pages": [
+        233
+      ]
+    },
+    {
+      "id": "TF044",
+      "statement": "Very small partitions have no management overhead.",
+      "answer": false,
+      "source_pages": [
+        233
+      ]
+    },
+    {
+      "id": "TF045",
+      "statement": "Dynamic partitioning can split large partitions and merge small ones.",
+      "answer": true,
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "TF046",
+      "statement": "An empty dynamically partitioned database may start with one partition.",
+      "answer": true,
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "TF047",
+      "statement": "Pre-splitting can spread initial writes.",
+      "answer": true,
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "TF048",
+      "statement": "Dynamic splitting only works with key-range partitioning.",
+      "answer": false,
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "TF049",
+      "statement": "Partitions proportional to nodes means fixed partitions per node.",
+      "answer": true,
+      "source_pages": [
+        235
+      ]
+    },
+    {
+      "id": "TF050",
+      "statement": "Cassandra is cited as using this general strategy.",
+      "answer": true,
+      "source_pages": [
+        235
+      ]
+    },
+    {
+      "id": "TF051",
+      "statement": "Random partition splitting always creates perfectly even load immediately.",
+      "answer": false,
+      "source_pages": [
+        235
+      ]
+    },
+    {
+      "id": "TF052",
+      "statement": "Automatic rebalancing always improves availability.",
+      "answer": false,
+      "source_pages": [
+        235,
+        236
+      ]
+    },
+    {
+      "id": "TF053",
+      "statement": "Automatic failure detection can interact badly with automatic rebalancing.",
+      "answer": true,
+      "source_pages": [
+        236
+      ]
+    },
+    {
+      "id": "TF054",
+      "statement": "A human-in-the-loop rebalance can reduce operational surprises.",
+      "answer": true,
+      "source_pages": [
+        236
+      ]
+    },
+    {
+      "id": "TF055",
+      "statement": "Clients may contact any node and rely on forwarding.",
+      "answer": true,
+      "source_pages": [
+        236
+      ]
+    },
+    {
+      "id": "TF056",
+      "statement": "A routing tier can act as a partition-aware load balancer.",
+      "answer": true,
+      "source_pages": [
+        236
+      ]
+    },
+    {
+      "id": "TF057",
+      "statement": "Clients can themselves maintain partition ownership metadata.",
+      "answer": true,
+      "source_pages": [
+        236
+      ]
+    },
+    {
+      "id": "TF058",
+      "statement": "All routing participants must eventually agree on partition ownership.",
+      "answer": true,
+      "source_pages": [
+        237
+      ]
+    },
+    {
+      "id": "TF059",
+      "statement": "ZooKeeper can maintain authoritative partition-to-node mappings.",
+      "answer": true,
+      "source_pages": [
+        237
+      ]
+    },
+    {
+      "id": "TF060",
+      "statement": "Cassandra and Riak are described as using gossip for cluster state.",
+      "answer": true,
+      "source_pages": [
+        238
+      ]
+    },
+    {
+      "id": "TF061",
+      "statement": "Gossip requires ZooKeeper as an external dependency.",
+      "answer": false,
+      "source_pages": [
+        238
+      ]
+    },
+    {
+      "id": "TF062",
+      "statement": "MongoDB uses config servers and mongos for routing.",
+      "answer": true,
+      "source_pages": [
+        238
+      ]
+    },
+    {
+      "id": "TF063",
+      "statement": "DNS may be sufficient for relatively stable node/router addresses.",
+      "answer": true,
+      "source_pages": [
+        238
+      ]
+    },
+    {
+      "id": "TF064",
+      "statement": "MPP systems can execute joins and aggregations in parallel across nodes.",
+      "answer": true,
+      "source_pages": [
+        238
+      ]
+    },
+    {
+      "id": "TF065",
+      "statement": "Partition independence makes every multi-partition write trivial.",
+      "answer": false,
+      "source_pages": [
+        239,
+        240
+      ]
+    }
+  ],
+  "fill_in_the_blank": [
+    {
+      "id": "FIB001",
+      "prompt": "Partitioning is also known as ______.",
+      "answer": "sharding",
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "id": "FIB002",
+      "prompt": "Uneven partition load is called ______.",
+      "answer": "skew",
+      "source_pages": [
+        223
+      ]
+    },
+    {
+      "id": "FIB003",
+      "prompt": "An overloaded partition is a hot ______.",
+      "answer": "spot",
+      "source_pages": [
+        223
+      ]
+    },
+    {
+      "id": "FIB004",
+      "prompt": "Continuous sorted key ownership is key-______ partitioning.",
+      "answer": "range",
+      "source_pages": [
+        224
+      ]
+    },
+    {
+      "id": "FIB005",
+      "prompt": "Applying a hash function to keys gives ______ partitioning.",
+      "answer": "hash",
+      "source_pages": [
+        225,
+        226
+      ]
+    },
+    {
+      "id": "FIB006",
+      "prompt": "Cassandra hashes the ______ component of a compound primary key.",
+      "answer": "first",
+      "source_pages": [
+        226,
+        227
+      ]
+    },
+    {
+      "id": "FIB007",
+      "prompt": "Adding a random suffix to a hot key is often called key ______.",
+      "answer": "salting",
+      "source_pages": [
+        227
+      ]
+    },
+    {
+      "id": "FIB008",
+      "prompt": "A per-primary-partition secondary index is a ______ index.",
+      "answer": "local",
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "FIB009",
+      "prompt": "Querying every partition and combining results is scatter/______.",
+      "answer": "gather",
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "FIB010",
+      "prompt": "A term-partitioned secondary index is a ______ index.",
+      "answer": "global",
+      "source_pages": [
+        230
+      ]
+    },
+    {
+      "id": "FIB011",
+      "prompt": "Moving partitions among nodes is called ______.",
+      "answer": "rebalancing",
+      "source_pages": [
+        231
+      ]
+    },
+    {
+      "id": "FIB012",
+      "prompt": "The naive unstable assignment is hash(key) mod ______.",
+      "answer": "N",
+      "source_pages": [
+        232
+      ]
+    },
+    {
+      "id": "FIB013",
+      "prompt": "Splitting partitions based on size is ______ partitioning.",
+      "answer": "dynamic",
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "FIB014",
+      "prompt": "Creating initial partitions before data arrives is pre-______.",
+      "answer": "splitting",
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "FIB015",
+      "prompt": "Cassandra is cited with ______ partitions per node by default.",
+      "answer": "256",
+      "source_pages": [
+        235
+      ]
+    },
+    {
+      "id": "FIB016",
+      "prompt": "Finding the correct server for a networked service is service ______.",
+      "answer": "discovery",
+      "source_pages": [
+        236
+      ]
+    },
+    {
+      "id": "FIB017",
+      "prompt": "A separate partition-aware load balancer is a routing ______.",
+      "answer": "tier",
+      "source_pages": [
+        236
+      ]
+    },
+    {
+      "id": "FIB018",
+      "prompt": "A coordination service cited for routing metadata is ______.",
+      "answer": "ZooKeeper",
+      "source_pages": [
+        237
+      ]
+    },
+    {
+      "id": "FIB019",
+      "prompt": "Cassandra and Riak disseminate cluster state with a ______ protocol.",
+      "answer": "gossip",
+      "source_pages": [
+        238
+      ]
+    },
+    {
+      "id": "FIB020",
+      "prompt": "MongoDB's routing daemon is ______.",
+      "answer": "mongos",
+      "source_pages": [
+        238
+      ]
+    },
+    {
+      "id": "FIB021",
+      "prompt": "Couchbase's cited routing tier is ______.",
+      "answer": "moxi",
+      "source_pages": [
+        238
+      ]
+    },
+    {
+      "id": "FIB022",
+      "prompt": "MPP stands for massively parallel ______.",
+      "answer": "processing",
+      "source_pages": [
+        238
+      ]
+    },
+    {
+      "id": "FIB023",
+      "prompt": "Local indexes favor local ______ while global indexes favor targeted reads.",
+      "answer": "writes",
+      "source_pages": [
+        239
+      ]
+    },
+    {
+      "id": "FIB024",
+      "prompt": "Hash partitioning destroys key ______.",
+      "answer": "ordering",
+      "source_pages": [
+        239
+      ]
+    }
+  ],
+  "ordering_exercises": [
+    {
+      "id": "ORD01",
+      "title": "Fixed-partition node addition",
+      "items_scrambled": [
+        "New node receives moved partitions",
+        "Cluster has many partitions per node",
+        "Select partitions from existing nodes",
+        "Continue serving with old assignment during transfer",
+        "Commit new ownership"
+      ],
+      "correct_order": [
+        "Cluster has many partitions per node",
+        "Select partitions from existing nodes",
+        "Continue serving with old assignment during transfer",
+        "New node receives moved partitions",
+        "Commit new ownership"
+      ],
+      "source_pages": [
+        232,
+        233
+      ]
+    },
+    {
+      "id": "ORD02",
+      "title": "Dynamic split",
+      "items_scrambled": [
+        "Transfer one child partition if needed",
+        "Partition exceeds threshold",
+        "Split into two ranges",
+        "Continue with smaller partitions"
+      ],
+      "correct_order": [
+        "Partition exceeds threshold",
+        "Split into two ranges",
+        "Transfer one child partition if needed",
+        "Continue with smaller partitions"
+      ],
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "ORD03",
+      "title": "Any-node request routing",
+      "items_scrambled": [
+        "Owner executes request",
+        "Client contacts arbitrary node",
+        "Node determines owner",
+        "Intermediate node forwards",
+        "Reply returns to client"
+      ],
+      "correct_order": [
+        "Client contacts arbitrary node",
+        "Node determines owner",
+        "Intermediate node forwards",
+        "Owner executes request",
+        "Reply returns to client"
+      ],
+      "source_pages": [
+        236
+      ]
+    },
+    {
+      "id": "ORD04",
+      "title": "ZooKeeper-based routing update",
+      "items_scrambled": [
+        "Router updates routing table",
+        "Partition ownership changes",
+        "ZooKeeper updates authoritative metadata",
+        "Subscriber receives notification"
+      ],
+      "correct_order": [
+        "Partition ownership changes",
+        "ZooKeeper updates authoritative metadata",
+        "Subscriber receives notification",
+        "Router updates routing table"
+      ],
+      "source_pages": [
+        237
+      ]
+    },
+    {
+      "id": "ORD05",
+      "title": "MPP query execution",
+      "items_scrambled": [
+        "Combine final results",
+        "Optimizer decomposes query",
+        "Execute stages on nodes",
+        "Identify joins/filters/groups/aggregates"
+      ],
+      "correct_order": [
+        "Identify joins/filters/groups/aggregates",
+        "Optimizer decomposes query",
+        "Execute stages on nodes",
+        "Combine final results"
+      ],
+      "source_pages": [
+        238
+      ]
+    }
+  ],
+  "scenario_questions": [
+    {
+      "id": "SC01",
+      "difficulty": "medium",
+      "scenario": "A 20 TB dataset no longer fits comfortably on one machine even though you already replicate it.",
+      "question": "What additional technique is needed?",
+      "expected_answer": "Partition/shard the dataset so different subsets can live on different nodes.",
+      "source_pages": [
+        221,
+        222
+      ]
+    },
+    {
+      "id": "SC02",
+      "difficulty": "medium",
+      "scenario": "Ten nodes exist, but almost every request lands on one partition.",
+      "question": "What problem is this?",
+      "expected_answer": "Skew resulting in a hot spot; adding nodes will not help until the partitioning/load distribution improves.",
+      "source_pages": [
+        223
+      ]
+    },
+    {
+      "id": "SC03",
+      "difficulty": "hard",
+      "scenario": "Sensor readings use a monotonically increasing timestamp as their partition key.",
+      "question": "Why can this fail operationally?",
+      "expected_answer": "All current writes target the newest key range, overloading one partition while older ranges are idle.",
+      "source_pages": [
+        224,
+        225
+      ]
+    },
+    {
+      "id": "SC04",
+      "difficulty": "hard",
+      "scenario": "You need fast queries for one user's posts within a time range while spreading different users across nodes.",
+      "question": "What key design matches the chapter?",
+      "expected_answer": "A compound key such as (user_id, update_timestamp): hash user_id for partitioning and sort by timestamp within the user's partition.",
+      "source_pages": [
+        226,
+        227
+      ]
+    },
+    {
+      "id": "SC05",
+      "difficulty": "hard",
+      "scenario": "A celebrity post receives nearly all traffic and the key is the post ID.",
+      "question": "Why doesn't ordinary hashing solve the hot spot?",
+      "expected_answer": "All requests use the same key, so they all produce the same hash and hit one partition.",
+      "source_pages": [
+        227
+      ]
+    },
+    {
+      "id": "SC06",
+      "difficulty": "hard",
+      "scenario": "You salt one hot key into 100 variants.",
+      "question": "What new read cost appears?",
+      "expected_answer": "Readers may need to query all 100 variants and merge results, plus track which keys are salted.",
+      "source_pages": [
+        227
+      ]
+    },
+    {
+      "id": "SC07",
+      "difficulty": "medium",
+      "scenario": "Every partition maintains its own index on car color.",
+      "question": "What type of secondary index is this?",
+      "expected_answer": "A document-partitioned/local secondary index.",
+      "source_pages": [
+        228,
+        229
+      ]
+    },
+    {
+      "id": "SC08",
+      "difficulty": "hard",
+      "scenario": "A query for red cars must hit all 40 partitions and return only when results are merged.",
+      "question": "What pattern and performance risk is this?",
+      "expected_answer": "Scatter/gather, with tail-latency amplification because the overall query depends on many partition responses.",
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "SC09",
+      "difficulty": "hard",
+      "scenario": "A global index maps color:red to documents from every primary partition.",
+      "question": "What is the read/write tradeoff?",
+      "expected_answer": "Reads can target the term's index partition, but one document write may update multiple global-index partitions.",
+      "source_pages": [
+        230,
+        231
+      ]
+    },
+    {
+      "id": "SC10",
+      "difficulty": "hard",
+      "scenario": "A user writes a document and immediately searches a global secondary index but doesn't find it.",
+      "question": "Is this compatible with the chapter's model?",
+      "expected_answer": "Yes. Global/term-partitioned index updates are often asynchronous and may lag the primary write.",
+      "source_pages": [
+        231
+      ]
+    },
+    {
+      "id": "SC11",
+      "difficulty": "medium",
+      "scenario": "A cluster changes from 10 to 11 nodes using hash(key)%N.",
+      "question": "Why is this expensive?",
+      "expected_answer": "Most keys map to different node numbers after N changes, forcing excessive data movement.",
+      "source_pages": [
+        232
+      ]
+    },
+    {
+      "id": "SC12",
+      "difficulty": "hard",
+      "scenario": "A database starts with 1,000 logical partitions on 10 nodes and later adds an 11th node.",
+      "question": "What should move?",
+      "expected_answer": "Whole logical partitions should be reassigned from existing nodes to the new node; key-to-partition mapping remains unchanged.",
+      "source_pages": [
+        232,
+        233
+      ]
+    },
+    {
+      "id": "SC13",
+      "difficulty": "medium",
+      "scenario": "A key-range partition exceeds its configured size threshold.",
+      "question": "What does dynamic partitioning do?",
+      "expected_answer": "Split the range into two partitions, typically with about half the data on each side, and potentially move one half to another node.",
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "SC14",
+      "difficulty": "hard",
+      "scenario": "A new empty HBase-like cluster has many machines, but all writes initially hit one node.",
+      "question": "Why and how can it be mitigated?",
+      "expected_answer": "The database starts with one partition because boundaries are unknown; pre-splitting creates initial ranges in advance.",
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "SC15",
+      "difficulty": "hard",
+      "scenario": "An overloaded node becomes slow. Automatic failure detection declares it dead and automatic rebalancing starts moving its partitions.",
+      "question": "What failure mode can occur?",
+      "expected_answer": "A cascading failure: rebalancing adds more CPU/network/disk pressure and makes the original overload worse.",
+      "source_pages": [
+        235,
+        236
+      ]
+    },
+    {
+      "id": "SC16",
+      "difficulty": "medium",
+      "scenario": "Clients are intentionally simple and may connect to any database node.",
+      "question": "How can routing work?",
+      "expected_answer": "The contacted node determines the partition owner and forwards the request if it does not own the partition.",
+      "source_pages": [
+        236
+      ]
+    },
+    {
+      "id": "SC17",
+      "difficulty": "medium",
+      "scenario": "You want clients insulated from partition metadata but also don't want every database node forwarding requests.",
+      "question": "What architecture fits?",
+      "expected_answer": "A partition-aware routing tier/load balancer between clients and storage nodes.",
+      "source_pages": [
+        236,
+        237
+      ]
+    },
+    {
+      "id": "SC18",
+      "difficulty": "hard",
+      "scenario": "Routers need immediate notification whenever partition ownership changes.",
+      "question": "What mechanism described in the chapter can provide this?",
+      "expected_answer": "A coordination service such as ZooKeeper storing authoritative partition assignment and notifying subscribers.",
+      "source_pages": [
+        237
+      ]
+    },
+    {
+      "id": "SC19",
+      "difficulty": "medium",
+      "scenario": "A Cassandra/Riak-like system wants no external ZooKeeper dependency.",
+      "question": "How can cluster metadata propagate?",
+      "expected_answer": "Nodes can disseminate membership/partition changes using gossip and forward requests among themselves.",
+      "source_pages": [
+        238
+      ]
+    },
+    {
+      "id": "SC20",
+      "difficulty": "hard",
+      "scenario": "A warehouse query joins several tables, filters, groups, aggregates, and scans a large fraction of data.",
+      "question": "How can a partitioned analytical database execute it?",
+      "expected_answer": "An MPP optimizer decomposes it into parallel execution stages distributed across nodes and combines the results.",
+      "source_pages": [
+        238
+      ]
+    },
+    {
+      "id": "SC21",
+      "difficulty": "hard",
+      "scenario": "A business operation must atomically write two partitions, but one succeeds and one fails.",
+      "question": "Why does Chapter 6 flag this as a harder problem?",
+      "expected_answer": "Partition independence enables scalability, but multi-partition writes can become partially successful and require stronger transaction/coordination mechanisms discussed later.",
+      "source_pages": [
+        239,
+        240
+      ]
+    }
+  ],
+  "short_answer_questions": [
+    {
+      "id": "SA01",
+      "question": "Why does partitioning scale a database?",
+      "model_answer": "It distributes logical subsets of data across independent nodes, allowing storage to use many disks and single-partition query throughput to use many processors.",
+      "source_pages": [
+        221,
+        222
+      ]
+    },
+    {
+      "id": "SA02",
+      "question": "Compare partitioning and replication.",
+      "model_answer": "Partitioning divides the dataset into different subsets; replication creates multiple copies. They are largely independent and commonly combined.",
+      "source_pages": [
+        221,
+        222
+      ]
+    },
+    {
+      "id": "SA03",
+      "question": "Compare key-range and hash partitioning.",
+      "model_answer": "Key-range partitioning preserves ordering and range scans but risks clustered hot spots. Hash partitioning spreads keys more evenly but destroys original ordering and efficient range scans.",
+      "source_pages": [
+        224,
+        225,
+        226,
+        239
+      ]
+    },
+    {
+      "id": "SA04",
+      "question": "Why does Cassandra use a compound-key hybrid?",
+      "model_answer": "Hashing a partition-key component spreads entities across nodes, while clustering/sorting by later key components supports ordered range access within each entity's partition.",
+      "source_pages": [
+        226,
+        227
+      ]
+    },
+    {
+      "id": "SA05",
+      "question": "Why can a hot key defeat hashing?",
+      "model_answer": "Hashing distributes distinct keys, not accesses to a single identical key. Every request for that key still maps to one hash and one partition.",
+      "source_pages": [
+        227
+      ]
+    },
+    {
+      "id": "SA06",
+      "question": "Compare local and global secondary indexes.",
+      "model_answer": "Local indexes stay with document partitions, making writes local but reads scatter/gather. Global indexes are partitioned by term, making reads targeted but writes potentially update several index partitions.",
+      "source_pages": [
+        228,
+        229,
+        230,
+        231,
+        239
+      ]
+    },
+    {
+      "id": "SA07",
+      "question": "Why is scatter/gather susceptible to high tail latency?",
+      "model_answer": "A query depends on many parallel partition responses, so one slow partition can delay the overall query.",
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "SA08",
+      "question": "Why is hash(key)%N poor for rebalancing?",
+      "model_answer": "Changing node count N changes the modulus and remaps most keys, forcing much more data movement than necessary.",
+      "source_pages": [
+        232
+      ]
+    },
+    {
+      "id": "SA09",
+      "question": "How does fixed-partition rebalancing separate logical and physical placement?",
+      "model_answer": "Keys stay assigned to the same logical partitions; only whole partitions are reassigned among physical nodes.",
+      "source_pages": [
+        232,
+        233
+      ]
+    },
+    {
+      "id": "SA10",
+      "question": "What is the fixed-partition sizing dilemma?",
+      "model_answer": "Too few partitions create large, expensive-to-move units and limit scaling; too many create excessive management overhead.",
+      "source_pages": [
+        233
+      ]
+    },
+    {
+      "id": "SA11",
+      "question": "What problem does dynamic partitioning solve and introduce?",
+      "model_answer": "It adapts partition count to dataset size by splitting/merging, but an initially empty database may start with one hot partition unless pre-split.",
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "SA12",
+      "question": "Explain partitions proportional to nodes.",
+      "model_answer": "Keep roughly a fixed number of partitions per node. Adding nodes causes selected partitions to split, with the new node taking parts of existing partitions.",
+      "source_pages": [
+        234,
+        235
+      ]
+    },
+    {
+      "id": "SA13",
+      "question": "Why can automatic rebalancing cause cascading failure?",
+      "model_answer": "If a merely overloaded node is misclassified as failed, moving its partitions generates more network/disk/CPU load and can worsen cluster overload.",
+      "source_pages": [
+        235,
+        236
+      ]
+    },
+    {
+      "id": "SA14",
+      "question": "What are the three request-routing approaches?",
+      "model_answer": "Contact any node and forward, use a dedicated routing tier, or make clients partition-aware and connect directly.",
+      "source_pages": [
+        236,
+        237
+      ]
+    },
+    {
+      "id": "SA15",
+      "question": "Compare ZooKeeper-based and gossip-based partition metadata.",
+      "model_answer": "ZooKeeper provides a separate authoritative coordination service and notifications; gossip distributes cluster state among the database nodes themselves and avoids that external dependency.",
+      "source_pages": [
+        237,
+        238
+      ]
+    },
+    {
+      "id": "SA16",
+      "question": "What does MPP add beyond simple partition-aware point queries?",
+      "model_answer": "A query optimizer can decompose joins, filters, grouping, and aggregation into parallel stages that execute across many nodes.",
+      "source_pages": [
+        238
+      ]
+    },
+    {
+      "id": "SA17",
+      "question": "Why are multi-partition writes a correctness challenge?",
+      "model_answer": "Independent partitions scale well, but a multi-partition operation can partially succeed, so atomicity and failure handling require additional coordination.",
+      "source_pages": [
+        239,
+        240
+      ]
+    }
+  ],
+  "active_recall_prompts": [
+    {
+      "id": "AR01",
+      "prompt": "Explain why replication alone does not solve very-large-dataset scaling.",
+      "target_points": [
+        "replicas copy same data",
+        "storage still full dataset",
+        "partition subsets",
+        "shared-nothing nodes"
+      ],
+      "source_pages": [
+        221,
+        222
+      ]
+    },
+    {
+      "id": "AR02",
+      "prompt": "Define skew and hot spot and explain why random placement is not enough.",
+      "target_points": [
+        "uneven load",
+        "busy partition",
+        "routing problem",
+        "need deterministic mapping"
+      ],
+      "source_pages": [
+        223
+      ]
+    },
+    {
+      "id": "AR03",
+      "prompt": "Compare key-range and hash partitioning from memory.",
+      "target_points": [
+        "sorted ranges",
+        "range scan",
+        "timestamp hot spot",
+        "uniform hash",
+        "lost ordering"
+      ],
+      "source_pages": [
+        224,
+        225,
+        226
+      ]
+    },
+    {
+      "id": "AR04",
+      "prompt": "Explain Cassandra compound-key partitioning.",
+      "target_points": [
+        "first component hash",
+        "remaining components sorted",
+        "user_id",
+        "timestamp",
+        "one-to-many"
+      ],
+      "source_pages": [
+        226,
+        227
+      ]
+    },
+    {
+      "id": "AR05",
+      "prompt": "Explain hot-key salting and every tradeoff.",
+      "target_points": [
+        "same hash",
+        "random suffix/prefix",
+        "100 variants",
+        "parallel reads",
+        "merge",
+        "bookkeeping"
+      ],
+      "source_pages": [
+        227
+      ]
+    },
+    {
+      "id": "AR06",
+      "prompt": "Compare local/document and global/term secondary indexes.",
+      "target_points": [
+        "write locality",
+        "scatter/gather",
+        "tail latency",
+        "targeted read",
+        "multi-partition write",
+        "async index update"
+      ],
+      "source_pages": [
+        228,
+        229,
+        230,
+        231
+      ]
+    },
+    {
+      "id": "AR07",
+      "prompt": "State the three minimum rebalancing requirements.",
+      "target_points": [
+        "fair load",
+        "continue serving",
+        "minimal movement"
+      ],
+      "source_pages": [
+        231
+      ]
+    },
+    {
+      "id": "AR08",
+      "prompt": "Explain why hash mod N is bad and how fixed partitions improve it.",
+      "target_points": [
+        "N changes",
+        "most keys move",
+        "many logical partitions",
+        "key-to-partition stable",
+        "partition ownership moves"
+      ],
+      "source_pages": [
+        232,
+        233
+      ]
+    },
+    {
+      "id": "AR09",
+      "prompt": "Compare fixed, dynamic, and per-node partition counts.",
+      "target_points": [
+        "fixed count",
+        "partition sizing",
+        "split/merge",
+        "pre-split",
+        "fixed per node",
+        "Cassandra"
+      ],
+      "source_pages": [
+        233,
+        234,
+        235
+      ]
+    },
+    {
+      "id": "AR10",
+      "prompt": "Explain automatic vs manual rebalancing and cascading-failure risk.",
+      "target_points": [
+        "resource intensive",
+        "failure detector",
+        "slow overloaded node",
+        "extra movement",
+        "human approval"
+      ],
+      "source_pages": [
+        235,
+        236
+      ]
+    },
+    {
+      "id": "AR11",
+      "prompt": "Recite the three request-routing designs.",
+      "target_points": [
+        "any node forwards",
+        "routing tier",
+        "partition-aware client"
+      ],
+      "source_pages": [
+        236,
+        237
+      ]
+    },
+    {
+      "id": "AR12",
+      "prompt": "Compare cluster metadata mechanisms.",
+      "target_points": [
+        "ZooKeeper",
+        "subscriptions",
+        "Helix",
+        "config server/mongos",
+        "gossip",
+        "moxi",
+        "DNS"
+      ],
+      "source_pages": [
+        237,
+        238
+      ]
+    },
+    {
+      "id": "AR13",
+      "prompt": "Explain MPP query execution.",
+      "target_points": [
+        "analytical query",
+        "joins",
+        "filters",
+        "groups",
+        "aggregations",
+        "optimizer",
+        "parallel stages"
+      ],
+      "source_pages": [
+        238
+      ]
+    },
+    {
+      "id": "AR14",
+      "prompt": "Give the chapter's final four major tradeoffs.",
+      "target_points": [
+        "range vs hash",
+        "local vs global index",
+        "fixed vs dynamic rebalance",
+        "single-partition independence vs multi-partition coordination"
+      ],
+      "source_pages": [
+        238,
+        239,
+        240
+      ]
+    }
+  ],
+  "diagram_reconstruction_drills": [
+    {
+      "id": "DR01",
+      "name": "Partitioning plus replication",
+      "task": "Redraw Figure 6-1: several nodes, each leading some partitions and following other partitions.",
+      "source_pages": [
+        223
+      ]
+    },
+    {
+      "id": "DR02",
+      "name": "Key-range partitioning",
+      "task": "Draw sorted key ranges with uneven boundaries and show how one point key routes to exactly one partition.",
+      "source_pages": [
+        224
+      ]
+    },
+    {
+      "id": "DR03",
+      "name": "Hash partitioning",
+      "task": "Draw keys -> hash values -> hash ranges p0...pN, and annotate loss of original key order.",
+      "source_pages": [
+        225,
+        226
+      ]
+    },
+    {
+      "id": "DR04",
+      "name": "Local secondary indexes",
+      "task": "Redraw Figure 6-4 with each document partition owning color/make indexes and a red-car query scattering to all partitions.",
+      "source_pages": [
+        228,
+        229
+      ]
+    },
+    {
+      "id": "DR05",
+      "name": "Global secondary index",
+      "task": "Redraw Figure 6-5 with color:red in one term partition even though matching cars live in multiple primary partitions.",
+      "source_pages": [
+        230
+      ]
+    },
+    {
+      "id": "DR06",
+      "name": "Fixed partition rebalance",
+      "task": "Redraw Figure 6-6 before/after adding a node; show whole partitions moving while key-to-partition mapping stays fixed.",
+      "source_pages": [
+        232,
+        233
+      ]
+    },
+    {
+      "id": "DR07",
+      "name": "Dynamic split",
+      "task": "Draw one oversized key range splitting into two, then one half migrating to another node.",
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "DR08",
+      "name": "Three routing approaches",
+      "task": "Redraw Figure 6-7: any-node forwarding, routing-tier forwarding, and direct partition-aware client routing.",
+      "source_pages": [
+        236,
+        237
+      ]
+    },
+    {
+      "id": "DR09",
+      "name": "ZooKeeper routing metadata",
+      "task": "Redraw nodes registering partition ownership, ZooKeeper storing the mapping, and routers subscribing to updates.",
+      "source_pages": [
+        237
+      ]
+    },
+    {
+      "id": "DR10",
+      "name": "MPP execution",
+      "task": "Draw a complex analytical query decomposed into parallel partition-local stages and a final combine stage.",
+      "source_pages": [
+        238
+      ]
+    }
+  ],
+  "interview_style_questions": [
+    {
+      "id": "INT01",
+      "question": "How would you choose between key-range and hash partitioning?",
+      "strong_answer_outline": [
+        "range locality",
+        "range scans",
+        "uniformity",
+        "hot spots",
+        "access patterns"
+      ],
+      "source_pages": [
+        224,
+        225,
+        226,
+        239
+      ]
+    },
+    {
+      "id": "INT02",
+      "question": "How would you mitigate a hot partition caused by one celebrity ID?",
+      "strong_answer_outline": [
+        "hash doesn't help one identical key",
+        "salt/shard hot key",
+        "fan-out reads",
+        "merge",
+        "bookkeeping"
+      ],
+      "source_pages": [
+        227
+      ]
+    },
+    {
+      "id": "INT03",
+      "question": "Compare local and global secondary indexes in a sharded database.",
+      "strong_answer_outline": [
+        "local index",
+        "one-partition writes",
+        "scatter/gather",
+        "global index",
+        "targeted reads",
+        "multi-partition updates",
+        "async"
+      ],
+      "source_pages": [
+        228,
+        229,
+        230,
+        231
+      ]
+    },
+    {
+      "id": "INT04",
+      "question": "Why is hash(key)%N usually a poor sharding algorithm?",
+      "strong_answer_outline": [
+        "node count changes",
+        "mass remapping",
+        "data movement",
+        "separate logical partitions from nodes"
+      ],
+      "source_pages": [
+        232
+      ]
+    },
+    {
+      "id": "INT05",
+      "question": "How would you rebalance a fixed-partition cluster when adding a node?",
+      "strong_answer_outline": [
+        "many partitions per node",
+        "move whole partitions",
+        "stable key mapping",
+        "serve during transfer",
+        "minimal movement"
+      ],
+      "source_pages": [
+        232,
+        233
+      ]
+    },
+    {
+      "id": "INT06",
+      "question": "Compare fixed and dynamic partition counts.",
+      "strong_answer_outline": [
+        "operational simplicity",
+        "initial sizing",
+        "split/merge",
+        "dataset growth",
+        "overhead",
+        "pre-splitting"
+      ],
+      "source_pages": [
+        233,
+        234
+      ]
+    },
+    {
+      "id": "INT07",
+      "question": "Why can fully automatic rebalancing be dangerous?",
+      "strong_answer_outline": [
+        "data movement expensive",
+        "overloaded node",
+        "false failure",
+        "extra load",
+        "cascading failure",
+        "human approval"
+      ],
+      "source_pages": [
+        235,
+        236
+      ]
+    },
+    {
+      "id": "INT08",
+      "question": "How do clients find the right shard after rebalancing?",
+      "strong_answer_outline": [
+        "forwarding node",
+        "routing tier",
+        "smart client",
+        "metadata consistency",
+        "service discovery"
+      ],
+      "source_pages": [
+        236,
+        237
+      ]
+    },
+    {
+      "id": "INT09",
+      "question": "ZooKeeper or gossip for partition metadata—what is the architectural difference?",
+      "strong_answer_outline": [
+        "external authoritative coordination",
+        "subscriptions",
+        "node-to-node dissemination",
+        "dependency vs node complexity"
+      ],
+      "source_pages": [
+        237,
+        238
+      ]
+    },
+    {
+      "id": "INT10",
+      "question": "Why are cross-partition operations harder than single-partition operations?",
+      "strong_answer_outline": [
+        "partition independence",
+        "partial success",
+        "coordination",
+        "atomicity",
+        "later transaction chapters"
+      ],
+      "source_pages": [
+        239,
+        240
+      ]
+    }
+  ],
+  "common_confusions": [
+    {
+      "confusion": "Database partitioning means the network is partitioned.",
+      "correction": "They are unrelated terms: database partitioning intentionally divides data; a network partition is a communication failure.",
+      "source_pages": [
+        221
+      ]
+    },
+    {
+      "confusion": "Replication removes the need for partitioning.",
+      "correction": "Replication duplicates the full data; partitioning is needed when the dataset or query throughput exceeds one machine.",
+      "source_pages": [
+        221,
+        222
+      ]
+    },
+    {
+      "confusion": "Equal-size key ranges always produce equal load.",
+      "correction": "Real key distributions are uneven, so boundaries may need to be uneven and adaptive.",
+      "source_pages": [
+        224
+      ]
+    },
+    {
+      "confusion": "Hash partitioning automatically solves every hot spot.",
+      "correction": "It spreads distinct keys but cannot split traffic for one identical hot key.",
+      "source_pages": [
+        227
+      ]
+    },
+    {
+      "confusion": "Classic consistent hashing is the chapter's preferred database partitioning term.",
+      "correction": "The chapter says the original algorithm is rarely ideal for databases and recommends simply saying hash partitioning.",
+      "source_pages": [
+        226
+      ]
+    },
+    {
+      "confusion": "A local secondary index can answer any secondary-index query from one partition.",
+      "correction": "If matches are distributed, it needs scatter/gather across partitions.",
+      "source_pages": [
+        229
+      ]
+    },
+    {
+      "confusion": "A global secondary index makes writes cheaper.",
+      "correction": "It makes reads more targeted but can require several index partitions to be updated for one document write.",
+      "source_pages": [
+        230,
+        231
+      ]
+    },
+    {
+      "confusion": "widespread hash(key)%N is ideal because it is simple.",
+      "correction": "It causes massive remapping whenever N changes.",
+      "source_pages": [
+        232
+      ]
+    },
+    {
+      "confusion": "Fixed partitioning means partitions can never move.",
+      "correction": "The logical partition set stays fixed, but partition ownership moves between nodes during rebalancing.",
+      "source_pages": [
+        232,
+        233
+      ]
+    },
+    {
+      "confusion": "Dynamic partitioning is perfectly balanced from an empty database.",
+      "correction": "It may begin with one partition and one busy node until the first split unless pre-splitting is used.",
+      "source_pages": [
+        234
+      ]
+    },
+    {
+      "confusion": "Automatic rebalancing is always operationally safer than manual approval.",
+      "correction": "It can react badly to overload/failure detection and trigger cascading failures.",
+      "source_pages": [
+        235,
+        236
+      ]
+    },
+    {
+      "confusion": "Request routing is static once the cluster starts.",
+      "correction": "Partition ownership changes during rebalancing and membership changes, so routing metadata must be updated.",
+      "source_pages": [
+        236,
+        237
+      ]
+    },
+    {
+      "confusion": "All distributed databases need ZooKeeper.",
+      "correction": "Some use ZooKeeper, while Cassandra/Riak use gossip and MongoDB uses its own config/routing architecture.",
+      "source_pages": [
+        237,
+        238
+      ]
+    }
+  ],
+  "practice_problems": [
+    {
+      "id": "P01",
+      "type": "partition_choice",
+      "prompt": "You need all orders for one customer sorted by order_timestamp, but different customers should spread across nodes. Propose a key.",
+      "solution": "Use a compound key such as (customer_id, order_timestamp), hash customer_id for the partition, and sort by timestamp within it.",
+      "based_on_source_pages": [
+        226,
+        227
+      ]
+    },
+    {
+      "id": "P02",
+      "type": "hot_spot",
+      "prompt": "One key receives 50,000 writes/s. If you salt it across 100 physical keys and writes distribute evenly, what is the average write rate per physical key?",
+      "solution": "Approximately 500 writes/s per salted key, ignoring skew/overhead.",
+      "based_on_source_pages": [
+        227
+      ]
+    },
+    {
+      "id": "P03",
+      "type": "scatter_gather",
+      "prompt": "A local secondary-index query hits 20 partitions. If 19 respond in 20 ms and one responds in 300 ms, approximately when can the full scatter/gather result complete?",
+      "solution": "About 300 ms, illustrating tail-latency amplification.",
+      "based_on_source_pages": [
+        229
+      ]
+    },
+    {
+      "id": "P04",
+      "type": "mod_n",
+      "prompt": "Given hash(key)=123456, calculate assignment for N=10,11,12.",
+      "solution": "6, 3, and 0 respectively, showing why changing N remaps keys.",
+      "based_on_source_pages": [
+        232
+      ]
+    },
+    {
+      "id": "P05",
+      "type": "fixed_partitioning",
+      "prompt": "A 10-node cluster has 1,000 partitions. Approximately how many partitions per node before rebalancing?",
+      "solution": "About 100.",
+      "based_on_source_pages": [
+        232
+      ]
+    },
+    {
+      "id": "P06",
+      "type": "fixed_partitioning",
+      "prompt": "If an 11th equally powerful node joins a 1,000-partition cluster, roughly how many partitions should each node have after perfect balance?",
+      "solution": "About 91 partitions per node on average (1000/11 ≈ 90.9), with whole partitions producing small deviations.",
+      "based_on_source_pages": [
+        232,
+        233
+      ]
+    },
+    {
+      "id": "P07",
+      "type": "dynamic_partitioning",
+      "prompt": "An empty dynamically partitioned range database starts on 8 nodes. Why might 7 nodes initially be idle?",
+      "solution": "There may initially be only one partition, so all writes go to its owning node until splitting occurs; pre-splitting can mitigate this.",
+      "based_on_source_pages": [
+        234
+      ]
+    },
+    {
+      "id": "P08",
+      "type": "index_tradeoff",
+      "prompt": "You need extremely frequent secondary-index reads but can tolerate asynchronous index updates. Which index strategy is attractive?",
+      "solution": "A term-partitioned/global index, because reads can target the term's index partition while writes update index partitions asynchronously.",
+      "based_on_source_pages": [
+        230,
+        231
+      ]
+    },
+    {
+      "id": "P09",
+      "type": "routing",
+      "prompt": "You want simple clients and database nodes without forwarding logic. Which routing architecture fits?",
+      "solution": "A separate partition-aware routing tier/load balancer.",
+      "based_on_source_pages": [
+        236,
+        237
+      ]
+    },
+    {
+      "id": "P10",
+      "type": "operations",
+      "prompt": "A node is slow due to overload. Why might moving its partitions immediately be the wrong reaction?",
+      "solution": "Rebalancing itself consumes network/disk/CPU resources and can increase pressure enough to cause a cascading failure.",
+      "based_on_source_pages": [
+        235,
+        236
+      ]
+    }
+  ],
+  "mastery_check": {
+    "beginner": [
+      "Can distinguish replication, partitioning, and network partitions.",
+      "Can define skew and hot spots.",
+      "Can compare key-range and hash partitioning.",
+      "Can define local and global secondary indexes.",
+      "Can define rebalancing."
+    ],
+    "intermediate": [
+      "Can design compound keys for partition locality and range access.",
+      "Can explain and mitigate hot keys.",
+      "Can explain scatter/gather and global-index write amplification.",
+      "Can compare fixed, dynamic, and node-proportional partitioning.",
+      "Can explain all three routing architectures."
+    ],
+    "advanced": [
+      "Can reason about operational risks of automatic rebalancing.",
+      "Can choose a partitioning/index strategy from workload characteristics.",
+      "Can explain cluster metadata dissemination through ZooKeeper or gossip.",
+      "Can identify when cross-partition operations require stronger coordination.",
+      "Can explain how MPP query execution builds on partitioned data."
+    ]
+  },
+  "final_review": {
+    "must_memorize": [
+      "Partitioning/sharding splits data; replication duplicates it.",
+      "Partitioning's purpose is scalability across disks and CPUs.",
+      "Skew = uneven load; hot spot = disproportionately busy partition.",
+      "Key-range partitioning preserves order and supports range scans.",
+      "Monotonic/timestamp keys can create a current-range hot spot.",
+      "Hash partitioning spreads distinct keys but destroys key ordering.",
+      "Distributed partition hashes must be stable across processes.",
+      "The chapter recommends saying hash partitioning rather than loosely using consistent hashing.",
+      "Cassandra-style hybrid = hash partition key, sort clustering components.",
+      "Hashing cannot solve one identical hot key.",
+      "Hot-key salting spreads writes but requires fan-out/merge reads.",
+      "Local/document secondary index = local writes, scatter/gather reads.",
+      "Global/term secondary index = targeted reads, multi-partition writes.",
+      "Global index updates are often asynchronous.",
+      "Rebalancing must preserve service, balance load, and minimize movement.",
+      "Avoid hash(key)%N because changing N remaps most keys.",
+      "Fixed partitions = many logical partitions per node; move whole partitions.",
+      "Fixed partition count creates a too-big vs too-small sizing tradeoff.",
+      "Dynamic partitions split/merge with data size.",
+      "Pre-splitting prevents initial single-partition concentration.",
+      "Partitions proportional to nodes keep a fixed number of partitions per node.",
+      "Automatic rebalancing can cause cascading failures under overload.",
+      "Routing options: any-node forwarding, routing tier, partition-aware client.",
+      "ZooKeeper can maintain authoritative partition ownership.",
+      "Cassandra/Riak use gossip to spread cluster state.",
+      "MongoDB uses config servers + mongos.",
+      "MPP optimizers decompose analytical queries into parallel stages.",
+      "Partition independence enables scale but makes multi-partition writes harder to coordinate."
+    ],
+    "memory_chain": "WHY PARTITION -> REPLICATION + PARTITIONS -> SKEW/HOT SPOTS -> KEY RANGE -> HASH -> CASSANDRA COMPOUND KEY -> HOT-KEY SALTING -> LOCAL INDEX -> SCATTER/GATHER -> GLOBAL INDEX -> REBALANCING -> DON'T USE MOD N -> FIXED PARTITIONS -> DYNAMIC SPLITS -> PARTITIONS PER NODE -> AUTO VS MANUAL -> REQUEST ROUTING -> ZOOKEEPER/GOSSIP -> MPP QUERY EXECUTION",
+    "one_sentence_takeaway": "Partitioning scales data and query load by keeping partitions mostly independent, but every partitioning choice trades locality, balance, indexing cost, rebalancing complexity, and cross-partition coordination against one another."
+  }
+}
