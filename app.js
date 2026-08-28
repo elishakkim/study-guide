@@ -609,6 +609,26 @@ function renderFlashcards(cards, root, ctx = {}) {
 }
 
 /* ----- Multiple choice ----- */
+/* Supports two choice formats:
+   - object: { "A": "text", ... } with answer = a letter key
+   - array:  ["text", ...] with answer = the correct answer text (order-independent) */
+function normalizeChoices(it) {
+  if (Array.isArray(it.choices)) {
+    return it.choices.map((text, i) => ({
+      key: "#" + i,
+      label: String.fromCharCode(65 + i),
+      text,
+      correct: text === it.answer,
+    }));
+  }
+  return Object.entries(it.choices || {}).map(([label, text]) => ({
+    key: label,
+    label,
+    text,
+    correct: label === it.answer,
+  }));
+}
+
 function renderMCQ(items, root, ctx = {}) {
   const store = ctx.chapterKey ? chapterProgress(ctx.chapterKey) : null;
   const score = makeScore();
@@ -620,30 +640,32 @@ function renderMCQ(items, root, ctx = {}) {
     let answered = false;
     const btns = {};
     const key = itemKey(it, ctx.sectionKey || "mcq", idx);
+    const entries = normalizeChoices(it);
+    const correctEntry = entries.find((e) => e.correct) || {};
 
-    const grade = (chosen, persist) => {
+    const grade = (chosenKey, persist) => {
       if (answered) return;
       answered = true;
-      const correct = chosen === it.answer;
-      if (btns[chosen]) btns[chosen].classList.add(correct ? "correct" : "incorrect");
-      if (btns[it.answer]) btns[it.answer].classList.add("correct");
+      const correct = chosenKey === correctEntry.key;
+      if (btns[chosenKey]) btns[chosenKey].classList.add(correct ? "correct" : "incorrect");
+      if (btns[correctEntry.key]) btns[correctEntry.key].classList.add("correct");
       Object.values(btns).forEach((b) => (b.disabled = true));
       score.record(correct);
       exp.classList.remove("hidden-reveal");
-      if (persist && store) { store.quiz[key] = { c: chosen, ok: correct }; saveProgress(); }
+      if (persist && store) { store.quiz[key] = { c: chosenKey, ok: correct }; saveProgress(); }
     };
 
-    for (const [k, label] of Object.entries(it.choices || {})) {
-      const btn = el("button", { class: "choice", "data-key": k }, [
-        el("span", { class: "choice-key", text: k }),
-        el("span", { text: label }),
+    for (const e of entries) {
+      const btn = el("button", { class: "choice", "data-key": e.key }, [
+        el("span", { class: "choice-key", text: e.label }),
+        el("span", { text: e.text }),
       ]);
-      btn.addEventListener("click", () => grade(k, true));
-      btns[k] = btn;
+      btn.addEventListener("click", () => grade(e.key, true));
+      btns[e.key] = btn;
       choices.append(btn);
     }
     item.append(choices);
-    const exp = explanationBlock(it.explanation, it.source_pages);
+    const exp = explanationBlock(it.explanation || `Correct answer: ${correctEntry.text || ""}`, it.source_pages);
     exp.classList.add("hidden-reveal");
     item.append(exp);
     root.append(item);

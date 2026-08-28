@@ -1157,13 +1157,13 @@
       "id": "MCQ001",
       "difficulty": "medium",
       "question": "Which is a data-system building block?",
-      "choices": {
-        "A": "Cache",
-        "B": "Compiler",
-        "C": "CSS engine",
-        "D": "GPU shader"
-      },
-      "answer": "A",
+      "choices": [
+        "CSS engine",
+        "Compiler",
+        "Cache",
+        "GPU shader"
+      ],
+      "answer": "Cache",
       "source_pages": [
         25
       ]
@@ -1172,13 +1172,13 @@
       "id": "MCQ002",
       "difficulty": "medium",
       "question": "What primarily characterizes a data-intensive application?",
-      "choices": {
-        "A": "Data quantity/complexity/change rate",
-        "B": "Only CPU frequency",
-        "C": "Only UI complexity",
-        "D": "Only network protocol"
-      },
-      "answer": "A",
+      "choices": [
+        "Only CPU frequency",
+        "Data quantity/complexity/change rate",
+        "Only network protocol",
+        "Only UI complexity"
+      ],
+      "answer": "Data quantity/complexity/change rate",
       "source_pages": [
         25
       ]
@@ -1187,13 +1187,13 @@
       "id": "MCQ003",
       "difficulty": "medium",
       "question": "Which example blurs datastore and message-queue categories?",
-      "choices": {
-        "A": "Redis",
-        "B": "RAID",
-        "C": "HTTP",
-        "D": "DNS"
-      },
-      "answer": "A",
+      "choices": [
+        "Redis",
+        "RAID",
+        "DNS",
+        "HTTP"
+      ],
+      "answer": "Redis",
       "source_pages": [
         26
       ]
@@ -1202,13 +1202,13 @@
       "id": "MCQ004",
       "difficulty": "medium",
       "question": "What does combining several tools behind one API create?",
-      "choices": {
-        "A": "A special-purpose data system",
-        "B": "A compiler",
-        "C": "A single disk",
-        "D": "A browser"
-      },
-      "answer": "A",
+      "choices": [
+        "A single disk",
+        "A compiler",
+        "A special-purpose data system",
+        "A browser"
+      ],
+      "answer": "A special-purpose data system",
       "source_pages": [
         27
       ]
@@ -1217,13 +1217,13 @@
       "id": "MCQ005",
       "difficulty": "medium",
       "question": "Which is a core concern?",
-      "choices": {
-        "A": "Reliability",
-        "B": "Typography",
-        "C": "Branding",
-        "D": "Localization only"
-      },
-      "answer": "A",
+      "choices": [
+        "Reliability",
+        "Branding",
+        "Localization only",
+        "Typography"
+      ],
+      "answer": "Reliability",
       "source_pages": [
         28
       ]
@@ -1232,13 +1232,13 @@
       "id": "MCQ006",
       "difficulty": "medium",
       "question": "What is a fault?",
-      "choices": {
-        "A": "Component deviation from spec",
-        "B": "Whole-system outage",
-        "C": "SLA",
-        "D": "Cache hit"
-      },
-      "answer": "A",
+      "choices": [
+        "Whole-system outage",
+        "SLA",
+        "Cache hit",
+        "Component deviation from spec"
+      ],
+      "answer": "Component deviation from spec",
       "source_pages": [
         29
       ]
@@ -1247,13 +1247,13 @@
       "id": "MCQ007",
       "difficulty": "medium",
       "question": "What is a failure?",
-      "choices": {
-        "A": "Whole system stops required service",
-        "B": "One component glitch only",
-        "C": "A retry",
-        "D": "A deployment"
-      },
-      "answer": "A",
+      "choices": [
+        "A deployment",
+        "A retry",
+        "Whole system stops required service",
+        "One component glitch only"
+      ],
+      "answer": "Whole system stops required service",
       "source_pages": [
         29
       ]
@@ -1262,13 +1262,13 @@
       "id": "MCQ008",
       "difficulty": "medium",
       "question": "What is fault tolerance trying to do?",
-      "choices": {
-        "A": "Prevent faults becoming failures",
-        "B": "Eliminate all faults forever",
-        "C": "Remove monitoring",
-        "D": "Avoid redundancy"
-      },
-      "answer": "A",
+      "choices": [
+        "Eliminate all faults forever",
+        "Remove monitoring",
+        "Prevent faults becoming failures",
+        "Avoid redundancy"
+      ],
+      "answer": "Prevent faults becoming failures",
       "source_pages": [
         29
       ]
@@ -1277,13 +1277,13 @@
       "id": "MCQ009",
       "difficulty": "medium",
       "question": "What tool injects deliberate faults?",
-      "choices": {
-        "A": "Chaos Monkey",
-        "B": "Kafka",
-        "C": "Solr",
-        "D": "RAID"
-      },
-      "answer": "A",
+      "choices": [
+        "Chaos Monkey",
+        "RAID",
+        "Kafka",
+        "Solr"
+      ],
+      "answer": "Chaos Monkey",
       "source_pages": [
         29
       ]
@@ -1292,13 +1292,13 @@
       "id": "MCQ010",
       "difficulty": "medium",
       "question": "What disk MTTF range is cited?",
-      "choices": {
-        "A": "10–50 years",
-        "B": "1–5 days",
-        "C": "500 years",
-        "D": "Exactly 1 year"
-      },
-      "answer": "A",
+      "choices": [
+        "500 years",
+        "1–5 days",
+        "Exactly 1 year",
+        "10–50 years"
+      ],
+      "answer": "10–50 years",
       "source_pages": [
         29
       ]
@@ -1307,13 +1307,13 @@
       "id": "MCQ011",
       "difficulty": "medium",
       "question": "What does 10,000 disks imply?",
-      "choices": {
-        "A": "~1 failure/day",
-        "B": "~1 failure/decade",
-        "C": "0 failures",
-        "D": "10k failures/day"
-      },
-      "answer": "A",
+      "choices": [
+        "10k failures/day",
+        "~1 failure/day",
+        "0 failures",
+        "~1 failure/decade"
+      ],
+      "answer": "~1 failure/day",
       "source_pages": [
         29
       ]
@@ -1322,13 +1322,13 @@
       "id": "MCQ012",
       "difficulty": "medium",
       "question": "Why can software faults be worse than hardware faults?",
-      "choices": {
-        "A": "They can be systematic/correlated",
-        "B": "They are always isolated",
-        "C": "They never cascade",
-        "D": "They only affect disks"
-      },
-      "answer": "A",
+      "choices": [
+        "They can be systematic/correlated",
+        "They are always isolated",
+        "They never cascade",
+        "They only affect disks"
+      ],
+      "answer": "They can be systematic/correlated",
       "source_pages": [
         30,
         31
@@ -1338,13 +1338,13 @@
       "id": "MCQ013",
       "difficulty": "medium",
       "question": "Which is a software fault?",
-      "choices": {
-        "A": "Runaway process exhausting resources",
-        "B": "Healthy disk",
-        "C": "Successful request",
-        "D": "Cache hit"
-      },
-      "answer": "A",
+      "choices": [
+        "Successful request",
+        "Runaway process exhausting resources",
+        "Healthy disk",
+        "Cache hit"
+      ],
+      "answer": "Runaway process exhausting resources",
       "source_pages": [
         30
       ]
@@ -1353,13 +1353,13 @@
       "id": "MCQ014",
       "difficulty": "medium",
       "question": "What was the cited leading outage cause?",
-      "choices": {
-        "A": "Operator configuration errors",
-        "B": "CPU manufacturing",
-        "C": "Disk only",
-        "D": "DNS only"
-      },
-      "answer": "A",
+      "choices": [
+        "Disk only",
+        "DNS only",
+        "Operator configuration errors",
+        "CPU manufacturing"
+      ],
+      "answer": "Operator configuration errors",
       "source_pages": [
         31
       ]
@@ -1368,13 +1368,13 @@
       "id": "MCQ015",
       "difficulty": "medium",
       "question": "What reduces human-error blast radius?",
-      "choices": {
-        "A": "Gradual rollout",
-        "B": "All-at-once deploy only",
-        "C": "No rollback",
-        "D": "No tests"
-      },
-      "answer": "A",
+      "choices": [
+        "Gradual rollout",
+        "No rollback",
+        "No tests",
+        "All-at-once deploy only"
+      ],
+      "answer": "Gradual rollout",
       "source_pages": [
         32
       ]
@@ -1383,13 +1383,13 @@
       "id": "MCQ016",
       "difficulty": "medium",
       "question": "What is telemetry?",
-      "choices": {
-        "A": "Monitoring/metrics",
-        "B": "A DB engine",
-        "C": "A queue",
-        "D": "A query"
-      },
-      "answer": "A",
+      "choices": [
+        "Monitoring/metrics",
+        "A queue",
+        "A query",
+        "A DB engine"
+      ],
+      "answer": "Monitoring/metrics",
       "source_pages": [
         32
       ]
@@ -1398,13 +1398,13 @@
       "id": "MCQ017",
       "difficulty": "medium",
       "question": "What is scalability about?",
-      "choices": {
-        "A": "Coping with specific load growth",
-        "B": "A binary label",
-        "C": "Only bigger servers",
-        "D": "Only lower latency"
-      },
-      "answer": "A",
+      "choices": [
+        "A binary label",
+        "Only bigger servers",
+        "Coping with specific load growth",
+        "Only lower latency"
+      ],
+      "answer": "Coping with specific load growth",
       "source_pages": [
         32,
         33
@@ -1414,13 +1414,13 @@
       "id": "MCQ018",
       "difficulty": "medium",
       "question": "Which is a load parameter?",
-      "choices": {
-        "A": "Requests per second",
-        "B": "Font size",
-        "C": "Repo name",
-        "D": "Programming language"
-      },
-      "answer": "A",
+      "choices": [
+        "Requests per second",
+        "Programming language",
+        "Font size",
+        "Repo name"
+      ],
+      "answer": "Requests per second",
       "source_pages": [
         33
       ]
@@ -1429,13 +1429,13 @@
       "id": "MCQ019",
       "difficulty": "medium",
       "question": "Twitter's average post rate?",
-      "choices": {
-        "A": "4.6k/sec",
-        "B": "46k/sec",
-        "C": "300k/sec",
-        "D": "4.6/sec"
-      },
-      "answer": "A",
+      "choices": [
+        "4.6/sec",
+        "4.6k/sec",
+        "46k/sec",
+        "300k/sec"
+      ],
+      "answer": "4.6k/sec",
       "source_pages": [
         33
       ]
@@ -1444,13 +1444,13 @@
       "id": "MCQ020",
       "difficulty": "medium",
       "question": "Twitter's timeline read rate?",
-      "choices": {
-        "A": "300k/sec",
-        "B": "30k/sec",
-        "C": "3k/sec",
-        "D": "30/sec"
-      },
-      "answer": "A",
+      "choices": [
+        "30k/sec",
+        "3k/sec",
+        "300k/sec",
+        "30/sec"
+      ],
+      "answer": "300k/sec",
       "source_pages": [
         33
       ]
@@ -1459,13 +1459,13 @@
       "id": "MCQ021",
       "difficulty": "medium",
       "question": "Twitter's main scaling problem?",
-      "choices": {
-        "A": "Fan-out",
-        "B": "Tweet text length",
-        "C": "Encryption",
-        "D": "Search syntax"
-      },
-      "answer": "A",
+      "choices": [
+        "Encryption",
+        "Tweet text length",
+        "Fan-out",
+        "Search syntax"
+      ],
+      "answer": "Fan-out",
       "source_pages": [
         33
       ]
@@ -1474,13 +1474,13 @@
       "id": "MCQ022",
       "difficulty": "medium",
       "question": "What does fan-out on read do?",
-      "choices": {
-        "A": "Assemble timeline on read",
-        "B": "Copy to all followers on post",
-        "C": "Delete tweets",
-        "D": "Compress tweets"
-      },
-      "answer": "A",
+      "choices": [
+        "Copy to all followers on post",
+        "Compress tweets",
+        "Assemble timeline on read",
+        "Delete tweets"
+      ],
+      "answer": "Assemble timeline on read",
       "source_pages": [
         33
       ]
@@ -1489,13 +1489,13 @@
       "id": "MCQ023",
       "difficulty": "medium",
       "question": "What does fan-out on write do?",
-      "choices": {
-        "A": "Precompute follower timelines on post",
-        "B": "Assemble on read only",
-        "C": "Avoid caches",
-        "D": "Use one write total"
-      },
-      "answer": "A",
+      "choices": [
+        "Use one write total",
+        "Avoid caches",
+        "Precompute follower timelines on post",
+        "Assemble on read only"
+      ],
+      "answer": "Precompute follower timelines on post",
       "source_pages": [
         34
       ]
@@ -1504,13 +1504,13 @@
       "id": "MCQ024",
       "difficulty": "medium",
       "question": "Why was fan-out on write attractive?",
-      "choices": {
-        "A": "Reads far exceeded writes",
-        "B": "Writes exceeded reads",
-        "C": "No followers existed",
-        "D": "SQL was unavailable"
-      },
-      "answer": "A",
+      "choices": [
+        "No followers existed",
+        "SQL was unavailable",
+        "Writes exceeded reads",
+        "Reads far exceeded writes"
+      ],
+      "answer": "Reads far exceeded writes",
       "source_pages": [
         34
       ]
@@ -1519,13 +1519,13 @@
       "id": "MCQ025",
       "difficulty": "medium",
       "question": "Average fan-out?",
-      "choices": {
-        "A": "75 followers",
-        "B": "7.5",
-        "C": "7500",
-        "D": "30M"
-      },
-      "answer": "A",
+      "choices": [
+        "7.5",
+        "7500",
+        "30M",
+        "75 followers"
+      ],
+      "answer": "75 followers",
       "source_pages": [
         34
       ]
@@ -1534,13 +1534,13 @@
       "id": "MCQ026",
       "difficulty": "medium",
       "question": "4.6k posts/sec × 75 gives?",
-      "choices": {
-        "A": "~345k cache writes/sec",
-        "B": "~34.5k",
-        "C": "~4.6k",
-        "D": "~300"
-      },
-      "answer": "A",
+      "choices": [
+        "~34.5k",
+        "~345k cache writes/sec",
+        "~300",
+        "~4.6k"
+      ],
+      "answer": "~345k cache writes/sec",
       "source_pages": [
         34
       ]
@@ -1549,13 +1549,13 @@
       "id": "MCQ027",
       "difficulty": "medium",
       "question": "What problem do celebrities create?",
-      "choices": {
-        "A": "Tens of millions of fan-out writes",
-        "B": "No write amplification",
-        "C": "No readers",
-        "D": "Smaller posts"
-      },
-      "answer": "A",
+      "choices": [
+        "Tens of millions of fan-out writes",
+        "Smaller posts",
+        "No write amplification",
+        "No readers"
+      ],
+      "answer": "Tens of millions of fan-out writes",
       "source_pages": [
         35
       ]
@@ -1564,13 +1564,13 @@
       "id": "MCQ028",
       "difficulty": "medium",
       "question": "What is Twitter's hybrid?",
-      "choices": {
-        "A": "Fan out normal users; merge celebrity tweets on read",
-        "B": "Fan out everyone",
-        "C": "Read-time only",
-        "D": "Disable celebrities"
-      },
-      "answer": "A",
+      "choices": [
+        "Disable celebrities",
+        "Fan out everyone",
+        "Read-time only",
+        "Fan out normal users; merge celebrity tweets on read"
+      ],
+      "answer": "Fan out normal users; merge celebrity tweets on read",
       "source_pages": [
         35
       ]
@@ -1579,13 +1579,13 @@
       "id": "MCQ029",
       "difficulty": "medium",
       "question": "What is throughput?",
-      "choices": {
-        "A": "Work per unit time",
-        "B": "Only queue delay",
-        "C": "Median latency",
-        "D": "Request size"
-      },
-      "answer": "A",
+      "choices": [
+        "Only queue delay",
+        "Request size",
+        "Median latency",
+        "Work per unit time"
+      ],
+      "answer": "Work per unit time",
       "source_pages": [
         35
       ]
@@ -1594,13 +1594,13 @@
       "id": "MCQ030",
       "difficulty": "medium",
       "question": "What is response time?",
-      "choices": {
-        "A": "Client-visible request-to-response duration",
-        "B": "Only CPU time",
-        "C": "Only queueing",
-        "D": "Only network"
-      },
-      "answer": "A",
+      "choices": [
+        "Only CPU time",
+        "Client-visible request-to-response duration",
+        "Only queueing",
+        "Only network"
+      ],
+      "answer": "Client-visible request-to-response duration",
       "source_pages": [
         35,
         36
@@ -1610,13 +1610,13 @@
       "id": "MCQ031",
       "difficulty": "medium",
       "question": "What is latency in the chapter?",
-      "choices": {
-        "A": "Time waiting to be handled",
-        "B": "Full client response time",
-        "C": "Only disk time",
-        "D": "Only TCP time"
-      },
-      "answer": "A",
+      "choices": [
+        "Only disk time",
+        "Only TCP time",
+        "Full client response time",
+        "Time waiting to be handled"
+      ],
+      "answer": "Time waiting to be handled",
       "source_pages": [
         36
       ]
@@ -1625,13 +1625,13 @@
       "id": "MCQ032",
       "difficulty": "medium",
       "question": "What is p50?",
-      "choices": {
-        "A": "Median",
-        "B": "Maximum",
-        "C": "Mean",
-        "D": "p99"
-      },
-      "answer": "A",
+      "choices": [
+        "Mean",
+        "p99",
+        "Median",
+        "Maximum"
+      ],
+      "answer": "Median",
       "source_pages": [
         37
       ]
@@ -1640,13 +1640,13 @@
       "id": "MCQ033",
       "difficulty": "medium",
       "question": "What does p95=1.5s mean?",
-      "choices": {
-        "A": "95% finish under 1.5s",
-        "B": "95% exceed 1.5s",
-        "C": "Every request is 1.5s",
-        "D": "5% finish under 1.5s"
-      },
-      "answer": "A",
+      "choices": [
+        "Every request is 1.5s",
+        "95% finish under 1.5s",
+        "5% finish under 1.5s",
+        "95% exceed 1.5s"
+      ],
+      "answer": "95% finish under 1.5s",
       "source_pages": [
         37
       ]
@@ -1655,13 +1655,13 @@
       "id": "MCQ034",
       "difficulty": "medium",
       "question": "What are high-percentile response times called?",
-      "choices": {
-        "A": "Tail latencies",
-        "B": "Throughput",
-        "C": "SLA",
-        "D": "Load parameters"
-      },
-      "answer": "A",
+      "choices": [
+        "SLA",
+        "Load parameters",
+        "Tail latencies",
+        "Throughput"
+      ],
+      "answer": "Tail latencies",
       "source_pages": [
         37
       ]
@@ -1670,13 +1670,13 @@
       "id": "MCQ035",
       "difficulty": "medium",
       "question": "Which percentile is cited for some Amazon internal targets?",
-      "choices": {
-        "A": "p99.9",
-        "B": "p50 only",
-        "C": "p10",
-        "D": "p1"
-      },
-      "answer": "A",
+      "choices": [
+        "p1",
+        "p99.9",
+        "p10",
+        "p50 only"
+      ],
+      "answer": "p99.9",
       "source_pages": [
         37
       ]
@@ -1685,13 +1685,13 @@
       "id": "MCQ036",
       "difficulty": "medium",
       "question": "What is head-of-line blocking?",
-      "choices": {
-        "A": "Slow work delays requests behind it",
-        "B": "All requests execute together",
-        "C": "A cache miss",
-        "D": "A DB transaction"
-      },
-      "answer": "A",
+      "choices": [
+        "Slow work delays requests behind it",
+        "A DB transaction",
+        "A cache miss",
+        "All requests execute together"
+      ],
+      "answer": "Slow work delays requests behind it",
       "source_pages": [
         38
       ]
@@ -1700,13 +1700,13 @@
       "id": "MCQ037",
       "difficulty": "medium",
       "question": "What is tail-latency amplification?",
-      "choices": {
-        "A": "One slow backend delays a fan-out request",
-        "B": "Tail latency disappears with fan-out",
-        "C": "Averages become percentiles",
-        "D": "Writes become reads"
-      },
-      "answer": "A",
+      "choices": [
+        "One slow backend delays a fan-out request",
+        "Averages become percentiles",
+        "Tail latency disappears with fan-out",
+        "Writes become reads"
+      ],
+      "answer": "One slow backend delays a fan-out request",
       "source_pages": [
         38
       ]
@@ -1715,13 +1715,13 @@
       "id": "MCQ038",
       "difficulty": "medium",
       "question": "How should percentiles from machines be aggregated?",
-      "choices": {
-        "A": "Combine histograms",
-        "B": "Average p99 values",
-        "C": "Average p50 only",
-        "D": "Take max only"
-      },
-      "answer": "A",
+      "choices": [
+        "Take max only",
+        "Average p99 values",
+        "Combine histograms",
+        "Average p50 only"
+      ],
+      "answer": "Combine histograms",
       "source_pages": [
         38
       ]
@@ -1730,13 +1730,13 @@
       "id": "MCQ039",
       "difficulty": "medium",
       "question": "What is vertical scaling?",
-      "choices": {
-        "A": "Use a more powerful machine",
-        "B": "Use more machines",
-        "C": "Reduce traffic",
-        "D": "Add a queue"
-      },
-      "answer": "A",
+      "choices": [
+        "Use a more powerful machine",
+        "Reduce traffic",
+        "Use more machines",
+        "Add a queue"
+      ],
+      "answer": "Use a more powerful machine",
       "source_pages": [
         39
       ]
@@ -1745,13 +1745,13 @@
       "id": "MCQ040",
       "difficulty": "medium",
       "question": "What is horizontal scaling?",
-      "choices": {
-        "A": "Spread load across machines",
-        "B": "Use one bigger machine",
-        "C": "Reduce data",
-        "D": "Only cache"
-      },
-      "answer": "A",
+      "choices": [
+        "Spread load across machines",
+        "Only cache",
+        "Use one bigger machine",
+        "Reduce data"
+      ],
+      "answer": "Spread load across machines",
       "source_pages": [
         39
       ]
@@ -1760,13 +1760,13 @@
       "id": "MCQ041",
       "difficulty": "medium",
       "question": "What is elastic scaling?",
-      "choices": {
-        "A": "Automatically add capacity",
-        "B": "Manual-only scaling",
-        "C": "No scaling",
-        "D": "Only vertical scaling"
-      },
-      "answer": "A",
+      "choices": [
+        "Manual-only scaling",
+        "Automatically add capacity",
+        "Only vertical scaling",
+        "No scaling"
+      ],
+      "answer": "Automatically add capacity",
       "source_pages": [
         39
       ]
@@ -1775,13 +1775,13 @@
       "id": "MCQ042",
       "difficulty": "medium",
       "question": "Which system type is harder to distribute?",
-      "choices": {
-        "A": "Stateful data systems",
-        "B": "Stateless services",
-        "C": "Static files",
-        "D": "Pure functions"
-      },
-      "answer": "A",
+      "choices": [
+        "Stateless services",
+        "Static files",
+        "Stateful data systems",
+        "Pure functions"
+      ],
+      "answer": "Stateful data systems",
       "source_pages": [
         40
       ]
@@ -1790,13 +1790,13 @@
       "id": "MCQ043",
       "difficulty": "medium",
       "question": "Is there a one-size-fits-all scalable architecture?",
-      "choices": {
-        "A": "No",
-        "B": "Yes: always shard",
-        "C": "Yes: always microservices",
-        "D": "Yes: always SQL"
-      },
-      "answer": "A",
+      "choices": [
+        "No",
+        "Yes: always SQL",
+        "Yes: always shard",
+        "Yes: always microservices"
+      ],
+      "answer": "No",
       "source_pages": [
         40
       ]
@@ -1805,13 +1805,13 @@
       "id": "MCQ044",
       "difficulty": "medium",
       "question": "What are maintainability's three principles?",
-      "choices": {
-        "A": "Operability, simplicity, evolvability",
-        "B": "RPS, p99, fan-out",
-        "C": "RAID, cache, queue",
-        "D": "TCP, HTTP, SQL"
-      },
-      "answer": "A",
+      "choices": [
+        "Operability, simplicity, evolvability",
+        "RAID, cache, queue",
+        "TCP, HTTP, SQL",
+        "RPS, p99, fan-out"
+      ],
+      "answer": "Operability, simplicity, evolvability",
       "source_pages": [
         41
       ]
@@ -1820,13 +1820,13 @@
       "id": "MCQ045",
       "difficulty": "medium",
       "question": "What is operability?",
-      "choices": {
-        "A": "Ease of keeping system running",
-        "B": "Simple UI",
-        "C": "Low latency only",
-        "D": "Data compression"
-      },
-      "answer": "A",
+      "choices": [
+        "Data compression",
+        "Ease of keeping system running",
+        "Low latency only",
+        "Simple UI"
+      ],
+      "answer": "Ease of keeping system running",
       "source_pages": [
         41
       ]
@@ -1835,13 +1835,13 @@
       "id": "MCQ046",
       "difficulty": "medium",
       "question": "What is accidental complexity?",
-      "choices": {
-        "A": "Implementation complexity not inherent to the problem",
-        "B": "All domain complexity",
-        "C": "Network latency",
-        "D": "Business requirements"
-      },
-      "answer": "A",
+      "choices": [
+        "Implementation complexity not inherent to the problem",
+        "All domain complexity",
+        "Business requirements",
+        "Network latency"
+      ],
+      "answer": "Implementation complexity not inherent to the problem",
       "source_pages": [
         43
       ]
@@ -1850,13 +1850,13 @@
       "id": "MCQ047",
       "difficulty": "medium",
       "question": "What reduces accidental complexity?",
-      "choices": {
-        "A": "Good abstraction",
-        "B": "More special cases",
-        "C": "Tighter coupling",
-        "D": "More hidden dependencies"
-      },
-      "answer": "A",
+      "choices": [
+        "Good abstraction",
+        "More hidden dependencies",
+        "Tighter coupling",
+        "More special cases"
+      ],
+      "answer": "Good abstraction",
       "source_pages": [
         43
       ]
@@ -1865,13 +1865,13 @@
       "id": "MCQ048",
       "difficulty": "medium",
       "question": "What supports evolvability?",
-      "choices": {
-        "A": "Simple systems and good abstractions",
-        "B": "More hacks",
-        "C": "More coupling",
-        "D": "Less testing"
-      },
-      "answer": "A",
+      "choices": [
+        "More coupling",
+        "Simple systems and good abstractions",
+        "More hacks",
+        "Less testing"
+      ],
+      "answer": "Simple systems and good abstractions",
       "source_pages": [
         44
       ]
