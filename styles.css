@@ -227,7 +227,7 @@ button { font-family: inherit; cursor: pointer; }
   color: var(--text-muted);
 }
 #chapter-title { margin: 0; font-size: 23px; letter-spacing: -0.02em; line-height: 1.2; }
-#chapter-title-block { flex: 1; min-width: 0; }
+#chapter-title-block { flex: 1; min-width: 240px; }
 .chapter-meta { margin: 4px 0 0; color: var(--text-muted); font-size: 13px; }
 
 .mode-tabs { display: flex; gap: 4px; background: var(--surface-2); padding: 4px; border-radius: 10px; flex: 0 0 auto; }
@@ -335,27 +335,17 @@ button.page-link:hover {
   border-color: #b9c6e4;
 }
 
-/* ---------- PDF modal ---------- */
-.pdf-modal {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  background: rgba(17, 24, 39, 0.55);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-}
-.pdf-dialog {
-  background: var(--surface);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-lg);
-  width: min(1000px, 100%);
-  height: min(90vh, 100%);
+/* ---------- PDF side panel ---------- */
+.pdf-panel {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  height: 100vh;
+  border-left: 1px solid var(--border);
+  background: var(--surface);
+  min-width: 0;
 }
+.study.pdf-open { grid-template-columns: 288px minmax(0, 1fr) clamp(360px, 42%, 720px); }
+.study.pdf-open.sidebar-collapsed { grid-template-columns: minmax(0, 1fr) clamp(360px, 45%, 760px); }
 .pdf-head {
   display: flex;
   align-items: center;
@@ -363,21 +353,31 @@ button.page-link:hover {
   gap: 12px;
   padding: 12px 16px;
   border-bottom: 1px solid var(--border);
+  background: var(--surface);
 }
-.pdf-title { font-weight: 600; font-size: 14px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pdf-title { font-weight: 600; font-size: 13.5px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pdf-actions { display: flex; gap: 8px; flex: 0 0 auto; }
 .pdf-btn {
   border: 1px solid var(--border);
   background: var(--surface-2);
   color: var(--text);
   border-radius: var(--radius-sm);
-  padding: 7px 14px;
+  padding: 7px 12px;
   font-size: 13px;
   font-weight: 600;
   text-decoration: none;
+  line-height: 1;
 }
 .pdf-btn:hover { background: #e7ecf6; }
 .pdf-frame { flex: 1; width: 100%; border: none; background: #525659; }
+
+@media (max-width: 760px) {
+  .study.pdf-open,
+  .study.pdf-open.sidebar-collapsed { grid-template-columns: 1fr; }
+  .study.pdf-open .sidebar,
+  .study.pdf-open .content { display: none; }
+  .pdf-panel { height: 100vh; }
+}
 
 /* ---------- Flashcards ---------- */
 .deck { display: flex; flex-direction: column; align-items: center; }

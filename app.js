@@ -1024,13 +1024,15 @@ function bookForChapter(ch) {
 
 function openBook(book, pageNum) {
   const src = `${book.path}#page=${pageNum}`;
-  $("#pdf-title").textContent = `${book.name} — page ${pageNum}`;
+  $("#pdf-title").textContent = `${book.name} — p. ${pageNum}`;
   $("#pdf-frame").setAttribute("src", src);
   $("#pdf-open-tab").setAttribute("href", src);
-  $("#pdf-modal").hidden = false;
+  $("#pdf-panel").hidden = false;
+  $("#study").classList.add("pdf-open");
 }
 function closeBook() {
-  $("#pdf-modal").hidden = true;
+  $("#pdf-panel").hidden = true;
+  $("#study").classList.remove("pdf-open");
   $("#pdf-frame").removeAttribute("src");
 }
 
@@ -1056,7 +1058,6 @@ function init() {
   $("#book-select").addEventListener("change", (e) => selectBook(e.target.value));
 
   $("#pdf-close").addEventListener("click", closeBook);
-  $("#pdf-modal").addEventListener("click", (e) => { if (e.target.id === "pdf-modal") closeBook(); });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeBook(); });
   $$("#mode-tabs .mode-tab").forEach((tab) => {
     tab.addEventListener("click", () => {
