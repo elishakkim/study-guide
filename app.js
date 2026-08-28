@@ -356,7 +356,7 @@ function renderChapter(id) {
     const chip = el("button", {
       class: "section-chip",
       "data-mode": isStudy ? "study" : "reference",
-      onClick: () => card.scrollIntoView({ behavior: "smooth", block: "start" }),
+      onClick: () => { card.scrollIntoView({ behavior: "smooth", block: "start" }); closeSectionNav(); },
     }, [
       humanize(key),
       el("span", { class: "chip-count", text: Array.isArray(value) ? `(${value.length})` : "" }),
@@ -364,6 +364,8 @@ function renderChapter(id) {
     nav.append(chip);
   }
 
+  $("#section-nav-label").textContent = `Jump to section (${nav.children.length})`;
+  closeSectionNav();
   applyModeFilter();
   $(".content").scrollTop = 0;
   saveLocation();
@@ -389,6 +391,18 @@ function renderSection(key, value, isStudy) {
   }
 
   return el("div", { class: "section-card" }, [header, body]);
+}
+
+/* ---------------- Section jump-to dropdown ---------------- */
+function closeSectionNav() {
+  $("#section-nav").hidden = true;
+  $("#section-nav-toggle").setAttribute("aria-expanded", "false");
+}
+function toggleSectionNav() {
+  const nav = $("#section-nav");
+  const open = nav.hidden;
+  nav.hidden = !open;
+  $("#section-nav-toggle").setAttribute("aria-expanded", String(open));
 }
 
 /* ---------------- Mode filter (All / Study / Reference) ---------------- */
@@ -1058,7 +1072,12 @@ function init() {
   $("#book-select").addEventListener("change", (e) => selectBook(e.target.value));
 
   $("#pdf-close").addEventListener("click", closeBook);
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeBook(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") { closeBook(); closeSectionNav(); } });
+
+  $("#section-nav-toggle").addEventListener("click", (e) => { e.stopPropagation(); toggleSectionNav(); });
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".section-nav-wrap")) closeSectionNav();
+  });
   $$("#mode-tabs .mode-tab").forEach((tab) => {
     tab.addEventListener("click", () => {
       $$("#mode-tabs .mode-tab").forEach((t) => t.classList.remove("active"));

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <title>Study Guide — System Design Flashcards</title>
-  <link rel="stylesheet" href="styles.css?v=12" />
+  <link rel="stylesheet" href="styles.css?v=13" />
 </head>
 <body>
   <div id="app">
@@ -73,7 +73,13 @@
             </div>
           </header>
 
-          <nav id="section-nav" class="section-nav" aria-label="Sections"></nav>
+          <div class="section-nav-wrap">
+            <button id="section-nav-toggle" class="section-nav-toggle" aria-expanded="false" aria-controls="section-nav">
+              <span id="section-nav-label">Jump to section</span>
+              <span class="section-nav-caret">▾</span>
+            </button>
+            <nav id="section-nav" class="section-nav" aria-label="Sections" hidden></nav>
+          </div>
         </div>
 
         <div id="sections" class="sections"></div>
@@ -92,6 +98,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=12"></script>
+  <script src="app.js?v=13"></script>
 </body>
 </html>

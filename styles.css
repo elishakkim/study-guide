@@ -242,11 +242,40 @@ button { font-family: inherit; cursor: pointer; }
 }
 .mode-tab.active { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
 
+.section-nav-wrap { position: relative; padding: 4px 32px 14px; }
+.section-nav-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: var(--shadow);
+}
+.section-nav-toggle:hover { background: var(--surface-2); }
+.section-nav-caret { color: var(--text-muted); transition: transform 0.15s; }
+.section-nav-toggle[aria-expanded="true"] .section-nav-caret { transform: rotate(180deg); }
+
 .section-nav {
+  position: absolute;
+  top: calc(100% - 6px);
+  left: 32px;
+  right: 32px;
+  z-index: 6;
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  padding: 4px 32px 14px;
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  max-height: 60vh;
+  overflow-y: auto;
 }
 .section-chip {
   white-space: nowrap;
