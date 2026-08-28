@@ -1041,13 +1041,35 @@ function openBook(book, pageNum) {
   $("#pdf-title").textContent = `${book.name} — p. ${pageNum}`;
   $("#pdf-frame").setAttribute("src", src);
   $("#pdf-open-tab").setAttribute("href", src);
-  $("#pdf-panel").hidden = false;
-  $("#study").classList.add("pdf-open");
+  withScrollAnchor(() => {
+    $("#pdf-panel").hidden = false;
+    $("#study").classList.add("pdf-open");
+  });
 }
 function closeBook() {
-  $("#pdf-panel").hidden = true;
-  $("#study").classList.remove("pdf-open");
+  withScrollAnchor(() => {
+    $("#pdf-panel").hidden = true;
+    $("#study").classList.remove("pdf-open");
+  });
   $("#pdf-frame").removeAttribute("src");
+}
+
+/* Keep the reading position stable when the content column reflows (panel open/close). */
+function withScrollAnchor(mutate) {
+  const content = $(".content");
+  const top = content.getBoundingClientRect().top;
+  let anchor = null, anchorOffset = 0;
+  for (const card of $$("#sections .section-card")) {
+    const r = card.getBoundingClientRect();
+    if (r.bottom > top) { anchor = card; anchorOffset = r.top - top; break; }
+  }
+  mutate();
+  if (anchor) {
+    requestAnimationFrame(() => {
+      const newTop = content.getBoundingClientRect().top;
+      content.scrollTop += (anchor.getBoundingClientRect().top - newTop) - anchorOffset;
+    });
+  }
 }
 
 /* ---------------- Wire up UI ---------------- */
