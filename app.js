@@ -662,48 +662,70 @@ function normalizeChoices(it) {
 
 function renderMCQ(items, root, ctx = {}) {
   const store = ctx.chapterKey ? chapterProgress(ctx.chapterKey) : null;
-  const score = makeScore();
-  root.append(score.pill);
-  items.forEach((it, idx) => {
-    const item = el("div", { class: "quiz-item" });
-    item.append(quizHeader(it, it.question));
-    const choices = el("div", { class: "choices" });
-    let answered = false;
-    const btns = {};
-    const key = itemKey(it, ctx.sectionKey || "mcq", idx);
-    const entries = normalizeChoices(it);
-    const correctEntry = entries.find((e) => e.correct) || {};
+  const keys = items.map((it, idx) => itemKey(it, ctx.sectionKey || "mcq", idx));
 
-    const grade = (chosenKey, persist) => {
-      if (answered) return;
-      answered = true;
-      const correct = chosenKey === correctEntry.key;
-      if (btns[chosenKey]) btns[chosenKey].classList.add(correct ? "correct" : "incorrect");
-      if (btns[correctEntry.key]) btns[correctEntry.key].classList.add("correct");
-      Object.values(btns).forEach((b) => (b.disabled = true));
-      score.record(correct);
-      exp.classList.remove("hidden-reveal");
-      if (persist && store) { store.quiz[key] = { c: chosenKey, ok: correct }; saveProgress(); }
-    };
+  const toolbar = el("div", { class: "quiz-toolbar" });
+  const list = el("div");
+  root.append(toolbar, list);
 
-    for (const e of entries) {
-      const btn = el("button", { class: "choice", "data-key": e.key }, [
-        el("span", { class: "choice-key", text: e.label }),
-        el("span", { text: e.text }),
-      ]);
-      btn.addEventListener("click", () => grade(e.key, true));
-      btns[e.key] = btn;
-      choices.append(btn);
-    }
-    item.append(choices);
-    const exp = explanationBlock(it.explanation || `Correct answer: ${correctEntry.text || ""}`, it.source_pages);
-    exp.classList.add("hidden-reveal");
-    item.append(exp);
-    root.append(item);
+  function build() {
+    toolbar.innerHTML = "";
+    list.innerHTML = "";
+    const score = makeScore();
+    const resetBtn = el("button", {
+      class: "reveal-btn",
+      text: "↺ Reset",
+      title: "Clear answers and try again",
+      onClick: () => {
+        if (store) { keys.forEach((k) => delete store.quiz[k]); saveProgress(); }
+        build();
+      },
+    });
+    toolbar.append(score.pill, resetBtn);
 
-    const saved = store && store.quiz[key];
-    if (saved) grade(saved.c, false);
-  });
+    items.forEach((it, idx) => {
+      const item = el("div", { class: "quiz-item" });
+      item.append(quizHeader(it, it.question));
+      const choices = el("div", { class: "choices" });
+      let answered = false;
+      const btns = {};
+      const key = keys[idx];
+      const entries = normalizeChoices(it);
+      const correctEntry = entries.find((e) => e.correct) || {};
+
+      const grade = (chosenKey, persist) => {
+        if (answered) return;
+        answered = true;
+        const correct = chosenKey === correctEntry.key;
+        if (btns[chosenKey]) btns[chosenKey].classList.add(correct ? "correct" : "incorrect");
+        if (btns[correctEntry.key]) btns[correctEntry.key].classList.add("correct");
+        Object.values(btns).forEach((b) => (b.disabled = true));
+        score.record(correct);
+        exp.classList.remove("hidden-reveal");
+        if (persist && store) { store.quiz[key] = { c: chosenKey, ok: correct }; saveProgress(); }
+      };
+
+      for (const e of entries) {
+        const btn = el("button", { class: "choice", "data-key": e.key }, [
+          el("span", { class: "choice-key", text: e.label }),
+          el("span", { text: e.text }),
+        ]);
+        btn.addEventListener("click", () => grade(e.key, true));
+        btns[e.key] = btn;
+        choices.append(btn);
+      }
+      item.append(choices);
+      const exp = explanationBlock(it.explanation || `Correct answer: ${correctEntry.text || ""}`, it.source_pages);
+      exp.classList.add("hidden-reveal");
+      item.append(exp);
+      list.append(item);
+
+      const saved = store && store.quiz[key];
+      if (saved) grade(saved.c, false);
+    });
+  }
+
+  build();
 }
 
 /* ----- True / false ----- */
