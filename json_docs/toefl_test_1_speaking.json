@@ -1,0 +1,140 @@
+{
+  "chapter": {
+    "number": 3,
+    "title": "Speaking Section",
+    "book": "TOEFL Practice Test 1",
+    "source": "TST Prep — Practice Test #1 for the TOEFL® Test (2026)",
+    "pdf_pages": {
+      "start": 58,
+      "end": 66
+    }
+  },
+  "summary": "Speaking section of Practice Test #1: 11 questions. Listen and Repeat = 7 statements (8–12 seconds each, no preparation). Take an Interview = 4 questions (45 seconds each, no preparation). The sample answers (text and audio) come from the answer key (PDF pp. 64–66).",
+  "short_answer_questions": [
+    {
+      "id": "S-LR1",
+      "passage": {
+        "title": "Listen and Repeat",
+        "audio": "https://s3.us-west-1.wasabisys.com/media.tstprep.com/freebies/2026/Test%20Audio%20Files/listen-and-repeat-speaking-tests-1-5-audio/04.01.01-listen-and-repeat-directions.mp3",
+        "text": "You are being trained as a new employee in an office. Listen to your trainer and repeat what they say. Repeat only once. You have 8–12 seconds per statement and no preparation time. Tip: a speech-to-text app can check your accuracy."
+      },
+      "question": "1. Listen, then repeat the statement aloud once.",
+      "audio": "https://s3.us-west-1.wasabisys.com/media.tstprep.com/freebies/2026/Test%20Audio%20Files/listen-and-repeat-speaking-tests-1-5-audio/04.01.02-listen-and-repeat-statement-1.mp3",
+      "model_answer": "Hi everyone, and welcome to our main office.",
+      "source_pages": [
+        61,
+        65
+      ]
+    },
+    {
+      "id": "S-LR2",
+      "question": "2. Listen, then repeat the statement aloud once.",
+      "audio": "https://s3.us-west-1.wasabisys.com/media.tstprep.com/freebies/2026/Test%20Audio%20Files/listen-and-repeat-speaking-tests-1-5-audio/04.01.03-listen-and-repeat-statement-2.mp3",
+      "model_answer": "Each workstation is equipped with a desktop computer and a headset.",
+      "source_pages": [
+        61,
+        65
+      ]
+    },
+    {
+      "id": "S-LR3",
+      "question": "3. Listen, then repeat the statement aloud once.",
+      "audio": "https://s3.us-west-1.wasabisys.com/media.tstprep.com/freebies/2026/Test%20Audio%20Files/listen-and-repeat-speaking-tests-1-5-audio/04.01.04-listen-and-repeat-statement-3.mp3",
+      "model_answer": "The shared stationery items and filing cabinets are over there.",
+      "source_pages": [
+        61,
+        65
+      ]
+    },
+    {
+      "id": "S-LR4",
+      "question": "4. Listen, then repeat the statement aloud once.",
+      "audio": "https://s3.us-west-1.wasabisys.com/media.tstprep.com/freebies/2026/Test%20Audio%20Files/listen-and-repeat-speaking-tests-1-5-audio/04.01.05-listen-and-repeat-statement-4.mp3",
+      "model_answer": "We hold our weekly meetings in this area every Monday morning.",
+      "source_pages": [
+        61,
+        65
+      ]
+    },
+    {
+      "id": "S-LR5",
+      "question": "5. Listen, then repeat the statement aloud once.",
+      "audio": "https://s3.us-west-1.wasabisys.com/media.tstprep.com/freebies/2026/Test%20Audio%20Files/listen-and-repeat-speaking-tests-1-5-audio/04.01.06-listen-and-repeat-statement-5.mp3",
+      "model_answer": "Please keep your desk organized and avoid leaving papers overnight.",
+      "source_pages": [
+        61,
+        65
+      ]
+    },
+    {
+      "id": "S-LR6",
+      "question": "6. Listen, then repeat the statement aloud once.",
+      "audio": "https://s3.us-west-1.wasabisys.com/media.tstprep.com/freebies/2026/Test%20Audio%20Files/listen-and-repeat-speaking-tests-1-5-audio/04.01.07-listen-and-repeat-statement-6.mp3",
+      "model_answer": "Coffee and refreshments are available near the cabinet by the wall.",
+      "source_pages": [
+        61,
+        65
+      ]
+    },
+    {
+      "id": "S-LR7",
+      "question": "7. Listen, then repeat the statement aloud once.",
+      "audio": "https://s3.us-west-1.wasabisys.com/media.tstprep.com/freebies/2026/Test%20Audio%20Files/listen-and-repeat-speaking-tests-1-5-audio/04.01.08-listen-and-repeat-statement-7.mp3",
+      "model_answer": "If you need help with the software, please ask one of your supervisors for assistance.",
+      "source_pages": [
+        61,
+        65
+      ]
+    }
+  ],
+  "scenario_questions": [
+    {
+      "id": "S-IV1",
+      "passage": {
+        "title": "Take an Interview",
+        "text": "You have volunteered for a research study about health and wellness. You will have a short online interview with a researcher. On test day you hear each question once, get no preparation time, and have 45 seconds to respond. Try answering from the audio before reading the question text."
+      },
+      "audio": "https://s3.us-west-1.wasabisys.com/media.tstprep.com/freebies/2026/Test%20Audio%20Files/interview-speaking-tests-1-5-audio/04.01.11-interview-question-1.mp3",
+      "question": "1. Thanks for joining me today. To begin, what kind of activities do you usually do to stay healthy? For instance, do you exercise regularly, focus on nutrition, or do something else?",
+      "expected_answer": "I try to stay healthy mainly by running three times a week. There’s a big park near my dorm, and I like to go early in the morning before my first class. It helps me clear my head and gives me energy for the rest of the day. Besides exercise, I also cook most of my meals at home. I make simple dishes like rice, beans, and grilled chicken. I try to avoid fast food during the week, even though I have intense cravings for a cheeseburger once in a while. I usually prepare my lunches for the week on Sunday, that way, I don’t have to spend too much time cooking my meals every day. I wouldn’t say I follow a strict diet, but I do pay attention to what I eat.",
+      "answer_audio": "https://s3.us-west-1.wasabisys.com/media.tstprep.com/freebies/2026/Test%20Audio%20Files/interview-speaking-tests-1-5-audio/04.01.15-interview-sample-answer-question-1.mp3",
+      "source_pages": [
+        62,
+        65
+      ]
+    },
+    {
+      "id": "S-IV2",
+      "audio": "https://s3.us-west-1.wasabisys.com/media.tstprep.com/freebies/2026/Test%20Audio%20Files/interview-speaking-tests-1-5-audio/04.01.12-interview-question-2.mp3",
+      "question": "2. I see. When life gets stressful, do you prefer to deal with it by being physically active, like going for a walk or working out? Or would you rather quietly relax while reading a book or listening to music? Please explain.",
+      "expected_answer": "When I’m stressed, I usually prefer to move around instead of sitting still. For example, during exam week last semester, at São Paulo University, I was so stressed that I couldn’t even focus on my notes. So every evening, I’d walk a loop around this huge park near my dorm. I remember one night, I just kept walking and breathing, and I could literally feel the tension leave my body. I was still stressed, but I felt much better. If I had tried to just read a book in my room, nothing would have changed. For me, my mind changes when something changes physically, which is why I have to move around when I need to change my mood.",
+      "answer_audio": "https://s3.us-west-1.wasabisys.com/media.tstprep.com/freebies/2026/Test%20Audio%20Files/interview-speaking-tests-1-5-audio/04.01.16-interview-sample-answer-question-2.mp3",
+      "source_pages": [
+        62,
+        66
+      ]
+    },
+    {
+      "id": "S-IV3",
+      "audio": "https://s3.us-west-1.wasabisys.com/media.tstprep.com/freebies/2026/Test%20Audio%20Files/interview-speaking-tests-1-5-audio/04.01.13-interview-question-3.mp3",
+      "question": "3. Interesting. Next, I'd like to get your opinion. In recent years, many people have started to take medicine to help them sleep through the night. Do you think that in the future, more people will rely on medication for proper sleep? Why or why not?",
+      "expected_answer": "Hmm, that’s an interesting question. I haven’t really thought about it much before, but yeah, I do think more people will depend on sleep medication in the future. Life just feels busier and noisier than it used to. People stay up late working or scrolling on their phones, and it messes with their sleep schedule. My older brother, for example, works at a hospital in São Paulo, and because of his night shifts, he started taking pills to fall asleep during the day. At first, it worked great, but now he says he can’t sleep without it. So I think that’s what’s going to happen to more people in the future.",
+      "answer_audio": "https://s3.us-west-1.wasabisys.com/media.tstprep.com/freebies/2026/Test%20Audio%20Files/interview-speaking-tests-1-5-audio/04.01.17-interview-sample-answer-question-3.mp3",
+      "source_pages": [
+        62,
+        66
+      ]
+    },
+    {
+      "id": "S-IV4",
+      "audio": "https://s3.us-west-1.wasabisys.com/media.tstprep.com/freebies/2026/Test%20Audio%20Files/interview-speaking-tests-1-5-audio/04.01.14-interview-question-4.mp3",
+      "question": "4. That’s an insightful answer. One last question: some people say good health mainly depends on personal choices, while others argue that a healthy lifestyle also requires support from society. What do you think, and why?",
+      "expected_answer": "So, honestly, I think it’s a mix of both, but society makes a bigger difference than people realize. For example, it’s much easier to eat healthy or exercise regularly if your city has good options, like safe parks, bike lanes, or grocery stores that sell fresh food. When I studied in Kyoto for a semester, I walked everywhere and ate balanced meals without even trying, because the environment supported it. But back home in Brazil, traffic is crazy and healthy food can be expensive, so people often grab fast food instead. So yes, personal choices matter, but society has to make those healthy choices possible in the first place.",
+      "answer_audio": "https://s3.us-west-1.wasabisys.com/media.tstprep.com/freebies/2026/Test%20Audio%20Files/interview-speaking-tests-1-5-audio/04.01.18-interview-sample-answer-question-4.mp3",
+      "source_pages": [
+        62,
+        66
+      ]
+    }
+  ]
+}

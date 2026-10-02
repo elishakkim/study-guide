@@ -1,0 +1,336 @@
+{
+  "chapter": {
+    "number": 4,
+    "title": "Writing Section",
+    "book": "TOEFL Practice Test 1",
+    "source": "TST Prep — Practice Test #1 for the TOEFL® Test (2026)",
+    "pdf_pages": {
+      "start": 68,
+      "end": 79
+    }
+  },
+  "summary": "Writing section of Practice Test #1: 12 questions. Build a Sentence = 10 questions in 6 minutes (put the words in order; some words are distractors). Write an Email = 7 minutes. Write for an Academic Discussion = 10 minutes. There is no spellcheck on test day. Answers and sample responses come from the answer key (PDF pp. 77–79).",
+  "build_a_sentence": [
+    {
+      "id": "W-BS1",
+      "passage": {
+        "title": "Build a Sentence",
+        "text": "Tap words to fill the blanks in order; tap a placed word to send it back. Some words are not used. On test day: 10 questions in 6 minutes."
+      },
+      "context": "1. “Your presentation received a lot of positive feedback from the audience.”",
+      "template": "___ they mention ___ ___ ___ ___ ___ ___ ?",
+      "words": [
+        "did",
+        "most",
+        "what",
+        "part",
+        "the",
+        "impressed",
+        "them"
+      ],
+      "answer": [
+        "Did",
+        "what",
+        "part",
+        "impressed",
+        "them",
+        "the",
+        "most"
+      ],
+      "sentence": "Did they mention what part impressed them the most?",
+      "source_pages": [
+        70,
+        78
+      ]
+    },
+    {
+      "id": "W-BS2",
+      "context": "2. “The workshop ended earlier than expected.”",
+      "template": "I ___ disappointed ___ ___ ___ ___ ___ ___ .",
+      "words": [
+        "wasn’t",
+        "already",
+        "very tired",
+        "I",
+        "hotel room",
+        "was",
+        "feeling",
+        "because"
+      ],
+      "answer": [
+        "wasn’t",
+        "because",
+        "I",
+        "was",
+        "already",
+        "feeling",
+        "very tired"
+      ],
+      "sentence": "I wasn’t disappointed because I was already feeling very tired.",
+      "source_pages": [
+        70,
+        78
+      ]
+    },
+    {
+      "id": "W-BS3",
+      "context": "3. “Which restaurant did you end up choosing for lunch?”",
+      "template": "___ ___ ___ ___ ___ ___ ___ near campus.",
+      "words": [
+        "just opened",
+        "went",
+        "one",
+        "last semester",
+        "the",
+        "that",
+        "to",
+        "we"
+      ],
+      "answer": [
+        "we",
+        "went",
+        "to",
+        "the",
+        "one",
+        "that",
+        "just opened"
+      ],
+      "sentence": "We went to the one that just opened near campus.",
+      "source_pages": [
+        71,
+        78
+      ]
+    },
+    {
+      "id": "W-BS4",
+      "context": "4. “Why did the company hire a new consultant?”",
+      "template": "___ needed ___ ___ ___ ___ ___ ___ .",
+      "words": [
+        "marketing",
+        "to",
+        "the",
+        "improve",
+        "they",
+        "someone",
+        "company",
+        "strategy",
+        "colleague"
+      ],
+      "answer": [
+        "they",
+        "someone",
+        "to",
+        "improve",
+        "the",
+        "marketing",
+        "strategy"
+      ],
+      "sentence": "They needed someone to improve the marketing strategy.",
+      "source_pages": [
+        71,
+        78
+      ]
+    },
+    {
+      "id": "W-BS5",
+      "context": "5. “Did your roommate say anything before leaving?”",
+      "template": "He ___ ___ ___ ___ ___ ___ ___ .",
+      "words": [
+        "me",
+        "left",
+        "spot",
+        "after",
+        "to lock",
+        "reminded",
+        "the door",
+        "he"
+      ],
+      "answer": [
+        "reminded",
+        "me",
+        "to lock",
+        "the door",
+        "after",
+        "he",
+        "left"
+      ],
+      "sentence": "He reminded me to lock the door after he left.",
+      "source_pages": [
+        71,
+        78
+      ]
+    },
+    {
+      "id": "W-BS6",
+      "context": "6. “Where did you buy that backpack?”",
+      "template": "___ ___ ___ ___ ___ ___ ___ to students.",
+      "words": [
+        "store",
+        "offers",
+        "from",
+        "the",
+        "it’s",
+        "that",
+        "I",
+        "bought",
+        "discounts"
+      ],
+      "answer": [
+        "it’s",
+        "from",
+        "the",
+        "store",
+        "that",
+        "offers",
+        "discounts"
+      ],
+      "sentence": "It’s from the store that offers discounts to students.",
+      "source_pages": [
+        72,
+        78
+      ]
+    },
+    {
+      "id": "W-BS7",
+      "context": "7. “What did you think of the guest lecture?”",
+      "template": "I’d love to hear ___ ___ ___ ___ ___ ___ ___ .",
+      "words": [
+        "speaker",
+        "the",
+        "articulate",
+        "on",
+        "someday",
+        "present",
+        "topic",
+        "another"
+      ],
+      "answer": [
+        "the",
+        "speaker",
+        "present",
+        "on",
+        "another",
+        "topic",
+        "someday"
+      ],
+      "sentence": "I’d love to hear the speaker present on another topic someday.",
+      "source_pages": [
+        72,
+        78
+      ]
+    },
+    {
+      "id": "W-BS8",
+      "context": "8. “Daniel said he’s taking evening classes this semester.”",
+      "template": "___ ___ ___ ___ ___ ___ ___ ?",
+      "words": [
+        "know",
+        "he",
+        "his schedule",
+        "do",
+        "changed",
+        "you",
+        "why"
+      ],
+      "answer": [
+        "do",
+        "you",
+        "know",
+        "why",
+        "he",
+        "changed",
+        "his schedule"
+      ],
+      "sentence": "Do you know why he changed his schedule?",
+      "source_pages": [
+        72,
+        78
+      ]
+    },
+    {
+      "id": "W-BS9",
+      "context": "9. “The manager said the meeting was postponed until Friday.”",
+      "template": "Was she ___ ___ ___ ___ ___ ___ ___ ?",
+      "words": [
+        "clear",
+        "it",
+        "will",
+        "what",
+        "about",
+        "time",
+        "start"
+      ],
+      "answer": [
+        "clear",
+        "about",
+        "what",
+        "time",
+        "it",
+        "will",
+        "start"
+      ],
+      "sentence": "Was she clear about what time it will start?",
+      "source_pages": [
+        73,
+        78
+      ]
+    },
+    {
+      "id": "W-BS10",
+      "context": "10. “What would you change if you could rewrite your essay?”",
+      "template": "I’d use ___ ___ ___ ___ ___ ___ ___ .",
+      "words": [
+        "better examples",
+        "if",
+        "I",
+        "more",
+        "misspellings",
+        "time",
+        "to edit",
+        "had"
+      ],
+      "answer": [
+        "better examples",
+        "if",
+        "I",
+        "had",
+        "more",
+        "time",
+        "to edit"
+      ],
+      "sentence": "I’d use better examples if I had more time to edit.",
+      "source_pages": [
+        73,
+        78
+      ]
+    }
+  ],
+  "short_answer_questions": [
+    {
+      "id": "W-EMAIL",
+      "passage": {
+        "title": "Write an Email (7 minutes, no spellcheck)",
+        "text": "You recently bought a printer from an online electronics store, and it worked well for the first few days. However, it began showing persistent errors and now refuses to print even basic documents. You want to contact customer service to explain the situation.\n\nWrite an email to customer service. In your email, do the following:\n• Describe the problem you are having with the printer.\n• Explain what you have already tried to fix it.\n• Ask about repair or replacement options.\n\nWrite as much as you can and in complete sentences.\n\nTo: Customer Service\nSubject: Request for printer repair or replacement"
+      },
+      "question": "Write your email, then compare it with the sample response.",
+      "model_answer": "Hello,\n\nTwo weeks ago, I purchased a printer from your online store, but after a few days, it stopped working. Whenever I attempt to print a document, it displays an error message that I don’t understand. This occurs even when I try to print very basic documents. I have already tried resetting the printer, checking for software updates on your website, and switching the ink cartridge. Since I am unable to solve the problem on my own, could you tell me whether it is possible to have the printer replaced? If that is possible, please let me know how I should apply for a replacement. Of course, I would also be happy to have the printer repaired by one of your technicians.\n\nThank you,\nAlberto Beardsley",
+      "source_pages": [
+        74,
+        78
+      ]
+    },
+    {
+      "id": "W-DISCUSSION",
+      "passage": {
+        "title": "Write for an Academic Discussion (10 minutes, 100+ words)",
+        "text": "Your professor is teaching a class on sociology. Write a post responding to the professor's question. Express and support your opinion, and make a contribution to the discussion in your own words. An effective response will contain at least 100 words.\n\nDr. Stingley: Today, we will look at the trend of temporarily stepping away from digital devices to reduce stress and improve personal interactions. As technology becomes increasingly pervasive, some argue that disconnecting can help regain focus and enhance productivity. Others believe that with proper self-regulation, technology does not have to be overwhelming. What are your thoughts on taking temporary breaks from technology? Do you believe it is beneficial?\n\nLucas: I think taking a break from technology is really beneficial. In my experience, taking breaks from my phone and computer has helped me concentrate better on my studies and feel less stressed overall. It's easy to get caught up in a cycle of constant connectivity, and breaking that cycle can provide a much-needed mental rest.\n\nMaya: I believe that instead of completely disconnecting, we should focus on managing our use of technology better. Many people rely on digital tools for work and staying in touch with family, so learning to use technology responsibly might be more realistic than not using it at all."
+      },
+      "question": "Write your post, then compare it with the sample response.",
+      "model_answer": "In my opinion, taking temporary breaks from digital devices is very helpful in reducing stress and improving focus. When I set aside time each day to disconnect from my phone and computer, I noticed that my concentration improved and my overall stress level dropped. Lucas is right that stepping away from constant connectivity gives the mind a much-needed rest, and I experienced this during a busy study period when I took a two-hour break each evening and felt more refreshed for my classes the next day. While Maya suggests that managing technology use might be more realistic, I believe that sometimes a complete break offers a clearer mental reset, as I found that turning off all devices allowed me to engage more fully with my surroundings and personal interests.",
+      "source_pages": [
+        75,
+        79
+      ]
+    }
+  ]
+}

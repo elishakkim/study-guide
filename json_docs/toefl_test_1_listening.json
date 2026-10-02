@@ -1,0 +1,730 @@
+{
+  "chapter": {
+    "number": 2,
+    "title": "Listening Section",
+    "book": "TOEFL Practice Test 1",
+    "source": "TST Prep — Practice Test #1 for the TOEFL® Test (2026)",
+    "pdf_pages": {
+      "start": 22,
+      "end": 56
+    }
+  },
+  "summary": "Listening section of Practice Test #1 (advanced): 35 questions, one point each, in two modules. Listen and Choose a Response = Questions 1–8 and 21–23. Conversations = 9–12 and 24–27. Announcements = 13–16. Academic Talks = 17–20, 28–31 and 32–35. Audio streams from TST Prep. On test day you hear each recording once and cannot go back. Transcripts and explanations come from the answer key (PDF pp. 46–56).",
+  "multiple_choice_questions": [
+    {
+      "id": "L-Q1",
+      "audio": "https://s3.us-west-1.wasabisys.com/media.tstprep.com/freebies/2026/Test%20Audio%20Files/listen-and-choose/02.01.01-listen-and-choose-module-1-statement-001.mp3",
+      "question": "1. Listen to the statement, then choose the best response.",
+      "choices": [
+        "The printer should be fixed by tomorrow.",
+        "The new manager is waiting.",
+        "I haven’t seen the agenda yet.",
+        "Then we’d better get started tonight."
+      ],
+      "answer": "Then we’d better get started tonight.",
+      "explanation": "Speaker: “The deadline’s coming up sooner than I expected.” — D is correct because it responds naturally to the speaker’s concern about the approaching deadline by suggesting immediate action. The other options do not address the urgency of the situation.",
+      "source_pages": [
+        24,
+        48
+      ]
+    },
+    {
+      "id": "L-Q2",
+      "audio": "https://s3.us-west-1.wasabisys.com/media.tstprep.com/freebies/2026/Test%20Audio%20Files/listen-and-choose/02.01.01-listen-and-choose-module-1-statement-002.mp3",
+      "question": "2. Listen to the statement, then choose the best response.",
+      "choices": [
+        "I didn’t see the meeting notes.",
+        "Want to grab a quick coffee while we wait?",
+        "It’s every Tuesday afternoon.",
+        "The conference room is upstairs."
+      ],
+      "answer": "Want to grab a quick coffee while we wait?",
+      "explanation": "Speaker: “Looks like the meeting’s running late.” — B is correct because it offers a practical suggestion that fits the delay mentioned. The other options are unrelated details that do not move the conversation forward.",
+      "source_pages": [
+        24,
+        48
+      ]
+    },
+    {
+      "id": "L-Q3",
+      "audio": "https://s3.us-west-1.wasabisys.com/media.tstprep.com/freebies/2026/Test%20Audio%20Files/listen-and-choose/02.01.01-listen-and-choose-module-1-statement-003.mp3",
+      "question": "3. Listen to the statement, then choose the best response.",
+      "choices": [
+        "She called me yesterday.",
+        "I’ll text you this evening.",
+        "The call was about ten minutes.",
+        "I think he’s traveling now."
+      ],
+      "answer": "I’ll text you this evening.",
+      "explanation": "Speaker: “Would you remind me to call my sister later?” — B is correct because it fulfills the speaker’s request for a reminder later. The other options mention calls or timing, but fail to perform the requested action.",
+      "source_pages": [
+        24,
+        48
+      ]
+    },
+    {
+      "id": "L-Q4",
+      "audio": "https://s3.us-west-1.wasabisys.com/media.tstprep.com/freebies/2026/Test%20Audio%20Files/listen-and-choose/02.01.01-listen-and-choose-module-1-statement-004.mp3",
+      "question": "4. Listen to the statement, then choose the best response.",
+      "choices": [
+        "The plants look really healthy right now.",
+        "I’ll stop by every morning on my way to work.",
+        "It hasn’t rained much this week.",
+        "Here would be great because this window gets plenty of light."
+      ],
+      "answer": "I’ll stop by every morning on my way to work.",
+      "explanation": "Speaker: “Could you water my plants while I’m away?” — B is correct because it fulfills the speaker’s request to water the plants by agreeing and specifying a plan. The other options mention the plants or weather, but do not address the request.",
+      "source_pages": [
+        24,
+        48
+      ]
+    },
+    {
+      "id": "L-Q5",
+      "audio": "https://s3.us-west-1.wasabisys.com/media.tstprep.com/freebies/2026/Test%20Audio%20Files/listen-and-choose/02.01.01-listen-and-choose-module-1-statement-005.mp3",
+      "question": "5. Listen to the statement, then choose the best response.",
+      "choices": [
+        "The couch looks comfortable.",
+        "No, I canceled my cards.",
+        "Yes, it was under the couch.",
+        "I left it at home."
+      ],
+      "answer": "Yes, it was under the couch.",
+      "explanation": "Speaker: “Did you find your wallet?” — C is correct because it directly answers the question and provides the location of the lost item. The other options are unrelated or incomplete.",
+      "source_pages": [
+        24,
+        48
+      ]
+    },
+    {
+      "id": "L-Q6",
+      "audio": "https://s3.us-west-1.wasabisys.com/media.tstprep.com/freebies/2026/Test%20Audio%20Files/listen-and-choose/02.01.01-listen-and-choose-module-1-statement-006.mp3",
+      "question": "6. Listen to the statement, then choose the best response.",
+      "choices": [
+        "They’re planning a trip this summer.",
+        "Yes, I told my friend yesterday.",
+        "I’ll call them after dinner.",
+        "The flight leaves tomorrow."
+      ],
+      "answer": "I’ll call them after dinner.",
+      "explanation": "Speaker: “Have you told your parents about the trip?” — C is correct because it responds appropriately to the question by indicating future intent to tell the parents. The other options reference trips or other people but fail to answer the question.",
+      "source_pages": [
+        25,
+        48
+      ]
+    },
+    {
+      "id": "L-Q7",
+      "audio": "https://s3.us-west-1.wasabisys.com/media.tstprep.com/freebies/2026/Test%20Audio%20Files/listen-and-choose/02.01.01-listen-and-choose-module-1-statement-007.mp3",
+      "question": "7. Listen to the statement, then choose the best response.",
+      "choices": [
+        "I’ll text her later.",
+        "The message was long.",
+        "She’s on vacation now.",
+        "It happens to everyone."
+      ],
+      "answer": "It happens to everyone.",
+      "explanation": "Speaker: “I forgot to reply to her message.” — D is correct because it acknowledges the speaker’s mistake politely and empathetically. The other options add details but do not provide an appropriate social response.",
+      "source_pages": [
+        25,
+        49
+      ]
+    },
+    {
+      "id": "L-Q8",
+      "audio": "https://s3.us-west-1.wasabisys.com/media.tstprep.com/freebies/2026/Test%20Audio%20Files/listen-and-choose/02.01.01-listen-and-choose-module-1-statement-008.mp3",
+      "question": "8. Listen to the statement, then choose the best response.",
+      "choices": [
+        "Yes, I printed them all this morning.",
+        "On your desk, right next to the printer.",
+        "The copies were longer than expected.",
+        "I’ve already read the report twice."
+      ],
+      "answer": "On your desk, right next to the printer.",
+      "explanation": "Speaker: “Where did you put the extra copies of the report?” — B is correct because it directly answers the location question with a clear, specific response. The other options are irrelevant or incomplete.",
+      "source_pages": [
+        25,
+        49
+      ]
+    },
+    {
+      "id": "L-Q9",
+      "passage": {
+        "title": "Module 1 · Conversation 1",
+        "audio": "https://s3.us-west-1.wasabisys.com/media.tstprep.com/freebies/2026/Test%20Audio%20Files/toefl-listening-tests-2026-audio-files/02.01.03-listen-to-a-conversation-module-1.mp3",
+        "transcript": "Woman: The laundry basket’s overflowing again. Didn’t you say you’d do it yesterday?\nMan: I did, but I ran out of detergent halfway through the first load.\nWoman: You could’ve told me. I passed the store on my way home.\nMan: I figured I’d go this morning, but then I got caught up finishing that report for work. I’ll grab some detergent after lunch and do a double load this afternoon.\nWoman: Please do. Otherwise, we’ll have nothing to wear tomorrow.",
+        "text": "Listen first (once, as on test day), then answer. Reveal the transcript only when reviewing."
+      },
+      "question": "9. What reason does the man give for not finishing the laundry?",
+      "choices": [
+        "The washing machine stopped working properly.",
+        "He ran out of detergent before completing it.",
+        "He forgot to start it after finishing up a book report.",
+        "He was waiting for clean clothes to dry first."
+      ],
+      "answer": "He ran out of detergent before completing it.",
+      "explanation": "The man says, “I did, but I ran out of detergent halfway through the first load.” This clearly shows that he wasn’t able to finish doing the laundry because he didn’t have enough detergent. Option A is wrong because the conversation never mentions any problem with the washing machine. Option C is incorrect since the man was finishing a work report, not a book report. Option D doesn’t fit because drying clothes is never discussed.",
+      "source_pages": [
+        27,
+        49
+      ]
+    },
+    {
+      "id": "L-Q10",
+      "question": "10. Why does the man mention his report for work?",
+      "choices": [
+        "It explains why he didn’t go to the store earlier.",
+        "He wants to show that he was being productive.",
+        "He needs to print it before doing chores.",
+        "He hopes the woman will help with the laundry."
+      ],
+      "answer": "It explains why he didn’t go to the store earlier.",
+      "explanation": "When the man mentions his report for work, he is explaining why he didn’t go to the store earlier. His focus on finishing the report caused him to delay buying detergent. Option B might sound reasonable, but his intention isn’t to brag about being productive. Option C is incorrect because printing is never mentioned, and option D is wrong because he doesn’t ask the woman for help with the laundry.",
+      "source_pages": [
+        27,
+        49
+      ]
+    },
+    {
+      "id": "L-Q11",
+      "passage": {
+        "title": "Module 1 · Conversation 2",
+        "audio": "https://s3.us-west-1.wasabisys.com/media.tstprep.com/freebies/2026/Test%20Audio%20Files/toefl-listening-tests-2026-audio-files/02.01.04-listen-to-a-conversation-module-1.mp3",
+        "transcript": "Man: My phone keeps dying just a few hours after it's fully charged.\nWoman: You probably need a new battery. How long have you had it?\nMan: Almost four years. It used to last all day, but now I charge it twice before dinner. I read online that once a battery starts losing power, it can even damage the phone if you ignore it for too long.\nWoman: Then you’d better replace it soon. There’s a repair shop near the library that does same-day service.\nMan: Oh, I didn’t know that. I’ll head over there after work.",
+        "text": "Listen first (once, as on test day), then answer. Reveal the transcript only when reviewing."
+      },
+      "question": "11. What does the man say about his phone battery?",
+      "choices": [
+        "It overheats whenever he plugs it in.",
+        "It stops charging when it reaches half capacity.",
+        "It loses power quickly after being fully charged.",
+        "It takes several hours to recharge completely."
+      ],
+      "answer": "It loses power quickly after being fully charged.",
+      "explanation": "The man explains that his phone used to last all day, but now needs to be charged twice before dinner. This means the battery loses power quickly after being fully charged. Option A is incorrect because overheating is never mentioned. Option B doesn’t match because the phone doesn’t stop charging at half capacity, and option D is wrong since there’s no indication that charging takes several hours.",
+      "source_pages": [
+        29,
+        50
+      ]
+    },
+    {
+      "id": "L-Q12",
+      "question": "12. What does the woman advise the man to do?",
+      "choices": [
+        "Reduce how often he uses the phone in the afternoon.",
+        "Carry a portable charger for emergencies.",
+        "Replace the battery before it causes more damage.",
+        "Wait until the weekend to get repairs done."
+      ],
+      "answer": "Replace the battery before it causes more damage.",
+      "explanation": "The woman advises the man to replace the battery before it causes further damage. She recommends a repair shop that offers same-day service. Option A is incorrect because reducing phone use is never suggested. Option B is wrong since she doesn’t mention carrying a portable charger. Option D is also incorrect because she tells him to fix it soon, not wait until the weekend.",
+      "source_pages": [
+        29,
+        50
+      ]
+    },
+    {
+      "id": "L-Q13",
+      "passage": {
+        "title": "Module 1 · Announcement at a university event",
+        "audio": "https://s3.us-west-1.wasabisys.com/media.tstprep.com/freebies/2026/Test%20Audio%20Files/toefl-listening-tests-2026-audio-files/02.01.07-listen-to-an-announcement-module-1.mp3",
+        "transcript": "Good morning, students. The Academic Advising Office will offer extended walk-in hours next week for anyone planning to register for summer courses. Advisors will be available from 9 a.m. to 4 p.m., Monday through Thursday. No appointment is necessary, but please arrive early to avoid long wait times.",
+        "text": "Listen first (once, as on test day), then answer. Reveal the transcript only when reviewing."
+      },
+      "question": "13. What is the main purpose of the announcement?",
+      "choices": [
+        "To inform students about changes to advising hours",
+        "To announce the deadline for summer registration",
+        "To remind students of the advising office’s normal hours of operation",
+        "To encourage students to attend an advising workshop"
+      ],
+      "answer": "To inform students about changes to advising hours",
+      "explanation": "The purpose of the announcement is to inform students about the Academic Advising Office’s new walk-in hours. The speaker clearly mentions that advisors will be available Monday through Thursday from 9 a.m. to 4 p.m. and that no appointment is necessary. The other options are incorrect because the speaker never refers to a registration deadline or an advising workshop. Option C is incorrect because the hours announced aren’t the normal hours of operation, but their extended walk-in hours.",
+      "source_pages": [
+        31,
+        50
+      ]
+    },
+    {
+      "id": "L-Q14",
+      "question": "14. What are students encouraged to do?",
+      "choices": [
+        "Arrive early to avoid long waits",
+        "Schedule their appointments online",
+        "Email advisors for registration forms",
+        "Extend their hours to register for courses"
+      ],
+      "answer": "Arrive early to avoid long waits",
+      "explanation": "Students are encouraged to arrive early to avoid long wait times. The announcement specifically advises this after mentioning that appointments are not required. The other options are not supported by the passage since there is no mention of scheduling appointments online, emailing advisors, or extending hours for registration.",
+      "source_pages": [
+        31,
+        50
+      ]
+    },
+    {
+      "id": "L-Q15",
+      "passage": {
+        "title": "Module 1 · Announcement at a university club meeting",
+        "audio": "https://s3.us-west-1.wasabisys.com/media.tstprep.com/freebies/2026/Test%20Audio%20Files/toefl-listening-tests-2026-audio-files/02.01.08-listen-to-an-announcement-module-1.mp3",
+        "transcript": "Hi everyone. Our club is partnering with the local Red Cross to host a community blood drive next Wednesday from 10 a.m. to 3 p.m. in the Student Center ballroom. Donors should eat beforehand and bring a photo ID. If you’d like to volunteer, please sign up using the link sent in yesterday’s email.",
+        "text": "Listen first (once, as on test day), then answer. Reveal the transcript only when reviewing."
+      },
+      "question": "15. What should donors do before participating?",
+      "choices": [
+        "Contact the Red Cross for an appointment",
+        "Fill out the volunteer form in person",
+        "Eat a meal",
+        "Pick up a wristband"
+      ],
+      "answer": "Eat a meal",
+      "explanation": "Donors are told to eat before giving blood. This is stated directly in the announcement as one of the instructions for participants. The other choices are incorrect because donors are not told to make appointments, fill out a form in person, or pick up a wristband before donating.",
+      "source_pages": [
+        33,
+        51
+      ]
+    },
+    {
+      "id": "L-Q16",
+      "question": "16. Why does the speaker mention the email link?",
+      "choices": [
+        "To explain where to send confirmation messages",
+        "To remind members how to register as volunteers",
+        "To thank students who already signed up through the link",
+        "To provide contact information for the Red Cross"
+      ],
+      "answer": "To remind members how to register as volunteers",
+      "explanation": "The speaker mentions the email link to remind members how to register as volunteers. It connects to the line “please sign up using the link sent in yesterday’s email.” The other choices are wrong because the link is not used to send confirmations, thank participants, or share Red Cross contact information.",
+      "source_pages": [
+        33,
+        51
+      ]
+    },
+    {
+      "id": "L-Q17",
+      "passage": {
+        "title": "Module 1 · Talk in a biology class",
+        "audio": "https://s3.us-west-1.wasabisys.com/media.tstprep.com/freebies/2026/Test%20Audio%20Files/toefl-listening-tests-2026-audio-files/02.01.09-listen-to-an-academic-talk-module-1.mp3",
+        "transcript": "Every autumn, millions of monarch butterflies travel from the northern United States and Canada to the mountain forests of central Mexico. Their bright orange wings make the sky seem alive with motion. What makes this journey remarkable is its length and accuracy. Monarchs travel thousands of kilometers, yet the butterflies that arrive in Mexico are not the same ones that left the north. The journey takes several generations to complete, with each new group continuing the route their ancestors started.\n\nScientists have been fascinated by how monarchs know where to go. Studies suggest they use the position of the sun as a kind of compass. They also appear to rely on an internal clock that adjusts for the sun’s movement during the day. Some experiments show that when the butterflies’ antennae are covered, they lose their sense of direction, suggesting that light sensors there play an important role. Monarchs also respond to temperature and wind, gliding on warm air currents to conserve energy during long flights.\n\nDespite their endurance, monarch populations have declined sharply in recent years. The biggest threats are habitat loss and the disappearance of milkweed plants, which are the only food source for monarch caterpillars. Conservation groups now encourage people to plant milkweed and create resting spots along the migration route. These efforts highlight how fragile and connected natural systems can be, even when they depend on something as small as a butterfly.",
+        "text": "Listen first (once, as on test day), then answer. Reveal the transcript only when reviewing."
+      },
+      "question": "17. What is the main topic of the talk?",
+      "choices": [
+        "The remarkable lives of monarch butterflies",
+        "How monarch butterflies adapt to environmental changes",
+        "The structure of butterfly wings and their colors",
+        "The effects of climate change on monarch butterflies"
+      ],
+      "answer": "The remarkable lives of monarch butterflies",
+      "explanation": "The lecture centers on the extraordinary migration of monarch butterflies, explaining how they travel thousands of kilometers across generations. Options B and D are too narrow because the passage doesn’t focus mainly on adaptation or climate change. Option C is incorrect since wing color is only mentioned briefly for imagery, not as a key topic.",
+      "source_pages": [
+        35,
+        51
+      ]
+    },
+    {
+      "id": "L-Q18",
+      "question": "18. Why does the speaker mention that multiple generations complete the migration?",
+      "choices": [
+        "To compare monarchs with other long-distance species",
+        "To suggest that migration patterns constantly change",
+        "To highlight how extraordinary the monarchs’ life cycle and navigation are",
+        "To explain why scientists cannot study the full journey"
+      ],
+      "answer": "To highlight how extraordinary the monarchs’ life cycle and navigation are",
+      "explanation": "The speaker points out that multiple generations complete the migration to show how remarkable the species’ instinct and navigation truly are. This detail emphasizes the complexity of the monarch’s life cycle. The other options misrepresent the purpose—there’s no comparison to other species or suggestion that patterns constantly change.",
+      "source_pages": [
+        35,
+        52
+      ]
+    },
+    {
+      "id": "L-Q19",
+      "question": "19. According to the speaker, what helps monarch butterflies navigate during migration?",
+      "choices": [
+        "The scent of milkweed plants along their route",
+        "Landmarks they recognize from previous generations",
+        "The position of the sun combined with an internal clock",
+        "Temperature changes that guide their flight path"
+      ],
+      "answer": "The position of the sun combined with an internal clock",
+      "explanation": "The professor explains that monarchs use the sun as a compass along with an internal clock, which helps them stay oriented during migration. Covering their antennae disrupts this system, proving its importance. The other options mention temperature or scent, but these were not described as navigational tools.",
+      "source_pages": [
+        35,
+        52
+      ]
+    },
+    {
+      "id": "L-Q20",
+      "question": "20. What can be inferred about monarch migration?",
+      "choices": [
+        "It varies dramatically each year depending on the weather.",
+        "It depends on inherited biological mechanisms.",
+        "It can occur under constant wind conditions.",
+        "It is identical to the migration patterns of other insects."
+      ],
+      "answer": "It depends on inherited biological mechanisms.",
+      "explanation": "The monarchs’ migration depends on inherited biological mechanisms, passed through generations rather than learned behavior. The other options conflict with the passage: weather variation is not central, and no other insects were said to share the exact same migration pattern.",
+      "source_pages": [
+        35,
+        52
+      ]
+    },
+    {
+      "id": "L-Q21",
+      "audio": "https://s3.us-west-1.wasabisys.com/media.tstprep.com/freebies/2026/Test%20Audio%20Files/listen-and-choose/02.01.02-listen-and-choose-module-2-statement-001.mp3",
+      "question": "21. Listen to the statement, then choose the best response.",
+      "choices": [
+        "I spoke with the finance team about making a change.",
+        "It’s due by the end of the quarter.",
+        "The marketing director signed off on it.",
+        "There’s a meeting about it scheduled for tomorrow."
+      ],
+      "answer": "The marketing director signed off on it.",
+      "explanation": "Speaker: “Who approved the new advertising budget?” — C is correct because it directly identifies who approved the budget. The other options discuss timing or related tasks but do not answer the question.",
+      "source_pages": [
+        36,
+        53
+      ]
+    },
+    {
+      "id": "L-Q22",
+      "audio": "https://s3.us-west-1.wasabisys.com/media.tstprep.com/freebies/2026/Test%20Audio%20Files/listen-and-choose/02.01.02-listen-and-choose-module-2-statement-002.mp3",
+      "question": "22. Listen to the statement, then choose the best response.",
+      "choices": [
+        "The meeting’s on the third floor.",
+        "Let’s plan to meet next week instead.",
+        "I already sent the link to your inbox.",
+        "I’m sorry to hear about your loss."
+      ],
+      "answer": "Let’s plan to meet next week instead.",
+      "explanation": "Speaker: “I can’t make it to the meeting tomorrow.” — B is correct because it acknowledges the speaker’s unavailability and suggests a reasonable alternative. The other options fail to address the scheduling issue.",
+      "source_pages": [
+        36,
+        53
+      ]
+    },
+    {
+      "id": "L-Q23",
+      "audio": "https://s3.us-west-1.wasabisys.com/media.tstprep.com/freebies/2026/Test%20Audio%20Files/listen-and-choose/02.01.02-listen-and-choose-module-2-statement-004.mp3",
+      "question": "23. Listen to the statement, then choose the best response.",
+      "choices": [
+        "They were installed last year.",
+        "I’ll ask maintenance to take a look.",
+        "The lights are brighter earlier in the day.",
+        "It’s about time to look for a new apartment."
+      ],
+      "answer": "I’ll ask maintenance to take a look.",
+      "explanation": "Speaker: “The hallway lights aren’t working again.” — B is correct because it responds appropriately by offering to resolve the problem. The other options provide unrelated or off-topic information.",
+      "source_pages": [
+        36,
+        53
+      ]
+    },
+    {
+      "id": "L-Q24",
+      "passage": {
+        "title": "Module 2 · Conversation 3",
+        "audio": "https://s3.us-west-1.wasabisys.com/media.tstprep.com/freebies/2026/Test%20Audio%20Files/toefl-listening-tests-2026-audio-files/02.01.05-listen-to-a-conversation-module-2.mp3",
+        "transcript": "Woman: The shipment of office supplies still hasn’t arrived.\nMan: Seriously? It’s been almost a week since we placed that order.\nWoman: I called the supplier this morning, and they said the delivery truck broke down outside the city. They’re sending another one tomorrow.\nMan: That explains it. I’ll let the team know to go easy on the printing until then.",
+        "text": "Listen first (once, as on test day), then answer. Reveal the transcript only when reviewing."
+      },
+      "question": "24. What can be inferred about the man’s workplace?",
+      "choices": [
+        "They plan to change suppliers soon.",
+        "They received an extra delivery last week.",
+        "They are running low on certain supplies.",
+        "They have recently put limits on their printing."
+      ],
+      "answer": "They are running low on certain supplies.",
+      "explanation": "The man says he’ll tell the team to go easy on printing, which implies that the office is running low on supplies until the shipment arrives. Option A is incorrect because there’s no mention of changing suppliers. Option B doesn’t fit since the delay shows they haven’t received any delivery. Option D sounds close, but the conversation shows he’s making a temporary suggestion, not enforcing an ongoing rule.",
+      "source_pages": [
+        38,
+        53
+      ]
+    },
+    {
+      "id": "L-Q25",
+      "question": "25. What will happen tomorrow?",
+      "choices": [
+        "A replacement delivery will arrive",
+        "The supplier will issue a refund",
+        "The office will run out of supplies",
+        "The team will cancel all print jobs"
+      ],
+      "answer": "A replacement delivery will arrive",
+      "explanation": "The woman says the delivery truck broke down, but that another one is being sent tomorrow. This means the replacement delivery will arrive the following day. Option B is incorrect because the supplier promises a delivery, not a refund. Option C is wrong since the supplies are delayed, not completely gone. Option D doesn’t make sense because the team will simply limit printing, not cancel all jobs.",
+      "source_pages": [
+        38,
+        53
+      ]
+    },
+    {
+      "id": "L-Q26",
+      "passage": {
+        "title": "Module 2 · Conversation 4",
+        "audio": "https://s3.us-west-1.wasabisys.com/media.tstprep.com/freebies/2026/Test%20Audio%20Files/toefl-listening-tests-2026-audio-files/02.01.06-listen-to-a-conversation-module-2.mp3",
+        "transcript": "Man: I canceled my gym membership last month, and now I regret it.\nWoman: What happened?\nMan: I thought I’d save money and just work out at home, but I haven’t exercised once since then.\nWoman: You could always rejoin. Sometimes they let you skip the signup fee if you were a recent member.\nMan: That’s good to know. I’ll stop by this weekend and ask.\nWoman: Do it. It’s easier to stay motivated when you go somewhere to train.",
+        "text": "Listen first (once, as on test day), then answer. Reveal the transcript only when reviewing."
+      },
+      "question": "26. Why did the man cancel his gym membership?",
+      "choices": [
+        "He moved to a new neighborhood farther from the gym.",
+        "He wanted to save money by exercising at home.",
+        "He was dissatisfied with the gym’s equipment.",
+        "He decided to start running outdoors instead."
+      ],
+      "answer": "He wanted to save money by exercising at home.",
+      "explanation": "The man explains that he canceled his gym membership to save money and try exercising at home. This shows that his decision was motivated by cost, not by dissatisfaction or a move. Option A is wrong because moving is never mentioned. Option C doesn’t fit since there’s no complaint about equipment, and option D is incorrect because he didn’t plan to run outdoors.",
+      "source_pages": [
+        40,
+        54
+      ]
+    },
+    {
+      "id": "L-Q27",
+      "question": "27. Why does the woman mention the signup fee?",
+      "choices": [
+        "To warn that some gyms increase fees each year",
+        "To explain why she stopped going to the gym",
+        "To suggest he compare prices at different gyms",
+        "To show that rejoining might not cost much"
+      ],
+      "answer": "To show that rejoining might not cost much",
+      "explanation": "The woman mentions the signup fee to reassure the man that rejoining the gym might not be expensive. She points out that some gyms waive the fee for returning members, suggesting that cost shouldn’t stop him from going back. Option A is incorrect because she never warns about rising fees. Option B doesn’t fit since she never says she stopped going. Option C is also wrong because she doesn’t advise comparing gyms, only rejoining his old one.",
+      "source_pages": [
+        40,
+        54
+      ]
+    },
+    {
+      "id": "L-Q28",
+      "passage": {
+        "title": "Module 2 · Talk in a marine biology class",
+        "audio": "https://s3.us-west-1.wasabisys.com/media.tstprep.com/freebies/2026/Test%20Audio%20Files/toefl-listening-tests-2026-audio-files/02.01.10-listen-to-an-academic-talk-module-2.mp3",
+        "transcript": "In the dark depths of the ocean, where sunlight never reaches, many organisms have developed the ability to produce their own light. This natural glow, known as bioluminescence, serves a variety of purposes. Some species use it to attract prey, while others rely on it to hide from predators. But one of the most intriguing uses is communication. For many deep-sea creatures, light is their language.\n\nCertain squid, for example, flash rhythmic pulses of blue light from their bodies to signal to potential mates or to coordinate movement within a group. In one species, these light displays become more complex during mating season, almost like a visual conversation. Other animals, such as the lanternfish, have glowing spots arranged along their sides that may help them recognize members of their own species in the darkness. Each pattern acts like an identification badge in a place where vision is limited.\n\nResearchers studying these organisms have discovered that light production is not always controlled by the animal alone. In some cases, bacteria living inside the creature’s body produce the glow. This cooperation between host and microbe shows how even in extreme environments, life depends on partnerships. Next, let’s look at how these biological light systems might inspire new forms of communication technology, such as underwater signaling devices or low-energy lighting systems.",
+        "text": "Listen first (once, as on test day), then answer. Reveal the transcript only when reviewing."
+      },
+      "question": "28. What is the main topic of the talk?",
+      "choices": [
+        "How bioluminescence affects ecosystems in the ocean depths",
+        "How deep-sea organisms use bioluminescence to survive",
+        "How scientists discovered bioluminescence in shallow waters",
+        "How light pollution interferes with the bioluminescence of marine animals"
+      ],
+      "answer": "How deep-sea organisms use bioluminescence to survive",
+      "explanation": "The talk focuses on how deep-sea organisms use bioluminescence to survive, communicate, and interact. Option A is too general, while C and D refer to unrelated ideas like shallow-water discoveries and light pollution. The main purpose is clearly tied to survival and communication beneath the ocean’s surface.",
+      "source_pages": [
+        42,
+        54
+      ]
+    },
+    {
+      "id": "L-Q29",
+      "question": "29. All of the following are mentioned as ways deep-sea animals use bioluminescence EXCEPT:",
+      "choices": [
+        "To navigate using reflected light from the ocean surface",
+        "To attract prey in the dark",
+        "To recognize others of the same species",
+        "To signal to potential mates"
+      ],
+      "answer": "To navigate using reflected light from the ocean surface",
+      "explanation": "The speaker never says animals use light to navigate by surface reflection, making this option the exception. The others—attracting prey, recognizing species, and signaling mates—are all explicitly described. The first option stands out as unrelated to deep-sea bioluminescence.",
+      "source_pages": [
+        42,
+        55
+      ]
+    },
+    {
+      "id": "L-Q30",
+      "question": "30. What can be inferred about the relationship between bacteria and bioluminescent animals?",
+      "choices": [
+        "The light from the bacteria can only be produced in shallow water.",
+        "The bacteria weaken the animal’s immune system over time.",
+        "Both organisms benefit from the light they produce together.",
+        "The bacteria rely on the animal’s nervous system to create electricity."
+      ],
+      "answer": "Both organisms benefit from the light they produce together.",
+      "explanation": "The relationship between bacteria and host animals is mutually beneficial, as both gain from the light they produce together. Nothing in the lecture suggests that the bacteria harm the host or rely on electricity. The partnership shows how life in the deep sea depends on cooperation, not conflict.",
+      "source_pages": [
+        42,
+        55
+      ]
+    },
+    {
+      "id": "L-Q31",
+      "question": "31. What will the speaker most likely discuss next?",
+      "choices": [
+        "How bioluminescent systems could inspire communication technologies",
+        "How scientists study light production in land-based animals",
+        "How climate change affects bioluminescent organisms",
+        "How ocean currents influence the movement of light-producing bacteria"
+      ],
+      "answer": "How bioluminescent systems could inspire communication technologies",
+      "explanation": "The lecture transitions toward practical applications, predicting that bioluminescent systems might inspire new communication technologies. The other options refer to topics not introduced—land animals, climate effects, and ocean currents—which were never mentioned as the next focus.",
+      "source_pages": [
+        42,
+        55
+      ]
+    },
+    {
+      "id": "L-Q32",
+      "passage": {
+        "title": "Module 2 · Talk in a history class",
+        "audio": "https://s3.us-west-1.wasabisys.com/media.tstprep.com/freebies/2026/Test%20Audio%20Files/toefl-listening-tests-2026-audio-files/02.01.11-listen-to-an-academic-talk-module-2.mp3",
+        "transcript": "Around ten thousand years ago, in a region of the Middle East once known as the Fertile Crescent, a group of people began an experiment that would change human history. They were not building cities or empires yet. They were simply trying to survive in a landscape of grasslands and rivers that flooded each spring.\n\nArchaeological evidence from sites near the Tigris and Euphrates Rivers shows that small communities began gathering wild grains that grew after the floods. Over time, they noticed that seeds dropped near their camps sprouted again the next season. This observation marked the beginning of agriculture.\n\nOne of the best-studied settlements from this period is Jericho, located near the Jordan River. The people there constructed circular houses from mud and built stone walls to protect their crops from animals and seasonal floods. Storage pits found beneath the floors suggest that they were saving food from one harvest to the next. This ability to store grain gave them security through harsh seasons and allowed the population to grow. Families no longer needed to move constantly in search of food, and social roles began to change as some members specialized in toolmaking and food preparation.\n\nThese early farmers could not have known the long-term consequences of their innovation, yet their decision to plant and protect grain set in motion the rise of complex societies. In the next section, we will look at how similar communities laid the groundwork for the first civilizations.",
+        "text": "Listen first (once, as on test day), then answer. Reveal the transcript only when reviewing."
+      },
+      "question": "32. What is the main focus of the talk?",
+      "choices": [
+        "How early farmers domesticated animals to grow crops and build communities",
+        "How ancient empires expanded trade routes in the Middle East",
+        "How climate change forced ancient peoples to change the way they gathered food",
+        "How early communities in the Fertile Crescent developed agriculture"
+      ],
+      "answer": "How early communities in the Fertile Crescent developed agriculture",
+      "explanation": "The talk explains how early communities in the Fertile Crescent began farming and developed stable settlements. The other options either focus on animals, empires, or climate, none of which represent the central theme. The passage highlights agriculture’s birth, not political or environmental crises.",
+      "source_pages": [
+        44,
+        56
+      ]
+    },
+    {
+      "id": "L-Q33",
+      "question": "33. What evidence suggests that people in Jericho stored food?",
+      "choices": [
+        "Archaeologists found storage pits beneath the floors of houses.",
+        "Large clay jars were discovered near irrigation canals.",
+        "Stone carvings showed baskets filled with harvested grain.",
+        "Written records described the process of preserving food."
+      ],
+      "answer": "Archaeologists found storage pits beneath the floors of houses.",
+      "explanation": "Archaeologists found storage pits beneath house floors, showing that people kept surplus grain for later use. No evidence of written records or decorative carvings was discussed. The pits demonstrate an early understanding of food security, which is why this detail supports the main point.",
+      "source_pages": [
+        44,
+        56
+      ]
+    },
+    {
+      "id": "L-Q34",
+      "question": "34. Why does the speaker mention specialization in toolmaking and food preparation?",
+      "choices": [
+        "To describe how farming weakened traditional family structures",
+        "To explain why communities abandoned older hunting traditions",
+        "To show how stable food supplies made new forms of labor possible",
+        "To suggest that early agriculture caused social conflict"
+      ],
+      "answer": "To show how stable food supplies made new forms of labor possible",
+      "explanation": "By mentioning specialization in toolmaking and food preparation, the speaker shows that farming allowed people to develop new roles once survival was stable. The other options suggest negative or unrelated outcomes that were never mentioned. The emphasis is on progress, not decline.",
+      "source_pages": [
+        44,
+        56
+      ]
+    },
+    {
+      "id": "L-Q35",
+      "question": "35. What will the speaker most likely discuss next?",
+      "choices": [
+        "How farming communities contributed to the rise of early civilizations",
+        "How modern agriculture differs from ancient techniques",
+        "How trade spread agricultural ideas to other continents",
+        "How early farmers adapted to colder climates in northern regions"
+      ],
+      "answer": "How farming communities contributed to the rise of early civilizations",
+      "explanation": "The next section is set to discuss how farming communities paved the way for civilization. This naturally follows the development of stable settlements and stored food. The other topics—modern agriculture, trade, or colder climates—are far removed from the timeline of the lecture.",
+      "source_pages": [
+        44,
+        56
+      ]
+    }
+  ],
+  "score_conversion": [
+    {
+      "raw_points": "33–35",
+      "score": "6",
+      "old_scale": "28–30",
+      "source_pages": [
+        47
+      ]
+    },
+    {
+      "raw_points": "31–32",
+      "score": "5.5",
+      "old_scale": "26–27",
+      "source_pages": [
+        47
+      ]
+    },
+    {
+      "raw_points": "26–30",
+      "score": "5",
+      "old_scale": "22–25",
+      "source_pages": [
+        47
+      ]
+    },
+    {
+      "raw_points": "24–25",
+      "score": "4.5",
+      "old_scale": "20–21",
+      "source_pages": [
+        47
+      ]
+    },
+    {
+      "raw_points": "20–23",
+      "score": "4",
+      "old_scale": "17–19",
+      "source_pages": [
+        47
+      ]
+    },
+    {
+      "raw_points": "15–19",
+      "score": "3.5",
+      "old_scale": "13–16",
+      "source_pages": [
+        47
+      ]
+    },
+    {
+      "raw_points": "11–14",
+      "score": "3",
+      "old_scale": "9–12",
+      "source_pages": [
+        47
+      ]
+    },
+    {
+      "raw_points": "7–10",
+      "score": "2.5",
+      "old_scale": "6–8",
+      "source_pages": [
+        47
+      ]
+    },
+    {
+      "raw_points": "5–6",
+      "score": "2",
+      "old_scale": "4–5",
+      "source_pages": [
+        47
+      ]
+    },
+    {
+      "raw_points": "3–4",
+      "score": "1.5",
+      "old_scale": "2–3",
+      "source_pages": [
+        47
+      ]
+    },
+    {
+      "raw_points": "0–2",
+      "score": "1",
+      "old_scale": "0–1",
+      "source_pages": [
+        47
+      ]
+    }
+  ]
+}

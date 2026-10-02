@@ -1,0 +1,446 @@
+{
+  "chapter": {
+    "number": 1,
+    "title": "Reading Section",
+    "book": "TOEFL Practice Test 1",
+    "source": "TST Prep — Practice Test #1 for the TOEFL® Test (2026)",
+    "pdf_pages": {
+      "start": 2,
+      "end": 20
+    }
+  },
+  "summary": "Reading section of Practice Test #1 (advanced): 48 questions, one point each, in two modules. Complete the Words = Questions 1–20 and 34–43 (fill in the missing letters). Read in Daily Life = Questions 21–28 (two emails and a text chain). Read an Academic Passage = Questions 29–33 (volcano chemistry) and 44–48 (the origins of cooking). Answers and explanations come from the book’s answer key (PDF pp. 15–20).",
+  "complete_the_words": [
+    {
+      "id": "R-CTW1",
+      "title": "Questions 1–10 · Fill in the missing letters in the paragraph.",
+      "text": "Every living thing is made of tiny units called cells. {Ea|ch} cell {h|as} a {th|in} outer {la|yer} that {ke|eps} its {con|tents} together {a|nd} lets {cer|tain} materials {pa|ss} through. {In|side}, a soft fluid supports smaller parts that handle jobs like making energy and repairing damage. When many cells of the same kind work together, they form tissues such as muscle or skin. Learning how cells function helps scientists understand growth, health, and disease.",
+      "source_pages": [
+        4,
+        17
+      ]
+    },
+    {
+      "id": "R-CTW2",
+      "title": "Questions 11–20 · Fill in the missing letters in the paragraph.",
+      "text": "Bridges allow people and vehicles to cross rivers, valleys, or busy roads safely. To {st|ay} strong, {th|ey} must {sp|read} the {we|ight} they {ca|rry} across {th|eir} supports. {Bui|lders} often {ch|oose} materials {su|ch} as {st|eel} or concrete because these can stretch slightly under pressure instead of breaking. Over time, weather and traffic slowly wear a bridge down, so inspections and repairs are essential. Without proper care, even the best design can fail when weight or age takes its toll.",
+      "source_pages": [
+        4,
+        17
+      ]
+    },
+    {
+      "id": "R-CTW3",
+      "title": "Module 2 · Questions 34–43 · Fill in the missing letters in the paragraph.",
+      "text": "The invention of the printing press changed how information spread across Europe. {Be|fore} this {mac|hine}, books {we|re} copied by {ha|nd}, which {to|ok} months. {Wi|th} movable {me|tal} letters, {pri|nters} could {ma|ke} many {co|pies} quickly and at lower cost. As more people learned to read, ideas about science and government reached wider audiences. This new access to knowledge encouraged discussion and discovery, marking one of the most important turning points in human progress.",
+      "source_pages": [
+        11,
+        19
+      ]
+    }
+  ],
+  "multiple_choice_questions": [
+    {
+      "id": "R-Q21",
+      "passage": {
+        "title": "Module 1 · Read an email",
+        "text": "Subject: Tour Confirmation\n\nDear Mr. Lee,\n\nYour group tour of the City History Museum is confirmed for March 5 at 10:30 a.m. Please arrive by 10:15 for check-in. Note that photography is not allowed during guided tours. We appreciate your cooperation.\n\nBest regards,\nPriya Singh"
+      },
+      "question": "21. What should Mr. Lee do before the tour begins?",
+      "choices": [
+        "Join a different group tour",
+        "Take photos of the exhibits",
+        "Buy tickets at the entrance",
+        "Arrive 15 minutes early"
+      ],
+      "answer": "Arrive 15 minutes early",
+      "explanation": "D is correct because the email states, “Please arrive by 10:15 for check-in,” and the tour begins at 10:30. Therefore, Mr. Lee should arrive 15 minutes early. A is incorrect because there is no mention of joining a different group tour. B is incorrect because the email explicitly says that “photography is not allowed during guided tours.” C is incorrect because the reservation is already confirmed, so he does not need to buy tickets at the entrance.",
+      "source_pages": [
+        5,
+        17
+      ]
+    },
+    {
+      "id": "R-Q22",
+      "question": "22. What can be inferred about the museum?",
+      "choices": [
+        "It requires all visitors to wear name tags.",
+        "It limits visitors’ use of cameras.",
+        "It allows private tours at any time.",
+        "It accepts payments in cash or credit."
+      ],
+      "answer": "It limits visitors’ use of cameras.",
+      "explanation": "B is correct because the statement “photography is not allowed during guided tours” implies that the museum limits visitors’ use of cameras. A is incorrect because the use of name tags is never mentioned. C is incorrect because there is no reference to private tours being available at any time. D is incorrect because there is no information about payment methods, such as cash.",
+      "source_pages": [
+        5,
+        17
+      ]
+    },
+    {
+      "id": "R-Q23",
+      "passage": {
+        "title": "Module 1 · Read a text chain",
+        "text": "Olga Antonov (9:00 A.M.) Morning team. The shipment of EcoBlend mugs was delayed due to the storm. We need to update our customers right away.\n\nLuis Fernandez (9:03 A.M.) I’ll email all wholesale clients explaining the new delivery date. Do we know when the shipment will arrive?\n\nOlga Antonov (9:05 A.M.) The supplier expects delivery on Thursday instead of Tuesday.\n\nYasmin Hasan (9:08 A.M.) Should I also post an announcement on our website and social media pages?\n\nOlga Antonov (9:10 A.M.) Yes, please do. Keep the message positive—mention the weather issue but emphasize that orders will ship later this week.\n\nAhmed Khan (9:12 A.M.) Got it. I’ll adjust the inventory page so customers can’t place new mug orders until Thursday.\n\nOlga Antonov (9:14 A.M.) Thanks, everyone. Let’s avoid the kind of confusion we had during last month’s delay."
+      },
+      "question": "23. What is Olga’s main concern in these messages?",
+      "choices": [
+        "Losing contact with the supplier",
+        "Preventing customer confusion about late orders",
+        "Designing a new product that suppliers can deliver on time",
+        "Finding ways to email clients about social media pages"
+      ],
+      "answer": "Preventing customer confusion about late orders",
+      "explanation": "B is correct because Olga’s main concern is to prevent customer confusion about delayed orders. She tells the team to update customers and ends by saying, “Let’s avoid the kind of confusion we had during last month’s delay.” A is incorrect because there is no sign of communication problems with the supplier. C is incorrect because designing a new product is not discussed. D is incorrect because her focus is on informing customers, not on emailing clients about social media pages.",
+      "source_pages": [
+        6,
+        17
+      ]
+    },
+    {
+      "id": "R-Q24",
+      "question": "24. According to the messages, when will the shipment now arrive?",
+      "choices": [
+        "Monday",
+        "Tuesday",
+        "Thursday",
+        "Friday"
+      ],
+      "answer": "Thursday",
+      "explanation": "C is correct because Olga clearly states, “The supplier expects delivery on Thursday instead of Tuesday.” This confirms that Thursday is the new arrival date. A, B, and D are incorrect because Monday, Tuesday, and Friday are not supported by the passage.",
+      "source_pages": [
+        6,
+        17
+      ]
+    },
+    {
+      "id": "R-Q25",
+      "question": "25. Which of the following actions is NOT mentioned in the messages?",
+      "choices": [
+        "Contacting wholesale clients by email",
+        "Posting an update on social media",
+        "Adjusting the inventory page",
+        "Calling the supplier by phone"
+      ],
+      "answer": "Calling the supplier by phone",
+      "explanation": "D is correct because calling the supplier by phone is never mentioned in the messages. A, B, and C are all mentioned directly: Luis plans to email clients, Yasmin will post updates on social media, and Ahmed will adjust the inventory page.",
+      "source_pages": [
+        7,
+        18
+      ]
+    },
+    {
+      "id": "R-Q26",
+      "passage": {
+        "title": "Module 1 · Read an email",
+        "text": "Subject: Community Garden Plot Registration\n\nDear Valued Member,\n\nI hope you’re doing well. I wanted to let you know that registration for the Riverside Community Garden opens next Monday. As a returning participant, you’ll have early access to reserve your same plot before general registration begins on Wednesday.\n\nThis year, the garden committee is introducing a shared tool shed and composting area to make upkeep easier for everyone. There will also be a short orientation for new gardeners on Saturday morning, followed by a seed-exchange table where members can trade vegetables or flower seeds.\n\nIf you’d like to renew your plot, please confirm by replying to this email by Friday evening. Space is limited, and unconfirmed plots will be offered to people on the waiting list.\n\nBest regards,\nYuki Odani\nRiverside Garden Coordinator"
+      },
+      "question": "26. According to the email, what new feature will be available in the community garden this year?",
+      "choices": [
+        "A shared tool shed for members",
+        "A new registration area",
+        "Orientation meetings and weekly markets",
+        "A larger parking area for visitors"
+      ],
+      "answer": "A shared tool shed for members",
+      "explanation": "A is correct because the email explicitly mentions that “the garden committee is introducing a shared tool shed and composting area.” Therefore, a shared tool shed for members is a new feature. B is incorrect because there is no mention of a registration area. C is incorrect because weekly markets are never mentioned, and D is incorrect because the email does not refer to a parking area.",
+      "source_pages": [
+        8,
+        18
+      ]
+    },
+    {
+      "id": "R-Q27",
+      "question": "27. The new garden features do NOT include",
+      "choices": [
+        "A composting area",
+        "A shared tool shed",
+        "A weekly seed-exchange event",
+        "Orientation for new members"
+      ],
+      "answer": "A weekly seed-exchange event",
+      "explanation": "C is correct because the passage mentions “a short orientation for new gardeners … followed by a seed-exchange table,” but it does not say this event will occur weekly. Therefore, a weekly seed-exchange event is not included. A, B, and D are all true statements since a composting area, shared tool shed, and orientation are all mentioned as new features.",
+      "source_pages": [
+        8,
+        18
+      ]
+    },
+    {
+      "id": "R-Q28",
+      "question": "28. What can be inferred about the members?",
+      "choices": [
+        "They participated in the garden last year.",
+        "They have already paid the registration fee.",
+        "They are responsible for organizing the orientation.",
+        "They are members of the garden committee."
+      ],
+      "answer": "They participated in the garden last year.",
+      "explanation": "A is correct because the message refers to the reader as a “returning participant” and offers “early access to reserve your same plot,” which implies that members participated last year. B is incorrect because no payment information is given. C is incorrect because the orientation is clearly meant for new members, not organized by existing ones. D is incorrect because Yuki Odani identifies herself as the coordinator, not one of the committee members.",
+      "source_pages": [
+        8,
+        18
+      ]
+    },
+    {
+      "id": "R-Q29",
+      "passage": {
+        "title": "Module 1 · Read an academic passage",
+        "text": "The Chemistry of Volcanoes\n\nVolcanoes are often viewed simply as sources of lava and ash, but they are also powerful chemical systems that shape Earth’s atmosphere. When magma rises toward the surface, dissolved gases like water vapor, carbon dioxide, and sulfur dioxide escape, driving explosive eruptions. The balance among these gases largely determines how violent an eruption becomes.\n\nSulfur dioxide is of particular interest to scientists because it reacts with water vapor to form aerosols—tiny droplets that can reflect sunlight. After a major eruption, these aerosols may linger in the stratosphere for months or even years, slightly cooling Earth’s surface. For example, the 1991 eruption of Mount Pinatubo in the Philippines lowered global temperatures by about half a degree Celsius for more than a year.\n\nNot all eruptions have the same impact. Small but frequent events release gases gradually, whereas massive eruptions can inject enormous quantities into the upper atmosphere almost instantly. The height at which gases are released determines whether their influence remains local or becomes global.\n\nVolcanic gases also interact with life at ground level. While sulfur dioxide can harm lungs and vegetation, volcanic soils enriched with minerals eventually foster fertile landscapes. This dual effect—destructive and regenerative—illustrates how volcanoes contribute both hazards and long-term ecological benefits."
+      },
+      "question": "29. The word “linger” in the passage is closest in meaning to",
+      "choices": [
+        "remain",
+        "disappear",
+        "expand",
+        "scatter"
+      ],
+      "answer": "remain",
+      "explanation": "A is correct because “linger” means to remain or stay in place for a long time. The passage says, “These aerosols may linger in the stratosphere for months or even years,” meaning they stay there. B is incorrect because “disappear” is the opposite meaning. C and D are incorrect because “expand” and “scatter” do not fit the context of staying in one location.",
+      "source_pages": [
+        9,
+        18
+      ]
+    },
+    {
+      "id": "R-Q30",
+      "question": "30. According to the passage, what determines the strength of a volcanic eruption?",
+      "choices": [
+        "The temperature of the surrounding air",
+        "The balance of gases within the magma",
+        "The mineral content of volcanic soil",
+        "The age of the volcano"
+      ],
+      "answer": "The balance of gases within the magma",
+      "explanation": "B is correct because the passage clearly states, “The balance among these gases largely determines how violent an eruption becomes.” Therefore, the balance of gases within the magma determines the strength of an eruption. A, C, and D are incorrect because the temperature of air, mineral content of soil, and the volcano’s age are not mentioned as influencing eruption strength.",
+      "source_pages": [
+        9,
+        18
+      ]
+    },
+    {
+      "id": "R-Q31",
+      "question": "31. Why does the author mention the 1991 eruption of Mount Pinatubo?",
+      "choices": [
+        "To describe how aerosols form in the lower atmosphere",
+        "To show that eruptions produce identical cooling effects",
+        "To argue that volcanic eruptions are becoming more frequent",
+        "To provide an example of an eruption that affected global climate"
+      ],
+      "answer": "To provide an example of an eruption that affected global climate",
+      "explanation": "D is correct because the author mentions the 1991 eruption of Mount Pinatubo to provide an example of a volcanic eruption that affected global climate. The passage says it “lowered global temperatures by about half a degree Celsius for more than a year.” A is incorrect because the formation of aerosols is explained earlier. B is incorrect because the author does not claim that all eruptions have the same cooling effect. C is incorrect because there is no claim that volcanic eruptions are increasing in frequency.",
+      "source_pages": [
+        9,
+        18
+      ]
+    },
+    {
+      "id": "R-Q32",
+      "question": "32. What can be inferred about volcanic gases released at higher altitudes?",
+      "choices": [
+        "They remain near the volcano’s crater.",
+        "They can influence climate over a wider area.",
+        "They lose their cooling effect more quickly.",
+        "They cause more damage to vegetation."
+      ],
+      "answer": "They can influence climate over a wider area.",
+      "explanation": "B is correct because the passage states, “The height at which gases are released determines whether their influence remains local or becomes global.” From this, we can infer that gases released at higher altitudes can influence climate over a wider area. A is incorrect because gases at higher altitudes do not remain near the crater. C is incorrect because the passage does not mention that their cooling effect disappears more quickly. D is incorrect because vegetation damage occurs at ground level, not high in the atmosphere.",
+      "source_pages": [
+        10,
+        19
+      ]
+    },
+    {
+      "id": "R-Q33",
+      "passage": {
+        "title": "Insert the sentence — four marked locations",
+        "text": "(A) Sulfur dioxide is of particular interest to scientists because it reacts with water vapor to form aerosols—tiny droplets that can reflect sunlight. (B) After a major eruption, these aerosols may linger in the stratosphere for months or even years, slightly cooling Earth’s surface. (C) For example, the 1991 eruption of Mount Pinatubo in the Philippines lowered global temperatures by about half a degree Celsius for more than a year. (D)"
+      },
+      "question": "33. Where would the following sentence best fit?  “The reaction these mixtures release into the atmosphere could have far-reaching effects.”",
+      "choices": [
+        "(A)",
+        "(B)",
+        "(C)",
+        "(D)"
+      ],
+      "answer": "(B)",
+      "explanation": "B is correct because the sentence fits best immediately after the sentence marked (A), where sulfur dioxide’s reaction with water vapor is introduced. This position allows the sentence to bridge the gap between the idea that droplets reflect sunlight and how the aerosols linger in the stratosphere. Placing it at (A) would be too early, and at (D) it would appear too late in the paragraph.",
+      "source_pages": [
+        10,
+        19
+      ]
+    },
+    {
+      "id": "R-Q44",
+      "passage": {
+        "title": "Module 2 · Read an academic passage",
+        "text": "The Origins of Cooking\n\nArchaeological discoveries suggest that early humans began using fire for cooking hundreds of thousands of years ago. Charred bones and plant remains found near ancient hearths reveal that cooking was not just accidental but deliberate. Transforming raw food with heat altered its texture and flavor, making it easier to chew and digest. These changes had far-reaching effects, both biological and social.\n\nCooking made more calories available from the same ingredients, which may have helped fuel the growth of the human brain. Meals prepared around a shared fire also encouraged cooperation and communication. Anthropologists argue that these gatherings became centers for storytelling and teaching, giving rise to more complex social relationships. In this sense, cooking may have been as much about community as nutrition.\n\nToday, the practice still connects people. Whether in family kitchens or public festivals, cooking expresses culture and identity. The origins of this activity remind us that a basic human need evolved into a defining social ritual, one that continues to shape how societies organize daily life and celebrate shared experiences."
+      },
+      "question": "44. What can be inferred about the social importance of cooking?",
+      "choices": [
+        "It led to the decline of group interaction around fires",
+        "It replaced hunting as the main form of cooperation",
+        "It discouraged the sharing of resources",
+        "It encouraged the development of spoken language"
+      ],
+      "answer": "It encouraged the development of spoken language",
+      "explanation": "D is correct because the passage states that cooking “encouraged cooperation and communication” and that gatherings around fires became centers for “storytelling and teaching.” These points suggest that cooking may have encouraged the development of spoken language. A is incorrect because the text says the opposite—cooking increased social interaction, not its decline. B is incorrect because hunting is never said to have been replaced by cooking. C is incorrect because cooking promoted sharing and cooperation, not the discouragement of sharing resources.",
+      "source_pages": [
+        12,
+        19
+      ]
+    },
+    {
+      "id": "R-Q45",
+      "question": "45. The word “deliberate” in the passage is closest in meaning to",
+      "choices": [
+        "surprising",
+        "rare",
+        "intentional",
+        "cautious"
+      ],
+      "answer": "intentional",
+      "explanation": "C is correct because “deliberate” means intentional or done on purpose. The passage notes that cooking “was not just accidental but deliberate,” directly contrasting deliberate with accidental. A, B, and D are incorrect because “surprising,” “rare,” and “cautious” do not fit the context of purposeful human action.",
+      "source_pages": [
+        12,
+        19
+      ]
+    },
+    {
+      "id": "R-Q46",
+      "question": "46. According to the passage, what benefit did cooking provide for early humans?",
+      "choices": [
+        "It reduced the need for hunting large animals",
+        "It increased the amount of energy gained from food",
+        "It allowed humans to be more biologically efficient",
+        "It protected food from contamination through ash and smoke"
+      ],
+      "answer": "It increased the amount of energy gained from food",
+      "explanation": "B is correct because the passage explains that cooking “made more calories available from the same ingredients,” meaning it increased the amount of energy gained from food. A is incorrect because the passage does not suggest that cooking reduced the need for hunting. C is incorrect because there is no mention of making humans biologically efficient. D is incorrect because the text does not discuss food protection from ash or smoke.",
+      "source_pages": [
+        12,
+        20
+      ]
+    },
+    {
+      "id": "R-Q47",
+      "question": "47. What is the relationship between paragraphs 2 and 3?",
+      "choices": [
+        "Paragraph 3 connects the historical role of cooking to its modern cultural meaning",
+        "Paragraph 3 introduces new archaeological evidence supporting earlier claims",
+        "Paragraph 3 challenges the scientific explanation of brain growth",
+        "Paragraph 3 provides a counterexample to the social theory in paragraph 2"
+      ],
+      "answer": "Paragraph 3 connects the historical role of cooking to its modern cultural meaning",
+      "explanation": "A is correct because paragraph 2 explains the early biological and social effects of cooking, while paragraph 3 moves forward in time to describe how cooking continues to connect people and express culture today. Thus, paragraph 3 connects the historical role of cooking to its modern cultural meaning. B is incorrect because paragraph 3 does not introduce new archaeological evidence. C is incorrect because it does not challenge the earlier explanation of brain growth. D is incorrect because paragraph 3 expands on the social importance of cooking rather than providing a counterexample.",
+      "source_pages": [
+        13,
+        20
+      ]
+    },
+    {
+      "id": "R-Q48",
+      "question": "48. All of the following are mentioned in the passage as results of cooking EXCEPT",
+      "choices": [
+        "The strengthening of community bonds",
+        "The emergence of teaching and storytelling",
+        "The decline of cooperation among groups",
+        "The expansion of human caloric intake"
+      ],
+      "answer": "The decline of cooperation among groups",
+      "explanation": "C is correct because the decline of cooperation among groups is never mentioned; instead, the passage emphasizes increased cooperation and communication. A, B, and D are all mentioned: the strengthening of community bonds (“encouraged cooperation and communication”), the emergence of teaching and storytelling (“centers for storytelling and teaching”), and the expansion of human caloric intake (“made more calories available from the same ingredients”).",
+      "source_pages": [
+        13,
+        20
+      ]
+    }
+  ],
+  "score_conversion": [
+    {
+      "raw_points": "47–48",
+      "score": "6",
+      "old_scale": "29–30",
+      "source_pages": [
+        16
+      ]
+    },
+    {
+      "raw_points": "43–46",
+      "score": "5.5",
+      "old_scale": "27–28",
+      "source_pages": [
+        16
+      ]
+    },
+    {
+      "raw_points": "39–42",
+      "score": "5",
+      "old_scale": "24–26",
+      "source_pages": [
+        16
+      ]
+    },
+    {
+      "raw_points": "35–38",
+      "score": "4.5",
+      "old_scale": "22–23",
+      "source_pages": [
+        16
+      ]
+    },
+    {
+      "raw_points": "29–34",
+      "score": "4",
+      "old_scale": "18–21",
+      "source_pages": [
+        16
+      ]
+    },
+    {
+      "raw_points": "19–28",
+      "score": "3.5",
+      "old_scale": "12–17",
+      "source_pages": [
+        16
+      ]
+    },
+    {
+      "raw_points": "10–18",
+      "score": "3",
+      "old_scale": "6–11",
+      "source_pages": [
+        16
+      ]
+    },
+    {
+      "raw_points": "6–9",
+      "score": "2.5",
+      "old_scale": "4–5",
+      "source_pages": [
+        16
+      ]
+    },
+    {
+      "raw_points": "4–5",
+      "score": "2",
+      "old_scale": "3",
+      "source_pages": [
+        16
+      ]
+    },
+    {
+      "raw_points": "3",
+      "score": "1.5",
+      "old_scale": "2",
+      "source_pages": [
+        16
+      ]
+    },
+    {
+      "raw_points": "0–2",
+      "score": "1",
+      "old_scale": "0–1",
+      "source_pages": [
+        16
+      ]
+    }
+  ]
+}

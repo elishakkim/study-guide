@@ -61,6 +61,8 @@ const STUDY_SECTIONS = new Set([
   "multiple_choice_questions",
   "true_false",
   "fill_in_the_blank",
+  "complete_the_words",
+  "build_a_sentence",
   "ordering_exercises",
   "mix_and_match",
   "scenario_questions",
@@ -115,7 +117,10 @@ function humanize(key) {
 }
 
 function normalizeAnswer(s) {
-  return String(s).trim().toLowerCase().replace(/[.\s]+$/, "").replace(/\s+/g, " ");
+  return String(s).trim().toLowerCase()
+    .replace(/[‘’]/g, "'")
+    .replace(/[.?!\s]+$/, "")
+    .replace(/\s+/g, " ");
 }
 
 function shuffle(arr) {
@@ -182,7 +187,9 @@ async function loadFiles(fileList) {
   state.chapters = chapters;
   const saved = readJSON(LOCATION_KEY);
   const startCh =
-    (saved && chapters.find((c) => c.filename === saved.chapter)) || chapters[0];
+    chapterFromHash() ||
+    (saved && chapters.find((c) => c.filename === saved.chapter)) ||
+    chapters[0];
   state.activeSeries = startCh.series;
   state.activeChapterId = startCh.id;
   showStudyUI();
@@ -240,14 +247,37 @@ function showOpenPage() {
   $("#landing").hidden = false;
   $("#back-to-study-btn").hidden = state.chapters.length === 0;
 }
+/* Each chapter has a shareable URL: #/<book-slug>/<chapter-number> (or the filename when unnumbered). */
+function slugify(s) {
+  return String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+function chapterHash(ch) {
+  const tail = ch.number != null ? ch.number : ch.filename.replace(/\.json$/i, "");
+  return `#/${slugify(ch.series)}/${encodeURIComponent(tail)}`;
+}
+function chapterFromHash() {
+  if (!location.hash.startsWith("#/")) return null;
+  return state.chapters.find((c) => chapterHash(c) === location.hash) || null;
+}
+
 function applyRoute() {
   const wantsOpen = location.hash === "#open";
-  if (wantsOpen || state.chapters.length === 0) showOpenPage();
-  else showStudyUI();
+  if (wantsOpen || state.chapters.length === 0) { showOpenPage(); return; }
+  showStudyUI();
+  const ch = chapterFromHash();
+  if (ch && ch.id !== state.activeChapterId) renderChapter(ch.id);
+  else if (!ch && state.activeChapterId) syncHash(currentChapter(), true);
+}
+function syncHash(ch, replace = false) {
+  if (!ch || location.hash === "#open" || location.hash === chapterHash(ch)) return;
+  try {
+    history[replace ? "replaceState" : "pushState"](null, "", chapterHash(ch));
+  } catch (_) { /* some browsers block history edits on file:// */ }
 }
 function goToOpenPage() { location.hash = "open"; }
 function goToStudy() {
-  if (location.hash === "#open") location.hash = "";
+  const ch = currentChapter();
+  if (location.hash === "#open") location.hash = ch ? chapterHash(ch) : "";
   else applyRoute();
 }
 
@@ -368,7 +398,9 @@ function renderChapter(id) {
   closeSectionNav();
   applyModeFilter();
   $(".content").scrollTop = 0;
+  document.title = `${$("#chapter-title").textContent} — Study Guide`;
   saveLocation();
+  syncHash(ch, !location.hash.startsWith("#/"));
 }
 
 /* Build one section card. Returns the card element. */
@@ -527,6 +559,8 @@ const STUDY_RENDERERS = {
   multiple_choice_questions: renderMCQ,
   true_false: renderTrueFalse,
   fill_in_the_blank: renderFillBlank,
+  complete_the_words: renderCompleteWords,
+  build_a_sentence: renderBuildSentence,
   ordering_exercises: renderOrdering,
   mix_and_match: renderMixMatch,
   scenario_questions: (v, root) => renderRevealList(v, root, {
@@ -778,7 +812,7 @@ function renderFillBlank(items, root, ctx = {}) {
   items.forEach((it, idx) => {
     const item = el("div", { class: "quiz-item" });
     item.append(el("div", { class: "quiz-q", text: it.prompt }));
-    const input = el("input", { class: "fib-input", type: "text", placeholder: "Type your answer…" });
+    const input = el("input", { class: "fib-input", type: "text", placeholder: "Type your answer…", ...NO_AUTOCORRECT });
     let answered = false;
     const key = itemKey(it, ctx.sectionKey || "fib", idx);
 
@@ -802,6 +836,164 @@ function renderFillBlank(items, root, ctx = {}) {
 
     const saved = store && store.quiz[key];
     if (saved) { input.value = saved.c; btn.disabled = true; grade(false); }
+  });
+}
+
+/* Keep iPad/iOS keyboards and Scribble from "fixing" partial words. */
+const NO_AUTOCORRECT = { autocapitalize: "off", autocorrect: "off", autocomplete: "off", spellcheck: "false" };
+
+/* ----- Complete the words (gaps inline in the paragraph) ----- */
+/* Item: { id, title, text } where each gap in text is written {shown|missing}.
+   Inputs sit inside the paragraph; filling a gap moves focus to the next one. */
+function renderCompleteWords(items, root, ctx = {}) {
+  const store = ctx.chapterKey ? chapterProgress(ctx.chapterKey) : null;
+  items.forEach((it, idx) => {
+    const key = itemKey(it, ctx.sectionKey || "ctw", idx);
+    const item = el("div", { class: "quiz-item" });
+    root.append(item);
+
+    function build(saved) {
+      item.innerHTML = "";
+      if (it.title) item.append(el("div", { class: "quiz-q", text: it.title }));
+      const para = el("div", { class: "ctw-text" });
+      const gaps = [];
+      // split() with two capture groups yields [text, shown, missing, text, ...]
+      const parts = String(it.text || "").split(/\{([^|}]*)\|([^}]*)\}/);
+      for (let i = 0; i < parts.length; i += 3) {
+        if (parts[i]) para.append(parts[i]);
+        if (i + 2 >= parts.length) continue;
+        const shown = parts[i + 1], missing = parts[i + 2];
+        const input = el("input", {
+          class: "ctw-input", type: "text", "aria-label": `Complete “${shown}”`,
+          style: `--letters: ${missing.length}`, ...NO_AUTOCORRECT,
+        });
+        const word = el("span", { class: "ctw-word" }, [shown, input]);
+        gaps.push({ input, word, shown, missing });
+        para.append(word);
+      }
+      const next = (g) => { const n = gaps[gaps.indexOf(g) + 1]; if (n) n.input.focus(); };
+      for (const g of gaps) {
+        g.input.addEventListener("input", () => { if (g.input.value.trim().length >= g.missing.length) next(g); });
+        g.input.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); next(g); } });
+      }
+
+      const pill = el("span", { class: "score-pill", hidden: true });
+      const checkBtn = el("button", { class: "btn btn-primary", text: "Check answers" });
+      const retryBtn = el("button", { class: "reveal-btn", text: "↺ Try again", hidden: true,
+        onClick: () => { if (store) { delete store.quiz[key]; saveProgress(); } build(null); } });
+
+      const grade = (persist) => {
+        let right = 0;
+        for (const g of gaps) {
+          const v = normalizeAnswer(g.input.value);
+          const ok = v === g.missing.toLowerCase() || v === (g.shown + g.missing).toLowerCase();
+          if (ok) right++;
+          g.input.disabled = true;
+          g.input.classList.add(ok ? "correct" : "incorrect");
+          if (!ok) g.word.append(el("span", { class: "ctw-fix", text: g.shown + g.missing }));
+        }
+        pill.textContent = `${right} / ${gaps.length} correct`;
+        pill.hidden = false;
+        checkBtn.hidden = true;
+        retryBtn.hidden = false;
+        if (persist && store) {
+          store.quiz[key] = { c: gaps.map((g) => g.input.value), ok: right };
+          saveProgress();
+        }
+      };
+      checkBtn.addEventListener("click", () => grade(true));
+
+      item.append(para, el("div", { class: "action-row" }, [checkBtn, retryBtn, pill]));
+      if (it.source_pages) item.append(el("div", { style: "margin-top:10px;" }, [renderPages(it.source_pages)]));
+      if (saved) {
+        gaps.forEach((g, i) => (g.input.value = saved.c[i] || ""));
+        grade(false);
+      }
+    }
+    build(store && store.quiz[key]);
+  });
+}
+
+/* ----- Build a sentence (tap word tiles into the blanks) ----- */
+/* Item: { id, context, template, words, answer, sentence } — template marks blanks with ___,
+   answer lists the word for each blank in order; leftover words are distractors. */
+function renderBuildSentence(items, root, ctx = {}) {
+  const store = ctx.chapterKey ? chapterProgress(ctx.chapterKey) : null;
+  const score = makeScore();
+  root.append(score.pill);
+  items.forEach((it, idx) => {
+    const key = itemKey(it, ctx.sectionKey || "bs", idx);
+    const item = el("div", { class: "quiz-item" });
+    root.append(item);
+
+    function build(saved) {
+      item.innerHTML = "";
+      const blanks = (it.template.match(/___/g) || []).length;
+      const filled = saved ? saved.c.slice() : new Array(blanks).fill(null); // indexes into it.words
+      let checked = !!saved;
+      const same = (a, b) => normalizeAnswer(a) === normalizeAnswer(b);
+
+      const sentence = el("div", { class: "bs-sentence" });
+      const bank = el("div", { class: "bs-bank" });
+      const checkBtn = el("button", { class: "btn btn-primary", text: "Check" });
+      const retryBtn = el("button", { class: "reveal-btn", text: "↺ Try again",
+        onClick: () => { if (store) { delete store.quiz[key]; saveProgress(); } build(null); } });
+      const exp = el("div", { class: "explanation" });
+
+      function paint() {
+        sentence.innerHTML = "";
+        let b = 0;
+        for (const part of it.template.split(/(___)/)) {
+          if (part === "___") {
+            const slot = b++;
+            const w = filled[slot];
+            const btn = el("button", {
+              class: "bs-slot" + (w == null ? " empty" : ""),
+              text: w == null ? "" : it.words[w],
+              disabled: checked || w == null,
+              onClick: () => { filled[slot] = null; paint(); },
+            });
+            if (checked) btn.classList.add(w != null && same(it.words[w], it.answer[slot]) ? "correct" : "incorrect");
+            sentence.append(btn);
+          } else if (part.trim()) {
+            sentence.append(el("span", { class: "bs-fixed" + (/^[.?!]$/.test(part.trim()) ? " punct" : ""), text: part.trim() }));
+          }
+        }
+        bank.innerHTML = "";
+        it.words.forEach((w, i) => {
+          bank.append(el("button", {
+            class: "bs-chip", text: w, disabled: checked || filled.includes(i),
+            onClick: () => { const s = filled.indexOf(null); if (s >= 0) { filled[s] = i; paint(); } },
+          }));
+        });
+        checkBtn.hidden = checked;
+        checkBtn.disabled = filled.includes(null);
+        retryBtn.hidden = !checked;
+        bank.hidden = checked;
+        exp.hidden = !checked;
+      }
+
+      checkBtn.addEventListener("click", () => {
+        checked = true;
+        const ok = filled.every((w, slot) => w != null && same(it.words[w], it.answer[slot]));
+        score.record(ok);
+        setExplanation(ok);
+        if (store) { store.quiz[key] = { c: filled.slice(), ok }; saveProgress(); }
+        paint();
+      });
+      function setExplanation(ok) {
+        exp.innerHTML = "";
+        exp.append(el("span", { class: "exp-label", text: ok ? "Correct" : "Answer" }), el("div", { text: it.sentence }));
+        if (it.source_pages) exp.append(el("div", { style: "margin-top:8px;" }, [renderPages(it.source_pages)]));
+      }
+
+      item.append(stimulusBlock(it));
+      if (it.context) item.append(el("div", { class: "bs-context", text: it.context }));
+      item.append(sentence, bank, el("div", { class: "action-row" }, [checkBtn, retryBtn]), exp);
+      if (saved) { score.record(saved.ok); setExplanation(saved.ok); }
+      paint();
+    }
+    build(store && store.quiz[key]);
   });
 }
 
@@ -922,6 +1114,7 @@ function renderRevealList(items, root, cfg) {
       el("span", { class: "exp-label", text: cfg.aLabel || "Answer" }),
       ansBody,
     ]);
+    if (it.answer_audio) exp.append(audioPlayer(it.answer_audio));
     if (it.source_pages) exp.append(el("div", { style: "margin-top:8px;" }, [renderPages(it.source_pages)]));
 
     const btn = el("button", { class: "reveal-btn", text: "Show answer",
@@ -935,8 +1128,39 @@ function renderRevealList(items, root, cfg) {
 }
 
 /* ----- Small shared builders ----- */
+/* Shared stimulus shown above a question: a reading passage (it.passage, usually only on
+   the first question of a group) and/or an audio clip (it.audio or it.passage.audio).
+   A passage transcript stays hidden until revealed. */
+function stimulusBlock(it) {
+  const frag = document.createDocumentFragment();
+  const p = it.passage;
+  if (p) {
+    const box = el("div", { class: "passage" });
+    if (p.title) box.append(el("div", { class: "passage-title", text: p.title }));
+    if (p.audio) box.append(audioPlayer(p.audio));
+    if (p.text) box.append(el("div", { class: "passage-text", text: p.text }));
+    if (p.transcript) {
+      const tx = el("div", { class: "passage-text passage-transcript", hidden: true, text: p.transcript });
+      const btn = el("button", { class: "reveal-btn", text: "Show transcript",
+        onClick: () => {
+          tx.hidden = !tx.hidden;
+          btn.textContent = tx.hidden ? "Show transcript" : "Hide transcript";
+        } });
+      box.append(btn, tx);
+    }
+    frag.append(box);
+  }
+  if (it.audio) frag.append(audioPlayer(it.audio));
+  return frag;
+}
+
+function audioPlayer(src) {
+  return el("audio", { class: "audio-player", controls: true, preload: "none", src });
+}
+
 function quizHeader(it, questionText) {
   const frag = document.createDocumentFragment();
+  frag.append(stimulusBlock(it));
   if (it.difficulty) {
     frag.append(el("div", { class: "quiz-meta" }, [
       el("span", { class: "difficulty " + it.difficulty, text: it.difficulty }),
@@ -1061,7 +1285,12 @@ function bookForChapter(ch) {
 function openBook(book, pageNum) {
   const src = `${book.path}#page=${pageNum}`;
   $("#pdf-title").textContent = `${book.name} — p. ${pageNum}`;
-  $("#pdf-frame").setAttribute("src", src);
+  // Built-in PDF viewers ignore a #page change on an already-open document,
+  // so swap in a fresh frame; the browser serves the PDF from cache.
+  const oldFrame = $("#pdf-frame");
+  const frame = oldFrame.cloneNode(false);
+  frame.setAttribute("src", src);
+  oldFrame.replaceWith(frame);
   $("#pdf-open-tab").setAttribute("href", src);
   withScrollAnchor(() => {
     $("#pdf-panel").hidden = false;
