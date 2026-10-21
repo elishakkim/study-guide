@@ -1,0 +1,292 @@
+{
+  "chapter": {
+    "number": 4,
+    "title": "Writing Section",
+    "book": "TOEFL ETS Practice Test 2",
+    "source": "ETS — TOEFL iBT® Practice Test 2 (aligned with tests from January 21, 2026)",
+    "pdf": "TOEFL ETS Practice Test 2.pdf",
+    "pdf_pages": {
+      "start": 28,
+      "end": 33
+    }
+  },
+  "summary": "Writing section of the official ETS Practice Test 2: 10 Build a Sentence questions, a Write an Email task (7 minutes) and a Write for an Academic Discussion task (10 minutes). Build a Sentence answers come from the ETS answer key (PDF p. 33); the key has no sample responses for the email or discussion.",
+  "build_a_sentence": [
+    {
+      "id": "W-BS1",
+      "passage": {
+        "title": "Build a Sentence",
+        "text": "Tap words to fill the blanks in order; tap a placed word to send it back."
+      },
+      "context": "1. “I need to buy a new laptop.”",
+      "template": "___ ___ ___ ___ ___ ?",
+      "words": [
+        "has",
+        "the best",
+        "which",
+        "store",
+        "deals"
+      ],
+      "answer": [
+        "which",
+        "store",
+        "has",
+        "the best",
+        "deals"
+      ],
+      "sentence": "Which store has the best deals?",
+      "source_pages": [
+        29,
+        33
+      ]
+    },
+    {
+      "id": "W-BS2",
+      "context": "2. “I'm thinking about starting a blog.”",
+      "template": "___ ___ ___ ___ ___ yet?",
+      "words": [
+        "decided",
+        "you",
+        "a topic",
+        "have",
+        "on"
+      ],
+      "answer": [
+        "have",
+        "you",
+        "decided",
+        "on",
+        "a topic"
+      ],
+      "sentence": "Have you decided on a topic yet?",
+      "source_pages": [
+        29,
+        33
+      ]
+    },
+    {
+      "id": "W-BS3",
+      "context": "3. “I'm going to study at the library this afternoon.”",
+      "template": "___ ___ ___ ___ ___ ___ ?",
+      "words": [
+        "to",
+        "do",
+        "borrow",
+        "any books",
+        "you",
+        "need"
+      ],
+      "answer": [
+        "do",
+        "you",
+        "need",
+        "to",
+        "borrow",
+        "any books"
+      ],
+      "sentence": "Do you need to borrow any books?",
+      "source_pages": [
+        29,
+        33
+      ]
+    },
+    {
+      "id": "W-BS4",
+      "context": "4. “I'm thinking about getting a pet.”",
+      "template": "___ ___ ___ ___ ___ ___ ___ ?",
+      "words": [
+        "are",
+        "you",
+        "considering",
+        "kind",
+        "of",
+        "what",
+        "animal"
+      ],
+      "answer": [
+        "what",
+        "kind",
+        "of",
+        "animal",
+        "are",
+        "you",
+        "considering"
+      ],
+      "sentence": "What kind of animal are you considering?",
+      "source_pages": [
+        29,
+        33
+      ]
+    },
+    {
+      "id": "W-BS5",
+      "context": "5. “I'm excited to see the new science fiction movie tonight.”",
+      "template": "___ ___ ___ ___ ?",
+      "words": [
+        "it",
+        "showing",
+        "is",
+        "where"
+      ],
+      "answer": [
+        "where",
+        "is",
+        "it",
+        "showing"
+      ],
+      "sentence": "Where is it showing?",
+      "source_pages": [
+        29,
+        33
+      ]
+    },
+    {
+      "id": "W-BS6",
+      "context": "6. “I have an interview for a new job next week.”",
+      "template": "___ ___ ___ ___ ___ ___ ?",
+      "words": [
+        "ready",
+        "resume",
+        "have",
+        "you",
+        "do",
+        "your"
+      ],
+      "answer": [
+        "do",
+        "you",
+        "have",
+        "your",
+        "resume",
+        "ready"
+      ],
+      "sentence": "Do you have your resume ready?",
+      "source_pages": [
+        30,
+        33
+      ]
+    },
+    {
+      "id": "W-BS7",
+      "context": "7. “I need to submit my assignment by tomorrow.”",
+      "template": "___ ___ ___ ___ ___ ?",
+      "words": [
+        "writing",
+        "finished",
+        "you",
+        "it",
+        "have"
+      ],
+      "answer": [
+        "have",
+        "you",
+        "finished",
+        "writing",
+        "it"
+      ],
+      "sentence": "Have you finished writing it?",
+      "source_pages": [
+        30,
+        33
+      ]
+    },
+    {
+      "id": "W-BS8",
+      "context": "8. “I'm planning a trip to Europe this summer.”",
+      "template": "___ ___ book your ___ ___ ?",
+      "words": [
+        "did",
+        "flight",
+        "you",
+        "yet"
+      ],
+      "answer": [
+        "did",
+        "you",
+        "flight",
+        "yet"
+      ],
+      "sentence": "Did you book your flight yet?",
+      "source_pages": [
+        30,
+        33
+      ]
+    },
+    {
+      "id": "W-BS9",
+      "context": "9. “I just started learning French.”",
+      "template": "___ ___ ___ ___ ___ ?",
+      "words": [
+        "you",
+        "taking",
+        "are",
+        "where",
+        "classes"
+      ],
+      "answer": [
+        "where",
+        "are",
+        "you",
+        "taking",
+        "classes"
+      ],
+      "sentence": "Where are you taking classes?",
+      "source_pages": [
+        30,
+        33
+      ]
+    },
+    {
+      "id": "W-BS10",
+      "context": "10. “Why are you asking about the project deadline?”",
+      "template": "I’m ___ ___ ___ ___ ___ ___ .",
+      "words": [
+        "checking",
+        "to see",
+        "if",
+        "has been",
+        "extended",
+        "it"
+      ],
+      "answer": [
+        "checking",
+        "to see",
+        "if",
+        "it",
+        "has been",
+        "extended"
+      ],
+      "sentence": "I’m checking to see if it has been extended.",
+      "source_pages": [
+        30,
+        33
+      ]
+    }
+  ],
+  "short_answer_questions": [
+    {
+      "id": "W-EMAIL",
+      "passage": {
+        "title": "Write an Email (7 minutes)",
+        "text": "Your coworker, Kevin, recently recommended a new restaurant for your team to visit. You took the team there, but everyone was disappointed. The food was not as good as expected, and the service was slow. You need to inform Kevin about the situation and discuss future lunch options.\n\nWrite an email to Kevin. In your email, do the following.\n• Explain what was wrong with the restaurant.\n• Describe the team's reaction to the visit.\n• Suggest alternative lunch arrangements.\n\nWrite as much as you can and in complete sentences.\n\nTo: Kevin\nSubject: Team Lunch Experience"
+      },
+      "question": "Write your email, then check it against the task.",
+      "model_answer": "The ETS key has no sample response. Check that your email: (1) explains what was wrong with the restaurant (the food and the slow service), (2) describes how the team reacted, (3) suggests other lunch arrangements, and (4) stays polite to Kevin, with a greeting and sign-off.",
+      "source_pages": [
+        31
+      ]
+    },
+    {
+      "id": "W-DISCUSSION",
+      "passage": {
+        "title": "Write for an Academic Discussion (10 minutes, 100+ words)",
+        "text": "Your professor is teaching a class on psychology. Write a post responding to the professor’s question. Express and support your opinion, and make a contribution to the discussion in your own words. An effective response will contain at least 100 words.\n\nProfessor: Today we’ll discuss the effects of exercise on mental health. Clearly, regular physical activity can improve mood and reduce stress. On the other hand, some people believe that mental health is primarily influenced by other factors such as genetics and the environment. Which do you believe plays a larger role in mental health? Why?\n\nStudent 1: I think regular exercise has a significant positive impact on mental health. It can reduce stress, improve mood, and increase overall well-being by releasing endorphins and promoting a healthy lifestyle.\n\nStudent 2: I believe that while exercise is important, other factors like genetics and environment play a larger role in mental health. A supportive environment and good mental health practices are crucial for overall well-being."
+      },
+      "question": "Write your post, then check it against the task.",
+      "model_answer": "The ETS key has no sample response. Check that your post: (1) says whether exercise or other factors matter more for mental health, (2) supports it with a reason and an example, (3) adds an idea beyond what Student 1 and Student 2 said, and (4) is at least 100 words.",
+      "source_pages": [
+        32
+      ]
+    }
+  ]
+}

@@ -30,5 +30,13 @@
   "toefl_test_1_reading.json",
   "toefl_test_1_listening.json",
   "toefl_test_1_speaking.json",
-  "toefl_test_1_writing.json"
+  "toefl_test_1_writing.json",
+  "toefl_ets_test_1_reading.json",
+  "toefl_ets_test_1_listening.json",
+  "toefl_ets_test_1_speaking.json",
+  "toefl_ets_test_1_writing.json",
+  "toefl_ets_test_2_reading.json",
+  "toefl_ets_test_2_listening.json",
+  "toefl_ets_test_2_speaking.json",
+  "toefl_ets_test_2_writing.json"
 ]

@@ -2,8 +2,9 @@
   "chapter": {
     "number": 1,
     "title": "Reading Section",
-    "book": "TOEFL Practice Test 1",
+    "book": "TOEFL TST Prep Practice Test 1",
     "source": "TST Prep — Practice Test #1 for the TOEFL® Test (2026)",
+    "pdf": "TOEFL TST Prep Practice Test 1.pdf",
     "pdf_pages": {
       "start": 2,
       "end": 20

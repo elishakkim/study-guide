@@ -1,0 +1,380 @@
+{
+  "chapter": {
+    "number": 1,
+    "title": "Reading Section",
+    "book": "TOEFL ETS Practice Test 1",
+    "source": "ETS — TOEFL iBT® Practice Test 1 (aligned with tests from January 21, 2026)",
+    "pdf": "TOEFL ETS Practice Test 1.pdf",
+    "pdf_pages": {
+      "start": 2,
+      "end": 14
+    }
+  },
+  "summary": "Reading section of the official ETS Practice Test 1, in two modules of 20 questions. Each module: Complete the Words (Questions 1–10), Read in Daily Life (11–15) and Read an Academic Passage (16–20). Answers come from the ETS answer keys (PDF pp. 13–14), which list answers only, without explanations.",
+  "complete_the_words": [
+    {
+      "id": "M1-CTW",
+      "title": "Module 1 · Questions 1–10 · Fill in the missing letters in the paragraph.",
+      "text": "We know from drawings that have been preserved in caves for over 10,000 years that early humans performed dances as a group activity. We {mi|ght} think {th|at} prehistoric {peo|ple} concentrated {on|ly} on {ba|sic} survival. {How|ever}, it {i|s} clear {fr|om} the {rec|ord} that {dan|cing} was important to them. They recorded more drawings of dances than of any other group activity. Dances served various purposes, including ritualistic communication with the divine, storytelling, and social cohesion.",
+      "source_pages": [
+        4,
+        13
+      ]
+    },
+    {
+      "id": "M2-CTW",
+      "title": "Module 2 · Questions 1–10 · Fill in the missing letters in the paragraph.",
+      "text": "The human brain is a complex organ responsible for controlling all bodily functions and enabling thought, emotion, and memory. It {i|s} divided {in|to} several {reg|ions}, each {wi|th} specific {ro|les}. The cerebrum, {i|ts} largest {pa|rt}, is {invo|lved} in {cogn|itive} functions {su|ch} as reasoning, planning, and language. The cerebellum coordinates movement and balance, while the brainstem controls vital bodily functions like breathing and heart rate. Together, they enable the brain to perform its various tasks.",
+      "source_pages": [
+        9,
+        14
+      ]
+    }
+  ],
+  "multiple_choice_questions": [
+    {
+      "id": "M1-R11",
+      "passage": {
+        "title": "Module 1 · Read a notice",
+        "text": "Municipal Charter\n\nSign up for paperless billing statements today.\n\nSafe, convenient, easy. Enroll in paperless billing to receive monthly savings account statements in an electronic PDF document. Access your Municipal Charter account through the mobile app and select account preferences in the upper right-hand corner to enroll."
+      },
+      "question": "11. What type of business issued the notice?",
+      "choices": [
+        "An Internet provider",
+        "A computer company",
+        "A paper company",
+        "A bank"
+      ],
+      "answer": "A bank",
+      "explanation": "Answer key: (D) A bank",
+      "source_pages": [
+        4,
+        13
+      ]
+    },
+    {
+      "id": "M1-R12",
+      "question": "12. How can customers enroll in paperless billing?",
+      "choices": [
+        "By visiting a Municipal Charter office",
+        "By accessing the Municipal Charter website",
+        "By using the Municipal Charter app",
+        "By calling a Municipal Charter customer service representative"
+      ],
+      "answer": "By using the Municipal Charter app",
+      "explanation": "Answer key: (C) By using the Municipal Charter app",
+      "source_pages": [
+        4,
+        13
+      ]
+    },
+    {
+      "id": "M1-R13",
+      "passage": {
+        "title": "Module 1 · Read a social media post",
+        "text": "Sofia Baker\n\nEvery Saturday, our local farmer's market is the place to be! Fresh fruits, veggies, homemade goodies, and unique crafts await you. The Thompson family's organic produce is a must-try, known for its quality and cordial service. Their stall is always bustling with customers eager to buy fresh, pesticide-free vegetables from the welcoming staff.\n\nDon't miss the bakery stall—get there early for the best bread and pastries, including gluten-free and vegan options. The smell of freshly baked goods fills the air, and these treats sell out fast!\n\nIn addition to food, the market sells handmade crafts like jewelry, pottery, and textiles. These unique items make perfect gifts and support local artisans. Plus, enjoy live music while you shop. Talented local musicians help create a vibrant atmosphere, and the community spirit makes it a delightful experience for all. See you there!"
+      },
+      "question": "13. What is the main purpose of the post?",
+      "choices": [
+        "To explain the benefits of organic farming",
+        "To describe the variety of products available at the farmer’s market",
+        "To compare different farmer's markets in the area",
+        "To offer advice on starting a stall at the farmer's market"
+      ],
+      "answer": "To describe the variety of products available at the farmer’s market",
+      "explanation": "Answer key: (B) To describe the variety of products available at the farmer’s market",
+      "source_pages": [
+        5,
+        13
+      ]
+    },
+    {
+      "id": "M1-R14",
+      "question": "14. What reason is given for the popularity of the Thompson family's stall?",
+      "choices": [
+        "They offer cooking tips and recipes.",
+        "They offer the lowest prices at the market.",
+        "They provide friendly service and excellent products.",
+        "They have a beautiful and well-decorated stall."
+      ],
+      "answer": "They provide friendly service and excellent products.",
+      "explanation": "Answer key: (C) They provide friendly service and excellent products.",
+      "source_pages": [
+        5,
+        13
+      ]
+    },
+    {
+      "id": "M1-R15",
+      "question": "15. Why do customers go to the bakery stall early?",
+      "choices": [
+        "To get the free samples given in mornings",
+        "To get freshly baked bread and pastries before they are gone",
+        "To meet the famous baker",
+        "To take advantage of early morning discounts"
+      ],
+      "answer": "To get freshly baked bread and pastries before they are gone",
+      "explanation": "Answer key: (B) To get freshly baked bread and pastries before they are gone",
+      "source_pages": [
+        5,
+        13
+      ]
+    },
+    {
+      "id": "M1-R16",
+      "passage": {
+        "title": "Module 1 · Read an academic passage",
+        "text": "The Mirror Test\n\nVery young children cannot recognize themselves in a mirror; they usually achieve this milestone around 18 months of age. The ability to recognize oneself in the mirror is considered to be a key component of self-awareness and consciousness for humans. But what about animals?\n\nFor many years, scientists have known that members of the great ape family could recognize themselves in mirrors. They measured this by the “mirror test,” which involved putting a colored mark on an ape’s body, and then showing the ape its reflection in a mirror. If the ape tried to remove the mark on its own body, the scientists knew that the ape was recognizing its reflection.\n\nApes are close relatives of humans, but in recent years, scientists have discovered that other animals also pass the “mirror test.” Elephants and dolphins have shown signs of self-recognition. These, like apes, are highly intelligent animals. But in a more recent experiment, a type of fish called the cleaner fish tried to scrape a mark off its body when it saw itself in the mirror. This suggests that even less intelligent animals may possess more self-awareness than previously suspected."
+      },
+      "question": "16. What is the passage mainly about?",
+      "choices": [
+        "Stages of early childhood development",
+        "Research on animal cognition",
+        "Differences between apes, elephants, and dolphins",
+        "Recent experiments on fish"
+      ],
+      "answer": "Research on animal cognition",
+      "explanation": "Answer key: (B) Research on animal cognition",
+      "source_pages": [
+        6,
+        13
+      ]
+    },
+    {
+      "id": "M1-R17",
+      "question": "17. The word “milestone” in the first sentence is closest in meaning to",
+      "choices": [
+        "accomplishment",
+        "distance",
+        "weight",
+        "discovery"
+      ],
+      "answer": "accomplishment",
+      "explanation": "Answer key: (A) accomplishment",
+      "source_pages": [
+        6,
+        13
+      ]
+    },
+    {
+      "id": "M1-R18",
+      "question": "18. Why did scientists put colored marks on animals’ bodies?",
+      "choices": [
+        "It made it possible to track the animals’ movements.",
+        "It helped them determine whether the animals recognized themselves.",
+        "It made it easier to tell the animals apart.",
+        "It showed whether some animals can detect color differences."
+      ],
+      "answer": "It helped them determine whether the animals recognized themselves.",
+      "explanation": "Answer key: (B) It helped them determine whether the animals recognized themselves.",
+      "source_pages": [
+        6,
+        13
+      ]
+    },
+    {
+      "id": "M1-R19",
+      "question": "19. According to the passage, all of the following are true about elephants EXCEPT:",
+      "choices": [
+        "They can recognize themselves in mirrors.",
+        "They are highly intelligent animals.",
+        "They possess qualities in common with apes.",
+        "They understand certain signs from other animals."
+      ],
+      "answer": "They understand certain signs from other animals.",
+      "explanation": "Answer key: (D) They understand certain signs from other animals.",
+      "source_pages": [
+        6,
+        13
+      ]
+    },
+    {
+      "id": "M1-R20",
+      "question": "20. Why does the author mention cleaner fish?",
+      "choices": [
+        "To suggest that a wide range of animals may possess self-awareness",
+        "To imply that ocean animals are highly intelligent",
+        "To demonstrate a flaw in a recent experiment",
+        "To provide an example of an animal that does not recognize itself"
+      ],
+      "answer": "To suggest that a wide range of animals may possess self-awareness",
+      "explanation": "Answer key: (A) To suggest that a wide range of animals may possess self-awareness",
+      "source_pages": [
+        7,
+        13
+      ]
+    },
+    {
+      "id": "M2-R11",
+      "passage": {
+        "title": "Module 2 · Read an email",
+        "text": "To: edward56L@dmail.com\nFrom: artforeveryone@dmail.com\nDate: 10/09/2025\nSubject: Art Workshop Reservation Confirmation\n\nDear Ms. Edwards,\n\nThe reservation for the art workshop that you made on September 10th has been confirmed. The workshop will take place on September 20th at 3:00 PM. All necessary arts supplies will be provided, but please bring your own apron or smock.\n\nBest regards,\nLaura Bennett"
+      },
+      "question": "11. When is the date of the art workshop?",
+      "choices": [
+        "September 10th",
+        "September 12th",
+        "September 20th",
+        "September 30th"
+      ],
+      "answer": "September 20th",
+      "explanation": "Answer key: (C) September 20th",
+      "source_pages": [
+        9,
+        14
+      ]
+    },
+    {
+      "id": "M2-R12",
+      "question": "12. What should Ms. Edwards bring to the workshop?",
+      "choices": [
+        "A payment method",
+        "Extra paint",
+        "A protective garment",
+        "Proof of reservation"
+      ],
+      "answer": "A protective garment",
+      "explanation": "Answer key: (C) A protective garment",
+      "source_pages": [
+        9,
+        14
+      ]
+    },
+    {
+      "id": "M2-R13",
+      "passage": {
+        "title": "Module 2 · Read an email",
+        "text": "To: nguyenbooklover@dmail.com\nFrom: part.gymworkers@dmail.com\nSubject: You're Invited - Bring Friends & Family to Our Grand Opening!\n\nDear Ms. Nguyen,\n\nWe're excited to invite you—and your friends and family—to the grand opening of our new branch at 25 Orchid Street, happening next Monday. This event is a great opportunity to explore our state-of-the-art facility, featuring top-tier equipment, energizing group classes, and expert personal training.\n\nThis celebration, exclusively for our valued members and their guests, will include guided tours, live fitness demonstrations, and complimentary refreshments. It's the perfect chance to experience our community-focused approach to wellness and introduce others to a space designed for all fitness levels.\n\nBring your friends and family! We're offering a special one-day-only discount on memberships for all attendees.\n\nFor questions or to RSVP, contact our customer service team at 555-1234.\n\nWarm regards,\nJohn Parker"
+      },
+      "question": "13. What is the main purpose of the email?",
+      "choices": [
+        "To attract customers to a new fitness center",
+        "To provide Ms. Nguyen with an opportunity to provide expert personal training",
+        "To celebrate Ms. Nguyen's achievements in wellness",
+        "To announce a discount available to fitness-center members"
+      ],
+      "answer": "To attract customers to a new fitness center",
+      "explanation": "Answer key: (A) To attract customers to a new fitness center",
+      "source_pages": [
+        10,
+        14
+      ]
+    },
+    {
+      "id": "M2-R14",
+      "question": "14. What can be inferred about Ms. Nguyen's relationship with the fitness center?",
+      "choices": [
+        "She helps the fitness center to organize activities.",
+        "She has already explored the new facility.",
+        "She is a member at one of the fitness center's other locations.",
+        "She is new to using fitness centers and exercise equipment."
+      ],
+      "answer": "She is a member at one of the fitness center's other locations.",
+      "explanation": "Answer key: (C) She is a member at one of the fitness center's other locations.",
+      "source_pages": [
+        10,
+        14
+      ]
+    },
+    {
+      "id": "M2-R15",
+      "question": "15. The new fitness center is intended for use by which of the following groups of people?",
+      "choices": [
+        "Expert personal trainers",
+        "Top-tier athletes",
+        "Existing fitness-center members",
+        "Community members of all fitness levels"
+      ],
+      "answer": "Community members of all fitness levels",
+      "explanation": "Answer key: (D) Community members of all fitness levels",
+      "source_pages": [
+        10,
+        14
+      ]
+    },
+    {
+      "id": "M2-R16",
+      "passage": {
+        "title": "Module 2 · Read an academic passage",
+        "text": "The Paradox of Choice\n\nThe paradox of choice, a concept popularized by psychologist Barry Schwartz, suggests that more options can lead to less satisfaction. While the freedom to choose is fundamental to consumer culture, an overabundance of choices—from groceries to electronics—can overwhelm individuals, causing anxiety and decision fatigue. This paradox implies that the vast array of possibilities available today might actually diminish consumer contentment, as the fear of making the wrong choice looms large.\n\nResearch supports this notion. In an experiment, psychologist Sheena Iyengar found that shoppers were more likely to purchase jam when offered 6 varieties instead of 24. The limited selection eased the decision process, reducing the pressure to find the 'perfect' option and making the experience more enjoyable. This phenomenon reveals that fewer choices can sometimes make consumers happier, which is a valuable insight for marketers and retailers aiming to boost satisfaction by curating their offerings.\n\nThe paradox also has broader implications. In individualistic cultures, where personal choice is highly valued, the burden of decision-making can be significant. Conversely, collectivist cultures, which often provide fewer choices, report higher levels of contentment. This dynamic suggests that understanding cultural differences in consumer psychology can help businesses optimize their product strategies and enhance overall well-being."
+      },
+      "question": "16. Which of the following best states a main idea of the passage?",
+      "choices": [
+        "Effective marketing strategies focus on increasing product options.",
+        "Modern consumer culture is driven by a demand for fewer products.",
+        "Individualism enhances consumer contentment.",
+        "Limiting consumer choices can lead to higher satisfaction."
+      ],
+      "answer": "Limiting consumer choices can lead to higher satisfaction.",
+      "explanation": "Answer key: (D) Limiting consumer choices can lead to higher satisfaction.",
+      "source_pages": [
+        11,
+        14
+      ]
+    },
+    {
+      "id": "M2-R17",
+      "question": "17. What is one effect of decision fatigue as mentioned in the passage?",
+      "choices": [
+        "Desire to make the same choices as other consumers",
+        "Anxiety about making the wrong choice",
+        "Preference for consumer cultures",
+        "Enhanced freedom to choose"
+      ],
+      "answer": "Anxiety about making the wrong choice",
+      "explanation": "Answer key: (B) Anxiety about making the wrong choice",
+      "source_pages": [
+        11,
+        14
+      ]
+    },
+    {
+      "id": "M2-R18",
+      "question": "18. Why does the author mention Sheena Iyengar’s experiment?",
+      "choices": [
+        "To highlight the effectiveness of marketing strategies",
+        "To explain the methodology used in consumer psychology",
+        "To provide evidence supporting the paradox of choice",
+        "To criticize the abundance of products in modern markets"
+      ],
+      "answer": "To provide evidence supporting the paradox of choice",
+      "explanation": "Answer key: (C) To provide evidence supporting the paradox of choice",
+      "source_pages": [
+        11,
+        14
+      ]
+    },
+    {
+      "id": "M2-R19",
+      "question": "19. The word “curating” in the passage is closest in meaning to",
+      "choices": [
+        "eliminating",
+        "organizing",
+        "increasing",
+        "changing"
+      ],
+      "answer": "organizing",
+      "explanation": "Answer key: (B) organizing",
+      "source_pages": [
+        11,
+        14
+      ]
+    },
+    {
+      "id": "M2-R20",
+      "question": "20. What can be inferred about consumers in collectivist cultures?",
+      "choices": [
+        "They tend to report lower levels of satisfaction.",
+        "They are more affected by the paradox of choice.",
+        "They generally have fewer choices available.",
+        "They prefer individual decision-making."
+      ],
+      "answer": "They generally have fewer choices available.",
+      "explanation": "Answer key: (C) They generally have fewer choices available.",
+      "source_pages": [
+        12,
+        14
+      ]
+    }
+  ]
+}

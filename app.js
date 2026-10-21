@@ -1114,7 +1114,7 @@ function renderRevealList(items, root, cfg) {
       el("span", { class: "exp-label", text: cfg.aLabel || "Answer" }),
       ansBody,
     ]);
-    if (it.answer_audio) exp.append(audioPlayer(it.answer_audio));
+    if (it.answer_audio) exp.append(mediaPlayer(it.answer_audio));
     if (it.source_pages) exp.append(el("div", { style: "margin-top:8px;" }, [renderPages(it.source_pages)]));
 
     const btn = el("button", { class: "reveal-btn", text: "Show answer",
@@ -1129,7 +1129,7 @@ function renderRevealList(items, root, cfg) {
 
 /* ----- Small shared builders ----- */
 /* Shared stimulus shown above a question: a reading passage (it.passage, usually only on
-   the first question of a group) and/or an audio clip (it.audio or it.passage.audio).
+   the first question of a group) and/or an audio or video clip (it.audio or it.passage.audio).
    A passage transcript stays hidden until revealed. */
 function stimulusBlock(it) {
   const frag = document.createDocumentFragment();
@@ -1137,7 +1137,7 @@ function stimulusBlock(it) {
   if (p) {
     const box = el("div", { class: "passage" });
     if (p.title) box.append(el("div", { class: "passage-title", text: p.title }));
-    if (p.audio) box.append(audioPlayer(p.audio));
+    if (p.audio) box.append(mediaPlayer(p.audio));
     if (p.text) box.append(el("div", { class: "passage-text", text: p.text }));
     if (p.transcript) {
       const tx = el("div", { class: "passage-text passage-transcript", hidden: true, text: p.transcript });
@@ -1150,11 +1150,14 @@ function stimulusBlock(it) {
     }
     frag.append(box);
   }
-  if (it.audio) frag.append(audioPlayer(it.audio));
+  if (it.audio) frag.append(mediaPlayer(it.audio));
   return frag;
 }
 
-function audioPlayer(src) {
+function mediaPlayer(src) {
+  if (/\.(mp4|webm|mov)$/i.test(src)) {
+    return el("video", { class: "video-player", controls: true, playsinline: true, preload: "metadata", src });
+  }
   return el("audio", { class: "audio-player", controls: true, preload: "none", src });
 }
 
@@ -1273,6 +1276,10 @@ function words(s) {
 }
 function bookForChapter(ch) {
   if (!state.books.length) return null;
+  // A chapter can name its PDF exactly (chapter.pdf); otherwise match on words in the book name.
+  const pdf = (ch.data.chapter || {}).pdf;
+  const named = pdf && state.books.find((b) => b.name === pdf.replace(/\.pdf$/i, ""));
+  if (named) return named;
   const target = new Set(words(ch.series));
   let best = null, bestScore = 0;
   for (const b of state.books) {

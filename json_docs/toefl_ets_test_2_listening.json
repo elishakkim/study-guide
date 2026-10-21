@@ -1,0 +1,626 @@
+{
+  "chapter": {
+    "number": 2,
+    "title": "Listening Section",
+    "book": "TOEFL ETS Practice Test 2",
+    "source": "ETS — TOEFL iBT® Practice Test 2 (aligned with tests from January 21, 2026)",
+    "pdf": "TOEFL ETS Practice Test 2.pdf",
+    "pdf_pages": {
+      "start": 15,
+      "end": 27
+    }
+  },
+  "summary": "Listening section of the official ETS Practice Test 2, in two modules. Module 1: Choose a Response (1–8), two conversations (9–12), a club announcement (13–14) and a physics talk (15–18). Module 2: Choose a Response (1–8), a conversation (9–10), a campus radio announcement (11–12) and an environmental science talk (13–16). The audio is the ETS recordings; transcripts are hidden until you reveal them. Answers come from the ETS answer keys (PDF pp. 26–27).",
+  "multiple_choice_questions": [
+    {
+      "id": "M1-L1",
+      "audio": "audio/toefl-ets-test-2/listening/m1-q01-response.m4a",
+      "passage": {
+        "title": "Module 1 · Choose the best response",
+        "text": "Listen to each statement once, then pick the best reply. The statement is shown after you answer."
+      },
+      "question": "1. Listen, then choose the best response.",
+      "choices": [
+        "The lighter one is over there.",
+        "There's a switch on the back wall.",
+        "The side door is open.",
+        "I prefer to work at home."
+      ],
+      "answer": "There's a switch on the back wall.",
+      "explanation": "Man: “How can I get this light to work?” — Answer key: (B) There's a switch on the back wall.",
+      "source_pages": [
+        17,
+        26
+      ]
+    },
+    {
+      "id": "M1-L2",
+      "audio": "audio/toefl-ets-test-2/listening/m1-q02-response.m4a",
+      "question": "2. Listen, then choose the best response.",
+      "choices": [
+        "Let's try to get there early.",
+        "What's a better day for you?",
+        "It's not on my schedule either.",
+        "I was in a meeting last night."
+      ],
+      "answer": "What's a better day for you?",
+      "explanation": "Woman: “I'm not available tomorrow.” — Answer key: (B) What's a better day for you?",
+      "source_pages": [
+        17,
+        26
+      ]
+    },
+    {
+      "id": "M1-L3",
+      "audio": "audio/toefl-ets-test-2/listening/m1-q03-response.m4a",
+      "question": "3. Listen, then choose the best response.",
+      "choices": [
+        "I can hold that for you.",
+        "Stage lighting is usually very hot.",
+        "My roommate is a talented basketball player.",
+        "Do you know who the judges will be?"
+      ],
+      "answer": "Do you know who the judges will be?",
+      "explanation": "Man: “The campus talent contest will be held next Saturday evening.” — Answer key: (D) Do you know who the judges will be?",
+      "source_pages": [
+        17,
+        26
+      ]
+    },
+    {
+      "id": "M1-L4",
+      "audio": "audio/toefl-ets-test-2/listening/m1-q04-response.m4a",
+      "question": "4. Listen, then choose the best response.",
+      "choices": [
+        "Don't worry about it—I'll get him.",
+        "He said he prefers the window seat.",
+        "The station now has a snack shop.",
+        "There's road construction near the entrance."
+      ],
+      "answer": "Don't worry about it—I'll get him.",
+      "explanation": "Man: “What time do I need to pick up Michael from the train station?” — Answer key: (A) Don't worry about it—I'll get him.",
+      "source_pages": [
+        17,
+        26
+      ]
+    },
+    {
+      "id": "M1-L5",
+      "audio": "audio/toefl-ets-test-2/listening/m1-q05-response.m4a",
+      "question": "5. Listen, then choose the best response.",
+      "choices": [
+        "Yes, it is.",
+        "No, shopping takes time.",
+        "It's next to the store.",
+        "I'd rather not."
+      ],
+      "answer": "Yes, it is.",
+      "explanation": "Woman: “Isn't the grocery store open late tonight?” — Answer key: (A) Yes, it is.",
+      "source_pages": [
+        17,
+        26
+      ]
+    },
+    {
+      "id": "M1-L6",
+      "audio": "audio/toefl-ets-test-2/listening/m1-q06-response.m4a",
+      "question": "6. Listen, then choose the best response.",
+      "choices": [
+        "They are in the blue folder.",
+        "Who can identify them?",
+        "Both can be done.",
+        "Yes, I would."
+      ],
+      "answer": "They are in the blue folder.",
+      "explanation": "Woman: “Did you bring the identification documents?” — Answer key: (A) They are in the blue folder.",
+      "source_pages": [
+        17,
+        26
+      ]
+    },
+    {
+      "id": "M1-L7",
+      "audio": "audio/toefl-ets-test-2/listening/m1-q07-response.m4a",
+      "question": "7. Listen, then choose the best response.",
+      "choices": [
+        "No, it's tonight.",
+        "No, I can't wait.",
+        "Yes, I would.",
+        "Yes, that's fine."
+      ],
+      "answer": "No, it's tonight.",
+      "explanation": "Man: “Wait, isn't the concert tomorrow night?” — Answer key: (A) No, it's tonight.",
+      "source_pages": [
+        17,
+        26
+      ]
+    },
+    {
+      "id": "M1-L8",
+      "audio": "audio/toefl-ets-test-2/listening/m1-q08-response.m4a",
+      "question": "8. Listen, then choose the best response.",
+      "choices": [
+        "So am I.",
+        "It takes a while.",
+        "I didn't mean it.",
+        "Well, I understand."
+      ],
+      "answer": "Well, I understand.",
+      "explanation": "Woman: “I'm not available this afternoon.” — Answer key: (D) Well, I understand.",
+      "source_pages": [
+        18,
+        26
+      ]
+    },
+    {
+      "id": "M1-L9",
+      "passage": {
+        "title": "Module 1 · Listen to a conversation",
+        "audio": "audio/toefl-ets-test-2/listening/m1-q09-10-conversation.m4a",
+        "transcript": "Man: I think my laptop is acting up again. It keeps freezing and shutting down randomly.\nWoman: That’s frustrating. Have you tried restarting it or running a virus scan?\nMan: Yes, I did both, but it didn’t help. I might need to take it to a repair shop.\nWoman: That sounds like a good idea. They should be able to diagnose and fix the issue.\nMan: I’ll do that this afternoon.",
+        "text": "Listen first (once, as on test day), then answer. Reveal the transcript only when reviewing."
+      },
+      "question": "9. What problem is the man experiencing with his laptop?",
+      "choices": [
+        "It has a cracked screen.",
+        "It won’t turn on.",
+        "It keeps freezing and shutting down.",
+        "It is running slowly."
+      ],
+      "answer": "It keeps freezing and shutting down.",
+      "explanation": "Answer key: (C) It keeps freezing and shutting down.",
+      "source_pages": [
+        18,
+        26
+      ]
+    },
+    {
+      "id": "M1-L10",
+      "question": "10. What will the man most likely do next?",
+      "choices": [
+        "Buy a new laptop",
+        "Run another virus scan",
+        "Take his laptop to a repair shop",
+        "Restart his laptop"
+      ],
+      "answer": "Take his laptop to a repair shop",
+      "explanation": "Answer key: (C) Take his laptop to a repair shop",
+      "source_pages": [
+        18,
+        26
+      ]
+    },
+    {
+      "id": "M1-L11",
+      "passage": {
+        "title": "Module 1 · Listen to a conversation",
+        "audio": "audio/toefl-ets-test-2/listening/m1-q11-12-conversation.m4a",
+        "transcript": "Man: Are you going to the supermarket today by any chance?\nWoman: I was just there yesterday. Why?\nMan: I suddenly remembered that I’m supposed to bring some drinks to my team’s lunch meeting tomorrow at work, and I’m in the middle of a project I need to finish tonight.\nWoman: You’re in luck. I stocked up yesterday.",
+        "text": "Listen first (once, as on test day), then answer. Reveal the transcript only when reviewing."
+      },
+      "question": "11. What is the man’s problem?",
+      "choices": [
+        "He has nothing to eat for lunch.",
+        "He is unable to attend a meeting.",
+        "He forgot about an obligation at work.",
+        "He needs more resources to finish a project."
+      ],
+      "answer": "He forgot about an obligation at work.",
+      "explanation": "Answer key: (C) He forgot about an obligation at work.",
+      "source_pages": [
+        18,
+        26
+      ]
+    },
+    {
+      "id": "M1-L12",
+      "question": "12. What does the woman imply when she says, “I stocked up yesterday”?",
+      "choices": [
+        "She does not plan to go to work tomorrow.",
+        "She will provide the man with drinks for his meeting.",
+        "The supermarket has plenty of drinks available.",
+        "The man will not need extra time to finish his project."
+      ],
+      "answer": "She will provide the man with drinks for his meeting.",
+      "explanation": "Answer key: (B) She will provide the man with drinks for his meeting.",
+      "source_pages": [
+        18,
+        26
+      ]
+    },
+    {
+      "id": "M1-L13",
+      "passage": {
+        "title": "Module 1 · Listen to an announcement at a university club meeting",
+        "audio": "audio/toefl-ets-test-2/listening/m1-q13-14-announcement.m4a",
+        "transcript": "Announcer: Welcome to the creative writing club's monthly meeting! Before we get started, I wanted to remind you of the guidelines for our upcoming short-story contest. We’re looking for stories on the theme of family, and all stories must be submitted by the end of November to be considered. Good luck to everyone participating!",
+        "text": "Listen first (once, as on test day), then answer. Reveal the transcript only when reviewing."
+      },
+      "question": "13. Why does the speaker mention family?",
+      "choices": [
+        "It is the topic of the story they are reading.",
+        "It was discussed at last month’s meeting.",
+        "It is a contest theme.",
+        "Families are invited to the next meeting."
+      ],
+      "answer": "It is a contest theme.",
+      "explanation": "Answer key: (C) It is a contest theme.",
+      "source_pages": [
+        19,
+        26
+      ]
+    },
+    {
+      "id": "M1-L14",
+      "question": "14. What does the speaker encourage the participants to do?",
+      "choices": [
+        "Observe the guidelines",
+        "Read last month’s submissions",
+        "Prepare for a presentation",
+        "Join the club’s mailing list"
+      ],
+      "answer": "Observe the guidelines",
+      "explanation": "Answer key: (A) Observe the guidelines",
+      "source_pages": [
+        19,
+        26
+      ]
+    },
+    {
+      "id": "M1-L15",
+      "passage": {
+        "title": "Module 1 · Listen to a talk in a physics class",
+        "audio": "audio/toefl-ets-test-2/listening/m1-q15-18-talk.m4a",
+        "transcript": "Professor: Dark matter is a type of matter that doesn’t emit, absorb, or reflect light, making it invisible to current instruments. Despite being unobservable directly, it’s believed to make up about 27 percent of the universe’s mass-energy content. How do scientists know dark matter exists? Well, all the stars in a galaxy rotate around the center of their galaxy. According to basic physics, the farther a star is from the center of a galaxy, the slower it should rotate. However, observations show that stars in the outer regions of galaxies rotate at unexpectedly high speeds. This anomaly suggests that a massive, unseen matter is exerting gravitational force, keeping the stars moving faster than expected.\n\nDark matter is hugely important for the structure of the universe. Computer simulations show that galaxies wouldn't have formed the way they did if dark matter hadn't been around. But what does dark matter consist of? Well, there are different theories, so let's consider a couple of them.",
+        "text": "Listen first (once, as on test day), then answer. Reveal the transcript only when reviewing."
+      },
+      "question": "15. What is the main topic of the talk?",
+      "choices": [
+        "How gravity affects stars",
+        "Material in the universe that cannot be directly seen",
+        "The distribution of stars in galaxies",
+        "The formation of the universe"
+      ],
+      "answer": "Material in the universe that cannot be directly seen",
+      "explanation": "Answer key: (B) Material in the universe that cannot be directly seen",
+      "source_pages": [
+        19,
+        26
+      ]
+    },
+    {
+      "id": "M1-L16",
+      "question": "16. According to the speaker, how do scientists infer the existence of dark matter?",
+      "choices": [
+        "From the temperature of visible matter",
+        "From the amount of light in the universe",
+        "From the number of stars in galaxies",
+        "From the speed of stars' movement"
+      ],
+      "answer": "From the speed of stars' movement",
+      "explanation": "Answer key: (D) From the speed of stars' movement",
+      "source_pages": [
+        20,
+        26
+      ]
+    },
+    {
+      "id": "M1-L17",
+      "question": "17. Why does the speaker mention computer simulations?",
+      "choices": [
+        "To support the claim that dark matter plays an important role in the universe",
+        "To describe how the gravitational forces acting on stars were calculated",
+        "To highlight the anomalies in basic physics",
+        "To explain how the speeds of stars were measured"
+      ],
+      "answer": "To support the claim that dark matter plays an important role in the universe",
+      "explanation": "Answer key: (A) To support the claim that dark matter plays an important role in the universe",
+      "source_pages": [
+        20,
+        26
+      ]
+    },
+    {
+      "id": "M1-L18",
+      "question": "18. What will the speaker most likely discuss next?",
+      "choices": [
+        "Measurements of dark matter in galaxies",
+        "Ideas about dark matter’s composition",
+        "The anomalies in galaxy rotation caused by dark matter",
+        "The distribution of dark matter in the universe"
+      ],
+      "answer": "Ideas about dark matter’s composition",
+      "explanation": "Answer key: (B) Ideas about dark matter’s composition",
+      "source_pages": [
+        20,
+        26
+      ]
+    },
+    {
+      "id": "M2-L1",
+      "audio": "audio/toefl-ets-test-2/listening/m2-q01-response.m4a",
+      "passage": {
+        "title": "Module 2 · Choose the best response",
+        "text": "Listen to each statement once, then pick the best reply. The statement is shown after you answer."
+      },
+      "question": "1. Listen, then choose the best response.",
+      "choices": [
+        "I do.",
+        "I'm not sure.",
+        "A few unexpected delays.",
+        "It stays on track."
+      ],
+      "answer": "I'm not sure.",
+      "explanation": "Woman: “Who is responsible for the project timeline?” — Answer key: (B) I'm not sure.",
+      "source_pages": [
+        22,
+        27
+      ]
+    },
+    {
+      "id": "M2-L2",
+      "audio": "audio/toefl-ets-test-2/listening/m2-q02-response.m4a",
+      "question": "2. Listen, then choose the best response.",
+      "choices": [
+        "Two days ago.",
+        "Meeting attendees.",
+        "Actually, it was rescheduled.",
+        "How about another time?"
+      ],
+      "answer": "Actually, it was rescheduled.",
+      "explanation": "Woman: “Why did the team meeting get canceled?” — Answer key: (C) Actually, it was rescheduled.",
+      "source_pages": [
+        22,
+        27
+      ]
+    },
+    {
+      "id": "M2-L3",
+      "audio": "audio/toefl-ets-test-2/listening/m2-q03-response.m4a",
+      "question": "3. Listen, then choose the best response.",
+      "choices": [
+        "Let me know what you think.",
+        "You're very kind.",
+        "What exactly do you need help with?",
+        "It doesn't matter."
+      ],
+      "answer": "What exactly do you need help with?",
+      "explanation": "Man: “Can you assist me with my science report?” — Answer key: (C) What exactly do you need help with?",
+      "source_pages": [
+        22,
+        27
+      ]
+    },
+    {
+      "id": "M2-L4",
+      "audio": "audio/toefl-ets-test-2/listening/m2-q04-response.m4a",
+      "question": "4. Listen, then choose the best response.",
+      "choices": [
+        "That's unfortunate.",
+        "Sure, I can.",
+        "I think you have it.",
+        "No, it's planned."
+      ],
+      "answer": "That's unfortunate.",
+      "explanation": "Man: “I'm not sure about the current plan.” — Answer key: (A) That's unfortunate.",
+      "source_pages": [
+        22,
+        27
+      ]
+    },
+    {
+      "id": "M2-L5",
+      "audio": "audio/toefl-ets-test-2/listening/m2-q05-response.m4a",
+      "question": "5. Listen, then choose the best response.",
+      "choices": [
+        "Either is fine by me.",
+        "Happy to help.",
+        "That's what I'll do.",
+        "I'm available."
+      ],
+      "answer": "That's what I'll do.",
+      "explanation": "Man: “If you need help, ask Ms. Johnson.” — Answer key: (C) That's what I'll do.",
+      "source_pages": [
+        22,
+        27
+      ]
+    },
+    {
+      "id": "M2-L6",
+      "audio": "audio/toefl-ets-test-2/listening/m2-q06-response.m4a",
+      "question": "6. Listen, then choose the best response.",
+      "choices": [
+        "In the party room.",
+        "At 1 p.m.",
+        "It's crowded.",
+        "Event coordinators."
+      ],
+      "answer": "At 1 p.m.",
+      "explanation": "Woman: “What time does the event start?” — Answer key: (B) At 1 p.m.",
+      "source_pages": [
+        22,
+        27
+      ]
+    },
+    {
+      "id": "M2-L7",
+      "audio": "audio/toefl-ets-test-2/listening/m2-q07-response.m4a",
+      "question": "7. Listen, then choose the best response.",
+      "choices": [
+        "The marketing team is.",
+        "It's tonight.",
+        "I can't help it.",
+        "It's good for two days."
+      ],
+      "answer": "The marketing team is.",
+      "explanation": "Man: “Who is hosting the party tonight?” — Answer key: (A) The marketing team is.",
+      "source_pages": [
+        22,
+        27
+      ]
+    },
+    {
+      "id": "M2-L8",
+      "audio": "audio/toefl-ets-test-2/listening/m2-q08-response.m4a",
+      "question": "8. Listen, then choose the best response.",
+      "choices": [
+        "Maybe it is.",
+        "Why not this weekend instead?",
+        "Have you checked the weather?",
+        "Are you busy?"
+      ],
+      "answer": "Have you checked the weather?",
+      "explanation": "Man: “Let's go hiking this weekend.” — Answer key: (C) Have you checked the weather?",
+      "source_pages": [
+        23,
+        27
+      ]
+    },
+    {
+      "id": "M2-L9",
+      "passage": {
+        "title": "Module 2 · Listen to a conversation",
+        "audio": "audio/toefl-ets-test-2/listening/m2-q09-10-conversation.m4a",
+        "transcript": "Man: Have you returned the books we borrowed from the library?\nWoman: Why? I thought we could keep them for six weeks.\nMan: Actually, it’s now four weeks. They changed the policy. I guess I forgot to tell you!\nWoman: That means they’re due tomorrow!\nMan: Exactly!\nWoman: In that case, I’ll take care of it right now!",
+        "text": "Listen first (once, as on test day), then answer. Reveal the transcript only when reviewing."
+      },
+      "question": "9. What was the woman not aware of?",
+      "choices": [
+        "The library’s new location",
+        "The library’s borrowing policy",
+        "The library’s holiday schedule",
+        "The library’s hours of operation"
+      ],
+      "answer": "The library’s borrowing policy",
+      "explanation": "Answer key: (B) The library’s borrowing policy",
+      "source_pages": [
+        23,
+        27
+      ]
+    },
+    {
+      "id": "M2-L10",
+      "question": "10. What will the woman probably do next?",
+      "choices": [
+        "Return books to the library",
+        "Make a phone call to the library",
+        "Pay a fine for returning books late",
+        "Borrow a new book from the library"
+      ],
+      "answer": "Return books to the library",
+      "explanation": "Answer key: (A) Return books to the library",
+      "source_pages": [
+        23,
+        27
+      ]
+    },
+    {
+      "id": "M2-L11",
+      "passage": {
+        "title": "Module 2 · Listen to an announcement on the campus radio station",
+        "audio": "audio/toefl-ets-test-2/listening/m2-q11-12-announcement.m4a",
+        "transcript": "Announcer: Good evening everyone. Just a friendly reminder that the university's annual charity auction will take place tomorrow at 7 P.M. in the Main Hall. All proceeds will go to local charities. We hope to see you there and appreciate your support!",
+        "text": "Listen first (once, as on test day), then answer. Reveal the transcript only when reviewing."
+      },
+      "question": "11. What is the main topic of the announcement?",
+      "choices": [
+        "A new university event",
+        "A lecture on local charities",
+        "A change in venue",
+        "An upcoming fundraiser"
+      ],
+      "answer": "An upcoming fundraiser",
+      "explanation": "Answer key: (D) An upcoming fundraiser",
+      "source_pages": [
+        23,
+        27
+      ]
+    },
+    {
+      "id": "M2-L12",
+      "question": "12. What does the speaker hope the listeners will do?",
+      "choices": [
+        "Attend an event",
+        "Prepare for a lecture",
+        "Donate online",
+        "Volunteer at an event"
+      ],
+      "answer": "Attend an event",
+      "explanation": "Answer key: (A) Attend an event",
+      "source_pages": [
+        24,
+        27
+      ]
+    },
+    {
+      "id": "M2-L13",
+      "passage": {
+        "title": "Module 2 · Listen to a talk in an environmental science class",
+        "audio": "audio/toefl-ets-test-2/listening/m2-q13-16-talk.m4a",
+        "transcript": "Professor: Biomimicry is the human practice of learning from and imitating things found in nature in order to create new inventions. This way, scientists and engineers can create innovative solutions that are both efficient and sustainable.\n\nOne well-known example of biomimicry is the development of a widely used fastening system. The inventor was inspired by the way burrs, uh thorns, from plants stuck to his dog’s fur. By replicating the tiny hooks found on the burrs he removed from the dog fur, he created the new fastening system.\n\nAnother example is the design of energy-efficient buildings based on the ventilation system of structures created by termites. Termites are ground-dwelling insects that use different materials to create hills, or mounds, in which the termites live. Termite mounds have a complex network of vents. The vents maintain a stable internal temperature, which can be emulated in human architecture.\n\nBiomimicry can also be applied to renewable energy. For instance, researchers are developing wind turbine blades modeled after the flippers of humpback whales. The unique shape of the flippers reduces drag and increases efficiency, leading to more effective wind energy capture.",
+        "text": "Listen first (once, as on test day), then answer. Reveal the transcript only when reviewing."
+      },
+      "question": "13. What is the talk mainly about?",
+      "choices": [
+        "Ways in which humans use natural materials in clothing and architecture",
+        "Hiding strategies of different animals",
+        "New methods of using renewable energy",
+        "Examples of how humans imitate nature for practical purposes"
+      ],
+      "answer": "Examples of how humans imitate nature for practical purposes",
+      "explanation": "Answer key: (D) Examples of how humans imitate nature for practical purposes",
+      "source_pages": [
+        24,
+        27
+      ]
+    },
+    {
+      "id": "M2-L14",
+      "question": "14. Why does the speaker mention a dog?",
+      "choices": [
+        "To illustrate how an inventor copied animal behavior",
+        "To compare its efficiency in movement with that of humpback whales",
+        "To explain how a structure found in plants inspired an invention",
+        "To show the close bond between scientists and animals"
+      ],
+      "answer": "To explain how a structure found in plants inspired an invention",
+      "explanation": "Answer key: (C) To explain how a structure found in plants inspired an invention",
+      "source_pages": [
+        24,
+        27
+      ]
+    },
+    {
+      "id": "M2-L15",
+      "question": "15. What point does the speaker make about termite mounds?",
+      "choices": [
+        "The temperature inside of them does not change much.",
+        "Termites sometimes build them near human-made structures.",
+        "Building them takes a lot of energy.",
+        "They are created mostly from plant material."
+      ],
+      "answer": "The temperature inside of them does not change much.",
+      "explanation": "Answer key: (A) The temperature inside of them does not change much.",
+      "source_pages": [
+        24,
+        27
+      ]
+    },
+    {
+      "id": "M2-L16",
+      "question": "16. What does the speaker imply about wind turbine blades that are being developed?",
+      "choices": [
+        "The noise they create can be harmful to whales.",
+        "They can be easily installed on buildings.",
+        "They can be efficiently constructed from renewable materials.",
+        "They are very similar to some whales' flippers in shape."
+      ],
+      "answer": "They are very similar to some whales' flippers in shape.",
+      "explanation": "Answer key: (D) They are very similar to some whales' flippers in shape.",
+      "source_pages": [
+        25,
+        27
+      ]
+    }
+  ]
+}

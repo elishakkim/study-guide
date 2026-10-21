@@ -1,0 +1,127 @@
+{
+  "chapter": {
+    "number": 3,
+    "title": "Speaking Section",
+    "book": "TOEFL ETS Practice Test 1",
+    "source": "ETS — TOEFL iBT® Practice Test 1 (aligned with tests from January 21, 2026)",
+    "pdf": "TOEFL ETS Practice Test 1.pdf",
+    "pdf_pages": {
+      "start": 33,
+      "end": 35
+    }
+  },
+  "summary": "Speaking section of the official ETS Practice Test 1: 7 Listen and Repeat statements (a zoo welcome) and a 4-question interview about city life, with the ETS audio and video. The ETS key gives no sample answers; revealing shows what was said.",
+  "short_answer_questions": [
+    {
+      "id": "S-LR1",
+      "passage": {
+        "title": "Listen and Repeat",
+        "audio": "audio/toefl-ets-test-1/speaking/repeat-directions.m4a",
+        "text": "You are learning to welcome visitors to the zoo. Listen to your manager and repeat what she says. Repeat only once. No preparation time is given."
+      },
+      "question": "1. Listen, then repeat the statement aloud once.",
+      "audio": "audio/toefl-ets-test-1/speaking/repeat-1.m4a",
+      "model_answer": "We have a variety of wildlife.",
+      "source_pages": [
+        34
+      ]
+    },
+    {
+      "id": "S-LR2",
+      "question": "2. Listen, then repeat the statement aloud once.",
+      "audio": "audio/toefl-ets-test-1/speaking/repeat-2.m4a",
+      "model_answer": "Bears, wolves, and large cats are to the right.",
+      "source_pages": [
+        34
+      ]
+    },
+    {
+      "id": "S-LR3",
+      "question": "3. Listen, then repeat the statement aloud once.",
+      "audio": "audio/toefl-ets-test-1/speaking/repeat-3.m4a",
+      "model_answer": "You can find sea lions and elephants further down the path.",
+      "source_pages": [
+        34
+      ]
+    },
+    {
+      "id": "S-LR4",
+      "question": "4. Listen, then repeat the statement aloud once.",
+      "audio": "audio/toefl-ets-test-1/speaking/repeat-4.m4a",
+      "model_answer": "Please, no outside food or drinks, and do not feed the animals.",
+      "source_pages": [
+        34
+      ]
+    },
+    {
+      "id": "S-LR5",
+      "question": "5. Listen, then repeat the statement aloud once.",
+      "audio": "audio/toefl-ets-test-1/speaking/repeat-5.m4a",
+      "model_answer": "Avoid banging or tapping on the displays and enclosures.",
+      "source_pages": [
+        34
+      ]
+    },
+    {
+      "id": "S-LR6",
+      "question": "6. Listen, then repeat the statement aloud once.",
+      "audio": "audio/toefl-ets-test-1/speaking/repeat-6.m4a",
+      "model_answer": "For those with children, we offer summer camps and educational opportunities.",
+      "source_pages": [
+        34
+      ]
+    },
+    {
+      "id": "S-LR7",
+      "question": "7. Listen, then repeat the statement aloud once.",
+      "audio": "audio/toefl-ets-test-1/speaking/repeat-7.m4a",
+      "model_answer": "The visitor’s center, located near the front entrance, can give you more information.",
+      "source_pages": [
+        34
+      ]
+    }
+  ],
+  "scenario_questions": [
+    {
+      "id": "S-IV1",
+      "passage": {
+        "title": "Take an Interview",
+        "audio": "audio/toefl-ets-test-1/speaking/interview-directions.m4a",
+        "text": "You have agreed to take part in a research study about urban life. You will have a short online interview with a researcher. Watch each question, then answer aloud for about 45 seconds with no preparation. The ETS key has no sample answers—reveal to see the question text."
+      },
+      "question": "1. Watch the interviewer, then answer aloud.",
+      "audio": "audio/toefl-ets-test-1/speaking/interview-1.mp4",
+      "expected_answer": "Interviewer: “Thank you for speaking with me today. I’m conducting a study about people’s experiences and perceptions of living in a city. I’d like to ask you some questions. Now, do you currently live in a big city, a small town, or a village?”",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "S-IV2",
+      "question": "2. Watch the interviewer, then answer aloud.",
+      "audio": "audio/toefl-ets-test-1/speaking/interview-2.mp4",
+      "expected_answer": "Interviewer: “Great. Cities affect people in different ways. Some people find cities dynamic and exciting. Others find that cities are overwhelming and drain them of energy. What kind of reaction do you have to cities? Why do you think you react in this way?”",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "S-IV3",
+      "question": "3. Watch the interviewer, then answer aloud.",
+      "audio": "audio/toefl-ets-test-1/speaking/interview-3.mp4",
+      "expected_answer": "Interviewer: “OK. Next, I’d like to ask your opinion. Some people believe that those who live in cities lead more interesting lives. They would argue, for example, that people who live in cities have more access to professional opportunities and interesting leisure activities. Do you agree that people who live in cities lead more interesting lives? Why or why not?”",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "S-IV4",
+      "question": "4. Watch the interviewer, then answer aloud.",
+      "audio": "audio/toefl-ets-test-1/speaking/interview-4.mp4",
+      "expected_answer": "Interviewer: “Good points. Let me ask you one final question. For some time now, researchers have been interested in whether green spaces, such as parks, make people who live in cities happier. Do you think that city governments should create more parks in urban areas to promote a general sense of happiness and life satisfaction? Why or why not?”",
+      "source_pages": [
+        35
+      ]
+    }
+  ]
+}

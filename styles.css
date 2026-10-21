@@ -629,6 +629,7 @@ button.page-link:hover {
 .passage-text { white-space: pre-wrap; font-size: 14.5px; }
 .passage-transcript { margin-top: 10px; }
 .audio-player { display: block; width: 100%; max-width: 420px; margin: 4px 0 10px; }
+.video-player { display: block; width: 100%; max-width: 420px; border-radius: var(--radius-sm); background: #000; margin: 4px 0 10px; }
 
 /* ---------- Complete the words (inline gaps) ---------- */
 .ctw-text { font-size: 17px; line-height: 2.8; }

@@ -1,0 +1,380 @@
+{
+  "chapter": {
+    "number": 1,
+    "title": "Reading Section",
+    "book": "TOEFL ETS Practice Test 2",
+    "source": "ETS — TOEFL iBT® Practice Test 2 (aligned with tests from January 21, 2026)",
+    "pdf": "TOEFL ETS Practice Test 2.pdf",
+    "pdf_pages": {
+      "start": 2,
+      "end": 14
+    }
+  },
+  "summary": "Reading section of the official ETS Practice Test 2, in two modules of 20 questions. Each module: Complete the Words (Questions 1–10), Read in Daily Life (11–15) and Read an Academic Passage (16–20). Answers come from the ETS answer keys (PDF pp. 13–14), which list answers only, without explanations.",
+  "complete_the_words": [
+    {
+      "id": "M1-CTW",
+      "title": "Module 1 · Questions 1–10 · Fill in the missing letters in the paragraph.",
+      "text": "Maps are tools that help us understand the world around us. They {sh|ow} the {loca|tions} of {pla|ces} like {cit|ies}, rivers, {a|nd} mountains. {Th|ese} visual {gu|ides} can {al|so} display different {ty|pes} of {infor|mation}, such as climate or population. There are many kinds, including physical, political, and thematic versions. The study of maps and cartography, the process by which they are made, can teach us about the geography of our planet and how people live in different regions.",
+      "source_pages": [
+        4,
+        13
+      ]
+    },
+    {
+      "id": "M2-CTW",
+      "title": "Module 2 · Questions 1–10 · Fill in the missing letters in the paragraph.",
+      "text": "Elephants are social animals that live in groups called herds. They {commu|nicate} using {sou|nds}, gestures, {a|nd} touch. These {ani|mals} are {kn|own} for {th|eir} strong {fam|ily} bonds and {of|ten} help {ea|ch} other {i|n} times of need. They can remember the locations of water sources and food, which helps them survive in their natural environment. These highly intelligent creatures play an important role in their ecosystems, shaping the landscape, creating access to moisture, and spreading seeds.",
+      "source_pages": [
+        9,
+        14
+      ]
+    }
+  ],
+  "multiple_choice_questions": [
+    {
+      "id": "M1-R11",
+      "passage": {
+        "title": "Module 1 · Read an email",
+        "text": "To: brownchocolover@dmail.com\nFrom: santos.apartments@dmail.com\nDate: 05/22/2025\nSubject: Maintenance Request\n\nDear Mr. Brown,\n\nYour maintenance request has been received. Our technician will visit your apartment on June 10th between 1:00 PM and 3:00 PM. You must be present during that time, as our policy is that only the primary tenant can let the technician in.\n\nBest regards,\nMaria Santos"
+      },
+      "question": "11. What is the earliest time of day that the technician will arrive?",
+      "choices": [
+        "10:00 AM",
+        "11:00 AM",
+        "1:00 PM",
+        "3:00 PM"
+      ],
+      "answer": "1:00 PM",
+      "explanation": "Answer key: (C) 1:00 PM",
+      "source_pages": [
+        4,
+        13
+      ]
+    },
+    {
+      "id": "M1-R12",
+      "question": "12. Why must Mr. Brown be present?",
+      "choices": [
+        "To sign off on completed work",
+        "To provide details about the problem",
+        "To let the technician in",
+        "To complete a survey"
+      ],
+      "answer": "To let the technician in",
+      "explanation": "Answer key: (C) To let the technician in",
+      "source_pages": [
+        5,
+        13
+      ]
+    },
+    {
+      "id": "M1-R13",
+      "passage": {
+        "title": "Module 1 · Read an email",
+        "text": "To: miyazakisuzuki@dmail.com\nFrom: rogersemily.branscomb.services@dmail.com\nDate: 03/23/2025\nSubject: Audit\n\nDear Mr. Suzuki,\n\nBranscomb Technology's annual inventory audit will be performed on Thursday, April 19, beginning promptly at 8:00 a.m. in the warehouse on Kramer Boulevard. All department heads like yourself are required to attend and assist with the audit process. Please ensure that all inventory logs from your department are updated and will be readily accessible two days prior to the event. Because the audit is expected to take the entire day, we will be providing lunch from Beasly Bistro for participants. Please look over the attached menu and submit your selection to Fran Paloma in the HR department. We ask that you avoid scheduling any meetings on the morning of April 20 in the event that we need additional time to complete the process.\n\nRegards,\nEmily Rogers"
+      },
+      "question": "13. Why did Ms. Rogers send the email to Mr. Suzuki?",
+      "choices": [
+        "To assist him with an audit process",
+        "To remind him to update inventory logs every day",
+        "To inform him of an upcoming event",
+        "To request his input on how to revise a process"
+      ],
+      "answer": "To inform him of an upcoming event",
+      "explanation": "Answer key: (C) To inform him of an upcoming event",
+      "source_pages": [
+        5,
+        13
+      ]
+    },
+    {
+      "id": "M1-R14",
+      "question": "14. Why should Mr. Suzuki contact Ms. Paloma?",
+      "choices": [
+        "To provide her with his meal preference",
+        "To obtain some information from the HR department",
+        "To share a list of employees who have experience with audits",
+        "To send her an updated inventory log"
+      ],
+      "answer": "To provide her with his meal preference",
+      "explanation": "Answer key: (A) To provide her with his meal preference",
+      "source_pages": [
+        5,
+        13
+      ]
+    },
+    {
+      "id": "M1-R15",
+      "question": "15. What is indicated about the morning of April 20?",
+      "choices": [
+        "The audit might continue then.",
+        "Mr. Suzuki might have several meetings then.",
+        "A menu might be updated then.",
+        "Employees might have free time then."
+      ],
+      "answer": "The audit might continue then.",
+      "explanation": "Answer key: (A) The audit might continue then.",
+      "source_pages": [
+        6,
+        13
+      ]
+    },
+    {
+      "id": "M1-R16",
+      "passage": {
+        "title": "Module 1 · Read an academic passage (the highlighted word is in [brackets])",
+        "text": "The Impact of Sports on Social Integration\n\nSports can promote social integration by bridging gaps between people of various backgrounds. Participation in sports can lead to increased social [cohesion] and improved relationships among diverse groups.\n\nFor example, community soccer leagues often bring together people from different ethnicities, creating an environment where cultural differences are celebrated and mutual respect is cultivated. However, the impact of sports on social integration is not without challenges. Competitive environments can sometimes exacerbate social tensions, particularly when favoritism or exclusionary practices are present.\n\nDespite these issues, many initiatives aim to use sports as a platform for social change. One such initiative is the Sport for Peace program, which focuses on conflict resolution through team-building activities and collaborative sports events. The role of sports in social integration extends beyond participation. Spectatorship and fandom also play significant roles in uniting people. Major international sports events like the Olympics or the World Cup serve as opportunities for nations to come together and share common goals. The visibility of athletes from diverse backgrounds during these events fosters a sense of global harmony. These events often highlight stories of athletes overcoming adversity, inspiring spectators and fostering a collective sense of achievement."
+      },
+      "question": "16. The word “cohesion” in the passage is closest in meaning to",
+      "choices": [
+        "diversity",
+        "awareness",
+        "unity",
+        "celebration"
+      ],
+      "answer": "unity",
+      "explanation": "Answer key: (C) unity",
+      "source_pages": [
+        6,
+        13
+      ]
+    },
+    {
+      "id": "M1-R17",
+      "question": "17. In which of the following situations can sports have an especially negative impact on social integration?",
+      "choices": [
+        "When people from different ethnicities are brought together",
+        "When participants are unreasonably strict about the rules of competition",
+        "When the social environment is not favorable to competition",
+        "When social tensions are heightened by favoring or excluding certain participants"
+      ],
+      "answer": "When social tensions are heightened by favoring or excluding certain participants",
+      "explanation": "Answer key: (D) When social tensions are heightened by favoring or excluding certain participants",
+      "source_pages": [
+        6,
+        13
+      ]
+    },
+    {
+      "id": "M1-R18",
+      "question": "18. What is the relationship between paragraphs 2 and 3?",
+      "choices": [
+        "Paragraph 3 discusses ways of addressing a problem mentioned in paragraph 2.",
+        "Paragraph 3 contradicts a theory proposed in paragraph 2.",
+        "Paragraph 3 provides evidence for an idea presented in paragraph 2.",
+        "Paragraph 3 introduces a new challenge related to paragraph 2."
+      ],
+      "answer": "Paragraph 3 discusses ways of addressing a problem mentioned in paragraph 2.",
+      "explanation": "Answer key: (A) Paragraph 3 discusses ways of addressing a problem mentioned in paragraph 2.",
+      "source_pages": [
+        6,
+        13
+      ]
+    },
+    {
+      "id": "M1-R19",
+      "question": "19. What does the passage suggest about the Sport for Peace program?",
+      "choices": [
+        "Its main goal is to eliminate favoritism in sports.",
+        "It primarily targets professional athletes.",
+        "It uses team-building exercises to address conflicts.",
+        "It is only effective in local communities."
+      ],
+      "answer": "It uses team-building exercises to address conflicts.",
+      "explanation": "Answer key: (C) It uses team-building exercises to address conflicts.",
+      "source_pages": [
+        7,
+        13
+      ]
+    },
+    {
+      "id": "M1-R20",
+      "question": "20. Why does the author mention major international sports events like the Olympics and the World Cup?",
+      "choices": [
+        "To argue that these events have little impact on social integration",
+        "To illustrate how sports can unite people globally",
+        "To suggest that these events mainly benefit athletes",
+        "To highlight the competitive nature of these events"
+      ],
+      "answer": "To illustrate how sports can unite people globally",
+      "explanation": "Answer key: (B) To illustrate how sports can unite people globally",
+      "source_pages": [
+        7,
+        13
+      ]
+    },
+    {
+      "id": "M2-R11",
+      "passage": {
+        "title": "Module 2 · Read an email",
+        "text": "To: jhsigh36@dmail.com\nFrom: emmaj.onlinecourses@dmail.com\nDate: 08/17/2025\nSubject: You're in!\n\nDear Mr. Singh,\n\nYour registration for the online coding course, which begins on October 5th at 9:00 AM, is complete. Login details will be sent a day before the course begins. If you would like to cancel your registration, let us know by October 3rd.\n\nBest regards,\nEmma Johnson"
+      },
+      "question": "11. What is the main purpose of the e-mail?",
+      "choices": [
+        "To cancel registration for a course",
+        "To confirm registration for a course",
+        "To provide information about a course",
+        "To request payment for a course"
+      ],
+      "answer": "To confirm registration for a course",
+      "explanation": "Answer key: (B) To confirm registration for a course",
+      "source_pages": [
+        9,
+        14
+      ]
+    },
+    {
+      "id": "M2-R12",
+      "question": "12. When will Mr. Singh receive login details?",
+      "choices": [
+        "October 2nd",
+        "October 3rd",
+        "October 4th",
+        "October 5th"
+      ],
+      "answer": "October 4th",
+      "explanation": "Answer key: (C) October 4th",
+      "source_pages": [
+        10,
+        14
+      ]
+    },
+    {
+      "id": "M2-R13",
+      "passage": {
+        "title": "Module 2 · Read an email",
+        "text": "To: gardnerjardinero@dmail.com\nFrom: thompson.building.co@dmail.com\nSubject: Upcoming Heating System Maintenance - Tuesday, May 27\n\nDear Ms. Gardner,\n\nI hope you're doing well. I'm writing to inform you of a scheduled maintenance procedure on the office heating system, set to take place on Tuesday, May 27, from 8:00 A.M. to 5:00 P.M. This essential work is part of our seasonal inspection and efficiency upgrade initiative to ensure optimal performance during the colder months.\n\nPlease note that the heating system will be offline throughout the day, and indoor temperatures will drop noticeably. We recommend dressing in warm layers and advising your team to do the same. If any team members are particularly sensitive to cooler environments, remote work arrangements may be considered.\n\nAdditionally, as external technicians will be on-site, please ensure all confidential materials are secured appropriately.\n\nShould you have any questions, contact the maintenance team at 555-7264.\n\nWarm regards,\nRobert Thompson"
+      },
+      "question": "13. What is indicated about the office heating system?",
+      "choices": [
+        "It failed an inspection.",
+        "It will not be functioning during maintenance.",
+        "It is not working properly.",
+        "It performs optimally."
+      ],
+      "answer": "It will not be functioning during maintenance.",
+      "explanation": "Answer key: (B) It will not be functioning during maintenance.",
+      "source_pages": [
+        10,
+        14
+      ]
+    },
+    {
+      "id": "M2-R14",
+      "question": "14. What can be inferred about the weather on May 27?",
+      "choices": [
+        "It will be cooler than the temperature at which the office is normally kept.",
+        "It will be unusual for the season.",
+        "It will require office workers to stay home rather than go to the office.",
+        "It will change throughout the day."
+      ],
+      "answer": "It will be cooler than the temperature at which the office is normally kept.",
+      "explanation": "Answer key: (A) It will be cooler than the temperature at which the office is normally kept.",
+      "source_pages": [
+        10,
+        14
+      ]
+    },
+    {
+      "id": "M2-R15",
+      "question": "15. Who will be performing maintenance?",
+      "choices": [
+        "Ms. Gardner",
+        "Ms. Gardner's team members",
+        "Professionals from another company",
+        "Robert Thompson"
+      ],
+      "answer": "Professionals from another company",
+      "explanation": "Answer key: (C) Professionals from another company",
+      "source_pages": [
+        11,
+        14
+      ]
+    },
+    {
+      "id": "M2-R16",
+      "passage": {
+        "title": "Module 2 · Read an academic passage",
+        "text": "The Human Microbiome\n\nThe human microbiome consists of trillions of microorganisms living in and on our bodies. These include bacteria, viruses, fungi, and other microbes. They play a pivotal role in functions such as digestion, immunity, and mood regulation. For instance, gut bacteria help break down food and produce essential vitamins.\n\nRecent studies show that the microbiome can be influenced by diet, lifestyle, and medication. Antibiotics, while effective against harmful bacteria, can disrupt the balance of beneficial microbes. This disruption can lead to health issues like digestive problems and weakened immunity. Researchers are exploring the connection between the microbiome and mental health. Certain gut bacteria produce neurotransmitters affecting brain function. An imbalance in these bacteria may be linked to conditions like depression and anxiety.\n\nMaintaining a healthy microbiome involves eating a varied diet rich in fiber, reducing stress, and avoiding unnecessary antibiotics. Bacteria that aid digestion, known as probiotics and prebiotics, are also beneficial. As understanding of the microbiome grows, it may lead to breakthroughs in treating diseases and improving health."
+      },
+      "question": "16. The word “pivotal” in the passage is closest in meaning to",
+      "choices": [
+        "very important",
+        "possible",
+        "combined",
+        "unwelcome"
+      ],
+      "answer": "very important",
+      "explanation": "Answer key: (A) very important",
+      "source_pages": [
+        11,
+        14
+      ]
+    },
+    {
+      "id": "M2-R17",
+      "question": "17. What is one way antibiotics can affect humans?",
+      "choices": [
+        "They enhance the production of neurotransmitters.",
+        "They can weaken immunity by harming beneficial microbes.",
+        "They can help relieve digestive problems.",
+        "They make it easier to produce essential vitamins."
+      ],
+      "answer": "They can weaken immunity by harming beneficial microbes.",
+      "explanation": "Answer key: (B) They can weaken immunity by harming beneficial microbes.",
+      "source_pages": [
+        11,
+        14
+      ]
+    },
+    {
+      "id": "M2-R18",
+      "question": "18. What connection are researchers exploring regarding the microbiome?",
+      "choices": [
+        "The link between gut bacteria and immunity",
+        "The role of fungi in mood regulation",
+        "The role of viruses in digestion",
+        "The link between gut bacteria and mental health"
+      ],
+      "answer": "The link between gut bacteria and mental health",
+      "explanation": "Answer key: (D) The link between gut bacteria and mental health",
+      "source_pages": [
+        11,
+        14
+      ]
+    },
+    {
+      "id": "M2-R19",
+      "question": "19. All of the following help to maintain a healthy microbiome EXCEPT",
+      "choices": [
+        "eating a varied diet rich in fiber",
+        "lowering stress levels",
+        "avoiding sources of bacteria",
+        "reducing the use of antibiotics"
+      ],
+      "answer": "avoiding sources of bacteria",
+      "explanation": "Answer key: (C) avoiding sources of bacteria",
+      "source_pages": [
+        12,
+        14
+      ]
+    },
+    {
+      "id": "M2-R20",
+      "question": "20. What is the relationship between paragraphs 2 and 3?",
+      "choices": [
+        "Paragraph 3 challenges the ideas proposed in paragraph 2.",
+        "Paragraph 3 provides examples of the disruptions mentioned in paragraph 2.",
+        "Paragraph 3 specifies how to achieve a healthy microbiome based on the factors mentioned in paragraph 2.",
+        "Paragraph 3 elaborates on the benefits of antibiotics mentioned in paragraph 2."
+      ],
+      "answer": "Paragraph 3 specifies how to achieve a healthy microbiome based on the factors mentioned in paragraph 2.",
+      "explanation": "Answer key: (C) Paragraph 3 specifies how to achieve a healthy microbiome based on the factors mentioned in paragraph 2.",
+      "source_pages": [
+        12,
+        14
+      ]
+    }
+  ]
+}

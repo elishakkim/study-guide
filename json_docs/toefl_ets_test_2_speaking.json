@@ -1,0 +1,127 @@
+{
+  "chapter": {
+    "number": 3,
+    "title": "Speaking Section",
+    "book": "TOEFL ETS Practice Test 2",
+    "source": "ETS — TOEFL iBT® Practice Test 2 (aligned with tests from January 21, 2026)",
+    "pdf": "TOEFL ETS Practice Test 2.pdf",
+    "pdf_pages": {
+      "start": 34,
+      "end": 36
+    }
+  },
+  "summary": "Speaking section of the official ETS Practice Test 2: 7 Listen and Repeat statements (a campus gym tour) and a 4-question interview about commuting, with the ETS audio and video. The ETS key gives no sample answers; revealing shows what was said.",
+  "short_answer_questions": [
+    {
+      "id": "S-LR1",
+      "passage": {
+        "title": "Listen and Repeat",
+        "audio": "audio/toefl-ets-test-2/speaking/repeat-directions.m4a",
+        "text": "You are learning how to guide new students through the campus gym. Listen to the speaker and repeat what she says. Repeat only once. No preparation time is given."
+      },
+      "question": "1. Listen, then repeat the statement aloud once.",
+      "audio": "audio/toefl-ets-test-2/speaking/repeat-1.m4a",
+      "model_answer": "Welcome to our campus gym.",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "S-LR2",
+      "question": "2. Listen, then repeat the statement aloud once.",
+      "audio": "audio/toefl-ets-test-2/speaking/repeat-2.m4a",
+      "model_answer": "Cardio machines are near the entrance.",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "S-LR3",
+      "question": "3. Listen, then repeat the statement aloud once.",
+      "audio": "audio/toefl-ets-test-2/speaking/repeat-3.m4a",
+      "model_answer": "Free weights are in the back.",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "S-LR4",
+      "question": "4. Listen, then repeat the statement aloud once.",
+      "audio": "audio/toefl-ets-test-2/speaking/repeat-4.m4a",
+      "model_answer": "All of our locker rooms are equipped with showers and towels.",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "S-LR5",
+      "question": "5. Listen, then repeat the statement aloud once.",
+      "audio": "audio/toefl-ets-test-2/speaking/repeat-5.m4a",
+      "model_answer": "Our fitness instructors hold exercise classes over here.",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "S-LR6",
+      "question": "6. Listen, then repeat the statement aloud once.",
+      "audio": "audio/toefl-ets-test-2/speaking/repeat-6.m4a",
+      "model_answer": "You can check the schedule for available classes and timings.",
+      "source_pages": [
+        35
+      ]
+    },
+    {
+      "id": "S-LR7",
+      "question": "7. Listen, then repeat the statement aloud once.",
+      "audio": "audio/toefl-ets-test-2/speaking/repeat-7.m4a",
+      "model_answer": "If you have any questions, please seek assistance from the attendants at the help desk.",
+      "source_pages": [
+        35
+      ]
+    }
+  ],
+  "scenario_questions": [
+    {
+      "id": "S-IV1",
+      "passage": {
+        "title": "Take an Interview",
+        "audio": "audio/toefl-ets-test-2/speaking/interview-directions.m4a",
+        "text": "You have volunteered for a research study about commuting habits. You will have a short online interview with a researcher. Watch each question, then answer aloud for about 45 seconds with no preparation. The ETS key has no sample answers—reveal to see the question text."
+      },
+      "question": "1. Watch the interviewer, then answer aloud.",
+      "audio": "audio/toefl-ets-test-2/speaking/interview-1.mp4",
+      "expected_answer": "Interviewer: “Thank you for joining the study. Today, I'd like to ask you some questions about your commuting habits. First, is it important to live close to your school or work? Why?”",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "S-IV2",
+      "question": "2. Watch the interviewer, then answer aloud.",
+      "audio": "audio/toefl-ets-test-2/speaking/interview-2.mp4",
+      "expected_answer": "Interviewer: “I see. Imagine that you could choose to commute by car, which is faster but more expensive, or by public transportation, which is slower but less expensive. Which would you choose, and why?”",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "S-IV3",
+      "question": "3. Watch the interviewer, then answer aloud.",
+      "audio": "audio/toefl-ets-test-2/speaking/interview-3.mp4",
+      "expected_answer": "Interviewer: “Interesting. Some people believe that commuting can be stressful and tiring. What do you think are one or two different ways to make commuting more enjoyable? Give reasons for your answer.”",
+      "source_pages": [
+        36
+      ]
+    },
+    {
+      "id": "S-IV4",
+      "question": "4. Watch the interviewer, then answer aloud.",
+      "audio": "audio/toefl-ets-test-2/speaking/interview-4.mp4",
+      "expected_answer": "Interviewer: “Good points. Lastly, considering advances in technology, some people believe that commuting might disappear entirely. How do you think a severe decline in commuting might affect businesses in positive ways and negative ways? Please give one example of each.”",
+      "source_pages": [
+        36
+      ]
+    }
+  ]
+}

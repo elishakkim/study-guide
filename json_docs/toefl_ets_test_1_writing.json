@@ -1,0 +1,308 @@
+{
+  "chapter": {
+    "number": 4,
+    "title": "Writing Section",
+    "book": "TOEFL ETS Practice Test 1",
+    "source": "ETS — TOEFL iBT® Practice Test 1 (aligned with tests from January 21, 2026)",
+    "pdf": "TOEFL ETS Practice Test 1.pdf",
+    "pdf_pages": {
+      "start": 27,
+      "end": 32
+    }
+  },
+  "summary": "Writing section of the official ETS Practice Test 1: 10 Build a Sentence questions, a Write an Email task (7 minutes) and a Write for an Academic Discussion task (10 minutes). Build a Sentence answers come from the ETS answer key (PDF p. 32); the key has no sample responses for the email or discussion.",
+  "build_a_sentence": [
+    {
+      "id": "W-BS1",
+      "passage": {
+        "title": "Build a Sentence",
+        "text": "Tap words to fill the blanks in order; tap a placed word to send it back. Some words are not used."
+      },
+      "context": "1. “What was the highlight of your trip?”",
+      "template": "The ___ ___ ___ ___ ___ ___ fantastic.",
+      "words": [
+        "were",
+        "the",
+        "was",
+        "old city",
+        "showed us around",
+        "who",
+        "tour guides"
+      ],
+      "answer": [
+        "tour guides",
+        "who",
+        "showed us around",
+        "the",
+        "old city",
+        "were"
+      ],
+      "sentence": "The tour guides who showed us around the old city were fantastic.",
+      "source_pages": [
+        28,
+        32
+      ]
+    },
+    {
+      "id": "W-BS2",
+      "context": "2. “I heard Anna got a promotion.”",
+      "template": "___ ___ ___ ___ she will be ___ ___ ?",
+      "words": [
+        "a different department",
+        "if",
+        "moving to",
+        "know",
+        "do",
+        "you"
+      ],
+      "answer": [
+        "do",
+        "you",
+        "know",
+        "if",
+        "moving to",
+        "a different department"
+      ],
+      "sentence": "Do you know if she will be moving to a different department?",
+      "source_pages": [
+        28,
+        32
+      ]
+    },
+    {
+      "id": "W-BS3",
+      "context": "3. “We’re planning a trip to the mountains next weekend.”",
+      "template": "___ ___ tell me ___ ___ ___ ___ ?",
+      "words": [
+        "the cabins",
+        "available",
+        "whether",
+        "can",
+        "will be",
+        "you"
+      ],
+      "answer": [
+        "can",
+        "you",
+        "whether",
+        "the cabins",
+        "will be",
+        "available"
+      ],
+      "sentence": "Can you tell me whether the cabins will be available?",
+      "source_pages": [
+        28,
+        32
+      ]
+    },
+    {
+      "id": "W-BS4",
+      "context": "4. “I'm looking forward to the concert this weekend.”",
+      "template": "___ ___ ___ ___ ___ ?",
+      "words": [
+        "does",
+        "what",
+        "time",
+        "it",
+        "start"
+      ],
+      "answer": [
+        "what",
+        "time",
+        "does",
+        "it",
+        "start"
+      ],
+      "sentence": "What time does it start?",
+      "source_pages": [
+        28,
+        32
+      ]
+    },
+    {
+      "id": "W-BS5",
+      "context": "5. “The museum exhibition opens next month.”",
+      "template": "___ ___ ___ ___ ___ ___ ___ ?",
+      "words": [
+        "do",
+        "you",
+        "how",
+        "know",
+        "tickets",
+        "will cost",
+        "much"
+      ],
+      "answer": [
+        "do",
+        "you",
+        "know",
+        "how",
+        "much",
+        "tickets",
+        "will cost"
+      ],
+      "sentence": "Do you know how much tickets will cost?",
+      "source_pages": [
+        28,
+        32
+      ]
+    },
+    {
+      "id": "W-BS6",
+      "context": "6. “I'm planning to go to the beach tomorrow.”",
+      "template": "___ ___ ___ ___ ___ ___ ___ ?",
+      "words": [
+        "is",
+        "time of year",
+        "what",
+        "the water",
+        "this",
+        "like",
+        "temperature"
+      ],
+      "answer": [
+        "what",
+        "is",
+        "the water",
+        "temperature",
+        "like",
+        "this",
+        "time of year"
+      ],
+      "sentence": "What is the water temperature like this time of year?",
+      "source_pages": [
+        29,
+        32
+      ]
+    },
+    {
+      "id": "W-BS7",
+      "context": "7. “I need to buy groceries today.”",
+      "template": "___ ___ ___ ___ ___ ___ ?",
+      "words": [
+        "list",
+        "do",
+        "a",
+        "have",
+        "shopping",
+        "you"
+      ],
+      "answer": [
+        "do",
+        "you",
+        "have",
+        "a",
+        "shopping",
+        "list"
+      ],
+      "sentence": "Do you have a shopping list?",
+      "source_pages": [
+        29,
+        32
+      ]
+    },
+    {
+      "id": "W-BS8",
+      "context": "8. “I'll be taking a cooking class this weekend.”",
+      "template": "___ ___ ___ ___ ___ ?",
+      "words": [
+        "learn",
+        "what",
+        "will",
+        "you",
+        "recipes"
+      ],
+      "answer": [
+        "what",
+        "recipes",
+        "will",
+        "you",
+        "learn"
+      ],
+      "sentence": "What recipes will you learn?",
+      "source_pages": [
+        29,
+        32
+      ]
+    },
+    {
+      "id": "W-BS9",
+      "context": "9. “What did Maria ask you about the book you're reading?”",
+      "template": "She ___ ___ ___ ___ ___ ___ ___ .",
+      "words": [
+        "she",
+        "wanted",
+        "a copy",
+        "buy",
+        "to know",
+        "could",
+        "where"
+      ],
+      "answer": [
+        "wanted",
+        "to know",
+        "where",
+        "she",
+        "could",
+        "buy",
+        "a copy"
+      ],
+      "sentence": "She wanted to know where she could buy a copy.",
+      "source_pages": [
+        29,
+        32
+      ]
+    },
+    {
+      "id": "W-BS10",
+      "context": "10. “How did you prepare for the exam?”",
+      "template": "I used ___ ___ ___ ___ ___ .",
+      "words": [
+        "by",
+        "the professor",
+        "that",
+        "the study guide",
+        "was provided",
+        "it"
+      ],
+      "answer": [
+        "the study guide",
+        "that",
+        "was provided",
+        "by",
+        "the professor"
+      ],
+      "sentence": "I used the study guide that was provided by the professor.",
+      "source_pages": [
+        29,
+        32
+      ]
+    }
+  ],
+  "short_answer_questions": [
+    {
+      "id": "W-EMAIL",
+      "passage": {
+        "title": "Write an Email (7 minutes)",
+        "text": "A new poetry magazine has asked its readers for submissions, and you decided to submit two of your poems. However, you had a problem using the online submission form, and you are not certain that your submissions were received.\n\nWrite an email to the editor of the magazine. In your email, do the following.\n• Tell the editor what you like about the new magazine.\n• Describe the problem you experienced.\n• Ask about the status of your submissions.\n\nWrite as much as you can and in complete sentences.\n\nTo: editor@sunshinepoetrymagazine.com\nSubject: Problem using submission form"
+      },
+      "question": "Write your email, then check it against the task.",
+      "model_answer": "The ETS key has no sample response. Check that your email: (1) says what you like about the magazine, (2) clearly describes the problem with the online submission form, (3) asks whether your two poems were received, and (4) uses complete sentences with a greeting and sign-off.",
+      "source_pages": [
+        30
+      ]
+    },
+    {
+      "id": "W-DISCUSSION",
+      "passage": {
+        "title": "Write for an Academic Discussion (10 minutes, 100+ words)",
+        "text": "Your professor is teaching a class on social studies. Write a post responding to the professor’s question. Express and support your opinion, and make a contribution to the discussion in your own words. An effective response will contain at least 100 words.\n\nProfessor: Volunteerism refers to the act of offering your time and service without financial compensation to benefit a community, organization, or cause. While many people volunteer mainly to help others, some institutions have mandatory volunteer programs. High schools are one example, where students may be required to complete a certain number of volunteer hours to graduate. What do you think? Should high school students be required to do volunteer work? Why or why not?\n\nStudent 1: Yes, I think high schools should require volunteer hours because it helps students build a sense of civic responsibility. Many teenagers don’t naturally think about helping others, and this requirement can introduce them to the idea that their time and effort can make a real difference in the lives of others.\n\nStudent 2: I don’t think volunteer hours should be required because many students already have limited free time. Some have part-time jobs or take care of younger siblings after school. Adding a mandatory volunteer requirement could create extra stress and make it harder for those students to balance their existing responsibilities."
+      },
+      "question": "Write your post, then check it against the task.",
+      "model_answer": "The ETS key has no sample response. Check that your post: (1) states a clear opinion on required volunteer hours, (2) supports it with a reason and an example, (3) adds an idea beyond what Student 1 and Student 2 said, and (4) is at least 100 words.",
+      "source_pages": [
+        31
+      ]
+    }
+  ]
+}

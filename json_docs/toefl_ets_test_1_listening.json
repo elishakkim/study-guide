@@ -1,0 +1,626 @@
+{
+  "chapter": {
+    "number": 2,
+    "title": "Listening Section",
+    "book": "TOEFL ETS Practice Test 1",
+    "source": "ETS — TOEFL iBT® Practice Test 1 (aligned with tests from January 21, 2026)",
+    "pdf": "TOEFL ETS Practice Test 1.pdf",
+    "pdf_pages": {
+      "start": 15,
+      "end": 26
+    }
+  },
+  "summary": "Listening section of the official ETS Practice Test 1, in two modules. Module 1: Choose a Response (1–8), two conversations (9–12), an announcement (13–14) and a podcast talk (15–18). Module 2: Choose a Response (1–8), a conversation (9–10), an announcement (11–12) and an environmental science talk (13–16). The audio is the ETS recordings; transcripts are hidden until you reveal them. Answers come from the ETS answer keys (PDF pp. 25–26).",
+  "multiple_choice_questions": [
+    {
+      "id": "M1-L1",
+      "audio": "audio/toefl-ets-test-1/listening/m1-q01-response.m4a",
+      "passage": {
+        "title": "Module 1 · Choose the best response",
+        "text": "Listen to each statement once, then pick the best reply. The statement is shown after you answer."
+      },
+      "question": "1. Listen, then choose the best response.",
+      "choices": [
+        "As a matter of fact, I was returning a book.",
+        "Yes, you can find it in the reference section.",
+        "I don’t think I’ll have enough time to do that.",
+        "Actually, I think I can get there a little earlier."
+      ],
+      "answer": "As a matter of fact, I was returning a book.",
+      "explanation": "Woman: “Didn’t I just see you in the library an hour ago?” — Answer key: (A) As a matter of fact, I was returning a book.",
+      "source_pages": [
+        17,
+        25
+      ]
+    },
+    {
+      "id": "M1-L2",
+      "audio": "audio/toefl-ets-test-1/listening/m1-q02-response.m4a",
+      "question": "2. Listen, then choose the best response.",
+      "choices": [
+        "I nearly missed the bus.",
+        "Every 30 minutes.",
+        "I can help you find it.",
+        "I'll take the subway instead."
+      ],
+      "answer": "I can help you find it.",
+      "explanation": "Man: “Where is the nearest bus stop?” — Answer key: (C) I can help you find it.",
+      "source_pages": [
+        17,
+        25
+      ]
+    },
+    {
+      "id": "M1-L3",
+      "audio": "audio/toefl-ets-test-1/listening/m1-q03-response.m4a",
+      "question": "3. Listen, then choose the best response.",
+      "choices": [
+        "Yes, you're allowed to do that.",
+        "Use the convenient chat feature.",
+        "No, I don't mind.",
+        "They provide good service."
+      ],
+      "answer": "Use the convenient chat feature.",
+      "explanation": "Woman: “How do I contact customer service?” — Answer key: (B) Use the convenient chat feature.",
+      "source_pages": [
+        17,
+        25
+      ]
+    },
+    {
+      "id": "M1-L4",
+      "audio": "audio/toefl-ets-test-1/listening/m1-q04-response.m4a",
+      "question": "4. Listen, then choose the best response.",
+      "choices": [
+        "Oh, that's too early.",
+        "How about tomorrow night then?",
+        "She arrived this afternoon.",
+        "No, that's not necessary."
+      ],
+      "answer": "How about tomorrow night then?",
+      "explanation": "Woman: “I'm afraid I'm not available this evening.” — Answer key: (B) How about tomorrow night then?",
+      "source_pages": [
+        17,
+        25
+      ]
+    },
+    {
+      "id": "M1-L5",
+      "audio": "audio/toefl-ets-test-1/listening/m1-q05-response.m4a",
+      "question": "5. Listen, then choose the best response.",
+      "choices": [
+        "No, it's my package.",
+        "It's just around the corner!",
+        "I think he's come home already.",
+        "Let's check the schedule online."
+      ],
+      "answer": "Let's check the schedule online.",
+      "explanation": "Man: “Isn't the post office open today?” — Answer key: (D) Let's check the schedule online.",
+      "source_pages": [
+        17,
+        25
+      ]
+    },
+    {
+      "id": "M1-L6",
+      "audio": "audio/toefl-ets-test-1/listening/m1-q06-response.m4a",
+      "question": "6. Listen, then choose the best response.",
+      "choices": [
+        "I can help you with that.",
+        "You don't need any more information.",
+        "You have a lot of questions, don't you?",
+        "You haven't given me your number yet."
+      ],
+      "answer": "You haven't given me your number yet.",
+      "explanation": "Woman: “If you need me, just text.” — Answer key: (D) You haven't given me your number yet.",
+      "source_pages": [
+        17,
+        25
+      ]
+    },
+    {
+      "id": "M1-L7",
+      "audio": "audio/toefl-ets-test-1/listening/m1-q07-response.m4a",
+      "question": "7. Listen, then choose the best response.",
+      "choices": [
+        "Yes, there is a major power outage.",
+        "Yes, it's under renovation.",
+        "Yes, it's closed all day on Sunday.",
+        "Yes, they're having a huge sale."
+      ],
+      "answer": "Yes, they're having a huge sale.",
+      "explanation": "Woman: “So the store is open for business all weekend?” — Answer key: (D) Yes, they're having a huge sale.",
+      "source_pages": [
+        18,
+        25
+      ]
+    },
+    {
+      "id": "M1-L8",
+      "audio": "audio/toefl-ets-test-1/listening/m1-q08-response.m4a",
+      "question": "8. Listen, then choose the best response.",
+      "choices": [
+        "I overslept.",
+        "No, not very well.",
+        "Have you asked your professor?",
+        "I forgot to look."
+      ],
+      "answer": "I overslept.",
+      "explanation": "Man: “Did you attend the seminar?” — Answer key: (A) I overslept.",
+      "source_pages": [
+        18,
+        25
+      ]
+    },
+    {
+      "id": "M1-L9",
+      "passage": {
+        "title": "Module 1 · Listen to a conversation",
+        "audio": "audio/toefl-ets-test-1/listening/m1-q09-10-conversation.m4a",
+        "transcript": "Woman: Need anything from the supermarket?\nMan: Huh? Aren’t we getting ready to go see that play in a few minutes?\nWoman: That’s tomorrow.\nMan: Oh. Wow, I’d forget my head if it wasn’t screwed on…. Guess I don’t need to change my clothes after all.\nWoman: So, you weren’t planning to prepare dinner?\nMan: No, but I can. What do you want?\nWoman: Just something light and healthy. So, can you go shopping instead?\nMan: Yeah, sure. How about salmon and salad? Want anything else?\nWoman: No, that’s good. Thanks!",
+        "text": "Listen first (once, as on test day), then answer. Reveal the transcript only when reviewing."
+      },
+      "question": "9. What does the woman imply that she was about to do?",
+      "choices": [
+        "See a play",
+        "Change her clothes",
+        "Go shopping",
+        "Eat dinner"
+      ],
+      "answer": "Go shopping",
+      "explanation": "Answer key: (C) Go shopping",
+      "source_pages": [
+        18,
+        25
+      ]
+    },
+    {
+      "id": "M1-L10",
+      "question": "10. Why does the man say “I’d forget my head if it wasn’t screwed on”?",
+      "choices": [
+        "He forgot what the woman wanted him to buy.",
+        "He forgot about the timing of their plans.",
+        "He forgot what they were going to eat for dinner.",
+        "He forgot to buy salmon and salad at the supermarket."
+      ],
+      "answer": "He forgot about the timing of their plans.",
+      "explanation": "Answer key: (B) He forgot about the timing of their plans.",
+      "source_pages": [
+        18,
+        25
+      ]
+    },
+    {
+      "id": "M1-L11",
+      "passage": {
+        "title": "Module 1 · Listen to a conversation",
+        "audio": "audio/toefl-ets-test-1/listening/m1-q11-12-conversation.m4a",
+        "transcript": "Man: Did you see the maintenance request about the air-conditioning?\nWoman: Yes, I called the technician this morning. They said someone should be here shortly.\nMan: That’s a relief. It’s getting uncomfortably warm in here.\nWoman: I know—I called as soon as I noticed. Hopefully, it’s just a minor issue and they can get it working again without too much delay. In the meantime, why don’t you go out to lunch early? Maybe it’ll be better when you get back.",
+        "text": "Listen first (once, as on test day), then answer. Reveal the transcript only when reviewing."
+      },
+      "question": "11. Why did the woman call a technician?",
+      "choices": [
+        "An air-conditioner is leaking.",
+        "A room is too hot.",
+        "An elevator needs maintenance.",
+        "A window will not open."
+      ],
+      "answer": "A room is too hot.",
+      "explanation": "Answer key: (B) A room is too hot.",
+      "source_pages": [
+        19,
+        25
+      ]
+    },
+    {
+      "id": "M1-L12",
+      "question": "12. What does the woman suggest the man do?",
+      "choices": [
+        "Finish an assignment early",
+        "Wait for a service agent",
+        "Open a door",
+        "Take a break early"
+      ],
+      "answer": "Take a break early",
+      "explanation": "Answer key: (D) Take a break early",
+      "source_pages": [
+        19,
+        25
+      ]
+    },
+    {
+      "id": "M1-L13",
+      "passage": {
+        "title": "Module 1 · Listen to an announcement in a classroom",
+        "audio": "audio/toefl-ets-test-1/listening/m1-q13-14-announcement.m4a",
+        "transcript": "Man: Good afternoon, everyone. I am excited to inform you that Dr. Cynthia Palmer, a renowned expert in environmental science, will be giving a guest lecture next Monday at 2 PM in Waldman Auditorium. Dr. Palmer will discuss the latest advancements in sustainable energy solutions and their impact on global climate change. Due to her popularity and the high interest in her work, I highly recommend arriving early to secure a seat.",
+        "text": "Listen first (once, as on test day), then answer. Reveal the transcript only when reviewing."
+      },
+      "question": "13. What is the announcement about?",
+      "choices": [
+        "A guest lecture",
+        "A different location for a class",
+        "Requirements for a class",
+        "A new university science course"
+      ],
+      "answer": "A guest lecture",
+      "explanation": "Answer key: (A) A guest lecture",
+      "source_pages": [
+        19,
+        25
+      ]
+    },
+    {
+      "id": "M1-L14",
+      "question": "14. Why does the professor mention Dr. Palmer’s popularity?",
+      "choices": [
+        "To encourage students to read her work",
+        "To indicate why she was invited to the university",
+        "To compare her to other invited experts",
+        "To explain why students should arrive early"
+      ],
+      "answer": "To explain why students should arrive early",
+      "explanation": "Answer key: (D) To explain why students should arrive early",
+      "source_pages": [
+        19,
+        25
+      ]
+    },
+    {
+      "id": "M1-L15",
+      "passage": {
+        "title": "Module 1 · Listen to a talk on a podcast about psychology",
+        "audio": "audio/toefl-ets-test-1/listening/m1-q15-18-talk.m4a",
+        "transcript": "Podcast Host: Did you see that new thriller movie that came out last week? I did and loved it. The action, the plot twists… I was totally captivated. Time just flew by. Not a single thought occurred to me that was unrelated to the movie. What I experienced is what psychologists call hard fascination. Hard fascination means intense focus and concentration. Whether it’s TV programs, video games... hard fascination is all too easy to come by in this modern world.\n\nThere’s another type of fascination—soft fascination. There’s still effortless attention, meaning that no special effort is required for you to stay focused, but there’s still room for other thoughts. When I take a walk in the park and look at the flowers and trees, for example, I might be thinking in the back of my mind about my dinner plans.\n\nNow, one thing to know is hard fascination causes mental fatigue. The mind is so intensely focused that it gets tired fast. What follows mental fatigue? You might find yourself easily distracted, irritable, and stressed. Soft fascination, in contrast, engages a different part of the brain—the DMN, or Default Mode Network, which soothes the mind and helps combat mental fatigue. So next time you feel like your mind is on overload, turn off the TV, put down your phone. Take a walk, or simply sit and stare at the clouds.",
+        "text": "Listen first (once, as on test day), then answer. Reveal the transcript only when reviewing."
+      },
+      "question": "15. What is the topic of the talk?",
+      "choices": [
+        "How psychologists study attention",
+        "How to keep the mind focused",
+        "Two types of fascination",
+        "The benefits of hard fascination"
+      ],
+      "answer": "Two types of fascination",
+      "explanation": "Answer key: (C) Two types of fascination",
+      "source_pages": [
+        20,
+        25
+      ]
+    },
+    {
+      "id": "M1-L16",
+      "question": "16. Why does the speaker mention a movie?",
+      "choices": [
+        "To compare different types of movies",
+        "To introduce a concept in psychology",
+        "To explain how movies affect emotions",
+        "To encourage listeners to watch more movies"
+      ],
+      "answer": "To introduce a concept in psychology",
+      "explanation": "Answer key: (B) To introduce a concept in psychology",
+      "source_pages": [
+        20,
+        25
+      ]
+    },
+    {
+      "id": "M1-L17",
+      "question": "17. What does the speaker say about her walk in the park?",
+      "choices": [
+        "It is similar to her experience watching a good movie.",
+        "Her mind has space for thoughts unrelated to nature.",
+        "She needs to put in special effort to stay focused on flowers and trees.",
+        "She gets mental fatigue from her mind engaging in hard fascination."
+      ],
+      "answer": "Her mind has space for thoughts unrelated to nature.",
+      "explanation": "Answer key: (B) Her mind has space for thoughts unrelated to nature.",
+      "source_pages": [
+        20,
+        25
+      ]
+    },
+    {
+      "id": "M1-L18",
+      "question": "18. What does the speaker say about Default Mode Network?",
+      "choices": [
+        "It is involved in soft fascination.",
+        "It leads to irritability and stress.",
+        "It is easily tired from overuse.",
+        "Its effect is unknown to psychologists."
+      ],
+      "answer": "It is involved in soft fascination.",
+      "explanation": "Answer key: (A) It is involved in soft fascination.",
+      "source_pages": [
+        20,
+        25
+      ]
+    },
+    {
+      "id": "M2-L1",
+      "audio": "audio/toefl-ets-test-1/listening/m2-q01-response.m4a",
+      "passage": {
+        "title": "Module 2 · Choose the best response",
+        "text": "Listen to each statement once, then pick the best reply. The statement is shown after you answer."
+      },
+      "question": "1. Listen, then choose the best response.",
+      "choices": [
+        "She started last week.",
+        "I’m unsure, but I can find out.",
+        "Let's welcome the new manager.",
+        "The position has been filled."
+      ],
+      "answer": "I’m unsure, but I can find out.",
+      "explanation": "Woman: “Who is the new manager?” — Answer key: (B) I’m unsure, but I can find out.",
+      "source_pages": [
+        22,
+        26
+      ]
+    },
+    {
+      "id": "M2-L2",
+      "audio": "audio/toefl-ets-test-1/listening/m2-q02-response.m4a",
+      "question": "2. Listen, then choose the best response.",
+      "choices": [
+        "Please wait while I look that up.",
+        "Give me some dates.",
+        "No, I have another due date.",
+        "Yes, that's correct."
+      ],
+      "answer": "Please wait while I look that up.",
+      "explanation": "Man: “When is the due date for the report?” — Answer key: (A) Please wait while I look that up.",
+      "source_pages": [
+        22,
+        26
+      ]
+    },
+    {
+      "id": "M2-L3",
+      "audio": "audio/toefl-ets-test-1/listening/m2-q03-response.m4a",
+      "question": "3. Listen, then choose the best response.",
+      "choices": [
+        "Every Wednesday.",
+        "In aisle 4.",
+        "The cinema is not open today.",
+        "Let’s go together."
+      ],
+      "answer": "Let’s go together.",
+      "explanation": "Man: “I’m going to get some groceries.” — Answer key: (D) Let’s go together.",
+      "source_pages": [
+        22,
+        26
+      ]
+    },
+    {
+      "id": "M2-L4",
+      "audio": "audio/toefl-ets-test-1/listening/m2-q04-response.m4a",
+      "question": "4. Listen, then choose the best response.",
+      "choices": [
+        "The research facility.",
+        "That would be great.",
+        "The break is in an hour.",
+        "Two bullet points."
+      ],
+      "answer": "That would be great.",
+      "explanation": "Woman: “Would you like a copy of my notes?” — Answer key: (B) That would be great.",
+      "source_pages": [
+        22,
+        26
+      ]
+    },
+    {
+      "id": "M2-L5",
+      "audio": "audio/toefl-ets-test-1/listening/m2-q05-response.m4a",
+      "question": "5. Listen, then choose the best response.",
+      "choices": [
+        "Should we join them?",
+        "Did you like the concert?",
+        "Yesterday evening.",
+        "The best coffee."
+      ],
+      "answer": "Should we join them?",
+      "explanation": "Man: “Sami and Layla are on their way to the café.” — Answer key: (A) Should we join them?",
+      "source_pages": [
+        22,
+        26
+      ]
+    },
+    {
+      "id": "M2-L6",
+      "audio": "audio/toefl-ets-test-1/listening/m2-q06-response.m4a",
+      "question": "6. Listen, then choose the best response.",
+      "choices": [
+        "I'm revising my résumé.",
+        "I’ll set up a meeting for us to talk.",
+        "She just got a promotion.",
+        "Yes, the training is complete."
+      ],
+      "answer": "I’ll set up a meeting for us to talk.",
+      "explanation": "Woman: “I'd like to hear your thoughts on the job candidates.” — Answer key: (B) I’ll set up a meeting for us to talk.",
+      "source_pages": [
+        22,
+        26
+      ]
+    },
+    {
+      "id": "M2-L7",
+      "audio": "audio/toefl-ets-test-1/listening/m2-q07-response.m4a",
+      "question": "7. Listen, then choose the best response.",
+      "choices": [
+        "It's one of many.",
+        "Twice last week.",
+        "We don't offer that.",
+        "I'd like the bill, please."
+      ],
+      "answer": "We don't offer that.",
+      "explanation": "Woman: “How much does expedited shipping cost?” — Answer key: (C) We don't offer that.",
+      "source_pages": [
+        22,
+        26
+      ]
+    },
+    {
+      "id": "M2-L8",
+      "audio": "audio/toefl-ets-test-1/listening/m2-q08-response.m4a",
+      "question": "8. Listen, then choose the best response.",
+      "choices": [
+        "I can help with that.",
+        "What is her role in the company?",
+        "You ask a lot of questions.",
+        "And whom should I contact?"
+      ],
+      "answer": "What is her role in the company?",
+      "explanation": "Man: “If you need more information, contact Ms. Lee.” — Answer key: (B) What is her role in the company?",
+      "source_pages": [
+        23,
+        26
+      ]
+    },
+    {
+      "id": "M2-L9",
+      "passage": {
+        "title": "Module 2 · Listen to a conversation",
+        "audio": "audio/toefl-ets-test-1/listening/m2-q09-10-conversation.m4a",
+        "transcript": "Man: I’m trying to decide whether to get a smartphone or a tablet. What do you think?\nWoman: It depends on what you need it for. If you want something portable and easy to use on the go, a smartphone is better.\nMan: That’s true. But I like the larger screen on a tablet for watching videos and reading.\nWoman: In that case....\nMan: I better think about it some more.",
+        "text": "Listen first (once, as on test day), then answer. Reveal the transcript only when reviewing."
+      },
+      "question": "9. What is the man trying to decide between?",
+      "choices": [
+        "A laptop and a smartphone",
+        "A smartphone and a tablet",
+        "A tablet and a desktop computer",
+        "A smartphone and a smartwatch"
+      ],
+      "answer": "A smartphone and a tablet",
+      "explanation": "Answer key: (B) A smartphone and a tablet",
+      "source_pages": [
+        23,
+        26
+      ]
+    },
+    {
+      "id": "M2-L10",
+      "question": "10. What reason does the woman give for her suggestion?",
+      "choices": [
+        "The device is cheaper.",
+        "The device is easier to use on the go.",
+        "The device has a larger screen.",
+        "The device has better battery life."
+      ],
+      "answer": "The device is easier to use on the go.",
+      "explanation": "Answer key: (B) The device is easier to use on the go.",
+      "source_pages": [
+        23,
+        26
+      ]
+    },
+    {
+      "id": "M2-L11",
+      "passage": {
+        "title": "Module 2 · Listen to an announcement in a student lounge",
+        "audio": "audio/toefl-ets-test-1/listening/m2-q11-12-announcement.m4a",
+        "transcript": "Man: Attention everyone! The student lounge will be closed tomorrow from one P.M. to three P.M. for maintenance. We will be repairing a broken pipe in the ceiling. We apologize for any inconvenience this may cause. Please plan accordingly and consider using the library or the campus café during this time.",
+        "text": "Listen first (once, as on test day), then answer. Reveal the transcript only when reviewing."
+      },
+      "question": "11. What is the main purpose of the announcement?",
+      "choices": [
+        "To inform students about a schedule change",
+        "To announce new lounge amenities",
+        "To notify students of a new facility",
+        "To encourage students to use the lounge more"
+      ],
+      "answer": "To inform students about a schedule change",
+      "explanation": "Answer key: (A) To inform students about a schedule change",
+      "source_pages": [
+        23,
+        26
+      ]
+    },
+    {
+      "id": "M2-L12",
+      "question": "12. What should students do during the closure?",
+      "choices": [
+        "Wait in the lounge",
+        "Assist with the maintenance",
+        "Use alternate spaces",
+        "Visit the library website"
+      ],
+      "answer": "Use alternate spaces",
+      "explanation": "Answer key: (C) Use alternate spaces",
+      "source_pages": [
+        23,
+        26
+      ]
+    },
+    {
+      "id": "M2-L13",
+      "passage": {
+        "title": "Module 2 · Listen to a talk in an environmental science class",
+        "audio": "audio/toefl-ets-test-1/listening/m2-q13-16-talk.m4a",
+        "transcript": "Professor: An ecological footprint is a measure of the environmental impact of an individual, community, or country. It calculates the amount of natural resources consumed and the waste generated by human activities, usually expressed in global hectares. By comparing ecological footprints, we can understand how different lifestyles and practices contribute to resource depletion and environmental degradation.\n\nFor instance, the ecological footprint of someone living in a developed country is typically larger than that of someone living in a developing country, mainly due to higher consumption levels and waste production. Factors such as energy use, transportation, food consumption, and housing play significant roles in determining the size of an ecological footprint. Understanding ecological footprints is crucial for promoting sustainability. It helps identify areas where changes can be made to reduce environmental impact. For example, if you consume locally produced foods, you'll likely reduce your ecological footprint because less energy will be used for transporting that food. Governments and organizations can use ecological footprint data to develop policies aimed at achieving sustainable development. I'll discuss some examples of that next.",
+        "text": "Listen first (once, as on test day), then answer. Reveal the transcript only when reviewing."
+      },
+      "question": "13. What is the main topic of the talk?",
+      "choices": [
+        "Changes in consumption in societies over time",
+        "A measure of environmental impact",
+        "Environmentally damaging activities",
+        "The role of governments in sustainability"
+      ],
+      "answer": "A measure of environmental impact",
+      "explanation": "Answer key: (B) A measure of environmental impact",
+      "source_pages": [
+        24,
+        26
+      ]
+    },
+    {
+      "id": "M2-L14",
+      "question": "14. Why does the speaker mention developed and developing countries?",
+      "choices": [
+        "To contradict a theory related to the ecological footprint",
+        "To show that resource depletion can be similar regardless of lifestyle",
+        "To illustrate the usefulness of comparing ecological footprints",
+        "To point out that production efficiency reduces the ecological footprint"
+      ],
+      "answer": "To illustrate the usefulness of comparing ecological footprints",
+      "explanation": "Answer key: (C) To illustrate the usefulness of comparing ecological footprints",
+      "source_pages": [
+        24,
+        26
+      ]
+    },
+    {
+      "id": "M2-L15",
+      "question": "15. What does the speaker mention as a way that people can reduce their ecological footprint?",
+      "choices": [
+        "By disposing of waste appropriately",
+        "By joining an environmental organization",
+        "By using environmentally friendly forms of transportation",
+        "By eating locally produced food"
+      ],
+      "answer": "By eating locally produced food",
+      "explanation": "Answer key: (D) By eating locally produced food",
+      "source_pages": [
+        24,
+        26
+      ]
+    },
+    {
+      "id": "M2-L16",
+      "question": "16. What will the speaker most likely discuss next?",
+      "choices": [
+        "How information about ecological footprints has been used in creating policies",
+        "How data about ecological footprints has been collected",
+        "Why the idea of ecological footprint is often misunderstood",
+        "Why sustainable development can be difficult to achieve"
+      ],
+      "answer": "How information about ecological footprints has been used in creating policies",
+      "explanation": "Answer key: (A) How information about ecological footprints has been used in creating policies",
+      "source_pages": [
+        24,
+        26
+      ]
+    }
+  ]
+}
